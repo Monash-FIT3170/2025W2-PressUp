@@ -9,3 +9,4 @@
 8. Jackson William Tong (PM) jton0021@student.monash.edu
 9. Jessica Mark (RTE) jmar0069@student.monash.edu
 10. Sara Hopkins (PM) shop0007@student.monash.edu 
+11. Simran Rao (PM) srao0008@student.monash.edu
