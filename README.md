@@ -1,2 +1,4 @@
 # 2025W2-PressUp
-Daniel Gower-Hall dgow0002@student.monash.edu
+1. Alvin Fung (SA)
+2. Riya Vyas (RTE)
+3. Daniel Gower-Hall (SA) dgow0002@student.monash.edu
