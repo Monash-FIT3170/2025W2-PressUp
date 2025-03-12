@@ -1,5 +1,5 @@
 # 2025W2-PressUp
-1. Alvin Fung (SA)
+1. Alvin Fung (SA) afun0005@student.monash.edu
 2. Riya Vyas (RTE)
 3. Jay Ree (RTE) jree0010@student.monash.edu
 4. Daniel Gower-Hall (SA) dgow0002@student.monash.edu
