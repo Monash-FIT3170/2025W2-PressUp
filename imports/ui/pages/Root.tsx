@@ -1,9 +1,11 @@
 import { Outlet } from "react-router";
 
-// TODO: Global nav could live here
+// TODO: Global Nav
 export const RootPage = () => (
   <>
-    <div>Nav</div>
-    <Outlet />
+    <header className="header">Nav</header>
+    <main className="main">
+      <Outlet />
+    </main>
   </>
 );
