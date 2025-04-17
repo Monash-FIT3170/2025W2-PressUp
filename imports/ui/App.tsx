@@ -1,6 +1,19 @@
-import React from 'react';
-import { Index } from './pages/Index';
+import { createBrowserRouter, RouterProvider } from "react-router";
+import { HomePage } from "./pages/Home";
 
-export const App = () => (
-  <Index />
-);
+const router = createBrowserRouter([
+  {
+    index: true,
+    Component: HomePage,
+  },
+]);
+
+// TODO: Add global nav component
+export const App = () => {
+  return (
+    <>
+      <div>Nav</div>
+      <RouterProvider router={router} />
+    </>
+  );
+};
