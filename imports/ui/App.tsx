@@ -1,18 +1,25 @@
 import { createBrowserRouter, RouterProvider } from "react-router";
-import { HomePage } from "./pages/Home";
+import { RootPage } from "./pages/Root";
+import { StockPage } from "./pages/inventory/Stock";
+import { InventoryIndex } from "./pages/inventory/Index";
 
 const router = createBrowserRouter([
   {
-    index: true,
-    Component: HomePage,
+    path: "/",
+    Component: RootPage,
+    children: [
+      {
+        path: "inventory",
+        Component: InventoryIndex,
+        children: [{ path: "stock", Component: StockPage }],
+      },
+    ],
   },
 ]);
 
-// TODO: Add global nav component
 export const App = () => {
   return (
     <>
-      <div>Nav</div>
       <RouterProvider router={router} />
     </>
   );
