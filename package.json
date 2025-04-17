@@ -8,6 +8,8 @@
     "visualize": "meteor --production --extra-packages bundle-visualizer"
   },
   "dependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/plugin-transform-react-jsx": "^7.25.9",
     "@babel/runtime": "^7.20.7",
     "@tailwindcss/postcss": "^4.1.4",
     "meteor-node-stubs": "^1.2.5",
