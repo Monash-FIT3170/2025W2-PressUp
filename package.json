@@ -1,5 +1,5 @@
 {
-  "name": "meteor-app",
+  "name": "PressUp",
   "private": true,
   "scripts": {
     "start": "meteor run",
