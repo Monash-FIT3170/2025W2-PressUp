@@ -3,12 +3,14 @@ interface Props {
   borderColour: string;
   textColour: string;
   children?: string;
+  
 }
 
 export const Pill = ({
   bgColour,
   borderColour,
   textColour,
+ 
   children,
 }: Props) => {
   return (
