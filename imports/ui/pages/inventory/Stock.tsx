@@ -11,7 +11,7 @@ const mockStockItems = (amount: number) => {
       _id: i.toString(),
       name: [
         "Coffee Beans",
-        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "Sryup",
         "Almond Milk",
       ][rand(3)],
       quantity: [0, 99999999, 100, 10][rand(4)],
@@ -25,7 +25,7 @@ const mockStockItems = (amount: number) => {
 
 export const StockPage = () => {
   // TODO: Get from API here
-  const stockItems: StockItem[] = mockStockItems(100);
+  const stockItems: StockItem[] = mockStockItems(10);
 
   return (
     <div id="stock" className="flex flex-1">
