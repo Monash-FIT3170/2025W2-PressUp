@@ -40,32 +40,31 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
         <div className="bg-rose-200 py-1 px-2 border-y-3 border-rose-200 rounded-r-lg sticky top-0 z-1">
           Supplier
         </div>
-        {stockItems.map((item, i) => {
+        {stockItems.map((item, i) => { 
           const statusPill =
             item.quantity == 0 ? (
               <Pill
                 bgColour="bg-red-700"
                 borderColour="border-red-700"
                 textColour="text-white"
-              >
-                Out of Stock
-              </Pill>
+                children="Out of Stock"
+             />
+               
             ) : item.quantity <= lowInStockThreshold ? (
               <Pill
-                bgColour="bg-sky-300"
-                borderColour="border-sky-300"
+                bgColour="bg-amber-500"
+                borderColour="border-amber-500"
                 textColour="text-white"
-              >
-                Low in Stock
-              </Pill>
+                children="Low in Stock"
+              />
+               
             ) : (
               <Pill
                 bgColour="bg-green-700"
                 borderColour="border-green-700"
                 textColour="text-white"
-              >
-                In Stock
-              </Pill>
+                children="In Stock"
+              />
             );
 
           const stockIcon =
