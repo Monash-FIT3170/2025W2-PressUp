@@ -4,7 +4,9 @@ import NavBar from "../components/NavBar";
 // TODO: Global Nav
 export const RootPage = () => (
   <>
-    <header className="header">Nav</header>
+    <header className="header">
+      <NavBar/>
+    </header>
     <main className="main">
       <Outlet />
     </main>
