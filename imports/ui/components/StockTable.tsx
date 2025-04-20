@@ -47,7 +47,7 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
                 bgColour="bg-red-700"
                 borderColour="border-red-700"
                 textColour="text-white"
-                children="Out of Stock"
+                content="Out of Stock"
              />
                
             ) : item.quantity <= lowInStockThreshold ? (
@@ -55,7 +55,7 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
                 bgColour="bg-amber-500"
                 borderColour="border-amber-500"
                 textColour="text-white"
-                children="Low in Stock"
+                content="Low in Stock"
               />
                
             ) : (
@@ -63,7 +63,7 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
                 bgColour="bg-green-700"
                 borderColour="border-green-700"
                 textColour="text-white"
-                children="In Stock"
+                content="In Stock"
               />
             );
 
