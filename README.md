@@ -10,24 +10,50 @@ In order to run the project:
 4. Run `meteor run`
 
 # Team
+<!-- System Architects -->
+## 🧠 System Architects
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/fung-alvin"><img src="https://avatars.githubusercontent.com/u/164455066?v=4?s=100" alt="Alvin Fung"/><br /><b>Alvin Fung</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=fung-alvin">afun0005@student.monash.edu</a></sub></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/djgh1009"><img src="https://avatars.githubusercontent.com/u/174994101?v=4" alt="Daniel Gower-Hall"/><br /><b>Daniel Gower-Hall</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=djgh1009">dgow0002@student.monash.edu</a></sub></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/chr1st1nabb"><img src="https://avatars.githubusercontent.com/u/202890318?v=4" alt="Christina Burke Broderick"/><br /><b>Christina Burke Broderick</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=chr1st1nabb">cbur0025@student.monash.edu</a></sub></td>
+    </tr>
+  </tbody>
+</table>
 
-<details>
-<summary>Team Members</summary>
 
-1. Alvin Fung (SA) afun0005@student.monash.edu
-2. Riya Vyas (RTE) rvya0001@student.monash.edu
-3. Jay Ree (RTE) jree0010@student.monash.edu
-4. Daniel Gower-Hall (SA) dgow0002@student.monash.edu
-5. Reem El Machtoub (PM) relm0003@student.monash.edu
-6. Christina Burke Broderick (SA) cbur0025@student.monash.edu
-7. Bingmo Li (PM) blii0059@student.monash.edu
-8. Jackson William Tong (PM) jton0021@student.monash.edu
-9. Jessica Mark (RTE) jmar0069@student.monash.edu
-10. Sara Hopkins (PM) shop0007@student.monash.edu 
-11. Simran Rao (PM) srao0008@student.monash.edu
-12. Brandon Truong (RTE) btru0002@student.monash.edu
-13. Mitchell Augustini (PM) maug0006@student.monash.edu
-14. Milind Bhatt (RTE) mbha0018@student.monash.edu
-15. Jeremy Ockerby (RTE) jock0003@student.monash.edu
+<!-- Product Managers -->
+## 📦 Product Managers
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/mitchellaugustini"><img src="https://avatars.githubusercontent.com/u/141926677?v=4" alt="Mitchell Augustini"/><br /><b>Mitchell Augustini</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=mitchellaugustini">maug0006@student.monash.edu</a></sub></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/jacksonwtong"><img src="https://avatars.githubusercontent.com/u/202890810?v=4" alt="Jackson William Tong"/><br /><b>Jackson William Tong</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=jacksonwtong">jton0021@student.monash.edu</a></sub></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/saraalana"><img src="https://avatars.githubusercontent.com/u/181685905?v=4" alt="Sara Hopkins"/><br /><b>Sara Hopkins</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=saraalana">shop0007@student.monash.edu</a></sub></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/Reemm1"><img src="https://avatars.githubusercontent.com/u/86571894?v=4" alt="Reem El Machtoub"/><br /><b>Reem El Machtoub</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=Reemm1">relm0003@student.monash.edu</a></sub></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/bingmo767"><img src="https://avatars.githubusercontent.com/u/94940746?v=4" alt="Bingmo Li"/><br /><b>Bingmo Li</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=bingmo767">blii0059@student.monash.edu</a></sub></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/srao0008"><img src="https://avatars.githubusercontent.com/u/201020762?v=4" alt="Simran Rao"/><br /><b>Simran Rao</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=srao0008">srao0008@student.monash.edu</a></sub></td>
+    </tr>
+  </tbody>
+</table>
 
-</details>
+
+<!-- Release Train Engineers -->
+## 🚂 Release Train Engineers
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/jmark-9"><img src="https://avatars.githubusercontent.com/u/90585684?v=4" alt="Jessica Mark"/><br /><b>Jessica Mark</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=jmark-9">jmar00696@student.monash.edu</a></sub></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/JayReeMarine"><img src="https://avatars.githubusercontent.com/u/140177619?v=4" alt="Jaeyun Ree"/><br /><b>Jaeyun Ree</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=JayReeMarine">jree0010@student.monash.edu</a></sub></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/JeremyOckerby1"><img src="https://avatars.githubusercontent.com/u/202890242?v=4" alt="Jeremy Ockerby"/><br /><b>Jeremy Ockerby</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=JeremyOckerby1">jock0003@student.monash.edu</a></sub></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/Bhattman1"><img src="https://avatars.githubusercontent.com/u/96212218?v=4" alt="Milind Bhatt"/><br /><b>Milind Bhatt</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=Bhattman1">mbha0018@student.monash.edu</a></sub></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/riyav1602"><img src="https://avatars.githubusercontent.com/u/174166014?v=4" alt="Riya Vyas"/><br /><b>Riya Vyas</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=riyav1602">rvya0001@student.monash.edu</a></sub></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/brandttru"><img src="https://avatars.githubusercontent.com/u/140319560?v=4" alt="Brandon Truong"/><br /><b>Brandon Truong</b></a><br /><sub><a href="https://github.com/Monash-FIT3170/2025W2-PressUp/commits?author=brandttru">btru0002@student.monash.edu</a></sub></td>
+    </tr>
+  </tbody>
+</table>
