@@ -6,7 +6,8 @@ export const MainDisplay = () => {
     const posItems: PosItem[] = mainPosItems(9); 
 
     const handleItemClick = (item: PosItem) => {
-      alert(`Selected Menu: ${item.name} ($${item.price.toFixed(2)})`);
+      item.quantity += 1; // 
+      alert(`Selected Menu: ${item.name} ($${item.price.toFixed(2)}) - Quantity: ${item.quantity}`);
   };
 
   return (
