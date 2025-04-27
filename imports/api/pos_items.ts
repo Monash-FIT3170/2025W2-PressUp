@@ -7,8 +7,9 @@ export interface PosItem extends DBEntry {
     name: string;
     price: number;
     imageUrl: string; // path : /punlic/menu_items/...png
+    quantity: number; // TODO: This may need to be in database
 }
-
+// TODO: This needs to be a collection. I just created mock data for now
 export const PosItemsCollection = new Mongo.Collection<PosItem>("pos_items");
 
 
@@ -27,6 +28,7 @@ export const mainPosItems = (count: number): PosItem[] => {
         price: prices[index],
         imageUrl: `/menu_items/${imageNames[index]}.png`,
         createdAt: new Date(),
+        quantity: 0,
       });
     }
   
