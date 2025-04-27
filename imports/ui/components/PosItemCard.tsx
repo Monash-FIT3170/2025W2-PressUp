@@ -3,11 +3,14 @@ import { PosItem } from "/imports/api/pos_items";
 
 interface Props {
     item: PosItem;
+    onClick: (item: PosItem) => void;
 }
 
-export const PosItemCard = ({ item }: Props) => {
+export const PosItemCard = ({ item, onClick }: Props) => {
     return (
-      <div className="rounded-2xl shadow-sm bg-white overflow-hidden w-full max-w-[160px] mx-auto">
+      <div className="rounded-2xl shadow-sm bg-white overflow-hidden w-full max-w-[160px] mx-auto cursor-pointer"
+          onClick={() => onClick(item)}
+      >
         {/* image */}
         <img
           src={item.imageUrl}
