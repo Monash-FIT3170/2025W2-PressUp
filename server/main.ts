@@ -8,7 +8,6 @@ const insertMenuItem = (itemName: string, quantity: number, ingredients: string[
     name: itemName,
     quantity: quantity,
     ingredients: ingredients,
-    createdAt: new Date(),
 });
 
 Meteor.startup(async () => {
