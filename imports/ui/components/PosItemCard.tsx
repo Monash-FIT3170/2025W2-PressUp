@@ -1,9 +1,9 @@
 import React from "react";
-import { PosItem } from "/imports/api/pos_items";
+import { MenuItem } from "../../api/MenuItemsCollection";
 
 interface Props {
-    item: PosItem;
-    onClick: (item: PosItem) => void;
+    item: MenuItem;
+    onClick: (item: MenuItem) => void;
 }
 
 export const PosItemCard = ({ item, onClick }: Props) => {
