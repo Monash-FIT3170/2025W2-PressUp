@@ -1,10 +1,10 @@
 import { mainPosItems, MenuItem } from "../../../api/MenuItemsCollection";
 import { PosItemCard } from "../../components/PosItemCard";
 import { PosSideMenu } from "../../components/PosSideMenu"; 
-
+import { useState } from "react";
 
 export const MainDisplay = () => {
-    const posItems: MenuItem[] = mainPosItems(9); 
+    const [posItems] = useState<MenuItem[]>(mainPosItems(9));
 
     const handleItemClick = (item: MenuItem) => {
       item.amount += 1; // 
@@ -25,7 +25,7 @@ export const MainDisplay = () => {
         </div>
 
         {/* Sidebar */}
-        <PosSideMenu /> 
+        <PosSideMenu items={posItems} />
       </div>
     );
 
