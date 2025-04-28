@@ -20,5 +20,9 @@ Meteor.methods({
     MenuItemsCollection.update({ name: itemName }, {
       $set: updatedFields
     });
+  },
+
+  'menuItems.getAll'() {
+    return MenuItemsCollection.find().fetch();
   }
 });
