@@ -1,4 +1,5 @@
+import { Mongo } from "meteor/mongo";
+
 export interface DBEntry {
-  _id: string;
-  createdAt: Date;
+  _id?: Mongo.ObjectID;
 }
