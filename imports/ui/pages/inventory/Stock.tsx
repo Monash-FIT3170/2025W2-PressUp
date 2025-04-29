@@ -40,7 +40,7 @@ export const StockPage = () => {
   });
 
   return (
-    <div id="stock" className="flex flex-1 flex-col">  {/* flex-col? */} 
+    <div id="stock" className="flex flex-1 flex-col">
       <StockFilter filter={filter} onFilterChange={setFilter} />
 
       <StockTable stockItems={filteredStockItems} />
