@@ -8,6 +8,11 @@ interface StockFilterProps {
 export const StockFilter = ({ filter, onFilterChange }: StockFilterProps) => {
   return (
     <div className="mb-4 flex items-center">
+      <img
+        src="/filter-icon.svg"
+        alt="Filter Icon"
+        className="mr-2 w-5 h-5 text-red-900"
+      />
       <label htmlFor="stock-filter" className="mr-2 font-bold text-red-900">
         Status:
       </label>
