@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { StockItem } from "/imports/api/stock_item";
 import { StockTable } from "../../components/StockTable";
+import { StockFilter } from "../../components/StockFilter";
 
 // TODO: Delete this mock function when integrating with API
 const mockStockItems = (amount: number) => {
@@ -27,9 +28,22 @@ export const StockPage = () => {
   // TODO: Get from API here
   const stockItems: StockItem[] = mockStockItems(100);
 
+  const [filter, setFilter] = useState<"all" | "inStock" | "lowInStock" | "outOfStock">("all");
+
+  const lowStockThreshold = 10; // TODO: Make this dynamic based on user choice
+
+  const filteredStockItems = stockItems.filter((item) => {
+    if (filter === "inStock") return item.quantity > lowStockThreshold;
+    if (filter === "outOfStock") return item.quantity === 0;
+    if (filter === "lowInStock") return item.quantity > 0 && item.quantity <= lowStockThreshold;
+    return true;
+  });
+
   return (
-    <div id="stock" className="flex flex-1">
-      <StockTable stockItems={stockItems} />
+    <div id="stock" className="flex flex-1 flex-col">  {/* flex-col? */} 
+      <StockFilter filter={filter} onFilterChange={setFilter} />
+
+      <StockTable stockItems={filteredStockItems} />
     </div>
   );
 };
