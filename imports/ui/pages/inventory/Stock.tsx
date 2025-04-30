@@ -2,8 +2,8 @@ import React from "react";
 import { useState } from "react";
 import { StockItem } from "/imports/api/stock_item";
 import { StockTable } from "../../components/StockTable";
-import { Pill } from "../../components/Pill";
 import { Modal } from "../../components/Modal";
+import { AddItemForm } from "../../components/AddItemForm";
 
 // TODO: Delete this mock function when integrating with API
 const mockStockItems = (amount: number) => {
@@ -11,7 +11,6 @@ const mockStockItems = (amount: number) => {
   let result: StockItem[] = [];
   for (let i = 0; i < amount; ++i) {
     result.push({
-      _id: i.toString(),
       name: [
         "Coffee Beans",
         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -34,7 +33,6 @@ const mockStockItems = (amount: number) => {
           "727",
         ][rand(4)]
       }`,
-      createdAt: new Date(),
     });
   }
   return result;
@@ -45,18 +43,15 @@ export const StockPage = () => {
   const stockItems: StockItem[] = mockStockItems(100);
 
   // Modal state
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
 
   return (
     <div>
-      <button onClick={() => setOpen(true)}>
-        <Pill
-          bgColour="bg-rose-400"
-          borderColour="border-rose-400"
-          textColour="text-white"
-        >
-          Add Item
-        </Pill>
+      <button
+        onClick={() => setOpen(true)}
+        className="p-1 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-24 right-2 hover:bg-rose-500"
+      >
+        Add Item
       </button>
 
       <div id="stock" className="flex flex-1">
@@ -64,45 +59,20 @@ export const StockPage = () => {
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-        <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Add new inventory item
-          </h3>
-        </div>
-        <div className="p-4 md:p-5">
-          <form className="space-y-4" action="#">
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                Item Name
-              </label>
-              <input
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-rose-500 focus:border-rose-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-                placeholder="Coffee"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                Quantity
-              </label>
-              <input
-                placeholder="0"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-rose-500 focus:border-rose-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2">
-              <button
-                onClick={() => setOpen(false)}
-                className="mr-2 w-full border border-gray-200 text-black bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-400 dark:hover:bg-rose-500 dark:focus:ring-rose-600"
-              >
-                Cancel
-              </button>
-              <button className="ml-2 w-full text-white bg-rose-400 hover:bg-rose-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-400 dark:hover:bg-rose-500 dark:focus:ring-rose-600">
-                Add item
-              </button>
-            </div>
-          </form>
+        <AddItemForm></AddItemForm>
+        <div className="grid grid-cols-2 p-4">
+          <button
+            onClick={() => setOpen(false)}
+            className="drop-shadow-sm cursor-pointer mr-4 text-white bg-neutral-400 hover:bg-neutral-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-400 dark:hover:bg-rose-500 dark:focus:ring-rose-600"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => setOpen(false)}
+            className="drop-shadow-sm cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-400 dark:hover:bg-rose-500 dark:focus:ring-rose-600"
+          >
+            Add item
+          </button>
         </div>
       </Modal>
     </div>
