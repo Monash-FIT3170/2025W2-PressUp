@@ -26,7 +26,7 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
             </div>
             <div className="flex items-center space-x-2">
               <button className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold">-</button>
-              <span>2</span> {/* Hardcoded quantity for now */}
+              <span>{item.quantity}</span> {/* Hardcoded quantity for now */}
               <button className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold">+</button>
             </div>
             <div className="font-semibold text-gray-800">
