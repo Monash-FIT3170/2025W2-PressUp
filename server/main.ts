@@ -16,7 +16,6 @@ Meteor.startup(async () => {
     return StockItemsCollection.find();
   });
 
-
   // Dropping menuItems collection when application first runs
   MenuItemsCollection.dropCollectionAsync()
 
@@ -35,6 +34,4 @@ Meteor.startup(async () => {
 
     insertMenuItem(itemName, ingredients, available, quantity);
   }
-
-
 });

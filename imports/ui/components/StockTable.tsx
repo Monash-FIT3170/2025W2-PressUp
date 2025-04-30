@@ -47,25 +47,24 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
                 bgColour="bg-red-700"
                 borderColour="border-red-700"
                 textColour="text-white"
-              >
-                Out of Stock
-              </Pill>
+                content="Out of Stock"
+             />
+               
             ) : item.quantity <= lowInStockThreshold ? (
               <Pill
-                bgColour="bg-sky-300"
-                borderColour="border-sky-300"
+                bgColour="bg-amber-500"
+                borderColour="border-amber-500"
                 textColour="text-white"
-              >
-                Low in Stock
-              </Pill>
+                content="Low in Stock"
+              />
+               
             ) : (
               <Pill
                 bgColour="bg-green-700"
                 borderColour="border-green-700"
                 textColour="text-white"
-              >
-                In Stock
-              </Pill>
+                content="In Stock"
+              />
             );
 
           const stockIcon =
