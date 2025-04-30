@@ -49,7 +49,7 @@ export const StockPage = () => {
     <div>
       <button
         onClick={() => setOpen(true)}
-        className="p-1 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-24 right-2 hover:bg-rose-500"
+        className="shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-24 right-2 hover:bg-rose-500"
       >
         Add Item
       </button>
@@ -63,13 +63,13 @@ export const StockPage = () => {
         <div className="grid grid-cols-2 p-4">
           <button
             onClick={() => setOpen(false)}
-            className="drop-shadow-sm cursor-pointer mr-4 text-white bg-neutral-400 hover:bg-neutral-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-400 dark:hover:bg-rose-500 dark:focus:ring-rose-600"
+            className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer mr-4 text-white bg-neutral-400 hover:bg-neutral-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-neutral-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-400 dark:hover:bg-rose-500 dark:focus:ring-rose-600"
           >
             Cancel
           </button>
           <button
             onClick={() => setOpen(false)}
-            className="drop-shadow-sm cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-400 dark:hover:bg-rose-500 dark:focus:ring-rose-600"
+            className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-400 dark:hover:bg-rose-500 dark:focus:ring-rose-600"
           >
             Add item
           </button>
