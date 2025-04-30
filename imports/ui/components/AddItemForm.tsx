@@ -43,6 +43,7 @@ export const AddItemForm = () => {
             </label>
             <input
               type="number"
+              min="0"
               placeholder="0"
               className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
               required
