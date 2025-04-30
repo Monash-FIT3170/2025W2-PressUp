@@ -8,7 +8,7 @@ const mockStockItems = (amount: number) => {
   let result: StockItem[] = [];
   for (let i = 0; i < amount; ++i) {
     result.push({
-      _id: i.toString(),
+      // _id: i.toString(),
       name: [
         "Coffee Beans",
         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -17,7 +17,7 @@ const mockStockItems = (amount: number) => {
       quantity: [0, 99999999, 100, 10][rand(4)],
       location: `Room ${["1029381290129083190238120312938190282038120381029819028", "1", "2", "33"][rand(4)]}`,
       supplier: `Supplier ${["102938129089127012801238120128091238901289012890128", "1", "2", "727"][rand(4)]}`,
-      createdAt: new Date(),
+      // createdAt: new Date(),
     });
   }
   return result;
