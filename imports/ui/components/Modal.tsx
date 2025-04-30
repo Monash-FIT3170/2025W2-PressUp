@@ -9,12 +9,12 @@ export const Modal = ({ open, onClose, children }: ModalProps) => {
     <div
       className={`
       fixed inset-0 flex justify-center items-center
-      transition-colors
+      transition-colors z-1000
       ${open ? "visible bg-black/20" : "invisible"}
       `}
     >
       <div
-        className={`bg-stone-100 rounded-2xl shadow p-6 transition-all
+        className={`bg-stone-100 rounded-2xl shadow p-6 transition-all duration-300
     ${open ? "scale-100 opacity-100" : "scale-125 opacity-0"}`}
       >
         <button
