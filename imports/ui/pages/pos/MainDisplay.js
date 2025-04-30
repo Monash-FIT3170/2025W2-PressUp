@@ -1,6 +1,7 @@
 import { MenuItem, MenuItemsCollection } from "../../../api/MenuItemsCollection";
 import { PosItemCard } from "../../components/PosItemCard";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
+import { PosSideMenu } from "../../components/PosSideMenuCard";
 
 export const MainDisplay = () => {
     const isLoadingPosItems = useSubscribe("menuItems")
@@ -21,5 +22,6 @@ export const MainDisplay = () => {
         </div>
       ))}
     </div>
+    
   );
 };
