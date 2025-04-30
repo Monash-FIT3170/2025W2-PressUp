@@ -40,7 +40,7 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
         <div className="bg-rose-200 py-1 px-2 border-y-3 border-rose-200 rounded-r-lg sticky top-0 z-1">
           Supplier
         </div>
-        {stockItems.map((item, i) => { 
+        {stockItems.map((item, i) => {
           const statusPill =
             item.quantity == 0 ? (
               <Pill
