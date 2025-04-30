@@ -3,9 +3,9 @@ import NavBar from "../components/NavBar";
 
 export const RootPage = () => (
   <>
-    <header className="header">
+    <nav className="nav">
       <NavBar/>
-    </header>
+    </nav>
     <main className="main">
       <Outlet />
     </main>
