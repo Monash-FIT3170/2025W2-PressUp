@@ -3,4 +3,5 @@ export {
   StockItem,
   StockItemsCollection,
 } from "./stockItems/StockItemsCollection";
+export { Supplier, SuppliersCollection } from "./suppliers/SuppliersCollection";
 import "./menuItems/menuItemsMethods";
