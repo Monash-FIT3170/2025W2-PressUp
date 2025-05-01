@@ -1,6 +1,5 @@
 import { Meteor } from "meteor/meteor";
-import { StockItemsCollection } from "/imports/api/stock_item";
-import { MenuItemsCollection } from "../imports/api/MenuItemsCollection";
+import { StockItemsCollection, MenuItemsCollection } from "/imports/api";
 
 
 // Method for inserting new items to menuItems collection
