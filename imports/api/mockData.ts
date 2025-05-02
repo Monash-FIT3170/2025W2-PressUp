@@ -47,10 +47,11 @@ export const mockDataGenerator = async ({
 
   if ((await StockItemsCollection.countDocuments()) == 0)
     for (let i = 0; i < stockItemCount; ++i) {
-      const randomSupplier = await SuppliersCollection.findOneAsync(
-        {},
-        { projection: { _id: 1 } },
-      );
+      const randomSupplier = (
+        await SuppliersCollection.rawCollection()
+          .aggregate([{ $sample: { size: 1 } }, { $project: { _id: 1 } }])
+          .toArray()
+      )[0];
 
       const randomSupplierId = faker.datatype.boolean(0.75)
         ? randomSupplier
