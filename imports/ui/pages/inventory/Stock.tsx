@@ -60,7 +60,7 @@ export const StockPage = () => {
   const [open, setOpen] = useState<boolean>(false);
 
   return (
-    <div>
+    <div className="flex flex-1 flex-col">
       <div className="grid grid-cols-2">
         <StockFilter filter={filter} onFilterChange={setFilter} />
         <button
@@ -70,7 +70,7 @@ export const StockPage = () => {
           Add Item
         </button>
       </div>
-      <div id="stock" className="flex flex-1 flex-col">
+      <div className="flex-1 overflow-auto">
         <StockTable stockItems={filteredStockItems} />
       </div>
 
