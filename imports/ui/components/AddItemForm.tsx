@@ -1,10 +1,17 @@
+import { Mongo } from "meteor/mongo";
 import { ChangeEvent, useState } from "react";
-import { Supplier } from "/imports/api/supplier";
+import { Supplier } from "/imports/api";
 
 const mockSuppliers = (amount: number) => {
   let result: Supplier[] = [];
   for (let i = 1; i < amount; i++) {
-    result.push({ name: `Mock Supplier ${i}` });
+    result.push({
+      _id: new Mongo.ObjectID(),
+      name: `Mock Supplier ${i}`,
+      description: "",
+      pastOrderQty: 1,
+      goods: [],
+    });
   }
   return result;
 };
@@ -69,8 +76,10 @@ export const AddItemForm = () => {
               className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
             >
               <option value="">--Select supplier--</option>
-              {suppliers.map((supplier) => (
-                <option value={supplier.name}>{supplier.name}</option> // TODO: will need to add supplier id here as a key when db object is made
+              {suppliers.map((supplier, i) => (
+                <option value={supplier.name} key={i}>
+                  {supplier.name}
+                </option>
               ))}
             </select>
           </div>
