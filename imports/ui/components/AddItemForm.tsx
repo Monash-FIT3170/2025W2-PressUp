@@ -70,7 +70,7 @@ export const AddItemForm = () => {
             >
               <option value="">--Select supplier--</option>
               {suppliers.map((supplier) => (
-                <option value={supplier.name}>{supplier.name}</option>
+                <option value={supplier.name}>{supplier.name}</option> // TODO: will need to add supplier id here as a key when db object is made
               ))}
             </select>
           </div>
