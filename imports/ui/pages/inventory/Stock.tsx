@@ -1,11 +1,10 @@
-import React, { useState } from "react";
-import { StockItem } from "../../../api/StockItemsCollection";
+import React, { useRef, useState } from "react";
+import { StockItem } from "/imports/api/StockItemsCollection";
 import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
 
-// TODO: Delete this mock function when integrating with API
 const mockStockItems = (amount: number) => {
   const rand = (max: number) => Math.floor(Math.random() * max);
   let result: StockItem[] = [];
@@ -39,53 +38,57 @@ const mockStockItems = (amount: number) => {
 };
 
 export const StockPage = () => {
-  // TODO: Get from API here
   const stockItems: StockItem[] = mockStockItems(100);
-
-  const [filter, setFilter] = useState<
-    "all" | "inStock" | "lowInStock" | "outOfStock"
-  >("all");
-
-  const lowStockThreshold = 10; // TODO: Make this dynamic based on user choice
-
+  const [filter, setFilter] = useState<"all" | "inStock" | "lowInStock" | "outOfStock">("all");
+  const lowStockThreshold = 10;
   const filteredStockItems = stockItems.filter((item) => {
     if (filter === "inStock") return item.quantity > lowStockThreshold;
     if (filter === "outOfStock") return item.quantity === 0;
-    if (filter === "lowInStock")
-      return item.quantity > 0 && item.quantity <= lowStockThreshold;
+    if (filter === "lowInStock") return item.quantity > 0 && item.quantity <= lowStockThreshold;
     return true;
   });
 
-  // Modal state
   const [open, setOpen] = useState<boolean>(false);
 
+  // 👇 Ref to trigger submit
+  const addItemFormRef = useRef<{ submitForm: () => void }>(null);
+
+  const handleAddClick = () => {
+    if (addItemFormRef.current) {
+      addItemFormRef.current.submitForm();
+    }
+  };
+
   return (
-    <div className="flex flex-1 flex-col">
+    <div>
       <div className="grid grid-cols-2">
         <StockFilter filter={filter} onFilterChange={setFilter} />
         <button
           onClick={() => setOpen(true)}
-          className="justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-24 right-2 hover:bg-rose-500"
+          className="justify-self-end p-1 m-4 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-24 hover:bg-rose-500"
         >
           Add Item
         </button>
       </div>
-      <div className="flex-1 overflow-auto">
+      <div id="stock" className="flex flex-1 flex-col">
         <StockTable stockItems={filteredStockItems} />
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-        <AddItemForm></AddItemForm>
+        <AddItemForm
+          ref={addItemFormRef}
+          onSuccess={() => setOpen(false)}
+        />
         <div className="grid grid-cols-2 p-4">
           <button
             onClick={() => setOpen(false)}
-            className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer mr-4 text-white bg-neutral-400 hover:bg-neutral-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-neutral-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-neutral-500 dark:hover:bg-neutral-600 dark:focus:ring-neutral-600"
+            className="mr-4 text-white bg-neutral-400 hover:bg-neutral-500 rounded-lg px-5 py-2.5"
           >
             Cancel
           </button>
           <button
-            onClick={() => setOpen(false)}
-            className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
+            onClick={handleAddClick}
+            className="ml-4 text-white bg-rose-400 hover:bg-rose-500 rounded-lg px-5 py-2.5"
           >
             Add item
           </button>

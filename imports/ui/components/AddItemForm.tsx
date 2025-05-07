@@ -1,5 +1,11 @@
-import { ChangeEvent, useState } from "react";
+import {
+  FormEvent,
+  forwardRef,
+  useImperativeHandle,
+  useState,
+} from "react";
 import { Supplier } from "/imports/api/supplier";
+import { Meteor } from "meteor/meteor";
 
 const mockSuppliers = (amount: number) => {
   let result: Supplier[] = [];
@@ -11,71 +17,115 @@ const mockSuppliers = (amount: number) => {
 
 const suppliers: Supplier[] = mockSuppliers(10);
 
-export const AddItemForm = () => {
-  const [selectedValue, setSelectedValue] = useState<string>("");
+// 👇 Expose internal submit method to parent
+export const AddItemForm = forwardRef(
+  ({ onSuccess }: { onSuccess: () => void }, ref) => {
+    const [itemName, setItemName] = useState("");
+    const [quantity, setQuantity] = useState<number>(0);
+    const [location, setLocation] = useState("");
+    const [supplier, setSupplier] = useState("");
 
-  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedValue(event.target.value);
-  };
+    const submitForm = () => {
+      Meteor.call(
+        "stockItems.insert",
+        {
+          name: itemName,
+          quantity,
+          location,
+          supplier,
+        },
+        (error: Meteor.Error | undefined) => {
+          if (error) {
+            alert("Error: " + error.reason);
+          } else {
+            setItemName("");
+            setQuantity(0);
+            setLocation("");
+            setSupplier("");
+            onSuccess(); // close modal
+          }
+        }
+      );
+    };
 
-  return (
-    <div>
-      <div className="flex items-center justify-center p-4 w-100 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-        <h3 className="text-xl font-semibold text-rose-400 dark:text-white">
-          New Stock Item
-        </h3>
+    useImperativeHandle(ref, () => ({
+      submitForm,
+    }));
+
+    const handleSubmit = (e: FormEvent) => {
+      e.preventDefault();
+      submitForm();
+    };
+
+    return (
+      <div>
+        <div className="flex items-center justify-center p-4 w-100 md:p-5 border-b rounded-t border-gray-200">
+          <h3 className="text-xl font-semibold text-rose-400 dark:text-white">
+            New Stock Item
+          </h3>
+        </div>
+        <div className="p-4 md:p-5">
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div>
+              <label className="block mb-2 text-sm font-medium text-red-900">
+                Item Name
+              </label>
+              <input
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                className="bg-gray-50 border border-gray-300 text-red-900 ..."
+                placeholder="Coffee"
+                required
+              />
+            </div>
+            <div>
+              <label className="block mb-2 text-sm font-medium text-red-900">
+                Quantity
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+                className="bg-gray-50 border border-gray-300 text-red-900 ..."
+                placeholder="0"
+                required
+              />
+            </div>
+            <div>
+              <label className="block mb-2 text-sm font-medium text-red-900">
+                Location
+              </label>
+              <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="bg-gray-50 border border-gray-300 text-red-900 ..."
+                placeholder="Storage Room 1"
+                required
+              />
+            </div>
+            <div>
+              <label className="block mb-2 text-sm font-medium text-red-900">
+                Supplier
+              </label>
+              <select
+                value={supplier}
+                onChange={(e) => setSupplier(e.target.value)}
+                className="bg-gray-50 border border-gray-300 text-red-900 ..."
+                required
+              >
+                <option value="">--Select supplier--</option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier.name} value={supplier.name}>
+                    {supplier.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* 👇 Removed native submit button */}
+          </form>
+        </div>
       </div>
-      <div className="p-4 md:p-5">
-        <form className="space-y-4" action="#">
-          <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Item Name
-            </label>
-            <input
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-              placeholder="Coffee"
-              required
-            />
-          </div>
-          <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Quantity
-            </label>
-            <input
-              type="number"
-              min="0"
-              placeholder="0"
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-              required
-            />
-          </div>
-          <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Location
-            </label>
-            <input
-              placeholder="Storage Room 1"
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-              required
-            />
-          </div>
-          <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Supplier
-            </label>
-            <select
-              value={selectedValue}
-              onChange={handleChange}
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-            >
-              <option value="">--Select supplier--</option>
-              {suppliers.map((supplier) => (
-                <option value={supplier.name}>{supplier.name}</option> // TODO: will need to add supplier id here as a key when db object is made
-              ))}
-            </select>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
+    );
+  }
+);
