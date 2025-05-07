@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { StockItemsCollection } from "../imports/api/StockItemsCollection";
 import { MenuItemsCollection } from "../imports/api/MenuItemsCollection";
+import "../imports/api/StockMethods";
 
 // Method for inserting new items to menuItems collection
 const insertMenuItem = (itemName: string, ingredients: string[], available: boolean, quantity: number) =>
@@ -39,14 +40,11 @@ Meteor.startup(async () => {
 
   if ((await StockItemsCollection.find().countAsync()) === 0) {
     const mockItems = mockStockItems(5);
-    console.log(mockItems)
 
     for (const item of mockItems) {
       await insertStockItem(item.name, item.quantity, item.location, item.supplier);
     }
   }
-
-  console.log(await StockItemsCollection.find().countAsync()); 
 
   // Dropping menuItems collection when application first runs
   await MenuItemsCollection.dropCollectionAsync()

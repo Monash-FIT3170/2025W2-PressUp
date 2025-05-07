@@ -1,5 +1,6 @@
-import { ChangeEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 import { Supplier } from "/imports/api/supplier";
+import { Meteor } from "meteor/meteor";
 
 const mockSuppliers = (amount: number) => {
   let result: Supplier[] = [];
@@ -12,10 +13,31 @@ const mockSuppliers = (amount: number) => {
 const suppliers: Supplier[] = mockSuppliers(10);
 
 export const AddItemForm = () => {
-  const [selectedValue, setSelectedValue] = useState<string>("");
+  const [itemName, setItemName] = useState("");
+  const [quantity, setQuantity] = useState<number>(0);
+  const [location, setLocation] = useState("");
+  const [supplier, setSupplier] = useState("");
 
-  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedValue(event.target.value);
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+
+    Meteor.call("stockItems.insert", {
+      name: itemName,
+      quantity,
+      location,
+      supplier,
+    }, (error: Meteor.Error | undefined) => {
+      if (error) {
+        alert("Error: " + error.reason);
+      } else {
+        alert("Item added successfully!");
+        // Clear form
+        setItemName("");
+        setQuantity(0);
+        setLocation("");
+        setSupplier("");
+      }
+    });
   };
 
   return (
@@ -26,13 +48,15 @@ export const AddItemForm = () => {
         </h3>
       </div>
       <div className="p-4 md:p-5">
-        <form className="space-y-4" action="#">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
               Item Name
             </label>
             <input
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
+              className="bg-gray-50 border border-gray-300 text-red-900 ..."
               placeholder="Coffee"
               required
             />
@@ -44,8 +68,10 @@ export const AddItemForm = () => {
             <input
               type="number"
               min="0"
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+              className="bg-gray-50 border border-gray-300 text-red-900 ..."
               placeholder="0"
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
               required
             />
           </div>
@@ -54,8 +80,10 @@ export const AddItemForm = () => {
               Location
             </label>
             <input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="bg-gray-50 border border-gray-300 text-red-900 ..."
               placeholder="Storage Room 1"
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
               required
             />
           </div>
@@ -64,16 +92,25 @@ export const AddItemForm = () => {
               Supplier
             </label>
             <select
-              value={selectedValue}
-              onChange={handleChange}
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+              value={supplier}
+              onChange={(e) => setSupplier(e.target.value)}
+              className="bg-gray-50 border border-gray-300 text-red-900 ..."
+              required
             >
               <option value="">--Select supplier--</option>
               {suppliers.map((supplier) => (
-                <option value={supplier.name}>{supplier.name}</option>
+                <option key={supplier.name} value={supplier.name}>
+                  {supplier.name}
+                </option>
               ))}
             </select>
           </div>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-rose-500 text-white rounded"
+          >
+            Add Item
+          </button>
         </form>
       </div>
     </div>

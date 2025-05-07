@@ -10,4 +10,4 @@ export interface StockItem extends DBEntry {
   supplier: string; // TODO: This definitely needs to be its own collection.
 }
 
-export const StockItemsCollection = new Mongo.Collection<StockItem>("stock_items");
+export const StockItemsCollection = new Mongo.Collection<StockItem>("stockItems");
