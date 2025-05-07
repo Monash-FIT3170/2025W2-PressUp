@@ -30,7 +30,7 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
 
 
   return (
-    <div className="w-64 bg-gray-100 flex flex-col h-screen">
+    <div className="w-64 bg-gray-100 flex flex-col pb-20 h-screen">
       {/* Sidebar Header */}
       <div className="flex items-center justify-between bg-rose-400 text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
