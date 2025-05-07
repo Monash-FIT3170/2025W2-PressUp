@@ -12,32 +12,41 @@ const mockSuppliers = (amount: number) => {
 
 const suppliers: Supplier[] = mockSuppliers(10);
 
-export const AddItemForm = () => {
+export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [itemName, setItemName] = useState("");
-  const [quantity, setQuantity] = useState<number>(0);
+  const [quantity, setQuantity] = useState<string>("");
   const [location, setLocation] = useState("");
   const [supplier, setSupplier] = useState("");
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
-    Meteor.call("stockItems.insert", {
-      name: itemName,
-      quantity,
-      location,
-      supplier,
-    }, (error: Meteor.Error | undefined) => {
-      if (error) {
-        alert("Error: " + error.reason);
-      } else {
-        alert("Item added successfully!");
-        // Clear form
-        setItemName("");
-        setQuantity(0);
-        setLocation("");
-        setSupplier("");
+    const parsedQuantity = parseInt(quantity, 10);
+    if (!itemName || !location || !supplier || isNaN(parsedQuantity) || parsedQuantity < 0) {
+      alert("Please fill in all fields correctly.");
+      return;
+    }
+
+    Meteor.call(
+      "stockItems.insert",
+      {
+        name: itemName,
+        quantity: parsedQuantity,
+        location,
+        supplier,
+      },
+      (error: Meteor.Error | undefined) => {
+        if (error) {
+          alert("Error: " + error.reason);
+        } else {
+          setItemName("");
+          setQuantity("");
+          setLocation("");
+          setSupplier("");
+          onSuccess();
+        }
       }
-    });
+    );
   };
 
   return (
@@ -69,9 +78,8 @@ export const AddItemForm = () => {
               type="number"
               min="0"
               value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
+              onChange={(e) => setQuantity(e.target.value)}
               className="bg-gray-50 border border-gray-300 text-red-900 ..."
-              placeholder="0"
               required
             />
           </div>
@@ -107,7 +115,7 @@ export const AddItemForm = () => {
           </div>
           <button
             type="submit"
-            className="px-4 py-2 bg-rose-500 text-white rounded"
+            className="justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-24 right-2 hover:bg-rose-500"
           >
             Add Item
           </button>
