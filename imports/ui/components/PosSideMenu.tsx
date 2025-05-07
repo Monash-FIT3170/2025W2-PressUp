@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { Meteor } from "meteor/meteor";
 import { MenuItem } from "../../api/MenuItemsCollection"; 
 
 interface PosSideMenuProps {
@@ -6,6 +7,28 @@ interface PosSideMenuProps {
 }
 
 export const PosSideMenu = ({ items }: PosSideMenuProps) => {
+  const [localQuantities, setLocalQuantities] = useState<{ [id: string]: number }>(
+    Object.fromEntries(items.map((item) => [String(item._id), item.quantity]))
+  );
+
+  const handleQuantityChange = (id: string, change: number) => {
+    const newQuantity = Math.max(0, (localQuantities[id] || 0) + change);
+
+    // 1. local UI update
+    setLocalQuantities((prev) => ({
+      ...prev,
+      [id]: newQuantity,
+    }));
+
+    // 2. DB update
+    Meteor.call("menuItems.updateQuantity", id, change, (error: Meteor.Error | undefined) => {
+      if (error) {
+        console.error("DB update failed:", error);
+      }
+    });
+  };
+
+
   return (
     <div className="w-64 bg-gray-100 flex flex-col h-screen">
       {/* Sidebar Header */}
@@ -25,9 +48,19 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
               {/* <p className="text-xs text-gray-500">{item.size || "-"}</p> assuming there might be a size */}
             </div>
             <div className="flex items-center space-x-2">
-              <button className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold">-</button>
-              <span>{item.quantity}</span> {/* Hardcoded quantity for now */}
-              <button className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold">+</button>
+            <button
+                onClick={() => handleQuantityChange(String(item._id), -1)}
+                className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold cursor-pointer"
+              >
+                –
+              </button>
+              <span>{localQuantities[String(item._id)] ?? 0}</span>
+              <button
+                onClick={() => handleQuantityChange(String(item._id), 1)}
+                className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold cursor-pointer"
+              >
+                ＋
+              </button>
             </div>
             <div className="font-semibold text-gray-800">
               ${item.price.toFixed(2)}
