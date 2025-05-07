@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StockItem } from "/imports/api/stock_item";
+import { StockItem } from "../../../api/StockItemsCollection";
 import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
