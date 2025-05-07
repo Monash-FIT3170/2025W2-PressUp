@@ -24,5 +24,23 @@ Meteor.methods({
 
   'menuItems.getAll'() {
     return MenuItemsCollection.find().fetch();
-  }
+  },
+
+  'menuItems.updateQuantity'(itemId: string, change: number) {
+    if (!itemId || typeof change !== 'number') {
+      throw new Meteor.Error('invalid-arguments', 'Item ID and change number are required');
+    }
+
+    const item = MenuItemsCollection.findOne(itemId);
+    if (!item) {
+      throw new Meteor.Error('not-found', 'Item not found');
+    }
+
+    const newQuantity = Math.max(0, item.quantity + change); 
+    MenuItemsCollection.update(itemId, {
+      $set: { quantity: newQuantity }
+    });
+  },
+
+  
 });
