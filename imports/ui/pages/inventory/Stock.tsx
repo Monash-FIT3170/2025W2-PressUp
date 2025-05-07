@@ -1,62 +1,26 @@
 import React, { useState } from "react";
-import { StockItem } from "/imports/api/StockItemsCollection";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import {
+  StockItem,
+  StockItemsCollection,
+} from "/imports/api/StockItemsCollection";
 import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
 
-// Mock data for now
-const mockStockItems = (amount: number) => {
-  const rand = (max: number) => Math.floor(Math.random() * max);
-  let result: StockItem[] = [];
-  for (let i = 0; i < amount; ++i) {
-    result.push({
-      name: [
-"Coffee Beans",
-        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-"Almond Milk",
-][rand(3)],
-      quantity: [0, 99999999, 100, 10][rand(4)],
-      location: `Room ${
-        [
-          "1029381290129083190238120312938190282038120381029819028",
-"1",
-"2",
-"33",
-][rand(4)]
-      }`,
-      supplier: `Supplier ${
-        [
-          "102938129089127012801238120128091238901289012890128",
-"1",
-"2",
-"727",
-][rand(4)]
-      }`,
-    });
-  }
-  return result;
-};
-
 export const StockPage = () => {
-  const stockItems: StockItem[] = mockStockItems(100);
-
   const [filter, setFilter] = useState<
     "all" | "inStock" | "lowInStock" | "outOfStock"
   >("all");
-
   const [open, setOpen] = useState(false);
-
   const [formResetKey, setFormResetKey] = useState(0);
 
-  const handleModalClose = () => {
-    setOpen(false);
-    setFormResetKey(prev => prev + 1);
-  };
+  const isLoading = useSubscribe("stockItems.all") === false;
 
-  const handleSuccess = () => {
-    handleModalClose();
-  };
+  const stockItems: StockItem[] = useTracker(() => {
+    return StockItemsCollection.find({}, { sort: { name: 1 } }).fetch();
+  });
 
   const lowStockThreshold = 10;
   const filteredStockItems = stockItems.filter((item) => {
@@ -66,6 +30,13 @@ export const StockPage = () => {
       return item.quantity > 0 && item.quantity <= lowStockThreshold;
     return true;
   });
+
+  const handleModalClose = () => {
+    setOpen(false);
+    setFormResetKey((prev) => prev + 1);
+  };
+
+  const handleSuccess = () => handleModalClose();
 
   return (
     <div>
@@ -78,9 +49,15 @@ export const StockPage = () => {
           Add Item
         </button>
       </div>
+
       <div id="stock" className="flex flex-1 flex-col">
-        <StockTable stockItems={filteredStockItems} />
+        {isLoading ? (
+          <p className="text-gray-400 p-4">Loading inventory...</p>
+        ) : (
+          <StockTable stockItems={filteredStockItems} />
+        )}
       </div>
+
       <Modal open={open} onClose={handleModalClose}>
         <AddItemForm key={formResetKey} onSuccess={handleSuccess} />
       </Modal>

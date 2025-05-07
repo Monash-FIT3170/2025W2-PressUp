@@ -66,7 +66,6 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
               value={itemName}
               onChange={(e) => setItemName(e.target.value)}
               className="bg-gray-50 border border-gray-300 text-red-900 ..."
-              placeholder="Coffee"
               required
             />
           </div>
@@ -91,7 +90,6 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               className="bg-gray-50 border border-gray-300 text-red-900 ..."
-              placeholder="Storage Room 1"
               required
             />
           </div>
