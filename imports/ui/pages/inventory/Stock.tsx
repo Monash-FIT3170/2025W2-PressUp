@@ -5,7 +5,7 @@ import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
 
-// TODO: Delete this mock function when integrating with API
+// Mock data for now
 const mockStockItems = (amount: number) => {
   const rand = (max: number) => Math.floor(Math.random() * max);
   let result: StockItem[] = [];
@@ -39,25 +39,33 @@ const mockStockItems = (amount: number) => {
 };
 
 export const StockPage = () => {
-// TODO: Get from API here
   const stockItems: StockItem[] = mockStockItems(100);
 
   const [filter, setFilter] = useState<
-"all" | "inStock" | "lowInStock" | "outOfStock"
+    "all" | "inStock" | "lowInStock" | "outOfStock"
   >("all");
 
-  const lowStockThreshold = 10; // TODO: Make this dynamic based on user choice
+  const [open, setOpen] = useState(false);
 
+  const [formResetKey, setFormResetKey] = useState(0);
+
+  const handleModalClose = () => {
+    setOpen(false);
+    setFormResetKey(prev => prev + 1);
+  };
+
+  const handleSuccess = () => {
+    handleModalClose();
+  };
+
+  const lowStockThreshold = 10;
   const filteredStockItems = stockItems.filter((item) => {
     if (filter === "inStock") return item.quantity > lowStockThreshold;
     if (filter === "outOfStock") return item.quantity === 0;
     if (filter === "lowInStock")
-return item.quantity > 0 && item.quantity <= lowStockThreshold;
+      return item.quantity > 0 && item.quantity <= lowStockThreshold;
     return true;
   });
-
-  // Modal state
-  const [open, setOpen] = useState<boolean>(false);
 
   return (
     <div>
@@ -73,23 +81,8 @@ return item.quantity > 0 && item.quantity <= lowStockThreshold;
       <div id="stock" className="flex flex-1 flex-col">
         <StockTable stockItems={filteredStockItems} />
       </div>
-
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <AddItemForm></AddItemForm>
-        {/* <div className="grid grid-cols-2 p-4">
-          <button
-            onClick={() => setOpen(false)}
-            className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer mr-4 text-white bg-neutral-400 hover:bg-neutral-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-neutral-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-400 dark:hover:bg-rose-500 dark:focus:ring-rose-600"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => setOpen(false)}
-            className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-400 dark:hover:bg-rose-500 dark:focus:ring-rose-600"
-          >
-            Add item
-          </button>
-        </div> */}
+      <Modal open={open} onClose={handleModalClose}>
+        <AddItemForm key={formResetKey} onSuccess={handleSuccess} />
       </Modal>
     </div>
   );
