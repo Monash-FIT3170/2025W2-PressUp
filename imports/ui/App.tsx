@@ -4,6 +4,10 @@ import { StockPage } from "./pages/inventory/Stock";
 import { InventoryIndex } from "./pages/inventory/Index";
 import { MenuPage } from "./pages/menu";
 
+// pos system
+import { MainDisplay } from "./pages/pos/MainDisplay";
+import { PosIndex } from "./pages/pos/Index";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -17,6 +21,13 @@ const router = createBrowserRouter([
       {
         path: "menu",
         Component: MenuPage
+      },
+      {
+        path: "pos",
+        Component: PosIndex,
+        children: [
+          { path: "display", Component: MainDisplay },
+        ],
       },
     ],
   },
