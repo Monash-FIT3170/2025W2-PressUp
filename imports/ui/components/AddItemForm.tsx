@@ -22,7 +22,13 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
     e.preventDefault();
 
     const parsedQuantity = parseInt(quantity, 10);
-    if (!itemName || !location || !supplier || isNaN(parsedQuantity) || parsedQuantity < 0) {
+    if (
+      !itemName ||
+      !location ||
+      !supplier ||
+      isNaN(parsedQuantity) ||
+      parsedQuantity < 0
+    ) {
       alert("Please fill in all fields correctly.");
       return;
     }
@@ -45,7 +51,7 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
           setSupplier("");
           onSuccess();
         }
-      }
+      },
     );
   };
 
@@ -114,12 +120,14 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
               ))}
             </select>
           </div>
-          <button
-            type="submit"
-            className="justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-24 right-2 hover:bg-rose-500"
-          >
-            Add Item
-          </button>
+          <div className="grid grid-cols-1 p-4">
+            <button
+              type="submit"
+              className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
+            >
+              Add Item
+            </button>
+          </div>
         </form>
       </div>
     </div>
