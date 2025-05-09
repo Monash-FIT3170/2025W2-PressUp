@@ -65,7 +65,8 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
             <input
               value={itemName}
               onChange={(e) => setItemName(e.target.value)}
-              className="bg-gray-50 border border-gray-300 text-red-900 ..."
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+              placeholder="Coffee"
               required
             />
           </div>
@@ -78,7 +79,8 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
               min="0"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              className="bg-gray-50 border border-gray-300 text-red-900 ..."
+              placeholder="0"
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             />
           </div>
@@ -89,7 +91,8 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="bg-gray-50 border border-gray-300 text-red-900 ..."
+              placeholder="Storage Room 1"
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             />
           </div>
@@ -100,7 +103,7 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
             <select
               value={supplier}
               onChange={(e) => setSupplier(e.target.value)}
-              className="bg-gray-50 border border-gray-300 text-red-900 ..."
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             >
               <option value="">--Select supplier--</option>

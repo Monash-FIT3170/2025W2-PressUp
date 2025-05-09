@@ -3,6 +3,10 @@ import { RootPage } from "./pages/Root";
 import { StockPage } from "./pages/inventory/Stock";
 import { InventoryIndex } from "./pages/inventory/Index";
 
+// pos system
+import { MainDisplay } from "./pages/pos/MainDisplay";
+import { PosIndex } from "./pages/pos/Index";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -12,6 +16,13 @@ const router = createBrowserRouter([
         path: "inventory",
         Component: InventoryIndex,
         children: [{ path: "stock", Component: StockPage }],
+      },
+      {
+        path: "pos",
+        Component: PosIndex,
+        children: [
+          { path: "display", Component: MainDisplay },
+        ],
       },
     ],
   },
