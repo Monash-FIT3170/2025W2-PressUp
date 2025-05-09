@@ -2,7 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router";
 import { RootPage } from "./pages/Root";
 import { StockPage } from "./pages/inventory/Stock";
 import { InventoryIndex } from "./pages/inventory/Index";
-import { MenuPage } from "./pages/menu";
+import { MenuPage } from "./pages/menu/Index";
 
 // pos system
 import { MainDisplay } from "./pages/pos/MainDisplay";

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Meteor } from "meteor/meteor";
-import Sidebar from "../components/AddItemSidebar";
+import Sidebar from "../../components/AddItemSidebar";
 import { MenuItem } from '/imports/api/MenuItemsCollection';
 
 export const MenuPage = () => {
