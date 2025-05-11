@@ -31,6 +31,14 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
 
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
 
+  const applyDiscount = (percentage:number) => {
+    const discountPercentage = percentage;
+    const discountedFinalTotal = finalTotal - (100 * (discountPercentage/100));
+    setDiscountPercent(discountPercent);
+    setFinalTotal(discountedFinalTotal);
+    setOpenDiscountPopup(false);
+  };
+
 
   return (
     <div className="w-64 bg-gray-100 flex flex-col pb-20 h-screen">
@@ -88,7 +96,16 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
           <div className="fixed w-200 h-130 top-40 left-120 bg-pink-300 rounded-2xl">
             <div className="flex flex-row justify-between mx-5 my-5">
               <h1 className="font-bold text-2xl text-black">Apply Discount</h1>
-              <button onClick={()=> setOpenDiscountPopup(false)}>X</button>
+              <button className="bg-red-700 rounded-2xl w-8" onClick={()=> setOpenDiscountPopup(false)}>X</button>
+            </div>
+            <div className="w-180 h-100 bg-pink-200 rounded-2xl mx-10 p-6">
+              <div className="grid grid-cols-3 gap-1">
+                {[5, 10, 15, 20, 25, 30, 35, 40, 50].map((d) => (
+                  <button key={d} className="bg-pink-700 font-bold text-white h-13 rounded text-center mx-4 my-2 rounded-full" onClick={() => applyDiscount(d)}>
+                    {d}%
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="w-180 h-100 bg-pink-200 rounded-2xl mx-10"></div>
           </div>
