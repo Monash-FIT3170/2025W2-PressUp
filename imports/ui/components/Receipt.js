@@ -2,17 +2,18 @@ import React from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { MenuItemsCollection } from "/imports/api/MenuItemsCollection";
+import { TransactionsCollection } from "/imports/api/transaction";
 
 
 export const Receipt = () => {
 
-  const isLoadingPosItems = useSubscribe("menuItems")
-  const paymentItems = useTracker( () => MenuItemsCollection.find().fetch());
+  const isLoadingPosItems = useSubscribe("transactions")
+  const paymentItems = useTracker( () => TransactionsCollection.find().fetch());
 
   const order = {
     orderNumber: Math.floor(100000 + Math.random() * 900000).toString(), // Generate random order number
     date: new Date().toLocaleString(), // date of order is current date time
-    menuItems: MenuItemsCollection.find().fetch(),
+    menuItems: paymentItems
   };
   
   console.log(order.menuItems)
