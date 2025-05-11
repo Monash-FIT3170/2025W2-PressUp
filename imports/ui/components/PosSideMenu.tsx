@@ -29,6 +29,8 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
     });
   };
 
+  const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
+
 
   return (
     <div className="w-64 bg-gray-100 flex flex-col pb-20 h-screen">
@@ -70,14 +72,32 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
         ))}
       </div>
 
-      {/* Total and Pay Button */}
+      {/* Total Cost + Discount Button + Pay Button */}
       <div className="bg-rose-400 text-white p-4 flex-shrink-0 sticky bottom-0">
         <div className="flex justify-between items-center mb-4">
           <span className="text-lg font-bold">Total</span>
           <span className="text-lg font-bold">$40.00</span> {/* Static total for now */}
         </div>
-        {/* Link Pay button to Receipt page with Payment Modal*/}
-        <PaymentModal></PaymentModal>
+        
+        <button className="w-full bg-orange-400 hover:bg-orange-300 text-white font-bold py-2 px-4 mb-2 rounded-full" onClick={() => setOpenDiscountPopup(true)}>
+          Discount
+        </button>
+
+        {
+          openDiscountPopup && (
+          <div className="fixed w-200 h-130 top-40 left-120 bg-pink-300 rounded-2xl">
+            <div className="flex flex-row justify-between mx-5 my-5">
+              <h1 className="font-bold text-2xl text-black">Apply Discount</h1>
+              <button onClick={()=> setOpenDiscountPopup(false)}>X</button>
+            </div>
+            <div className="w-180 h-100 bg-pink-200 rounded-2xl mx-10"></div>
+          </div>
+          )
+        }
+
+        <button className="w-full bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 px-4 rounded-full">
+          Pay
+        </button>
       </div>
     </div>
   );
