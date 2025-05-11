@@ -1,6 +1,6 @@
 import React from "react";
 import { Pill } from "./Pill";
-import { InStock, LowInStock, OutOfStock } from "./StatusSymbols";
+import { InStock, LowInStock, OutOfStock } from "./symbols/StatusSymbols";
 import { StockItem } from "/imports/api/stock_item";
 
 interface StockTableProps {
