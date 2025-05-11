@@ -30,13 +30,19 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
   };
 
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
+  const [discountPercent, setDiscountPercent] = useState(0)
+  const [finalTotal, setFinalTotal] = useState(40.00)
+  const [savedAmount, setSavedAmount] = useState(0)
 
   const applyDiscount = (percentage:number) => {
     const discountPercentage = percentage;
     const discountedFinalTotal = finalTotal - (finalTotal * (discountPercentage/100));
+    const savedCost = finalTotal - discountedFinalTotal;
+    const totalSaved = savedAmount + savedCost;
     setDiscountPercent(discountPercentage);
     setFinalTotal(discountedFinalTotal);
     setOpenDiscountPopup(false);
+    setSavedAmount(totalSaved);
   };
 
 
