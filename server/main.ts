@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { StockItemsCollection } from "/imports/api/stock_item";
 import { MenuItemsCollection } from "../imports/api/MenuItemsCollection";
+import { TransactionsCollection } from "/imports/api/transaction";
 
 
 // Method for inserting new items to menuItems collection
@@ -14,6 +15,17 @@ const insertMenuItem = (itemName: string, ingredients: string[], available: bool
     image: image,
 });
 
+  // Method for inserting new items into the Transactions Collection
+  const insertTransactions = async ([name, quantity, price]: [string, number, number]) => {
+    await TransactionsCollection.insertAsync({
+      name: name,
+      quantity: quantity,
+      price: price,
+      createdAt: new Date(),
+    });
+  };
+
+
 Meteor.startup(async () => {
   Meteor.publish("stock_items", function () {
     return StockItemsCollection.find();
@@ -23,6 +35,11 @@ Meteor.startup(async () => {
   Meteor.publish("menuItems", function() {
     return MenuItemsCollection.find();
   });
+
+  Meteor.publish("transactions", function() {
+    return TransactionsCollection.find();
+  });
+
 
 
   // Include for first intialisation of menuItems collection
@@ -56,5 +73,21 @@ Meteor.startup(async () => {
     insertMenuItem(itemName, ingredients, true, quantity, price, image);
   }
 
+
+
+   // Dropping transactions collection when application first runs
+  TransactionsCollection.dropCollectionAsync()
+
+  // Hardcoded transactions menu items for now
+  const newTransactions: [string, number, number][] = [
+    ["Mocha", Math.floor(1 + Math.random() * 3), 4.80],
+    ["Croissant", Math.floor(1 + Math.random() * 3), 5.10],
+    ["Muffin", Math.floor(1 + Math.random() * 3), 2.20],
+  ];
+
+  // Adding transactions menu items to the transactions collection
+  for (let i = 0; i < newTransactions.length; i++) {
+    insertTransactions(newTransactions[i]);
+  }
 
 });
