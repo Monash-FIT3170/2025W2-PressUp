@@ -116,7 +116,7 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
               <span className="font-bold text-xl text-gray-700">Select Discount Percentage</span>
               <div className="grid grid-cols-3 gap-1 my-4">
                 {[5, 10, 15, 20, 25, 30, 35, 40, 50].map((d) => (
-                  <button key={d} className="bg-pink-700 font-bold text-white h-18 rounded text-center mx-4 my-2 rounded-full" onClick={() => applyDiscount(d)}>
+                  <button key={d} className="bg-pink-700 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full" onClick={() => applyDiscount(d)}>
                     {d}%
                   </button>
                 ))}
