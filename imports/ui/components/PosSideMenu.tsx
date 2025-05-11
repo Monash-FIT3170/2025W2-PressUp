@@ -34,7 +34,7 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
   const applyDiscount = (percentage:number) => {
     const discountPercentage = percentage;
     const discountedFinalTotal = finalTotal - (finalTotal * (discountPercentage/100));
-    setDiscountPercent(discountPercent);
+    setDiscountPercent(discountPercentage);
     setFinalTotal(discountedFinalTotal);
     setOpenDiscountPopup(false);
   };
@@ -82,11 +82,21 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
 
       {/* Total Cost + Discount Button + Pay Button */}
       <div className="bg-rose-400 text-white p-4 flex-shrink-0 sticky bottom-0">
-        <div className="flex justify-between items-center mb-4">
+        {/* Displaying total cost*/}
+        <div className="flex justify-between items-center mb-2">
           <span className="text-lg font-bold">Total</span>
           <span className="text-lg font-bold">$40.00</span> {/* Static total for now */}
         </div>
         
+        {/* Shows how much discount is applied*/}
+        {discountPercent !== 0 && (
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-bold">Discount Applied</span>
+            <span className="text-sm font-bold">{discountPercent}%</span>
+          </div>
+        )}
+
+        {/* Discount button + popup*/}
         <button className="w-full bg-orange-400 hover:bg-orange-300 text-white font-bold py-2 px-4 mb-2 rounded-full" onClick={() => setOpenDiscountPopup(true)}>
           Discount
         </button>
@@ -94,14 +104,17 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
         {
           openDiscountPopup && (
           <div className="fixed w-200 h-130 top-40 left-120 bg-pink-300 rounded-2xl">
+
             <div className="flex flex-row justify-between mx-5 my-5">
               <h1 className="font-bold text-2xl text-black">Apply Discount</h1>
               <button className="bg-red-700 rounded-2xl w-8" onClick={()=> setOpenDiscountPopup(false)}>X</button>
             </div>
-            <div className="w-180 h-100 bg-pink-200 rounded-2xl mx-10 p-6">
-              <div className="grid grid-cols-3 gap-1">
+
+            <div className="w-180 h-100 bg-pink-200 rounded-2xl mx-10 p-8">
+              <span className="font-bold text-xl text-gray-700">Select Discount Percentage</span>
+              <div className="grid grid-cols-3 gap-1 my-4">
                 {[5, 10, 15, 20, 25, 30, 35, 40, 50].map((d) => (
-                  <button key={d} className="bg-pink-700 font-bold text-white h-13 rounded text-center mx-4 my-2 rounded-full" onClick={() => applyDiscount(d)}>
+                  <button key={d} className="bg-pink-700 font-bold text-white h-18 rounded text-center mx-4 my-2 rounded-full" onClick={() => applyDiscount(d)}>
                     {d}%
                   </button>
                 ))}
