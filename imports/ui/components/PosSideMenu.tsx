@@ -35,7 +35,7 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
 
   const applyDiscount = (percentage:number) => {
     const discountPercentage = percentage;
-    const discountedFinalTotal = finalTotal - (100 * (discountPercentage/100));
+    const discountedFinalTotal = finalTotal - (finalTotal * (discountPercentage/100));
     setDiscountPercent(discountPercent);
     setFinalTotal(discountedFinalTotal);
     setOpenDiscountPopup(false);
