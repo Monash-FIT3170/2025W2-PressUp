@@ -74,8 +74,7 @@ Meteor.startup(async () => {
   }
 
 
-
-   // Dropping transactions collection when application first runs
+  // Dropping transactions collection when application first runs
   TransactionsCollection.dropCollectionAsync()
 
   // Hardcoded transactions menu items for now
@@ -87,7 +86,7 @@ Meteor.startup(async () => {
 
   // Adding transactions menu items to the transactions collection
   for (let i = 0; i < newTransactions.length; i++) {
-    insertTransactions(newTransactions[i]);
+    await insertTransactions(newTransactions[i]);
   }
 
 });
