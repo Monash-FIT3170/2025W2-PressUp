@@ -98,7 +98,7 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
         {discountPercent !== 0 && (
           <div>
             <div className="flex justify-between items-center mb-2 bg-yellow-400 text-black text-sm rounded-lg p-1">
-              <span className="text-sm font-bold">Discount Applied</span>
+              <span className="text-sm font-bold">Last Discount Applied</span>
               <span className="text-sm font-bold">{discountPercent}%</span>
             </div>
             <div className="flex justify-between items-center mb-2 bg-yellow-200 text-black text-sm rounded-lg p-1">
