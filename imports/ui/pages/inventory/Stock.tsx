@@ -45,7 +45,7 @@ export const StockPage = () => {
   }, [setPageTitle]);
 
   // TODO: Get from API here
-  const stockItems: StockItem[] = mockStockItems(100);
+  const [stockItems] = useState<StockItem[]>(mockStockItems(30));
 
   const [filter, setFilter] = useState<
     "all" | "inStock" | "lowInStock" | "outOfStock"
@@ -63,24 +63,33 @@ export const StockPage = () => {
 
   // Modal state
   const [open, setOpen] = useState<boolean>(false);
+  const [editItem, setEditItem] = useState<StockItem | null>(null);
+
+  const handleEdit = (item: StockItem) => {
+    setEditItem(item); 
+    setOpen(true); 
+  };
 
   return (
     <div className="flex flex-1 flex-col">
       <div className="grid grid-cols-2">
         <StockFilter filter={filter} onFilterChange={setFilter} />
         <button
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            setEditItem(null)
+            setOpen(true)
+          }}
           className="justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-24 right-2 hover:bg-rose-500"
         >
           Add Item
         </button>
       </div>
       <div className="flex-1 overflow-auto">
-        <StockTable stockItems={filteredStockItems} />
+        <StockTable stockItems={filteredStockItems} onEdit={handleEdit}/>
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-        <AddItemForm></AddItemForm>
+        <AddItemForm item={editItem} />
         <div className="grid grid-cols-2 p-4">
           <button
             onClick={() => setOpen(false)}
@@ -92,7 +101,7 @@ export const StockPage = () => {
             onClick={() => setOpen(false)}
             className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
           >
-            Add item
+            Save
           </button>
         </div>
       </Modal>
