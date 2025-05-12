@@ -15,7 +15,7 @@ export const Header = ({ onHamburgerClick }: HeaderProps) => {
       {/* NOTE: The col-span here is related to the size of the navigation bar.
        /*  If you want to change it here you should also make a change there */}
       <div className="col-span-1 flex">
-        <div onClick={onHamburgerClick}>
+        <div onClick={onHamburgerClick} className="cursor-pointer">
           <HamburgerMenuIcon
             width="72px"
             height="72px"
