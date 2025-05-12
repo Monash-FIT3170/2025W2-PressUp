@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Meteor } from "meteor/meteor";
-import { MenuItem } from "../../api/MenuItemsCollection"; 
+import { MenuItem } from "/imports/api";
 import { PaymentModal } from "./PaymentModal";
 
 interface PosSideMenuProps {

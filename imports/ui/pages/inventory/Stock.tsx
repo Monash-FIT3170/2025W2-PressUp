@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { StockItem } from "/imports/api/stock_item";
+import React, { useEffect, useState } from "react";
+import { StockItem } from "/imports/api";
 import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
+import { usePageTitle } from "../../hooks/PageTitleContext";
 
 // TODO: Delete this mock function when integrating with API
 const mockStockItems = (amount: number) => {
@@ -17,28 +18,32 @@ const mockStockItems = (amount: number) => {
         "Almond Milk",
       ][rand(3)],
       quantity: [0, 99999999, 100, 10][rand(4)],
-      location: `Room ${
-        [
+      location: `Room ${[
           "1029381290129083190238120312938190282038120381029819028",
           "1",
           "2",
           "33",
         ][rand(4)]
-      }`,
-      supplier: `Supplier ${
-        [
+        }`,
+      supplier: `Supplier ${[
           "102938129089127012801238120128091238901289012890128",
           "1",
           "2",
           "727",
         ][rand(4)]
-      }`,
+        }`,
     });
   }
   return result;
 };
 
 export const StockPage = () => {
+  // Set title
+  const [_, setPageTitle] = usePageTitle();
+  useEffect(() => {
+    setPageTitle("Inventory Management - Stock");
+  }, [setPageTitle]);
+
   // TODO: Get from API here
   const stockItems: StockItem[] = mockStockItems(100);
 
