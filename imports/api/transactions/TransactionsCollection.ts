@@ -1,5 +1,5 @@
 import { Mongo } from "meteor/mongo";
-import { DBEntry } from "./database";
+import { DBEntry } from "../database";
 
 export interface Transaction extends DBEntry {
   name: string;
