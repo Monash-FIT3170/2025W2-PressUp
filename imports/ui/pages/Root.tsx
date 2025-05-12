@@ -17,7 +17,7 @@ export const RootPage = () => {
         <nav>
           <NavigationMenu show={menuOpen} />
         </nav>
-        <main className="flex flex-1">
+        <main className="flex flex-1 ps-8 pt-4">
           <Outlet />
         </main>
       </div>
