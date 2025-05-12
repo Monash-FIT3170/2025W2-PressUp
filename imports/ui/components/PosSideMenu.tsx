@@ -136,7 +136,16 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
           </div>
           )
         }
-
+        {/* Reset Button */}
+        <button className="w-full bg-orange-700 hover:bg-orange-600 text-white font-bold py-2 px-4 mb-2 rounded-full"
+          onClick={() => {
+            setDiscountPercent(0);
+            setFinalTotal(40.00); 
+            setSavedAmount(0); 
+          }}>
+          Reset
+        </button>
+        {/* Pay button*/}
         <button className="w-full bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 px-4 rounded-full">
           Pay
         </button>
