@@ -1,5 +1,5 @@
 import React from "react";
-import { MenuItem } from "../../api/MenuItemsCollection";
+import { MenuItem } from "/imports/api";
 
 interface Props {
     item: MenuItem;

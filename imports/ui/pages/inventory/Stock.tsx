@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { StockItem } from "/imports/api/stock_item";
+import { StockItem } from "/imports/api";
 import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
 import { usePageTitle } from "../../hooks/PageTitleContext";
-import { useLocation } from "react-router";
 
 // TODO: Delete this mock function when integrating with API
 const mockStockItems = (amount: number) => {
