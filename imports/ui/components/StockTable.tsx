@@ -5,9 +5,10 @@ import { StockItem } from "/imports/api";
 
 interface StockTableProps {
   stockItems: StockItem[];
+  onEdit: (item: StockItem) => void;
 }
 
-export const StockTable = ({ stockItems }: StockTableProps) => {
+export const StockTable = ({ stockItems, onEdit }: StockTableProps) => {
   // TODO: Make this dynamic based on user choice
   const lowInStockThreshold = 10;
 
@@ -20,7 +21,7 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
 
   return (
     <div id="grid-container" className="overflow-auto flex-1">
-      <div className="grid gap-y-2 text-nowrap text-center grid-cols-[minmax(0,2fr)_min-content_1fr_min-content_1fr] text-red-900">
+      <div className="grid gap-y-2 text-nowrap text-center grid-cols-[minmax(0,2fr)_min-content_1fr_min-content_1fr_min-content] text-red-900">
         <div className="bg-rose-200 py-1 px-2 border-y-3 border-rose-200 rounded-l-lg sticky top-0 z-1 text-left">
           Item Name
           <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
@@ -37,8 +38,12 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
           Status
           <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
         </div>
-        <div className="bg-rose-200 py-1 px-2 border-y-3 border-rose-200 rounded-r-lg sticky top-0 z-1">
+        <div className="bg-rose-200 py-1 px-2 border-y-3 border-rose-200 sticky top-0 z-1">
           Supplier
+          <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
+        </div>
+        <div className="bg-rose-200 py-1 px-4 border-y-3 border-rose-200 rounded-r-lg sticky top-0 z-1">
+          Actions
         </div>
         {stockItems.map((item, i) => {
           const statusPill =
@@ -98,7 +103,18 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
                 {statusPill}
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
-              <div className="truncate py-1 px-2">{item.supplier}</div>
+              <div className="relative not-first:truncate py-1 px-2">
+                {item.supplier}
+                <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
+              </div>
+              <div className="relative truncate py-1 px-2">
+                <button
+                  onClick={() => onEdit(item)} 
+                  className="bg-rose-400 text-white py-1 px-3 rounded-lg text-sm font-medium transition-all hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-600 focus:ring-offset-1"
+                >
+                  Edit
+                </button>
+              </div>
             </React.Fragment>
           );
         })}
