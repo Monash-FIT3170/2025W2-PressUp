@@ -28,6 +28,10 @@ export const mockDataGenerator = async ({
   menuItemCount = menuItemCount || 10;
   stockItemCount = stockItemCount || 50;
 
+  await SuppliersCollection.dropCollectionAsync();
+  await MenuItemsCollection.dropCollectionAsync();
+  await StockItemsCollection.dropCollectionAsync();
+
   if ((await SuppliersCollection.countDocuments()) == 0)
     for (let i = 0; i < supplierCount; ++i)
       await SuppliersCollection.insertAsync({
