@@ -13,7 +13,7 @@ export const Pill = ({
 }: Props) => {
   return (
     <div
-      className={`${borderColour} ${bgColour} ${textColour} border rounded-xl px-3`}
+      className={`${borderColour} ${bgColour} ${textColour} border rounded-xl px-3 text-clip text-nowrap`}
     >
       {children}
     </div>
