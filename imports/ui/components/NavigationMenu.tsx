@@ -17,7 +17,7 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
     <div
       className={`bg-primary min-h-full transition-all ease-in-out duration-300 ${show ? "w-[20vw]" : "w-0"} overflow-hidden`}
     >
-      <div className="flex flex-col p-6 text-xl">
+      <div className="flex flex-col p-6 text-lg">
         <NavigationEntry
           icon={<PencilIcon fill="var(--color-primary-dark)" />}
           name="Inventory Management"
@@ -29,7 +29,7 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             name="Stock"
             path="/inventory/stock"
             selectionType={NavigationEntrySelection.ARROW}
-          ></NavigationEntry>
+          />
         </NavigationEntry>
         <NavigationEntry
           icon={<MonitorIcon fill="var(--color-primary-dark)" />}
@@ -94,10 +94,10 @@ const NavigationEntry = ({
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col text-nowrap truncate">
       <Link to={path}>
         <div className="flex flex-row text-white border-b-[0.15em] border-primary-dark min-w-full items-center mb-2">
-          {icon}
+          <div className="flex-0">{icon}</div>
           {active ? <ActiveContent /> : <div className="px-3">{name}</div>}
         </div>
       </Link>
