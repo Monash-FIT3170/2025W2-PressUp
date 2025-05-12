@@ -57,7 +57,7 @@ export const mockDataGenerator = async ({
         category: [faker.datatype.boolean() ? "Food" : "Drink"],
         image:
           possibleImages[
-            faker.number.int({ min: 0, max: possibleImages.length })
+            faker.number.int({ min: 0, max: possibleImages.length - 1 })
           ],
       });
 
