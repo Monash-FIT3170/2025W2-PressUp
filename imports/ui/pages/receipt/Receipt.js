@@ -1,8 +1,8 @@
 import React from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
-import { MenuItemsCollection } from "/imports/api/MenuItemsCollection";
-import { TransactionsCollection } from "/imports/api/transaction";
+import { MenuItemsCollection } from "/imports/api/menuItems/MenuItemsCollection";
+import { TransactionsCollection } from "/imports/api/transactions/TransactionsCollection";
 
 export const ReceiptPage = () => {
 
@@ -15,7 +15,6 @@ export const ReceiptPage = () => {
     menuItems: paymentItems
   };
   
-  console.log(order.menuItems)
 
   // Calculate total cost
   const getTotal = (menuItems) => {

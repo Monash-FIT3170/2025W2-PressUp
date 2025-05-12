@@ -1,5 +1,5 @@
 import { Meteor } from "meteor/meteor";
-import { Transaction, TransactionsCollection } from "./transaction";
+import { Transaction, TransactionsCollection } from "./TransactionsCollection";
 import { Mongo } from "meteor/mongo";
 
 Meteor.methods({

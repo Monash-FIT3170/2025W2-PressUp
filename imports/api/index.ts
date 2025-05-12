@@ -9,3 +9,8 @@ export {
   StockItem,
   StockItemsCollection,
 } from "./stockItems/StockItemsCollection";
+
+// Transactions
+export {
+  TransactionsCollection
+} from "./transactions/TransactionsCollection"
