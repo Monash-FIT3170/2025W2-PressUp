@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Outlet } from "react-router";
-import { Header, NavigationMenu } from "../components/Navigation";
+import { Header } from "../components/Header";
+import { NavigationMenu } from "../components/NavigationMenu";
 import { PageTitleProvider } from "../hooks/PageTitleContext";
 
 export const RootPage = () => {

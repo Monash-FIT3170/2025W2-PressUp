@@ -1,45 +1,17 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { usePageTitle } from "../hooks/PageTitleContext";
 import { Pill } from "./Pill";
 import { ArrowLeft } from "./symbols/navigation/Arrows";
-import { HamburgerMenuIcon } from "./symbols/navigation/HamburgerMenu";
-import { Logo } from "./symbols/Logo";
 import { PencilIcon, StockIcon } from "./symbols/navigation/Inventory";
-
-interface HeaderProps {
-  onHamburgerClick: () => void;
-}
-
-export const Header = ({ onHamburgerClick }: HeaderProps) => {
-  const [title] = usePageTitle();
-
-  return (
-    <div className="bg-primary min-w-full z-100 sticky grid grid-cols-5 border-b-6 border-primary-dark items-center p-5">
-      <div className="col-span-1 flex">
-        <div onClick={onHamburgerClick}>
-          <HamburgerMenuIcon
-            width="72px"
-            height="72px"
-            fill="var(--color-primary-dark)"
-          />
-        </div>
-      </div>
-      <div className="col-span-3 text-white text-4xl">{title ?? "PressUp"}</div>
-      <div className="col-span-1 justify-self-end">
-        {/* TODO: Login information here */}
-        <Logo />
-      </div>
-    </div>
-  );
-};
 
 interface NavigationMenuProps {
   show: boolean;
 }
 
 export const NavigationMenu = ({ show }: NavigationMenuProps) => {
+  // NOTE: The shown width of the menu is related to how much the global header title is indented.
+  // If you want to change the width here you should also make a change there.
   return (
     <div
       className={`bg-primary min-h-full transition-all ease-in-out duration-300 ${show ? "w-[20vw]" : "w-0"} overflow-hidden`}
