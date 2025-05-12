@@ -74,7 +74,7 @@ const NavigationEntry = ({
       case NavigationEntrySelection.ARROW:
         return (
           <>
-            {name}
+            <div className="ps-3">{name}</div>
             <ArrowLeft />
           </>
         );
@@ -98,7 +98,7 @@ const NavigationEntry = ({
       <Link to={path}>
         <div className="flex flex-row text-white border-b-[0.15em] border-primary-dark min-w-full items-center mb-2">
           {icon}
-          {active ? <ActiveContent /> : name}
+          {active ? <ActiveContent /> : <div className="px-3">{name}</div>}
         </div>
       </Link>
       <div className="grid grid-cols-3 text-[0.8em]">
