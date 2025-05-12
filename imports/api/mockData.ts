@@ -3,6 +3,18 @@ import { StockItemsCollection } from "./stockItems/StockItemsCollection";
 import { SuppliersCollection } from "./suppliers/SuppliersCollection";
 import { faker } from "@faker-js/faker";
 
+const possibleImages = [
+  "/menu_items/cappuccino.png",
+  "/menu_items/cookie.png",
+  "/menu_items/croissant.png",
+  "/menu_items/flat white.png",
+  "/menu_items/iced latte.png",
+  "/menu_items/latte.png",
+  "/menu_items/macchiato.png",
+  "/menu_items/mocha.png",
+  "/menu_items/muffin.png",
+];
+
 export const mockDataGenerator = async ({
   supplierCount,
   menuItemCount,
@@ -43,6 +55,10 @@ export const mockDataGenerator = async ({
         quantity: faker.number.int({ min: 1, max: 100 }),
         price: faker.number.float({ min: 1, max: 100 }),
         category: [faker.datatype.boolean() ? "Food" : "Drink"],
+        image:
+          possibleImages[
+            faker.number.int({ min: 0, max: possibleImages.length })
+          ],
       });
 
   if ((await StockItemsCollection.countDocuments()) == 0)
