@@ -6,6 +6,8 @@ import { InventoryIndex } from "./pages/inventory/Index";
 // pos system
 import { MainDisplay } from "./pages/pos/MainDisplay";
 import { PosIndex } from "./pages/pos/Index";
+import { ReceiptIndex } from "./pages/receipt/Index";
+import { ReceiptPage } from "./pages/receipt/Receipt";
 
 const router = createBrowserRouter([
   {
@@ -22,6 +24,13 @@ const router = createBrowserRouter([
         Component: PosIndex,
         children: [
           { path: "display", Component: MainDisplay },
+        ],
+      },
+      {
+        path: "receipt",
+        Component: ReceiptIndex,
+        children: [
+          { path: "", Component: ReceiptPage },
         ],
       },
     ],

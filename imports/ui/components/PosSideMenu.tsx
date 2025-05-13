@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { MenuItem } from "/imports/api";
+import { PaymentModal } from "./PaymentModal";
 
 interface PosSideMenuProps {
   items: MenuItem[];
@@ -75,9 +76,8 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
           <span className="text-lg font-bold">Total</span>
           <span className="text-lg font-bold">$40.00</span> {/* Static total for now */}
         </div>
-        <button className="w-full bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 px-4 rounded-full">
-          Pay
-        </button>
+        {/* Link Pay button to Receipt page with Payment Modal*/}
+        <PaymentModal></PaymentModal>
       </div>
     </div>
   );
