@@ -9,8 +9,11 @@ export const MainDisplay = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const isLoadingPosItems = useSubscribe("menuItems")
     const posItems = useTracker( () => MenuItemsCollection.find().fetch());
+    const filteredItems = posItems.filter((item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-    console.log(posItems)
+    console.log(filteredItems)
 
     const handleItemClick = (itemId) => {
       Meteor.call("menuItems.updateQuantity", itemId, 1);
@@ -31,8 +34,8 @@ export const MainDisplay = () => {
 
 
         <div id="pos-display" className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-            {posItems.map((item) => (
-              <div className="min-w-[160px]">
+            {filteredItems.map((item) => (
+              <div className="min-w-[160px]" key={String(item._id)}>
                 <PosItemCard item={item} onClick={handleItemClick} />
               </div>
             ))}
