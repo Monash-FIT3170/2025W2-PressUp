@@ -33,13 +33,24 @@ export const MainDisplay = () => {
     <div className="grid grid-cols-5 sm:grid-cols-2 md:grid-cols-5 gap-4 p-4 items-start overflow-auto">
       <div id="pos-main-display" className="col-span-4">
         <div id="search-bar" className="mb-4 px-4">
+          <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-pink-400">
+            <svg xmlns="http://www.w3.org/2000/svg" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              strokeWidth="1.5" 
+              stroke="currentColor" 
+              className="w-5 h-5 text-gray-400 mr-2">
+            <path strokeLinecap="round" strokeLinejoin="round" 
+                  d="m15.75 15.75-2.489-2.489m0 0a3.375 3.375 0 1 0-4.773-4.773 3.375 3.375 0 0 0 4.774 4.774ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
           <input
               type="text"
               placeholder="Search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-400"
+              className="w-full text-sm placeholder-gray-400 focus:outline-none"
             />
+          </div>
         </div>
 
         <div id="filter-section" className="mb-4 px-4">
@@ -72,9 +83,9 @@ export const MainDisplay = () => {
           </div>
         </div>
 
-        <div id="pos-display" className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+        <div id="pos-display" className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 transition-all duration-300 ease-in-out">
             {filteredItems.map((item) => (
-              <div className="min-w-[160px]" key={String(item._id)}>
+              <div className="min-w-[160px] transform transition-all duration-300 hover:scale-105" key={String(item._id)}>
                 <PosItemCard item={item} onClick={handleItemClick} />
               </div>
             ))}
