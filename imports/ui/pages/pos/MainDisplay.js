@@ -12,9 +12,14 @@ export const MainDisplay = () => {
     const [filterOpen, setFilterOpen] = useState(false);
 
     const posItems = useTracker( () => MenuItemsCollection.find().fetch());
-    const filteredItems = posItems.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    const filteredItems = posItems.filter((item) => {
+      const matchesName = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesCategory =
+        selectedCategory === "" || (item.category && item.category.includes(selectedCategory));
+
+      return matchesName && matchesCategory;
+    });
 
     console.log(filteredItems)
 
@@ -22,7 +27,7 @@ export const MainDisplay = () => {
       Meteor.call("menuItems.updateQuantity", itemId, 1);
     };
 
-    const categories = ["Food", "Drink", "Dessert"];
+    const categories = ["None","Food", "Drink", "Dessert"];
 
   return (  
     <div className="grid grid-cols-5 sm:grid-cols-2 md:grid-cols-5 gap-4 p-4 items-start overflow-auto">
@@ -37,27 +42,34 @@ export const MainDisplay = () => {
             />
         </div>
 
-        <div id="category-filter" className="mb-4 px-4">
-          <button
-            onClick={() => setFilterOpen(!filterOpen)}
-            className="bg-pink-400 hover:bg-pink-500 text-white font-bold py-2 px-4 rounded-full">
-              Filter
-          </button>
-          {filterOpen && (
-            <div className="absolute mt-2 border rounded-lg bg-white shadow-md min-w-[120px] z-10">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`block w-full text-left px-4 py-2 hover:bg-pink-100 ${
-                    selectedCategory === cat ? "font-bold text-pink-700" : ""
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          )}          
+        <div id="filter-section" className="mb-4 px-4">
+          <div className="relative inline-block">
+            <button
+              className="bg-pink-500 text-white font-bold py-2 px-4 rounded-full"
+              onClick={() => setFilterOpen(!filterOpen)}
+            >
+              {selectedCategory === "" ? "Filter" : selectedCategory}
+            </button>
+
+            {filterOpen && (
+              <div className="absolute mt-2 border rounded-lg bg-white shadow-md min-w-[120px] z-10">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => {
+                      setSelectedCategory(cat === "None" ? "" : cat); 
+                      setFilterOpen(false);
+                    }}
+                    className={`block w-full text-left px-4 py-2 hover:bg-pink-100 ${
+                      selectedCategory === cat ? "font-bold text-pink-700" : ""
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div id="pos-display" className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
