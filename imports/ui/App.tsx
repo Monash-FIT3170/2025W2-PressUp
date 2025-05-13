@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router";
 import { RootPage } from "./pages/Root";
 import { StockPage } from "./pages/inventory/Stock";
 import { InventoryIndex } from "./pages/inventory/Index";
+import { Menu } from "./pages/menuManagement/Menu";
 
 // pos system
 import { MainDisplay } from "./pages/pos/MainDisplay";
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
         children: [
           { path: "display", Component: MainDisplay },
         ],
+      },
+      {
+        path: "menuManagement",
+        Component: Menu,
       },
     ],
   },
