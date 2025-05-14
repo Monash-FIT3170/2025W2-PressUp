@@ -1,29 +1,19 @@
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { FormEvent, useState } from "react";
-import { Supplier } from "/imports/api";
 import { Meteor } from "meteor/meteor";
+import { Supplier, SuppliersCollection } from "/imports/api";
 import { Mongo } from "meteor/mongo";
-
-const mockSuppliers = (amount: number) => {
-  let result: Supplier[] = [];
-  for (let i = 1; i < amount; i++) {
-    result.push({
-      _id: new Mongo.ObjectID(),
-      name: `Mock Supplier ${i}`,
-      description: "",
-      pastOrderQty: 1,
-      goods: [],
-    });
-  }
-  return result;
-};
-
-const suppliers: Supplier[] = mockSuppliers(10);
 
 export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [itemName, setItemName] = useState("");
   const [quantity, setQuantity] = useState<string>("");
   const [location, setLocation] = useState("");
-  const [supplier, setSupplier] = useState("");
+  const [supplier, setSupplier] = useState<Mongo.ObjectID | null>(null);
+
+  useSubscribe("suppliers") === false;
+  const suppliers: Supplier[] = useTracker(() => {
+    return SuppliersCollection.find().fetch();
+  });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -55,7 +45,7 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
           setItemName("");
           setQuantity("");
           setLocation("");
-          setSupplier("");
+          setSupplier(null);
           onSuccess();
         }
       },
@@ -114,14 +104,13 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
               Supplier
             </label>
             <select
-              value={supplier}
-              onChange={(e) => setSupplier(e.target.value)}
+              onChange={(e) => setSupplier(suppliers.find(s => e.target.value == String(s._id))?._id ?? null)}
               className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             >
               <option value="">--Select supplier--</option>
               {suppliers.map((supplier, i) => (
-                <option value={supplier.name} key={i}>
+                <option value={String(supplier._id)} key={i}>
                   {supplier.name}
                 </option>
               ))}
