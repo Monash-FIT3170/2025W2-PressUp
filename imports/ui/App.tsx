@@ -7,6 +7,8 @@ import { Menu } from "./pages/menuManagement/Menu";
 // pos system
 import { MainDisplay } from "./pages/pos/MainDisplay";
 import { PosIndex } from "./pages/pos/Index";
+import { ReceiptIndex } from "./pages/receipt/Index";
+import { ReceiptPage } from "./pages/receipt/Receipt";
 
 const router = createBrowserRouter([
   {
@@ -28,7 +30,13 @@ const router = createBrowserRouter([
       {
         path: "menuManagement",
         Component: Menu,
-        
+      },
+      {
+        path: "receipt",
+        Component: ReceiptIndex,
+        children: [
+          { path: "", Component: ReceiptPage },
+        ],
       },
     ],
   },

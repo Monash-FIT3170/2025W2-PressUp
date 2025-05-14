@@ -2,6 +2,7 @@ import { MenuItemsCollection } from "./menuItems/MenuItemsCollection";
 import { StockItemsCollection } from "./stockItems/StockItemsCollection";
 import { SuppliersCollection } from "./suppliers/SuppliersCollection";
 import { faker } from "@faker-js/faker";
+import { TransactionsCollection } from "./transactions/TransactionsCollection";
 
 const possibleImages = [
   "/menu_items/cappuccino.png",
@@ -19,18 +20,22 @@ export const mockDataGenerator = async ({
   supplierCount,
   menuItemCount,
   stockItemCount,
+  transactionCount,
 }: {
   supplierCount?: number;
   menuItemCount?: number;
   stockItemCount?: number;
+  transactionCount?: number;
 }) => {
   supplierCount = supplierCount || 10;
   menuItemCount = menuItemCount || 10;
   stockItemCount = stockItemCount || 50;
+  transactionCount = transactionCount || 5;
 
   await SuppliersCollection.dropCollectionAsync();
   await MenuItemsCollection.dropCollectionAsync();
   await StockItemsCollection.dropCollectionAsync();
+  await TransactionsCollection.dropCollectionAsync();
 
   if ((await SuppliersCollection.countDocuments()) == 0)
     for (let i = 0; i < supplierCount; ++i)
@@ -43,7 +48,7 @@ export const mockDataGenerator = async ({
         address: faker.location.streetAddress(),
         goods: Array.from(
           { length: faker.number.int({ min: 1, max: 5 }) },
-          faker.commerce.product,
+          faker.commerce.product
         ),
       });
 
@@ -53,7 +58,7 @@ export const mockDataGenerator = async ({
         name: faker.food.dish(),
         ingredients: Array.from(
           { length: faker.number.int({ min: 1, max: 5 }) },
-          faker.food.ingredient,
+          faker.food.ingredient
         ),
         available: faker.datatype.boolean(),
         quantity: faker.number.int({ min: 1, max: 100 }),
@@ -90,4 +95,13 @@ export const mockDataGenerator = async ({
         supplier: randomSupplierId,
       });
     }
+  
+  if ((await TransactionsCollection.countDocuments()) == 0)
+    for (let i = 0; i < transactionCount; ++i)
+      await TransactionsCollection.insertAsync({
+        name: faker.food.dish(),
+        quantity: faker.number.int({ min: 1, max: 5 }),
+        price: faker.number.int({ min: 1, max: 20 }),
+        createdAt: new Date(),
+      });
 };
