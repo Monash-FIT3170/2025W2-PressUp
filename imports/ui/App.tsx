@@ -28,6 +28,7 @@ const router = createBrowserRouter([
       {
         path: "menuManagement",
         Component: Menu,
+        
       },
     ],
   },
