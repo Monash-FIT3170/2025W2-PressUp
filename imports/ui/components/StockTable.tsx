@@ -1,7 +1,7 @@
 import React from "react";
 import { Pill } from "./Pill";
-import { InStock, LowInStock, OutOfStock } from "./StatusSymbols";
-import { StockItem } from "/imports/api/StockItemsCollection";
+import { OutOfStock, InStock, LowInStock } from "./symbols/StatusSymbols";
+import { StockItem } from "/imports/api";
 
 interface StockTableProps {
   stockItems: StockItem[];
@@ -98,7 +98,7 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
                 {statusPill}
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
-              <div className="truncate py-1 px-2">{item.supplier}</div>
+              <div className="truncate py-1 px-2">{item.supplier?.toHexString()}</div>
             </React.Fragment>
           );
         })}

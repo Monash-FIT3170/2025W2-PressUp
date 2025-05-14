@@ -1,4 +1,4 @@
-import { MenuItem, MenuItemsCollection } from "../../../api/MenuItemsCollection";
+import { MenuItemsCollection } from "/imports/api";
 import { PosItemCard } from "../../components/PosItemCard";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { PosSideMenu } from "../../components/PosSideMenu";

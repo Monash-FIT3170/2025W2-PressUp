@@ -3,7 +3,7 @@ import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import {
   StockItem,
   StockItemsCollection,
-} from "/imports/api/StockItemsCollection";
+} from "/imports/api";
 import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
