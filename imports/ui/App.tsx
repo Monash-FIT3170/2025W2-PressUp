@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { RootPage } from "./pages/Root";
 import { StockPage } from "./pages/inventory/Stock";
+import { SuppliersPage } from "./pages/inventory/Suppliers";
 import { InventoryIndex } from "./pages/inventory/Index";
 import { Menu } from "./pages/menuManagement/Menu";
 
@@ -18,14 +19,15 @@ const router = createBrowserRouter([
       {
         path: "inventory",
         Component: InventoryIndex,
-        children: [{ path: "stock", Component: StockPage }],
+        children: [
+          { path: "stock", Component: StockPage },
+          { path: "suppliers", Component: SuppliersPage },
+        ],
       },
       {
         path: "pos",
         Component: PosIndex,
-        children: [
-          { path: "display", Component: MainDisplay },
-        ],
+        children: [{ path: "display", Component: MainDisplay }],
       },
       {
         path: "menuManagement",
@@ -34,9 +36,7 @@ const router = createBrowserRouter([
       {
         path: "receipt",
         Component: ReceiptIndex,
-        children: [
-          { path: "", Component: ReceiptPage },
-        ],
+        children: [{ path: "", Component: ReceiptPage }],
       },
     ],
   },
