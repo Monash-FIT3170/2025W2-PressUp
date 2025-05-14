@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { StockItemWithSupplier } from "./types";
 import {
-  StockItem,
   StockItemsCollection,
+  Supplier,
+  SuppliersCollection,
 } from "/imports/api";
 import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
@@ -16,10 +18,22 @@ export const StockPage = () => {
   const [open, setOpen] = useState(false);
   const [formResetKey, setFormResetKey] = useState(0);
 
-  const isLoading = useSubscribe("stockItems.all") === false;
+  const isLoadingStockItems = useSubscribe("stockItems.all") === false;
+  const isLoadingSuppliers = useSubscribe("suppliers") === false;
 
-  const stockItems: StockItem[] = useTracker(() => {
-    return StockItemsCollection.find({}, { sort: { name: 1 } }).fetch();
+  const stockItems: StockItemWithSupplier[] = useTracker(() => {
+    const stockItems = StockItemsCollection.find({}, { sort: { name: 1 } }).fetch();
+    const result = []
+    console.log(stockItems);
+    for (let stockItem of stockItems) {
+      let supplier : Supplier | null = null;
+      if (stockItem.supplier != null) {
+        supplier = SuppliersCollection.find({_id: stockItem.supplier}).fetch()[0];
+        console.log(supplier)
+      }
+      result.push({...stockItem, supplier});
+    }
+    return result
   });
 
   const lowStockThreshold = 10;
@@ -50,7 +64,7 @@ export const StockPage = () => {
         </button>
       </div>
       <div id="stock" className="flex flex-1 flex-col overflow-auto">
-        {isLoading ? (
+        {isLoadingStockItems || isLoadingSuppliers ? (
           <p className="text-gray-400 p-4">Loading inventory...</p>
         ) : (
           <StockTable stockItems={filteredStockItems} />
