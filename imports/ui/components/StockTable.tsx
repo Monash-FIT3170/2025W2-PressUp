@@ -1,10 +1,10 @@
 import React from "react";
+import { StockItemWithSupplier } from "../pages/inventory/types";
 import { Pill } from "./Pill";
-import { InStock, LowInStock, OutOfStock } from "./symbols/StatusSymbols";
-import { StockItem } from "/imports/api";
+import { OutOfStock, InStock, LowInStock } from "./symbols/StatusSymbols";
 
 interface StockTableProps {
-  stockItems: StockItem[];
+  stockItems: StockItemWithSupplier[];
 }
 
 export const StockTable = ({ stockItems }: StockTableProps) => {
@@ -98,7 +98,7 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
                 {statusPill}
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
-              <div className="truncate py-1 px-2">{item.supplier}</div>
+              <div className="truncate py-1 px-2">{item.supplier?.name}</div>
             </React.Fragment>
           );
         })}
