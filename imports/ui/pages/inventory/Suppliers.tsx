@@ -33,14 +33,12 @@ export const SuppliersPage = () => {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="grid grid-cols-2">
-        <button
-          onClick={() => setOpen(true)}
-          className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-right-2 hover:bg-rose-500"
-        >
-          Add Supplier
-        </button>
-      </div>
+      <button
+        onClick={() => setOpen(true)}
+        className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-right-2 hover:bg-rose-500"
+      >
+        Add Supplier
+      </button>
       <div id="stock" className="flex flex-1 flex-col overflow-auto">
         {isLoadingSuppliers ? (
           <p className="text-gray-400 p-4">Loading inventory...</p>
