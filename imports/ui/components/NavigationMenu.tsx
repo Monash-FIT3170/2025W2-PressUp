@@ -24,6 +24,7 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           path="/inventory"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         >
+          
           <NavigationEntry
             icon={<StockIcon fill="var(--color-primary-dark)" />}
             name="Stock"
@@ -35,6 +36,12 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           icon={<MonitorIcon fill="var(--color-primary-dark)" />}
           name="POS System"
           path="/pos/display"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        ></NavigationEntry>
+        <NavigationEntry
+          icon={<MonitorIcon fill="var(--color-primary-dark)" />}
+          name="Menu Management"
+          path="/menuManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         ></NavigationEntry>
       </div>
