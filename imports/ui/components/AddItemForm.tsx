@@ -1,11 +1,18 @@
 import { FormEvent, useState } from "react";
-import { Supplier } from "/imports/api/supplier";
+import { Supplier } from "/imports/api";
 import { Meteor } from "meteor/meteor";
+import { Mongo } from "meteor/mongo";
 
 const mockSuppliers = (amount: number) => {
   let result: Supplier[] = [];
   for (let i = 1; i < amount; i++) {
-    result.push({ name: `Mock Supplier ${i}` });
+    result.push({
+      _id: new Mongo.ObjectID(),
+      name: `Mock Supplier ${i}`,
+      description: "",
+      pastOrderQty: 1,
+      goods: [],
+    });
   }
   return result;
 };
@@ -113,8 +120,8 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
               required
             >
               <option value="">--Select supplier--</option>
-              {suppliers.map((supplier) => (
-                <option key={supplier.name} value={supplier.name}>
+              {suppliers.map((supplier, i) => (
+                <option value={supplier.name} key={i}>
                   {supplier.name}
                 </option>
               ))}
