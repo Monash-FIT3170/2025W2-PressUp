@@ -1,4 +1,4 @@
-import React, { useEffect, useState }  from "react";
+import React, { useState }  from "react";
 import { MenuItem } from "/imports/api";
 import { ConfirmModal } from './ConfirmModal';
 import { Meteor } from 'meteor/meteor';
