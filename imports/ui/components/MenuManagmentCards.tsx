@@ -1,41 +1,53 @@
-import React from "react";
+import React, { useState }  from "react";
 import { MenuItem } from "/imports/api";
+import { ConfirmModal } from './ConfirmModal';
+import { Meteor } from 'meteor/meteor';
 
 interface Props {
   item: MenuItem;
   onClick: (item: MenuItem) => void;
-  onDelete?: (itemId: string) => void; // New prop for delete functionality
+  onDelete: (item: MenuItem) => void; // New prop for delete functionality
 }
 
 export const MenuManagementCard = ({ item, onClick, onDelete }: Props) => {
-  // Handle delete click without triggering the card click
+  // set for confirmation modal
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  // when bin icon is clicked
   const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent the card click event
-    if (onDelete) {
-      onDelete(item._id);
-    }
+    e.stopPropagation();
+    setShowConfirm(true);
+  };
+  // confirmation modal
+  const handleConfirm = () => {
+    Meteor.call('menuItems.delete', item.name, (err: Meteor.Error | undefined) => {
+      if (err) {
+        alert(`Delete failed: ${err.reason}`);
+      }
+    });
+    setShowConfirm(false);
   };
 
   return (
-    <div 
+    <div
       className="rounded-2xl shadow-sm bg-white overflow-hidden w-full max-w-[160px] mx-auto cursor-pointer relative"
       onClick={() => onClick(item)}
     >
       {/* Trashcan icon in top right */}
-      <div 
+      <div
         className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors z-10"
         onClick={handleDeleteClick}
       >
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          width="16" 
-          height="16" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
           className="text-red-500"
         >
           <path d="M3 6h18"></path>
@@ -43,6 +55,12 @@ export const MenuManagementCard = ({ item, onClick, onDelete }: Props) => {
           <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
         </svg>
       </div>
+      <ConfirmModal
+        open={showConfirm}
+        message="Are you sure you want to delete this item?"
+        onConfirm={handleConfirm}
+        onCancel={() => setShowConfirm(false)}
+      />
 
       {/* image */}
       <img

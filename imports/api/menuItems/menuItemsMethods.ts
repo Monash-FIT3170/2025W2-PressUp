@@ -36,11 +36,11 @@ Meteor.methods({
       throw new Meteor.Error('not-found', 'Item not found');
     }
 
-    const newQuantity = Math.max(0, item.quantity + change); 
+    const newQuantity = Math.max(0, item.quantity + change);
     MenuItemsCollection.updateAsync(itemId, {
       $set: { quantity: newQuantity }
     });
   },
 
-  
+
 });
