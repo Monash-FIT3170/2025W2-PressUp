@@ -1,6 +1,6 @@
 import { Meteor } from "meteor/meteor";
-import { StockItemsCollection } from "./StockItemsCollection";
+import { StockItemsCollection } from "..";
 
-Meteor.publish("stockItems", function () {
+Meteor.publish("stockItems.all", function () {
   return StockItemsCollection.find();
 });
