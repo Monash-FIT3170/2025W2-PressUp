@@ -10,13 +10,15 @@ interface Props {
 }
 
 export const MenuManagementCard = ({ item, onClick, onDelete }: Props) => {
+  // set for confirmation modal
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // when bin icon is clicked
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowConfirm(true);
   };
-
+  // confirmation modal
   const handleConfirm = () => {
     Meteor.call('menuItems.delete', item.name, (err: Meteor.Error | undefined) => {
       if (err) {
