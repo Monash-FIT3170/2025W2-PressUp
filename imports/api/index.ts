@@ -12,5 +12,6 @@ export {
 
 // Transactions
 export {
+  Transaction,
   TransactionsCollection
 } from "./transactions/TransactionsCollection"

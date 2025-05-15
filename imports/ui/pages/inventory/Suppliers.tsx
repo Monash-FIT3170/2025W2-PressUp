@@ -6,15 +6,11 @@ import {
   Supplier,
   SuppliersCollection,
 } from "/imports/api";
-import { StockTable } from "../../components/StockTable";
+import { SupplierTable } from "../../components/SupplierTable";
 import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
-import { StockFilter } from "../../components/StockFilter";
 
-export const StockPage = () => {
-  const [filter, setFilter] = useState<
-    "all" | "inStock" | "lowInStock" | "outOfStock"
-  >("all");
+export const SuppliersPage = () => {
   const [open, setOpen] = useState(false);
   const [formResetKey, setFormResetKey] = useState(0);
 
@@ -22,27 +18,23 @@ export const StockPage = () => {
   const isLoadingSuppliers = useSubscribe("suppliers") === false;
 
   const stockItems: StockItemWithSupplier[] = useTracker(() => {
-    const stockItems = StockItemsCollection.find({}, { sort: { name: 1 } }).fetch();
-    const result = []
+    const stockItems = StockItemsCollection.find(
+      {},
+      { sort: { name: 1 } },
+    ).fetch();
+    const result = [];
     console.log(stockItems);
     for (let stockItem of stockItems) {
-      let supplier : Supplier | null = null;
+      let supplier: Supplier | null = null;
       if (stockItem.supplier != null) {
-        supplier = SuppliersCollection.find({_id: stockItem.supplier}).fetch()[0];
-        console.log(supplier)
+        supplier = SuppliersCollection.find({
+          _id: stockItem.supplier,
+        }).fetch()[0];
+        console.log(supplier);
       }
-      result.push({...stockItem, supplier});
+      result.push({ ...stockItem, supplier });
     }
-    return result
-  });
-
-  const lowStockThreshold = 10;
-  const filteredStockItems = stockItems.filter((item) => {
-    if (filter === "inStock") return item.quantity > lowStockThreshold;
-    if (filter === "outOfStock") return item.quantity === 0;
-    if (filter === "lowInStock")
-      return item.quantity > 0 && item.quantity <= lowStockThreshold;
-    return true;
+    return result;
   });
 
   const handleModalClose = () => {
@@ -55,24 +47,24 @@ export const StockPage = () => {
   return (
     <div className="flex flex-1 flex-col">
       <div className="grid grid-cols-2">
-        <StockFilter filter={filter} onFilterChange={setFilter} />
         <button
           onClick={() => setOpen(true)}
-          className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-24 right-2 hover:bg-rose-500"
+          className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-30 right-2 hover:bg-rose-500"
         >
-          Add Item
+          Add Supplier
         </button>
       </div>
       <div id="stock" className="flex flex-1 flex-col overflow-auto">
         {isLoadingStockItems || isLoadingSuppliers ? (
           <p className="text-gray-400 p-4">Loading inventory...</p>
         ) : (
-          <StockTable stockItems={filteredStockItems} />
+          <SupplierTable stockItems={stockItems} />
         )}
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-        <AddItemForm key={formResetKey} onSuccess={handleSuccess} />
+        <AddItemForm key={formResetKey} onSuccess={handleSuccess} /> /*TODO:
+        change to add supplier form */
       </Modal>
     </div>
   );
