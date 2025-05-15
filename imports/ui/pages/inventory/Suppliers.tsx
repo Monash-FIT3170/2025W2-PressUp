@@ -8,7 +8,8 @@ import {
 } from "/imports/api";
 import { SupplierTable } from "../../components/SupplierTable";
 import { Modal } from "../../components/Modal";
-import { AddItemForm } from "../../components/AddItemForm";
+import { AddSupplierForm } from "../../components/AddSupplierForm";
+
 
 export const SuppliersPage = () => {
   const [open, setOpen] = useState(false);
@@ -63,8 +64,7 @@ export const SuppliersPage = () => {
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-        <AddItemForm key={formResetKey} onSuccess={handleSuccess} /> /*TODO:
-        change to add supplier form */
+        <AddSupplierForm key={formResetKey} onSuccess={handleSuccess} /> 
       </Modal>
     </div>
   );
