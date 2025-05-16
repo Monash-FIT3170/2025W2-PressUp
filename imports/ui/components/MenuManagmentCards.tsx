@@ -6,10 +6,10 @@ import { Meteor } from 'meteor/meteor';
 interface Props {
   item: MenuItem;
   onClick: (item: MenuItem) => void;
-  onDelete: (item: MenuItem) => void; // New prop for delete functionality
+  // onDelete: (item: MenuItem) => void; // New prop for delete functionality
 }
 
-export const MenuManagementCard = ({ item, onClick, onDelete }: Props) => {
+export const MenuManagementCard = ({ item, onClick }: Props) => { // removed: , onDelete from parameters
   // set for confirmation modal
   const [showConfirm, setShowConfirm] = useState(false);
 
