@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Sidebar = () => {
+const Sidebar = ({onCategorySelect}) => {
   const [category, setCategory] = useState('Category ▼');
   const [isOpen, setIsOpen] = useState(false);
 
@@ -35,6 +35,7 @@ const Sidebar = () => {
                 onClick={() => {
                   setCategory(option);
                   setIsOpen(false);
+                  onCategorySelect(option)
                 }}
                 className={`w-full text-left py-2.5 px-4 transition-all ${
                   category === option ? 'opacity-100' : 'opacity-90'
