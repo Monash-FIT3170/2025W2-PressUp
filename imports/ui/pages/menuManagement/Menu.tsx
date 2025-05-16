@@ -24,6 +24,9 @@ export const Menu = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
+  // Category filter state
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
   const handleItemClick = (item: MenuItem) => {
     Meteor.call("menuItems.updateQuantity", item._id , 1);
     setSelectedItem(item);
@@ -35,12 +38,21 @@ export const Menu = () => {
     setSelectedItem(null);
   };
 
+  const handleCategorySelect = (category: any) => {
+    setSelectedCategory(category);
+  }
+
+  // Filter items
+  const filteredItems = selectedCategory === 'All' 
+  ? posItems 
+  : posItems.filter(item => Array.isArray(item.category) && item.category.includes(selectedCategory));
+
   return (
     <div id="pos" className="flex flex-1 overflow-auto">
       {/* Main content area */}
       <div className="flex-1 overflow-auto p-4">
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {posItems.map((item) => (
+          {filteredItems.map((item) => (
             <div key={item._id?.toString()} className="min-w-[160px]">
               <MenuManagementCard item={item} onClick={handleItemClick} />
             </div>
@@ -58,7 +70,7 @@ export const Menu = () => {
       </div>
       
       {/* Sidebar positioned on the right */}
-      <Sidebar />
+      <Sidebar onCategorySelect={handleCategorySelect} />
     </div>
   );
 };
