@@ -4,7 +4,7 @@ const Sidebar = ({onCategorySelect}) => {
   const [category, setCategory] = useState('Category ▼');
   const [isOpen, setIsOpen] = useState(false);
 
-  const categories = ['Food', 'Drinks', 'All'];
+  const categories = ['All', 'Food', 'Drink'];
 
   return (
     <div className="w-32 bg-gray-50 p-3 border-r border-gray-200 min-h-screen">
