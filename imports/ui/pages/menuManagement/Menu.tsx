@@ -6,6 +6,7 @@ import { MenuItemsCollection } from "/imports/api";
 import { MenuManagementCard } from "../../components/MenuManagmentCards";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { Meteor } from 'meteor/meteor';
+import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 
 export const Menu = () => {
   // Set title
@@ -16,12 +17,12 @@ export const Menu = () => {
 
   // Subscribe to menu items
   const isLoadingPosItems = useSubscribe("menuItems");
-  const posItems = useTracker(() => MenuItemsCollection.find().fetch());
+  const posItems:MenuItem[] = useTracker(() => MenuItemsCollection.find().fetch());
 
-  const handleItemClick = (itemId) => {
+  const handleItemClick = (item: MenuItem) => {
     // You might want different behavior in the menu management system
     // For now, we'll just use the same function as in MainDisplay
-    Meteor.call("menuItems.updateQuantity", itemId, 1);
+    Meteor.call("menuItems.updateQuantity", item._id , 1);
   };
 
   return (
@@ -30,7 +31,7 @@ export const Menu = () => {
       <div className="flex-1 overflow-auto p-4">
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {posItems.map((item) => (
-            <div key={item._id} className="min-w-[160px]">
+            <div key={item._id?.toString()} className="min-w-[160px]">
               <MenuManagementCard item={item} onClick={handleItemClick} />
             </div>
           ))}
