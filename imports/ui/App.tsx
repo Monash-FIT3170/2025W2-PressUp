@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router";
 import { RootPage } from "./pages/Root";
 import { StockPage } from "./pages/inventory/Stock";
 import { SuppliersPage } from "./pages/inventory/Suppliers";
@@ -18,8 +18,8 @@ const router = createBrowserRouter([
     children: [
       {
         path: "inventory",
-        Component: InventoryIndex,
         children: [
+          { index: true, Component: () => <Navigate replace to={"stock"} /> },
           { path: "stock", Component: StockPage },
           { path: "suppliers", Component: SuppliersPage },
         ],
