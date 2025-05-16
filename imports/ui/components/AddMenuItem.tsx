@@ -67,15 +67,25 @@ export const AddMenuItem: React.FC<AddItemModalProps> = ({
 
     useEffect(() => {
         var ingredients = ["Milk", "Flour", "Eggs", "Bread", "Butter", "Strawberries", "Avocado", "Bacon", "Olive Oil", "Paprika", "Jam"];
-        var categories = ["Breakfast","Lunch","Hot Drinks","Iced Drinks","Pastries"];
+        var categories = ["Breakfast", "Lunch", "Hot Drinks", "Iced Drinks", "Pastries"];
         setAvailableIngredients(ingredients);
         setAvailableCategories(categories);
     }, []);
 
+    const handleClose = () => {
+        setItemDiscount(0);
+        setItemName("");
+        setItemPrice(0);
+        setItemCategory([""]);
+        setItemIngredients([""]);
+        onClose();
+        
+    }
+
     return (
-        <Modal open={isOpen} onClose={onClose}>
+        <Modal open={isOpen} onClose={handleClose}>
             <div className="p-4 md:p-5 max-h-[80vh] overflow-y-auto w-full">
-                <h2 className="text-xl font-semibold text-rose-400 mb-4">Edit Item</h2>
+                <h2 className="text-xl font-semibold text-rose-400 mb-4">Add Item</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Item Name</label>
@@ -92,10 +102,8 @@ export const AddMenuItem: React.FC<AddItemModalProps> = ({
                         <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Price</label>
                         <input
                             type="number"
-                            min={0}
-                            step="0.01"
                             value={itemPrice}
-                            onChange={(e) => setItemPrice(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => setItemPrice(parseInt(e.target.value))}
                             className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:text-white"
                             required
                         />
@@ -104,43 +112,41 @@ export const AddMenuItem: React.FC<AddItemModalProps> = ({
                     <div>
                         <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Ingredients</label>
                         <select
-                        onChange={(e) => updateItemIngredients(e.target.value)}
-                        className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-                        required
-                    >
-                        <option value="">--Select Ingredient--</option>
-                        {availableIngredients.map((ingredient, i) => (
-                            <option value={ingredient} key={i}>
-                                {ingredient}
-                            </option>
-                        ))}
-                    </select>
+                            onChange={(e) => updateItemIngredients(e.target.value)}
+                            className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+                            required
+                        >
+                            <option value="">--Select Ingredient--</option>
+                            {availableIngredients.map((ingredient, i) => (
+                                <option value={ingredient} key={i}>
+                                    {ingredient}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div>
                         <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Category</label>
                         <select
-                        onChange={(e) => updateItemCategory(e.target.value)}
-                        className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-                        required
-                    >
-                        <option value="">--Select Category--</option>
-                        {availableCategories.map((category, i) => (
-                            <option value={category} key={i}>
-                                {category}
-                            </option>
-                        ))}
-                    </select>
+                            onChange={(e) => updateItemCategory(e.target.value)}
+                            className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+                            required
+                        >
+                            <option value="">--Select Category--</option>
+                            {availableCategories.map((category, i) => (
+                                <option value={category} key={i}>
+                                    {category}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div>
                         <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Discount</label>
                         <input
                             type="number"
-                            min={0}
-                            step="0.01"
                             value={itemDiscount}
-                            onChange={(e) => setItemDiscount(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => setItemDiscount(parseInt(e.target.value))}
                             className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:text-white"
                         />
                     </div>

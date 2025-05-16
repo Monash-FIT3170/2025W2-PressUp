@@ -18,7 +18,7 @@ export const Menu = () => {
   const isLoadingPosItems = useSubscribe("menuItems");
   const posItems = useTracker(() => MenuItemsCollection.find().fetch());
 
-  const handleItemClick = (itemId) => {
+  const handleItemClick = (itemId: string) => {
     // You might want different behavior in the menu management system
     // For now, we'll just use the same function as in MainDisplay
     Meteor.call("menuItems.updateQuantity", itemId, 1);
