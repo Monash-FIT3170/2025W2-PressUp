@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Outlet } from "react-router";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import Sidebar from "../../components/AddItemSidebar";
@@ -7,6 +7,7 @@ import { MenuManagementCard } from "../../components/MenuManagmentCards";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { Meteor } from 'meteor/meteor';
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
+import { EditItemModal } from "../../components/EditItemModal";
 
 export const Menu = () => {
   // Set title
@@ -19,10 +20,19 @@ export const Menu = () => {
   const isLoadingPosItems = useSubscribe("menuItems");
   const posItems:MenuItem[] = useTracker(() => MenuItemsCollection.find().fetch());
 
+  // Modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+
   const handleItemClick = (item: MenuItem) => {
-    // You might want different behavior in the menu management system
-    // For now, we'll just use the same function as in MainDisplay
     Meteor.call("menuItems.updateQuantity", item._id , 1);
+    setSelectedItem(item);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    setIsEditModalOpen(false);
+    setSelectedItem(null);
   };
 
   return (
@@ -37,6 +47,13 @@ export const Menu = () => {
           ))}
         </div>
         
+         <EditItemModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        item={selectedItem}
+        onSave={handleSave}
+      />
+
         <Outlet />
       </div>
       
