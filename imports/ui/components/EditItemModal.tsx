@@ -18,11 +18,13 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
 }) => {
     const [name, setName] = useState("");
     const [price, setPrice] = useState(0);
+    const [available, setAvailable] = useState(false);
 
      useEffect(() => {
         if (item) {
             setName(item.name);
             setPrice(item.price);
+            setAvailable(item.available);
         }
     }, [item]);
 
@@ -36,7 +38,8 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             item.name,
             {
                 name,
-                price
+                price,
+                available
             },
             (error: Meteor.Error | undefined ) => {
                 if (error) {
@@ -45,7 +48,8 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                     onSave({
                         _id: item._id,
                         name,
-                        price
+                        price,
+                        available
                     });
                     onClose();
                 }
@@ -83,6 +87,24 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:text-white"
                 required
                 />
+            </div>
+
+            <div>
+            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Available</label>
+            <button
+                type="button"
+                onClick={() => setAvailable(!available)}
+                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-400 ${
+                available ? "bg-rose-400" : "bg-gray-300"
+                }`}
+            >
+                <span
+                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${
+                    available ? "translate-x-6" : "translate-x-1"
+                }`}
+                />
+
+            </button>
             </div>
 
             <div className = "flex justify-start">
