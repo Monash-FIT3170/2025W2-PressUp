@@ -11,14 +11,14 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
   if (suppliers.length == 0)
     return (
       <h2 className="flex-1 text-center font-bold text-xl text-red-900">
-        No supplier
+        No suppliers.
       </h2>
     );
 
   return (
     <div id="grid-container" className="overflow-auto flex-1">
       <div className="grid gap-y-2 text-nowrap text-center grid-cols-15 text-red-900">
-        <div className="absolute col-span-4 bg-rose-200 py-1 px-2 border-y-3 border-rose-200 rounded-l-lg sticky top-0 z-1 text-left">
+        <div className="col-span-4 bg-rose-200 py-1 px-2 border-y-3 border-rose-200 rounded-l-lg sticky top-0 z-1 text-left">
           Supplier Name
           <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
         </div>
