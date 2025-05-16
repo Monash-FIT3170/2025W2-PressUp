@@ -85,6 +85,16 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 />
             </div>
 
+            <div className = "flex justify-start">
+                <button
+                type="button"
+                onClick={ () => {}}
+                className="bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 rounded-lg"
+                >
+                    Add Image
+                </button>
+            </div>
+
             <div className="flex justify-end space-x-2 pt-4">
                 <button
                 type="button"
