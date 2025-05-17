@@ -30,6 +30,7 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
 
     useEffect(() => { setSearchIngredient(""); }, [ initialIngredients, selectedIngredients ]);
 
+    // to close dropdown with an outside click
     useEffect(() => {
         const handleClickToClose = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)
@@ -55,10 +56,11 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                 onFocus={() => setShowDropdown(true)}
             />
             { showDropdown && (
+                // displaying the ingredients within dropdown
             <ul className="z-10 absolute bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white max-h-48 overflow-y-auto">
                 {searchIngredientList.length > 0 ? (
                     searchIngredientList.map((ingredient) => (
-                        <li key={ingredient} className="p-2 hover:bg-gray-200 rounded">
+                        <li key={ingredient} className="flex p-2 hover:bg-gray-200 rounded justify-between items-center">
                         <label className="flex items-center space-x-2 cursor-pointer">
                             <input
                                 type="checkbox"
@@ -67,9 +69,24 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                             />
                             {ingredient}
                         </label>
+                        {/* for deleting an ingredient */}
+                        <button
+                            type="button"
+                            className="text-red-500 hover:bg-red-100 rounded-full w-5 h-5 flex items-center justify-center ml-4"
+                            title="Delete ingredient"
+                            onClick={() => {
+                                setAllIngredients((previous) => previous.filter((item) => item !== ingredient));
+                                if (selectedIngredients.includes(ingredient)) {
+                                    onChange(selectedIngredients.filter((item) => item !== ingredient));
+                                }
+                            }}
+                        >
+                            x
+                        </button>
                     </li>
                     ))
                 ) : (
+                    // for adding an ingredient, if not found within search
                     <li className="p-2 text-sm text-gray-500">
                         <button
                             type="button"
