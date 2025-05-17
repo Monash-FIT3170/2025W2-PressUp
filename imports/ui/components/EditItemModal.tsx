@@ -34,7 +34,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         
-        if (!item) return;
+        if (!item || !item.name || !item._id ) return;
         
         Meteor.call(
             "menuItems.update",
@@ -60,9 +60,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 }
             }
         )
-
-        if (!item) return;
-
     };
 
     return (
