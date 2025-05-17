@@ -103,7 +103,10 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-        <PurchaseOrderForm supplier={formSupplier} />
+        <PurchaseOrderForm
+          supplier={formSupplier}
+          onSuccess={() => setOpen(false)}
+        />
       </Modal>
     </div>
   );
