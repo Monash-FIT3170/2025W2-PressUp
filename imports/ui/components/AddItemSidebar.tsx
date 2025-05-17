@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Sidebar = ({onCategorySelect}) => {
+const Sidebar = () => {
   const [category, setCategory] = useState('Category ▼');
   const [isOpen, setIsOpen] = useState(false);
 

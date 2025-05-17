@@ -17,7 +17,7 @@ export const CategoryFilter = ({
 
   return (
     <div className="mb-4 px-4">
-      <div className="relative inline-block">
+      <div className="relative inline-block w-20">
         <button
           className="bg-pink-500 text-white font-bold py-2 px-4 rounded-full"
           onClick={() => setIsOpen(!isOpen)}
