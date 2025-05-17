@@ -8,6 +8,7 @@ import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { Meteor } from 'meteor/meteor';
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { EditItemModal } from "../../components/EditItemModal";
+import { SearchBar } from "../../components/SearchBar";
 
 export const Menu = () => {
   // Set title
@@ -23,6 +24,9 @@ export const Menu = () => {
   // Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+
+  // Search term state
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Category filter state
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -51,6 +55,15 @@ export const Menu = () => {
     <div id="pos" className="flex flex-1 overflow-auto">
       {/* Main content area */}
       <div className="flex-1 overflow-auto p-4">
+
+        {/* Search Bar */}
+        <div className="w-full md-6">
+          <SearchBar 
+            onSearch={setSearchTerm} 
+            initialSearchTerm={searchTerm} 
+          />
+        </div>
+
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredItems.map((item) => (
             <div key={item._id?.toString()} className="min-w-[160px]">
