@@ -32,12 +32,13 @@ export const PurchaseOrderForm = ({
 
   const [stockItem, setStockItem] = useState<StockItem | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [cost, setCost] = useState(0);
+  const [cost, setCost] = useState<number | null>(null);
 
   useEffect(() => {
+    // Reset form if supplier changes
     setStockItem(null);
     setQuantity(1);
-    setCost(0);
+    setCost(null);
   }, [supplier]);
 
   const handleSubmit = (e: FormEvent) => {
@@ -48,6 +49,7 @@ export const PurchaseOrderForm = ({
       !stockItem._id ||
       isNaN(quantity) ||
       quantity < 0 ||
+      !cost ||
       isNaN(cost) ||
       cost < 0
     ) {
@@ -108,6 +110,7 @@ export const PurchaseOrderForm = ({
               className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
               disabled={!stockItems || Object.keys(stockItems).length <= 0}
+              value={String(stockItem?._id ?? "")}
             >
               <option value="">
                 {stockItems && Object.keys(stockItems).length > 0
@@ -142,7 +145,8 @@ export const PurchaseOrderForm = ({
             <input
               type="number"
               min="0.00"
-              value={cost}
+              step="0.01"
+              value={cost ?? ""}
               onChange={(e) => setCost(Number(e.target.value))}
               placeholder="0.00"
               className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
