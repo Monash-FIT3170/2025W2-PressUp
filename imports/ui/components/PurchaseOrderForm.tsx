@@ -1,11 +1,16 @@
+import { Meteor } from "meteor/meteor";
 import { FormEvent, useState } from "react";
-import { StockItem, Supplier } from "/imports/api";
+import { PurchaseOrder, StockItem, Supplier } from "/imports/api";
 
 interface PurcahseOrderFormProps {
+  onSuccess: () => void;
   supplier: Supplier;
 }
 
-export const PurchaseOrderForm = ({ supplier }: PurcahseOrderFormProps) => {
+export const PurchaseOrderForm = ({
+  onSuccess,
+  supplier,
+}: PurcahseOrderFormProps) => {
   const [stockItem, setStockItem] = useState<StockItem | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [cost, setCost] = useState(0);
@@ -14,6 +19,39 @@ export const PurchaseOrderForm = ({ supplier }: PurcahseOrderFormProps) => {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+
+    if (
+      !stockItem ||
+      !stockItem._id ||
+      isNaN(quantity) ||
+      quantity < 0 ||
+      isNaN(cost) ||
+      cost < 0
+    ) {
+      alert("Please fill in all fields correctly.");
+      return;
+    }
+
+    const purchaseOrder: Omit<PurchaseOrder, "date"> = {
+      stockItem: stockItem._id,
+      quantity,
+      cost,
+    };
+
+    Meteor.call(
+      "purchaseOrders.insert",
+      purchaseOrder,
+      (error: Meteor.Error | undefined) => {
+        if (error) {
+          alert("Error: " + error.reason);
+        } else {
+          setStockItem(null);
+          setQuantity(1);
+          setCost(0);
+          onSuccess();
+        }
+      },
+    );
   };
 
   return (
