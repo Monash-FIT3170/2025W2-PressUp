@@ -46,9 +46,18 @@ export const Menu = () => {
   // Filter items by search and category
   const filteredItems = posItems
     // Filter by search term (item name)
-    .filter(item => 
-      searchTerm === "" || 
-      item.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    .filter(item => {
+      searchTerm === ""
+
+    // Check for ingredients
+    const ingredientsMatch =
+      Array.isArray(item.ingredients) &&
+      item.ingredients.some(ingredient =>
+        ingredient.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+    return item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || ingredientsMatch;
+    }
     )
     // Filter by category
     .filter(item =>
