@@ -70,7 +70,25 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                     </li>
                     ))
                 ) : (
-                    <li className="p-2 text-sm text-gray-500">No matches found</li>
+                    <li className="p-2 text-sm text-gray-500">
+                        <button
+                            type="button"
+                            onClick={() => { 
+                                const trimInput = searchIngredient.trim();
+                                if ( 
+                                    trimInput !== "" && !allIngredients.includes(trimInput)
+                                ) {
+                                    const newIngredient = trimInput.charAt(0).toUpperCase() + trimInput.slice(1);
+                                    setAllIngredients((previous) => [...previous, newIngredient]);
+                                    onChange([...selectedIngredients, newIngredient]);
+                                    setSearchIngredient("");
+                                }
+                            }} 
+                            className="text-rose-500 hover:underline"
+                        >
+                        Add "{searchIngredient}"
+                        </button>
+                    </li>
                 )} 
                 </ul>
             )}
