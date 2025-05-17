@@ -1,18 +1,16 @@
-import { Mongo } from "meteor/mongo";
 import { FormEvent, useState } from "react";
 import { StockItem, Supplier } from "/imports/api";
 
 interface PurcahseOrderFormProps {
-  supplierId: Mongo.ObjectID;
+  supplier: Supplier;
 }
 
-export const PurchaseOrderForm = ({ supplierId }: PurcahseOrderFormProps) => {
+export const PurchaseOrderForm = ({ supplier }: PurcahseOrderFormProps) => {
   const [stockItem, setStockItem] = useState<StockItem | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [cost, setCost] = useState(0);
 
   const stockItems: { [index: string]: StockItem } = {};
-  const supplier: Supplier;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
