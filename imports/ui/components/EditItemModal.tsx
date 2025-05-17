@@ -2,6 +2,7 @@ import React, { useState, useEffect, FormEvent } from "react";
 import { Meteor } from "meteor/meteor";
 import { Modal } from "./Modal";
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
+import { IngredientDropdown } from "./IngredientDropdown";
 
 interface EditItemModalProps {
     isOpen: boolean;
@@ -19,12 +20,14 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     const [name, setName] = useState("");
     const [price, setPrice] = useState(0);
     const [available, setAvailable] = useState(false);
+    const [ingredients, setIngredients] = useState<string[]>([]);
 
      useEffect(() => {
         if (item) {
             setName(item.name);
             setPrice(item.price);
             setAvailable(item.available);
+            setIngredients(item.ingredients || []);
         }
     }, [item]);
 
@@ -39,6 +42,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             {
                 name,
                 price,
+                ingredients,
                 available
             },
             (error: Meteor.Error | undefined ) => {
@@ -49,6 +53,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                         _id: item._id,
                         name,
                         price,
+                        ingredients,
                         available
                     });
                     onClose();
@@ -88,6 +93,12 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 required
                 />
             </div>
+
+            <IngredientDropdown
+                selectedIngredients={ingredients}
+                onChange={setIngredients}
+                initialIngredients = {["Milk", "Flour", "Eggs", "Bread", "Butter", "Strawberries", "Avocado", "Bacon", "Olive Oil", "Paprika", "Jam"]}
+            />
 
             <div>
             <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Available</label>
