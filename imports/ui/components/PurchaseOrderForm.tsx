@@ -1,6 +1,12 @@
 import { Meteor } from "meteor/meteor";
-import { FormEvent, useState } from "react";
-import { PurchaseOrder, StockItem, Supplier } from "/imports/api";
+import { useTracker, useSubscribe } from "meteor/react-meteor-data";
+import { FormEvent, useEffect, useState } from "react";
+import {
+  PurchaseOrder,
+  StockItem,
+  StockItemsCollection,
+  Supplier,
+} from "/imports/api";
 
 interface PurcahseOrderFormProps {
   onSuccess: () => void;
@@ -11,11 +17,28 @@ export const PurchaseOrderForm = ({
   onSuccess,
   supplier,
 }: PurcahseOrderFormProps) => {
+  useSubscribe("stockItems.all");
+  const stockItems: { [index: string]: StockItem } = useTracker(() => {
+    const queryResult = StockItemsCollection.find(
+      { supplier: supplier._id },
+      { sort: { name: 1 } },
+    ).fetch();
+    let result: { [index: string]: StockItem } = {};
+    for (let stockItem of queryResult) {
+      result[String(stockItem._id)] = stockItem;
+    }
+    return result;
+  }, [supplier]);
+
   const [stockItem, setStockItem] = useState<StockItem | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [cost, setCost] = useState(0);
 
-  const stockItems: { [index: string]: StockItem } = {};
+  useEffect(() => {
+    setStockItem(null);
+    setQuantity(1);
+    setCost(0);
+  }, [supplier]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -84,8 +107,13 @@ export const PurchaseOrderForm = ({
               onChange={(e) => setStockItem(stockItems[e.target.value] ?? null)}
               className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
+              disabled={!stockItems || Object.keys(stockItems).length <= 0}
             >
-              <option value="">--Select good--</option>
+              <option value="">
+                {stockItems && Object.keys(stockItems).length > 0
+                  ? "--Select good--"
+                  : "No associated goods..."}
+              </option>
               {Object.values(stockItems).map((item, i) => (
                 <option value={String(item._id)} key={i}>
                   {item.name}
