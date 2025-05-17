@@ -14,6 +14,7 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
     const [allIngredients, setAllIngredients] = useState<string[]>(initialIngredients);
     const containerRef = useRef<HTMLDivElement>(null);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [ searchIngredient, setSearchIngredient ] = useState("");
 
     const updateIngredients = (ingredient: string) => {
         if (selectedIngredients.includes(ingredient)) {
@@ -22,6 +23,12 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
             onChange([...selectedIngredients, ingredient]);
         }
     };
+
+    const searchIngredientList = allIngredients.filter(ingredient =>
+        ingredient.toLowerCase().includes(searchIngredient.toLowerCase())
+    )
+
+    useEffect(() => { setSearchIngredient(""); }, [ initialIngredients, selectedIngredients ]);
 
     useEffect(() => {
         const handleClickToClose = (event: MouseEvent) => {
@@ -41,15 +48,18 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
         <div className="relative" ref={containerRef}>
             <input
                 type="text"
+                value={searchIngredient}
+                onChange={(e) => setSearchIngredient(e.target.value)}
                 className="border rounded p-2 w-full"
                 placeholder="--Search ingredients--"
                 onFocus={() => setShowDropdown(true)}
             />
             { showDropdown && (
-            <ul className="absolute bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white z-10">
-                {allIngredients.map((ingredient) => (
-                    <li key={ingredient} className="p-2 hover:bg-gray-200">
-                        <label>
+            <ul className="z-10 absolute bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white max-h-48 overflow-y-auto">
+                {searchIngredientList.length > 0 ? (
+                    searchIngredientList.map((ingredient) => (
+                        <li key={ingredient} className="p-2 hover:bg-gray-200 rounded">
+                        <label className="flex items-center space-x-2 cursor-pointer">
                             <input
                                 type="checkbox"
                                 checked={selectedIngredients.includes(ingredient)}
@@ -58,8 +68,11 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                             {ingredient}
                         </label>
                     </li>
-                ))}
-            </ul>
+                    ))
+                ) : (
+                    <li className="p-2 text-sm text-gray-500">No matches found</li>
+                )} 
+                </ul>
             )}
         </div>
     );
