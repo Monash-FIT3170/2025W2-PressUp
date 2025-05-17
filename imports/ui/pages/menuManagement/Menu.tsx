@@ -9,6 +9,7 @@ import { Meteor } from 'meteor/meteor';
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { EditItemModal } from "../../components/EditItemModal";
 import { SearchBar } from "../../components/SearchBar";
+import { CategoryFilter } from "../../components/CategoryFilter";
 
 export const Menu = () => {
   // Set title
@@ -42,16 +43,17 @@ export const Menu = () => {
     setSelectedItem(null);
   };
 
-  const handleCategorySelect = (category: any) => {
-    setSelectedCategory(category);
-  }
-
   // Filter items by search and category
   const filteredItems = posItems
     // Filter by search term (item name)
     .filter(item => 
       searchTerm === "" || 
       item.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    // Filter by category
+    .filter(item =>
+      selectedCategory === 'All' || 
+      Array.isArray(item.category) && item.category.includes(selectedCategory)
     );
 
 
@@ -65,6 +67,14 @@ export const Menu = () => {
           <SearchBar 
             onSearch={setSearchTerm} 
             initialSearchTerm={searchTerm} 
+          />
+        </div>
+
+        {/* Category Filter */}
+        <div className="w-full md-6">
+          <CategoryFilter
+            onCategorySelect={setSelectedCategory} 
+            initialCategory='All'
           />
         </div>
 
@@ -87,7 +97,7 @@ export const Menu = () => {
       </div>
       
       {/* Sidebar positioned on the right */}
-      <Sidebar onCategorySelect={handleCategorySelect} />
+      <Sidebar/> 
     </div>
   );
 };
