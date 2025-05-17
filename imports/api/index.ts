@@ -13,5 +13,11 @@ export {
 // Transactions
 export {
   Transaction,
-  TransactionsCollection
-} from "./transactions/TransactionsCollection"
+  TransactionsCollection,
+} from "./transactions/TransactionsCollection";
+
+// Purchase Orders
+export {
+  PurchaseOrder,
+  PurchaseOrdersCollection,
+} from "./purchaseOrders/PurchaseOrdersCollection";
