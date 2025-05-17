@@ -46,10 +46,14 @@ export const Menu = () => {
     setSelectedCategory(category);
   }
 
-  // Filter items
-  const filteredItems = selectedCategory === 'All' 
-  ? posItems 
-  : posItems.filter(item => Array.isArray(item.category) && item.category.includes(selectedCategory));
+  // Filter items by search and category
+  const filteredItems = posItems
+    // Filter by search term (item name)
+    .filter(item => 
+      searchTerm === "" || 
+      item.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
 
   return (
     <div id="pos" className="flex flex-1 overflow-auto">
