@@ -9,6 +9,7 @@ import {
   SupplierIcon,
 } from "./symbols/navigation/Inventory";
 import { MonitorIcon } from "./symbols/navigation/POS";
+import { CoffeeIcon } from "./symbols/navigation/Coffee";
 
 interface NavigationMenuProps {
   show: boolean;
@@ -52,7 +53,7 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         ></NavigationEntry>
         <NavigationEntry
-          icon={<MonitorIcon fill="var(--color-primary-dark)" />}
+          icon={<CoffeeIcon fill="var(--color-primary-dark)" />}
           name="Menu Management"
           path="/menuManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
