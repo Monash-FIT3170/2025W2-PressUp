@@ -1,0 +1,27 @@
+services:
+  mongo:
+    image: mongo:6
+    container_name: press-up-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - press-up-data:/data/db
+
+  meteor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: press-up-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/pressup
+      - ROOT_URL=http://localhost:3000
+      - PORT=3000
+    depends_on:
+      - mongo
+
+volumes:
+  press-up-data:
