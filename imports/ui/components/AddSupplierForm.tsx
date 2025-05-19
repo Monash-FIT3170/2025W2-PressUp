@@ -26,11 +26,12 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
     setGoods(goods.filter((_, index) => index !== indexToRemove));
   };
 
+  const validateEmail = (email: string) => {
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+};
 
-  useSubscribe("suppliers") === false;
-  const suppliers: Supplier[] = useTracker(() => {
-    return SuppliersCollection.find().fetch();
-  });
+
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -39,6 +40,7 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
     if (
       !supplierName ||
       !email ||
+      !validateEmail(email) ||
       !phone ||
       !website ||
       !address 
@@ -48,13 +50,14 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
     }
 
     Meteor.call(
-      "supplier.insert",
+      "suppliers.insert",
       {
         name: supplierName,
         email: email,
         phone: phone,
         website: website,
         address: address,
+        goods: goods
       },
       (error: Meteor.Error | undefined) => {
         if (error) {
@@ -65,6 +68,8 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
           setPhone("");
           setWebsite("");
           setAddress("");
+          setGoods([]);
+          setInputValue("");
           onSuccess();
         }
       },
@@ -179,7 +184,7 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
               type="submit"
               className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
             >
-              Add Goods
+              Add Supplier
             </button>
           </div>
         </form>

@@ -15,8 +15,19 @@ export const SuppliersPage = () => {
   const [open, setOpen] = useState(false);
   const [formResetKey, setFormResetKey] = useState(0);
 
-  const isLoadingStockItems = useSubscribe("stockItems.all") === false;
   const isLoadingSuppliers = useSubscribe("suppliers") === false;
+
+  const suppliers: Supplier[] = useTracker(() => {
+    return SuppliersCollection.find({}, { sort: { name: 1 } }).fetch();
+  })
+
+  const handleModalClose = () => {
+    setOpen(false);
+    setFormResetKey((prev) => prev + 1);
+  };
+
+  const handleSuccess = () => handleModalClose();
+
 
   const stockItems: StockItemWithSupplier[] = useTracker(() => {
     const stockItems = StockItemsCollection.find(
@@ -38,13 +49,6 @@ export const SuppliersPage = () => {
     return result;
   });
 
-  const handleModalClose = () => {
-    setOpen(false);
-    setFormResetKey((prev) => prev + 1);
-  };
-
-  const handleSuccess = () => handleModalClose();
-
   return (
     <div className="flex flex-1 flex-col">
       <div className="grid grid-cols-2">
@@ -59,7 +63,7 @@ export const SuppliersPage = () => {
         {isLoadingStockItems || isLoadingSuppliers ? (
           <p className="text-gray-400 p-4">Loading inventory...</p>
         ) : (
-          <SupplierTable stockItems={stockItems} />
+          <SupplierTable suppliers={suppliers} />
         )}
       </div>
 
