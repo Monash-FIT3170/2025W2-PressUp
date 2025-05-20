@@ -39,7 +39,7 @@ export const SuppliersPage = () => {
         <div className="relative">
           <input
             type="text"
-            placeholder="Search suppliers or goods..."
+            placeholder="Search suppliers or goods"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -48,7 +48,7 @@ export const SuppliersPage = () => {
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="flex items-center px-4 py-2 bg-red-400 text-white rounded-full hover:bg-red-500 transition-all duration-300"
+          className="flex items-center px-4 py-2 bg-red-400 shadow-lg/20 text-white rounded-full hover:bg-red-500 transition-all duration-300"
         >
           Add Supplier
         </button>
