@@ -1,9 +1,10 @@
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { FormEvent, useState, KeyboardEvent } from "react";
 import { Meteor } from "meteor/meteor";
-import { Supplier, SuppliersCollection } from "/imports/api";
+import { Supplier, SuppliersCollection } from "/imports/api/";
 import { Mongo } from "meteor/mongo";
 import {X} from 'lucide-react'
+
 
 export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [supplierName, setSupplierName] = useState("");

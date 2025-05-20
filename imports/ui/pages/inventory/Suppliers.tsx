@@ -1,74 +1,69 @@
 import React, { useState } from "react";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-import { StockItemWithSupplier } from "./types";
-import {
-  StockItemsCollection,
-  Supplier,
-  SuppliersCollection,
-} from "/imports/api";
-import { SupplierTable } from "../../components/SupplierTable";
+import { Supplier, SuppliersCollection } from "/imports/api";
 import { Modal } from "../../components/Modal";
 import { AddSupplierForm } from "../../components/AddSupplierForm";
-
+import { Search } from 'lucide-react'; 
+import { SupplierTable } from "../../components/SupplierTable";
 
 export const SuppliersPage = () => {
   const [open, setOpen] = useState(false);
   const [formResetKey, setFormResetKey] = useState(0);
-
+  const [searchTerm, setSearchTerm] = useState("");
+  
   const isLoadingSuppliers = useSubscribe("suppliers") === false;
-
+  
   const suppliers: Supplier[] = useTracker(() => {
     return SuppliersCollection.find({}, { sort: { name: 1 } }).fetch();
-  })
+  });
 
+  // Filter suppliers based on search term
+  const filteredSuppliers = suppliers.filter(supplier => 
+    searchTerm === "" || 
+    supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (supplier.goods && supplier.goods.some(good => 
+      good.toLowerCase().includes(searchTerm.toLowerCase())
+    ))
+  );
+  
   const handleModalClose = () => {
     setOpen(false);
     setFormResetKey((prev) => prev + 1);
   };
-
+  
   const handleSuccess = () => handleModalClose();
-
-
-  const stockItems: StockItemWithSupplier[] = useTracker(() => {
-    const stockItems = StockItemsCollection.find(
-      {},
-      { sort: { name: 1 } },
-    ).fetch();
-    const result = [];
-    console.log(stockItems);
-    for (let stockItem of stockItems) {
-      let supplier: Supplier | null = null;
-      if (stockItem.supplier != null) {
-        supplier = SuppliersCollection.find({
-          _id: stockItem.supplier,
-        }).fetch()[0];
-        console.log(supplier);
-      }
-      result.push({ ...stockItem, supplier });
-    }
-    return result;
-  });
-
+  
   return (
     <div className="flex flex-1 flex-col">
-      <div className="grid grid-cols-2">
+      <div className="flex justify-between items-center p-4 gap-2">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search suppliers or goods..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-400"
+          />
+          <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        </div>
         <button
           onClick={() => setOpen(true)}
-          className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-30 right-2 hover:bg-rose-500"
+          className="flex items-center px-4 py-2 bg-red-400 text-white rounded-full hover:bg-red-500 transition-all duration-300"
         >
           Add Supplier
         </button>
       </div>
-      <div id="stock" className="flex flex-1 flex-col overflow-auto">
-        {isLoadingStockItems || isLoadingSuppliers ? (
-          <p className="text-gray-400 p-4">Loading inventory...</p>
+      
+      <div id="supplier-container" className="flex flex-1 flex-col overflow-auto">
+        {isLoadingSuppliers ? (
+          <p className="text-gray-400 p-4">Loading suppliers...</p>
         ) : (
-          <SupplierTable suppliers={suppliers} />
+          <SupplierTable suppliers={filteredSuppliers} />
         )}
       </div>
-
+      
       <Modal open={open} onClose={() => setOpen(false)}>
-        <AddSupplierForm key={formResetKey} onSuccess={handleSuccess} /> 
+        <AddSupplierForm key={formResetKey} onSuccess={handleSuccess} />
       </Modal>
     </div>
   );
