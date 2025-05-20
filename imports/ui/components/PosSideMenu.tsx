@@ -47,6 +47,11 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
     setOpenDiscountPopup(false);
   };
 
+  const handleDelete = (idToDelete: string) => {
+  const updatedQuantities = { ...localQuantities };
+  updatedQuantities[idToDelete] = 0; // set quantity to 0 to hide
+  setLocalQuantities(updatedQuantities);
+};
 
   return (
     <div className="w-64 bg-gray-100 flex flex-col h-screen">
@@ -60,32 +65,58 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
       {/* Scrollable Order List */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
         {/* Now loop through the items */}
-        {items.map((item) => (
-          <div className="bg-white rounded-md p-3 shadow-sm flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-gray-800">{item.name}</h3>
-              {/* <p className="text-xs text-gray-500">{item.size || "-"}</p> assuming there might be a size */}
+        {items.map((item) => {
+          const quantity = localQuantities[String(item._id)];
+          if (quantity === 0) return null;
+
+          return (
+            <div
+              key={String(item._id)}
+              className="bg-white rounded-md p-3 shadow-sm space-y-2"
+            >
+              {/* Item name */}
+              <div className="text-sm font-semibold text-gray-800">
+                {item.name}
+              </div>
+
+              {/* Controls and price */}
+              <div className="flex items-center justify-between">
+                {/* Quantity controls */}
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleQuantityChange(String(item._id), -1)}
+                    className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold"
+                  >
+                    –
+                  </button>
+                  <span>{quantity}</span>
+                  <button
+                    onClick={() => handleQuantityChange(String(item._id), 1)}
+                    className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold"
+                  >
+                    ＋
+                  </button>
+                </div>
+
+                {/* Price and delete icon */}
+                <div className="flex items-center space-x-2">
+                  <div className="text-sm font-semibold text-gray-800">
+                    ${item.price.toFixed(2)}
+                  </div>
+                  <button
+                    onClick={() => handleDelete(String(item._id))}
+                    className="text-red-500 hover:text-red-700 text-lg font-bold"
+                    title="Remove item"
+                  >
+                    🗑
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-            <button
-                onClick={() => handleQuantityChange(String(item._id), -1)}
-                className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold cursor-pointer"
-              >
-                –
-              </button>
-              <span>{localQuantities[String(item._id)] ?? 0}</span>
-              <button
-                onClick={() => handleQuantityChange(String(item._id), 1)}
-                className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold cursor-pointer"
-              >
-                ＋
-              </button>
-            </div>
-            <div className="font-semibold text-gray-800">
-              ${item.price.toFixed(2)}
-            </div>
-          </div>
-        ))}
+          );
+        })}
+
+
       </div>
 
       {/* Total Cost + Discount Button + Pay Button */}
