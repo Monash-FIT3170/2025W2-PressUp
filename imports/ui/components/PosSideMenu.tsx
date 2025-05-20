@@ -132,7 +132,6 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
                 ))}
               </div>
             </div>
-            <div className="w-180 h-100 bg-pink-200 rounded-2xl mx-10"></div>
           </div>
           )
         }
