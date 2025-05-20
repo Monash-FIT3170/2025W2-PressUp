@@ -4,18 +4,19 @@ import { PaymentModal } from "./PaymentModal";
 import { Mongo } from "meteor/mongo";
 
 interface PosSideMenuProps {
+  tableNo: number;
   items: MenuItem[];
   total: number;
   onIncrease: (itemId: Mongo.ObjectID) => void;
   onDecrease: (itemId: Mongo.ObjectID) => void;
 }
 
-export const PosSideMenu = ({ items, total, onIncrease, onDecrease }: PosSideMenuProps) => {
+export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: PosSideMenuProps) => {
   return (
     <div className="w-64 bg-gray-100 flex flex-col pb-20 h-screen">
       <div className="flex items-center justify-between bg-rose-400 text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
-        <span className="text-lg font-semibold">Table 12</span>
+        <span className="text-lg font-semibold">Table {tableNo}</span>
         <button className="text-2xl font-bold">×</button>
       </div>
 

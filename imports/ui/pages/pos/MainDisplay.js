@@ -80,7 +80,7 @@ export const MainDisplay = () => {
           </div>
       </div>
       <div id="pos-side-panel" className="col-span-1 ">
-        <PosSideMenu items={order.menuItems} total={order.totalPrice} onIncrease={handleIncrease} onDecrease={handleDecrease}></PosSideMenu>
+        <PosSideMenu tableNo={order.tableNo} items={order.menuItems} total={order.totalPrice} onIncrease={handleIncrease} onDecrease={handleDecrease}></PosSideMenu>
       </div>
     </div>
     
