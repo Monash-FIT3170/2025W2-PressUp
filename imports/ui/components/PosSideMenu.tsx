@@ -8,6 +8,8 @@ interface PosSideMenuProps {
 }
 
 export const PosSideMenu = ({ items }: PosSideMenuProps) => {
+  let totalCost = 40.00; // Hardcoding total cost for now
+
   const [localQuantities, setLocalQuantities] = useState<{ [id: string]: number }>(
     Object.fromEntries(items.map((item) => [String(item._id), item.quantity]))
   );
@@ -31,18 +33,18 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
 
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
   const [discountPercent, setDiscountPercent] = useState(0)
-  const [finalTotal, setFinalTotal] = useState(40.00)
+  const [originalTotal, setOriginalTotal] = useState(totalCost);
+  const [finalTotal, setFinalTotal] = useState(totalCost)
   const [savedAmount, setSavedAmount] = useState(0)
 
   const applyDiscount = (percentage:number) => {
     const discountPercentage = percentage;
-    const discountedFinalTotal = finalTotal - (finalTotal * (discountPercentage/100));
-    const savedCost = finalTotal - discountedFinalTotal;
-    const totalSaved = savedAmount + savedCost;
+    const discountedFinalTotal = originalTotal - (originalTotal * (discountPercentage/100));
+    const savedCost = originalTotal - discountedFinalTotal;
     setDiscountPercent(discountPercentage);
     setFinalTotal(discountedFinalTotal);
+    setSavedAmount(savedCost);
     setOpenDiscountPopup(false);
-    setSavedAmount(totalSaved);
   };
 
 
@@ -91,7 +93,7 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
         {/* Displaying total cost*/}
         <div className="flex justify-between items-center mb-2">
           <span className="text-lg font-bold">Total</span>
-          <span className="text-lg font-bold">$40.00</span> {/* Static total for now */}
+          <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span> {/* Static total for now */}
         </div>
         
         {/* Shows how much discount is applied*/}
@@ -124,8 +126,8 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
 
             <div className="w-180 h-100 bg-pink-200 rounded-2xl mx-10 p-8">
               <span className="font-bold text-xl text-gray-700">Select Discount Percentage</span>
-              <div className="grid grid-cols-3 gap-1 my-4">
-                {[5, 10, 15, 20, 25, 30, 35, 40, 50].map((d) => (
+              <div className="grid grid-cols-4 gap-1 my-4">
+                {[5, 10, 25, 50].map((d) => (
                   <button key={d} className="bg-pink-700 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full" onClick={() => applyDiscount(d)}>
                     {d}%
                   </button>
