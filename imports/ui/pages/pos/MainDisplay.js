@@ -16,8 +16,36 @@ export const MainDisplay = () => {
       tableNo: 1,
     });
 
-    const handleItemClick = (item) => {
+    // Update order status
+    const updateOrder = (updatedItems) => {
+      const newTotal = updatedItems.reduce(
+        (sum, i) => sum + i.quantity * i.price,
+        0
+      );
+      setOrder({
+        ...order,
+        menuItems: updatedItems,
+        totalPrice: parseFloat(newTotal.toFixed(2)),
+      });
+    };
 
+    const handleIncrease = (itemId) => {
+      const updatedItems = order.menuItems.map((i) =>
+        i._id === itemId ? { ...i, quantity: i.quantity + 1 } : i
+      );
+      updateOrder(updatedItems);
+    };
+
+    const handleDecrease = (itemId) => {
+      const updatedItems = order.menuItems
+        .map((i) =>
+          i._id === itemId ? { ...i, quantity: i.quantity - 1 } : i
+        )
+        .filter((i) => i.quantity > 0); // Remove if 0
+      updateOrder(updatedItems);
+    };
+
+    const handleItemClick = (item) => {
       const existing = order.menuItems.find((i) => i._id === item._id);
       let updatedItems;
 
@@ -36,12 +64,7 @@ export const MainDisplay = () => {
         0
       );
 
-      // Update order status
-      setOrder({
-        ...order,
-        menuItems: updatedItems,
-        totalPrice: parseFloat(newTotal.toFixed(2)),
-      });
+      updateOrder(updatedItems);      
     };
 
   return (  
@@ -57,7 +80,7 @@ export const MainDisplay = () => {
           </div>
       </div>
       <div id="pos-side-panel" className="col-span-1 ">
-        <PosSideMenu items={order.menuItems} total={order.totalPrice}></PosSideMenu>
+        <PosSideMenu items={order.menuItems} total={order.totalPrice} onIncrease={handleIncrease} onDecrease={handleDecrease}></PosSideMenu>
       </div>
     </div>
     
