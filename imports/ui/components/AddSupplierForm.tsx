@@ -15,6 +15,7 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [goods, setGoods] =  useState<string[]>([]);
     const [inputValue, setInputValue] = useState('');
 
+  // Function to add a new good, when pressing enter, add the good. 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && inputValue.trim() !== '') {
       e.preventDefault();
@@ -23,10 +24,12 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
     }
   };
 
+  // Function to remove a good
   const removeGood = (indexToRemove: number) => {
     setGoods(goods.filter((_, index) => index !== indexToRemove));
   };
 
+  // Function to validate email
   const validateEmail = (email: string) => {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
@@ -40,6 +43,8 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
     //const parsedQuantity = parseInt(quantity, 10);
     if (
       !supplierName ||
+      //!description ||
+      //!pastOrderQty ||
       !email ||
       !validateEmail(email) ||
       !phone ||
@@ -183,7 +188,7 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
           <div className="grid grid-cols-1 p-4">
             <button
               type="submit"
-              className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
+              className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-500 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
             >
               Add Supplier
             </button>
