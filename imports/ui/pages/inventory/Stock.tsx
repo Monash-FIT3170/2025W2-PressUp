@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { usePageTitle } from "../../hooks/PageTitleContext";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { StockItemWithSupplier } from "./types";
 import {
@@ -12,6 +13,11 @@ import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
 
 export const StockPage = () => {
+  const [_, setPageTitle] = usePageTitle();
+  useEffect(() => {
+    setPageTitle("Inventory Management - Stock");
+  }, [setPageTitle]);
+
   const [filter, setFilter] = useState<
     "all" | "inStock" | "lowInStock" | "outOfStock"
   >("all");
