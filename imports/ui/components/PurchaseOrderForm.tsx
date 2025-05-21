@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import {
   PurchaseOrder,
   StockItem,
+  StockItemLine,
   StockItemsCollection,
   Supplier,
 } from "/imports/api";
@@ -18,7 +19,7 @@ export const PurchaseOrderForm = ({
   supplier,
 }: PurcahseOrderFormProps) => {
   useSubscribe("stockItems.all");
-  const stockItems: { [index: string]: StockItem } = useTracker(() => {
+  const availableStockItems: { [index: string]: StockItem } = useTracker(() => {
     const queryResult = StockItemsCollection.find(
       { supplier: supplier._id },
       { sort: { name: 1 } },
@@ -30,26 +31,25 @@ export const PurchaseOrderForm = ({
     return result;
   }, [supplier]);
 
-  const [stockItem, setStockItem] = useState<StockItem | null>(null);
-  const [quantity, setQuantity] = useState(1);
-  const [cost, setCost] = useState<number | null>(null);
+  const [stockItems, setStockItems] = useState<StockItemLine[]>([]);
+  const [selectedStockItem, setSelectedStockItem] = useState<StockItem | null>(
+    null,
+  );
+  const [quantityStr, setQuantityStr] = useState<string>("");
+  const [costStr, setCostStr] = useState<string>("");
 
-  useEffect(() => {
-    // Reset form if supplier changes
-    setStockItem(null);
-    setQuantity(1);
-    setCost(null);
-  }, [supplier]);
+  const costRegex = /^[0-9]*(\.[0-9]{0,2})?$/;
+  const quantityRegex = /^[0-9]*$/;
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const addStockItemLine = () => {
+    const stockItemId = selectedStockItem?._id;
+    const quantity = Number(quantityStr);
+    const cost = Number(costStr);
 
     if (
-      !stockItem ||
-      !stockItem._id ||
+      !stockItemId ||
       isNaN(quantity) ||
       quantity < 0 ||
-      !cost ||
       isNaN(cost) ||
       cost < 0
     ) {
@@ -57,10 +57,48 @@ export const PurchaseOrderForm = ({
       return;
     }
 
+    setStockItems((prev) => {
+      const existingIndex = prev.findIndex(
+        (v) => v.stockItem == stockItemId && v.cost == cost,
+      );
+      if (existingIndex != -1) {
+        const existingStockItemLine = prev[existingIndex];
+        const newStockItemLine = {
+          ...existingStockItemLine,
+          quantity: existingStockItemLine.quantity + quantity,
+        };
+        return [
+          ...prev.slice(0, existingIndex),
+          newStockItemLine,
+          ...prev.slice(existingIndex + 1),
+        ];
+      }
+
+      return [{ stockItem: stockItemId, quantity, cost }, ...prev];
+    });
+  };
+
+  const clearFields = () => {
+    setStockItems([]);
+    setSelectedStockItem(null);
+    setQuantityStr("");
+    setCostStr("");
+  };
+
+  useEffect(() => {
+    clearFields();
+  }, [supplier]);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+
+    if (stockItems.length == 0) {
+      alert("Please add at least one good.");
+      return;
+    }
+
     const purchaseOrder: Omit<PurchaseOrder, "date"> = {
-      stockItem: stockItem._id,
-      quantity,
-      cost,
+      stockItems,
     };
 
     Meteor.call(
@@ -70,9 +108,7 @@ export const PurchaseOrderForm = ({
         if (error) {
           alert("Error: " + error.reason);
         } else {
-          setStockItem(null);
-          setQuantity(1);
-          setCost(0);
+          clearFields();
           onSuccess();
         }
       },
@@ -81,7 +117,7 @@ export const PurchaseOrderForm = ({
 
   return (
     <div>
-      <div className="flex items-center justify-center p-4 w-100 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+      <div className="flex items-center justify-center p-4 w-full md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
         <h3 className="text-xl font-semibold text-rose-400 dark:text-white">
           New Purchase Order
         </h3>
@@ -103,55 +139,103 @@ export const PurchaseOrderForm = ({
           </div>
           <div>
             <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Item Name
+              Add Goods
             </label>
             <select
-              onChange={(e) => setStockItem(stockItems[e.target.value] ?? null)}
+              onChange={(e) =>
+                setSelectedStockItem(availableStockItems[e.target.value])
+              }
               className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
-              disabled={!stockItems || Object.keys(stockItems).length <= 0}
-              value={String(stockItem?._id ?? "")}
+              disabled={
+                !availableStockItems ||
+                Object.keys(availableStockItems).length <= 0
+              }
+              value={selectedStockItem ? String(selectedStockItem._id) : ""}
             >
               <option value="">
-                {stockItems && Object.keys(stockItems).length > 0
+                {availableStockItems &&
+                  Object.keys(availableStockItems).length > 0
                   ? "--Select good--"
                   : "No associated goods..."}
               </option>
-              {Object.values(stockItems).map((item, i) => (
+              {Object.values(availableStockItems).map((item, i) => (
                 <option value={String(item._id)} key={i}>
                   {item.name}
                 </option>
               ))}
             </select>
           </div>
-          <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Quantity
-            </label>
+          <div className="flex flex-row space-x-4">
             <input
-              type="number"
-              min="0"
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              placeholder="0"
+              type="text"
+              pattern={quantityRegex.source}
+              inputMode="numeric"
+              value={quantityStr}
+              onChange={(e) =>
+                quantityRegex.test(e.target.value) &&
+                setQuantityStr(e.target.value)
+              }
+              placeholder="Quantity"
               className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             />
+            <input
+              type="text"
+              pattern={costRegex.source}
+              inputMode="numeric"
+              value={costStr}
+              onChange={(e) =>
+                costRegex.test(e.target.value) && setCostStr(e.target.value)
+              }
+              placeholder="Cost"
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+              required
+            />
+            <button
+              className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-green-500 hover:bg-green-600 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-green-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-green-600"
+              onClick={(e) => {
+                e.preventDefault();
+                addStockItemLine();
+              }}
+            >
+              +
+            </button>
           </div>
-          <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Cost
-            </label>
-            <input
-              type="number"
-              min="0.00"
-              step="0.01"
-              value={cost ?? ""}
-              onChange={(e) => setCost(Number(e.target.value))}
-              placeholder="0.00"
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-              required
-            />
+          <div
+            className={`dark:text-white items-center grid grid-cols-5 max-h-48 gap-2 overflow-auto ${stockItems.length > 0 && "pb-5"}`}
+          >
+            {stockItems.length > 0 && (
+              <>
+                <div className="col-span-2 font-bold">Good</div>
+                <div className="font-bold">Quantity</div>
+                <div className="font-bold">Cost</div>
+                <div></div>
+              </>
+            )}
+            {stockItems.map((stockItemLine, i) => (
+              <>
+                <div className="col-span-2" key={`ssiname-${i}`}>
+                  {availableStockItems[String(stockItemLine.stockItem)].name}
+                </div>
+                <div key={`ssiqty-${i}`}>{stockItemLine.quantity}</div>
+                <div key={`ssicost-${i}`}>{stockItemLine.cost}</div>
+                <div key={`ssidel-${i}`}>
+                  <button
+                    className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-red-400 hover:bg-red-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-red-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-300 dark:hover:bg-red-400 dark:focus:ring-red-400"
+                    onClick={() =>
+                      setStockItems((prev) =>
+                        prev.filter(
+                          (s) => s.stockItem != stockItemLine.stockItem,
+                        ),
+                      )
+                    }
+                  >
+                    x
+                  </button>
+                </div>
+              </>
+            ))}
           </div>
           <div className="grid grid-cols-1 p-4">
             <button
