@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { usePageTitle } from "../../hooks/PageTitleContext";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Supplier, SuppliersCollection } from "/imports/api";
 import { Modal } from "../../components/Modal";
@@ -7,6 +8,11 @@ import { Search } from 'lucide-react';
 import { SupplierTable } from "../../components/SupplierTable";
 
 export const SuppliersPage = () => {
+  const [_, setPageTitle] = usePageTitle();
+  useEffect(() => {
+    setPageTitle("Inventory Management - Suppliers");
+  }, [setPageTitle]);
+
   const [open, setOpen] = useState(false);
   const [formResetKey, setFormResetKey] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,7 +54,7 @@ export const SuppliersPage = () => {
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="flex items-center px-4 py-2 bg-red-400 shadow-lg/20 text-white rounded-full hover:bg-red-500 transition-all duration-300"
+          className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-right-2 hover:bg-rose-500"
         >
           Add Supplier
         </button>
@@ -59,6 +65,7 @@ export const SuppliersPage = () => {
           <p className="text-gray-400 p-4">Loading suppliers...</p>
         ) : (
           <SupplierTable suppliers={filteredSuppliers} />
+
         )}
       </div>
       
