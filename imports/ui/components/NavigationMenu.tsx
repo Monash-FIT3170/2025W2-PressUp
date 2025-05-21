@@ -121,11 +121,11 @@ const NavigationEntry = ({
           {active ? <ActiveContent /> : <div className="px-3">{name}</div>}
         </div>
       </Link>
-      <div className="grid grid-cols-3 text-[0.8em]">
+      <div className="grid grid-cols-12 text-[0.8em]">
         {React.Children.map(children, (child, index) => (
           <>
             <div key={`${index}-empty`} />
-            <div className="col-span-2" key={`${index}-navelement`}>
+            <div className="col-span-11" key={`${index}-navelement`}>
               {child}
             </div>
           </>
