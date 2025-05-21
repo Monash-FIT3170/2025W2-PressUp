@@ -16,12 +16,12 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
       </h2>
     );
 
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [formSupplier, setFormSupplier] = useState<Supplier>(suppliers[0]);
 
   const onCreatePurchaseOrder = (supplier: Supplier) => {
     setFormSupplier(supplier);
-    setOpen(true);
+    setIsOpen(true);
   };
 
   return (
@@ -102,11 +102,13 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
         </div>
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <PurchaseOrderForm
-          supplier={formSupplier}
-          onSuccess={() => setOpen(false)}
-        />
+      <Modal open={isOpen} onClose={() => setIsOpen(false)}>
+        {isOpen && (
+          <PurchaseOrderForm
+            supplier={formSupplier}
+            onSuccess={() => setIsOpen(false)}
+          />
+        )}
       </Modal>
     </div>
   );
