@@ -1,41 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { StockItem } from "/imports/api";
+import React, { useState } from "react";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { StockItemWithSupplier } from "./types";
+import {
+  StockItemsCollection,
+  Supplier,
+  SuppliersCollection,
+} from "/imports/api";
 import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
-import { usePageTitle } from "../../hooks/PageTitleContext";
-
-// TODO: Delete this mock function when integrating with API
-const mockStockItems = (amount: number) => {
-  const rand = (max: number) => Math.floor(Math.random() * max);
-  let result: StockItem[] = [];
-  for (let i = 0; i < amount; ++i) {
-    result.push({
-      name: [
-        "Coffee Beans",
-        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-        "Almond Milk",
-      ][rand(3)],
-      quantity: [0, 99999999, 100, 10][rand(4)],
-      location: `Room ${[
-          "1029381290129083190238120312938190282038120381029819028",
-          "1",
-          "2",
-          "33",
-        ][rand(4)]
-        }`,
-      supplier: `Supplier ${[
-          "102938129089127012801238120128091238901289012890128",
-          "1",
-          "2",
-          "727",
-        ][rand(4)]
-        }`,
-    });
-  }
-  return result;
-};
 
 export const StockPage = () => {
   // Set title
@@ -50,9 +24,28 @@ export const StockPage = () => {
   const [filter, setFilter] = useState<
     "all" | "inStock" | "lowInStock" | "outOfStock"
   >("all");
+  const [open, setOpen] = useState(false);
+  const [formResetKey, setFormResetKey] = useState(0);
 
-  const lowStockThreshold = 10; // TODO: Make this dynamic based on user choice
+  const isLoadingStockItems = useSubscribe("stockItems.all") === false;
+  const isLoadingSuppliers = useSubscribe("suppliers") === false;
 
+  const stockItems: StockItemWithSupplier[] = useTracker(() => {
+    const stockItems = StockItemsCollection.find({}, { sort: { name: 1 } }).fetch();
+    const result = []
+    console.log(stockItems);
+    for (let stockItem of stockItems) {
+      let supplier : Supplier | null = null;
+      if (stockItem.supplier != null) {
+        supplier = SuppliersCollection.find({_id: stockItem.supplier}).fetch()[0];
+        console.log(supplier)
+      }
+      result.push({...stockItem, supplier});
+    }
+    return result
+  });
+
+  const lowStockThreshold = 10;
   const filteredStockItems = stockItems.filter((item) => {
     if (filter === "inStock") return item.quantity > lowStockThreshold;
     if (filter === "outOfStock") return item.quantity === 0;
@@ -70,6 +63,13 @@ export const StockPage = () => {
     setOpen(true); 
   };
 
+  const handleModalClose = () => {
+    setOpen(false);
+    setFormResetKey((prev) => prev + 1);
+  };
+
+  const handleSuccess = () => handleModalClose();
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="grid grid-cols-2">
@@ -79,17 +79,21 @@ export const StockPage = () => {
             setEditItem(null)
             setOpen(true)
           }}
-          className="justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-24 right-2 hover:bg-rose-500"
+          className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-24 right-2 hover:bg-rose-500"
         >
           Add Item
         </button>
       </div>
-      <div className="flex-1 overflow-auto">
-        <StockTable stockItems={filteredStockItems} onEdit={handleEdit}/>
+      <div id="stock" className="flex flex-1 flex-col overflow-auto">
+        {isLoadingStockItems || isLoadingSuppliers ? (
+          <p className="text-gray-400 p-4">Loading inventory...</p>
+        ) : (
+          <StockTable stockItems={filteredStockItems} onEdit={handleEdit}/>
+        )}
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-        <AddItemForm item={editItem} />
+        <AddItemForm key={formResetKey} onSuccess={handleSuccess} item={editItem} />
         <div className="grid grid-cols-2 p-4">
           <button
             onClick={() => setOpen(false)}

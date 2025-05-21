@@ -3,7 +3,11 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { Pill } from "./Pill";
 import { ArrowLeft } from "./symbols/navigation/Arrows";
-import { PencilIcon, StockIcon } from "./symbols/navigation/Inventory";
+import {
+  PencilIcon,
+  StockIcon,
+  SupplierIcon,
+} from "./symbols/navigation/Inventory";
 import { MonitorIcon } from "./symbols/navigation/POS";
 
 interface NavigationMenuProps {
@@ -15,7 +19,9 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
   // If you want to change the width here you should also make a change there.
   return (
     <div
-      className={`bg-primary min-h-full transition-all ease-in-out duration-300 ${show ? "w-[20vw]" : "w-0"} overflow-hidden`}
+      className={`bg-primary min-h-full transition-all ease-in-out duration-300 ${
+        show ? "w-[20vw]" : "w-0"
+      } overflow-hidden`}
     >
       <div className="flex flex-col p-6 text-lg">
         <NavigationEntry
@@ -30,11 +36,25 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             path="/inventory/stock"
             selectionType={NavigationEntrySelection.ARROW}
           />
+
+          <NavigationEntry
+            icon={<SupplierIcon fill="var(--color-primary-dark)" />}
+            name="Suppliers"
+            path="/inventory/suppliers"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
         </NavigationEntry>
+
         <NavigationEntry
           icon={<MonitorIcon fill="var(--color-primary-dark)" />}
           name="POS System"
           path="/pos/display"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        ></NavigationEntry>
+        <NavigationEntry
+          icon={<MonitorIcon fill="var(--color-primary-dark)" />}
+          name="Menu Management"
+          path="/menuManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         ></NavigationEntry>
       </div>

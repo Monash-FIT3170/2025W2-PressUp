@@ -1,10 +1,10 @@
 import React from "react";
+import { StockItemWithSupplier } from "../pages/inventory/types";
 import { Pill } from "./Pill";
-import { InStock, LowInStock, OutOfStock } from "./symbols/StatusSymbols";
-import { StockItem } from "/imports/api";
+import { OutOfStock, InStock, LowInStock } from "./symbols/StatusSymbols";
 
 interface StockTableProps {
-  stockItems: StockItem[];
+  stockItems: StockItemWithSupplier[];
   onEdit: (item: StockItem) => void;
 }
 
@@ -104,7 +104,7 @@ export const StockTable = ({ stockItems, onEdit }: StockTableProps) => {
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
               <div className="relative not-first:truncate py-1 px-2">
-                {item.supplier}
+                {item.supplier?.name}
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
               <div className="relative truncate py-1 px-2">
