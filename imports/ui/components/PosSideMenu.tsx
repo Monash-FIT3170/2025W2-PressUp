@@ -1,4 +1,4 @@
-import React , { useState } from "react";
+import React , { useState, useEffect } from "react";
 import { MenuItem } from "/imports/api";
 import { PaymentModal } from "./PaymentModal";
 import { Mongo } from "meteor/mongo";
@@ -27,6 +27,12 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
     setSavedAmount(savedCost);
     setOpenDiscountPopup(false);
   };
+
+  useEffect(() => {
+    setOriginalTotal(total);
+    setFinalTotal(total);
+  }, [total]);
+  
   return (
     <div className="w-64 bg-gray-100 flex flex-col h-screen">
       <div className="flex items-center justify-between bg-rose-400 text-white px-4 py-2 rounded-t-md">
@@ -71,7 +77,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
         {/* Displaying total cost*/}
         <div className="flex justify-between items-center mb-2">
           <span className="text-lg font-bold">Total</span>
-          <span className="text-lg font-bold">${total.toFixed(2)}</span>
+          <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span>
         </div>
         
         {/* Shows how much discount is applied*/}
