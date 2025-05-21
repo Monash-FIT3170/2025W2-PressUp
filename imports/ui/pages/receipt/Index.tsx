@@ -1,6 +1,6 @@
 import { Outlet } from "react-router";
 
-export const InventoryIndex = () => {
+export const ReceiptIndex = () => {
   return (
     <div id="inventory" className="flex flex-1">
       <Outlet />
