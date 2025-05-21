@@ -5,6 +5,6 @@ import "./stockItems/stockItemsPublishing";
 import "./transactions/transactionsPublishing";
 import "./suppliers/suppliersPublishing";
 import "./orders/ordersPublishing";
-import './suppliers/SupplierMethods';
+import "./suppliers/SupplierMethods";
 import "./purchaseOrders/purchaseOrdersMethods.ts";
 import "./purchaseOrders/purchaseOrdersPublishing.ts";

@@ -9,15 +9,15 @@ import {
   Supplier,
 } from "/imports/api";
 
-interface PurcahseOrderFormProps {
-  onSuccess: () => void;
+interface PurchaseOrderFormProps {
+  onSuccess: (purchaseOrder: Omit<PurchaseOrder, "date">) => void;
   supplier: Supplier;
 }
 
 export const PurchaseOrderForm = ({
   onSuccess,
   supplier,
-}: PurcahseOrderFormProps) => {
+}: PurchaseOrderFormProps) => {
   useSubscribe("stockItems.all");
   const availableStockItems: { [index: string]: StockItem } = useTracker(() => {
     const queryResult = StockItemsCollection.find(
@@ -109,7 +109,7 @@ export const PurchaseOrderForm = ({
           alert("Error: " + error.reason);
         } else {
           clearFields();
-          onSuccess();
+          onSuccess(purchaseOrder);
         }
       },
     );
@@ -155,7 +155,7 @@ export const PurchaseOrderForm = ({
             >
               <option value="">
                 {availableStockItems &&
-                  Object.keys(availableStockItems).length > 0
+                Object.keys(availableStockItems).length > 0
                   ? "--Select good--"
                   : "No associated goods..."}
               </option>
