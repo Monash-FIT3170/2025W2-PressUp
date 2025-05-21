@@ -1,88 +1,68 @@
-import React, { useState } from "react";
-import { Meteor } from "meteor/meteor";
+import React , { useState, useEffect } from "react";
 import { MenuItem } from "/imports/api";
 import { PaymentModal } from "./PaymentModal";
+import { Mongo } from "meteor/mongo";
 
 interface PosSideMenuProps {
+  tableNo: number;
   items: MenuItem[];
+  total: number;
+  onIncrease: (itemId: Mongo.ObjectID) => void;
+  onDecrease: (itemId: Mongo.ObjectID) => void;
 }
 
-export const PosSideMenu = ({ items }: PosSideMenuProps) => {
-  let totalCost = 40.00; // Hardcoding total cost for now
-
-  const [localQuantities, setLocalQuantities] = useState<{ [id: string]: number }>(
-    Object.fromEntries(items.map((item) => [String(item._id), item.quantity]))
-  );
-
-  const handleQuantityChange = (id: string, change: number) => {
-    const newQuantity = Math.max(0, (localQuantities[id] || 0) + change);
-
-    // 1. local UI update
-    setLocalQuantities((prev) => ({
-      ...prev,
-      [id]: newQuantity,
-    }));
-
-    // 2. DB update
-    Meteor.call("menuItems.updateQuantity", id, change, (error: Meteor.Error | undefined) => {
-      if (error) {
-        console.error("DB update failed:", error);
-      }
-    });
-  };
-
+export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: PosSideMenuProps) => {
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
   const [discountPercent, setDiscountPercent] = useState(0)
-  const [originalTotal, setOriginalTotal] = useState(totalCost);
-  const [finalTotal, setFinalTotal] = useState(totalCost)
   const [savedAmount, setSavedAmount] = useState(0)
 
-  const applyDiscount = (percentage:number) => {
-    const discountPercentage = percentage;
-    const discountedFinalTotal = originalTotal - (originalTotal * (discountPercentage/100));
-    const savedCost = originalTotal - discountedFinalTotal;
-    setDiscountPercent(discountPercentage);
-    setFinalTotal(discountedFinalTotal);
-    setSavedAmount(savedCost);
+  // Recalculate saved amount when total or discount changes
+  const finalTotal = total - (total * (discountPercent / 100));
+
+  useEffect(() => {
+    const saved = total - finalTotal;
+    setSavedAmount(saved);
+  }, [total, discountPercent]);
+
+  const applyDiscount = (percentage: number) => {
+    setDiscountPercent(percentage);
     setOpenDiscountPopup(false);
   };
 
-
   return (
     <div className="w-64 bg-gray-100 flex flex-col h-screen">
-      {/* Sidebar Header */}
       <div className="flex items-center justify-between bg-rose-400 text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
-        <span className="text-lg font-semibold">Table 12</span>
+        <span className="text-lg font-semibold">Table {tableNo}</span>
         <button className="text-2xl font-bold">×</button>
       </div>
 
-      {/* Scrollable Order List */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-        {/* Now loop through the items */}
         {items.map((item) => (
-          <div className="bg-white rounded-md p-3 shadow-sm flex items-center justify-between">
+          <div
+            key={item._id.toString()}
+            className="bg-white rounded-md p-3 shadow-sm flex items-center justify-between"
+          >
             <div>
               <h3 className="font-semibold text-gray-800">{item.name}</h3>
-              {/* <p className="text-xs text-gray-500">{item.size || "-"}</p> assuming there might be a size */}
             </div>
             <div className="flex items-center space-x-2">
-            <button
-                onClick={() => handleQuantityChange(String(item._id), -1)}
-                className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold cursor-pointer"
-              >
-                –
-              </button>
-              <span>{localQuantities[String(item._id)] ?? 0}</span>
               <button
-                onClick={() => handleQuantityChange(String(item._id), 1)}
-                className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold cursor-pointer"
+                onClick={() => onDecrease(item._id)}
+                className="bg-gray-200 px-2 rounded text-lg"
               >
-                ＋
+                −
+              </button>
+              <span>{item.quantity}</span>
+              <button
+                onClick={() => onIncrease(item._id)}
+                className="bg-gray-200 px-2 rounded text-lg"
+              >
+                +
               </button>
             </div>
             <div className="font-semibold text-gray-800">
-              ${item.price.toFixed(2)}
+              ${(item.price * item.quantity).toFixed(2)}
             </div>
           </div>
         ))}
@@ -118,12 +98,10 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
         {
           openDiscountPopup && (
           <div className="fixed w-200 h-130 top-40 left-120 bg-pink-300 rounded-2xl">
-
             <div className="flex flex-row justify-between mx-5 my-5">
               <h1 className="font-bold text-2xl text-black">Apply Discount</h1>
               <button className="bg-red-700 rounded-2xl w-8" onClick={()=> setOpenDiscountPopup(false)}>X</button>
             </div>
-
             <div className="w-180 h-100 bg-pink-200 rounded-2xl mx-10 p-8">
               <span className="font-bold text-xl text-gray-700">Select Discount Percentage</span>
               <div className="grid grid-cols-4 gap-1 my-4">
@@ -135,14 +113,13 @@ export const PosSideMenu = ({ items }: PosSideMenuProps) => {
               </div>
             </div>
           </div>
-          )
-        }
-        {/* Reset Button */}
-        <button className="w-full bg-orange-700 hover:bg-orange-600 text-white font-bold py-2 px-4 mb-2 rounded-full"
+        )}
+
+        <button
+          className="w-full bg-orange-700 hover:bg-orange-600 text-white font-bold py-2 px-4 mb-2 rounded-full"
           onClick={() => {
             setDiscountPercent(0);
-            setFinalTotal(40.00); 
-            setSavedAmount(0); 
+            setSavedAmount(0);
           }}>
           Reset
         </button>
