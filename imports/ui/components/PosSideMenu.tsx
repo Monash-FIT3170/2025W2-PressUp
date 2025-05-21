@@ -70,9 +70,10 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
 
       {/* Total Cost + Discount Button + Pay Button */}
       <div className="bg-rose-400 text-white p-4 flex-shrink-0 sticky bottom-0">
+        {/* Displaying total cost*/}
         <div className="flex justify-between items-center mb-2">
           <span className="text-lg font-bold">Total</span>
-          <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span>
+          <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span> {/* Static total for now */}
         </div>
         
         {/* Shows how much discount is applied*/}
