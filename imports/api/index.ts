@@ -22,5 +22,6 @@ export { Order, OrdersCollection } from "./orders/OrdersCollection";
 // Purchase Orders
 export {
   PurchaseOrder,
+  StockItemLine,
   PurchaseOrdersCollection,
 } from "./purchaseOrders/PurchaseOrdersCollection";
