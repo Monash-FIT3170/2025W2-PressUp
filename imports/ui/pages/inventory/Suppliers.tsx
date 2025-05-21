@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { usePageTitle } from "../../hooks/PageTitleContext";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Supplier, SuppliersCollection } from "/imports/api";
 import { SupplierTable } from "../../components/SupplierTable";
@@ -6,6 +7,11 @@ import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 
 export const SuppliersPage = () => {
+  const [_, setPageTitle] = usePageTitle();
+  useEffect(() => {
+    setPageTitle("Inventory Management - Suppliers");
+  }, [setPageTitle]);
+
   const [open, setOpen] = useState(false);
   const [formResetKey, setFormResetKey] = useState(0);
 
