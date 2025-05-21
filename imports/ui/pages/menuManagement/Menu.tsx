@@ -39,14 +39,23 @@ export const Menu = () => {
     <div id="pos" className="flex flex-1 overflow-auto">
       {/* Main content area */}
       <div className="flex-1 overflow-auto p-4">
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {posItems.map((item) => (
-            <div key={item._id?.toString()} className="min-w-[160px]">
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {[...posItems]
+          .sort((a, b) => {
+            // Move unavailable items to the end
+            if (a.available === b.available) return 0;
+            return a.available ? -1 : 1;
+          })
+          .map((item) => (
+            <div
+              key={item._id?.toString()}
+              className={`min-w-[160px] ${!item.available ? 'grayscale opacity-60' : ''}`}
+            >
               <MenuManagementCard item={item} onClick={handleItemClick} />
             </div>
           ))}
-        </div>
-        
+      </div>
+
          <EditItemModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -56,7 +65,7 @@ export const Menu = () => {
 
         <Outlet />
       </div>
-      
+
       {/* Sidebar positioned on the right */}
       <Sidebar />
     </div>
