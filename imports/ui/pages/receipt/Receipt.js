@@ -5,24 +5,22 @@ import { MenuItemsCollection } from "/imports/api/menuItems/MenuItemsCollection"
 import { TransactionsCollection } from "/imports/api/transactions/TransactionsCollection";
 
 export const ReceiptPage = () => {
+  const isLoadingTransactions = useSubscribe("transactions");
+  const transaction = useTracker(() => {
+    const allTransactions = TransactionsCollection.find().fetch();
+    return allTransactions[Math.floor(Math.random() * allTransactions.length)];
+  }, []);
 
-  const isLoadingPosItems = useSubscribe("transactions")
-  const paymentItems = useTracker( () => TransactionsCollection.find().fetch());
-
-  const order = {
-    orderNumber: Math.floor(100000 + Math.random() * 900000).toString(), // Generate random order number
-    date: new Date().toLocaleString(), // date of order is current date time
-    menuItems: paymentItems
-  };
-  
-
-  // Calculate total cost
-  const getTotal = (menuItems) => {
-    return menuItems.reduce(
-      (sum, menuItem) => sum + menuItem.quantity * menuItem.price,
-      0
+  if (isLoadingTransactions() || !transaction) {
+    return (
+      <div className="p-4 text-center text-gray-500 animate-pulse">
+        Loading transaction...
+      </div>
     );
-  };
+  }
+
+  const order = transaction.order;
+  console.log(order);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -31,9 +29,9 @@ export const ReceiptPage = () => {
 
           {/* Display cafe and receipt details */}
           <h2 className="text-center text-xl font-bold mb-4">Cafe</h2>
-          <p className="mb-2">Order #: {order.orderNumber}</p>
-          <p className="mb-2">Date: {order.date}</p>
-          
+          <p className="mb-2">Order #: {order.orderNo}</p>
+          <p className="mb-2">Date: {new Date(transaction.paidAt).toLocaleString()}</p>
+
           {/* Horizontal divider */}
           <hr className="my-2" />
 
@@ -57,9 +55,17 @@ export const ReceiptPage = () => {
 
           {/* Horizontal divider */}
           <hr className="my-2" />
-          <div className="flex justify-between text-lg">
+          <div className="flex justify-between">
+            <span>Subtotal:</span>
+            <span>${order.totalPrice.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Discount:</span>
+            <span>-${transaction.discount.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-lg font-bold">
             <span>Total:</span>
-            <span>${getTotal(order.menuItems).toFixed(2)}</span>
+            <span>${(order.totalPrice-transaction.discount).toFixed(2)}</span>
           </div>
           <p className="text-center mt-4 text-sm text-gray-600">
             Thank you for your order!
