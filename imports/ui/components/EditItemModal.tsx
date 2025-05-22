@@ -4,6 +4,7 @@ import { Modal } from "./Modal";
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { IngredientDropdown } from "./IngredientDropdown";
 import { CategoryDropdown } from "./CategoryDropdown";
+import { ConfirmModal } from "./ConfirmModal";
 
 interface EditItemModalProps {
     isOpen: boolean;
@@ -23,19 +24,21 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     const [available, setAvailable] = useState(false);
     const [ingredients, setIngredients] = useState<string[]>([]);
     const [categories, setCategories ] = useState<string[]>([]);
+    const [showConfirmation, setShowConfirmation ] = useState(false);
+    const [confirm, setConfirm] = useState<"cancel" | "save" | null>(null);
 
-     useEffect(() => {
-        if (item) {
-            setName(item.name);
-            setPrice(item.price);
-            setAvailable(item.available);
-            setIngredients(item.ingredients || []);
-            setCategories(item.category || []);
-        }
+    useEffect(() => {
+    if (item) {
+        setName(item.name);
+        setPrice(item.price);
+        setAvailable(item.available);
+        setIngredients(item.ingredients || []);
+        setCategories(item.category || []);
+    }
     }, [item]);
 
-    const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = (e?: FormEvent) => {
+        if (e) e.preventDefault();
         
         if (!item || !item.name || !item._id ) return;
         
@@ -46,7 +49,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 name,
                 price,
                 ingredients,
-                categories,
+                category: categories,
                 available
             },
             (error: Meteor.Error | undefined ) => {
@@ -68,7 +71,14 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     };
 
     return (
-        <Modal open={isOpen} onClose={onClose}>
+        <>
+        <Modal 
+        open={isOpen} //onClose={onClose}
+        onClose={() => {
+            setConfirm("cancel");
+            setShowConfirmation(true);
+        }}
+        >
         <div className="p-4 md:p-5 max-h-[80vh] overflow-y-auto w-full">
             <h2 className="text-xl font-semibold text-rose-400 mb-4">Edit Item</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -139,13 +149,21 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             <div className="flex justify-end space-x-2 pt-4">
                 <button
                 type="button"
-                onClick={onClose}
+                onClick={ () => {
+                    setConfirm("cancel");
+                    setShowConfirmation(true);
+                }}
                 className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded-lg"
                 >
                 Cancel
                 </button>
+
                 <button
-                type="submit"
+                type="button"
+                onClick={ () => {
+                    setConfirm("save");
+                    setShowConfirmation(true);
+                }}
                 className="bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 rounded-lg"
                 >
                 Save
@@ -154,6 +172,27 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             </form>
         </div>
     </Modal>
+
+    <ConfirmModal
+        open={showConfirmation}
+        message={ confirm === "cancel" ?
+            "Are you sure you want to discard your changes?":
+            "Confirm your saved changes"}
+        onConfirm={() => {
+            if ( confirm === "cancel") {
+                onClose();
+            } else if ( confirm === "save" ) {
+                handleSubmit();
+            }
+            setShowConfirmation(false);
+            setConfirm(null);
+        }}
+        onCancel={ () => {
+            setShowConfirmation(false);
+            setConfirm(null);
+        }}
+    />
+    </>
   );
 };
   
