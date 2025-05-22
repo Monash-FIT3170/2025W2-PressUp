@@ -41,7 +41,15 @@ export const Menu = () => {
       <div className="flex-1 overflow-auto p-4">
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {posItems.map((item) => (
-            <div key={item._id?.toString()} className="min-w-[160px]">
+            <div 
+            key={item._id?.toString()} 
+            className={`"min-w-[160px] rounded-lg transition duration-150
+            ${selectedItem?._id === item._id ? "ring-2 ring-rose-500 bg-rose-50" : ""}
+            w-full
+            h-full
+            p-4
+            `}
+            >
               <MenuManagementCard item={item} onClick={handleItemClick} />
             </div>
           ))}
@@ -49,7 +57,10 @@ export const Menu = () => {
         
          <EditItemModal
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setSelectedItem(null);
+        }}
         item={selectedItem}
         onSave={handleSave}
       />

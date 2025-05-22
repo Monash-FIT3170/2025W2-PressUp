@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useRef } from 'react';
+import { ConfirmModal } from './ConfirmModal';
 
 interface IngredientProps {
     selectedIngredients: string[];
@@ -15,6 +16,8 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
     const containerRef = useRef<HTMLDivElement>(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [ searchIngredient, setSearchIngredient ] = useState("");
+    const [ showConfirmation, setShowConfirmation ] = useState(false);
+    const [ ingredientDelete, setIngredientDelete ] = useState<string | null>(null)
 
     const updateIngredients = (ingredient: string) => {
         if (selectedIngredients.includes(ingredient)) {
@@ -27,6 +30,15 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
     const searchIngredientList = allIngredients.filter(ingredient =>
         ingredient.toLowerCase().includes(searchIngredient.toLowerCase())
     )
+
+    const deleteIngredient = (ingredient: string | null) => {
+        if (!ingredient) return;
+
+        setAllIngredients((previous) => previous.filter((item) => item !== ingredient));
+        if (selectedIngredients.includes(ingredient)) {
+            onChange(selectedIngredients.filter((item) => item !== ingredient));
+        }
+    };
 
     useEffect(() => { setSearchIngredient(""); }, [ initialIngredients, selectedIngredients ]);
 
@@ -46,6 +58,7 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
     }, []);
 
     return (
+        <>
         <div className="relative" ref={containerRef}>
             <input
                 type="text"
@@ -75,10 +88,8 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                             className="text-red-500 hover:bg-red-100 rounded-full w-5 h-5 flex items-center justify-center ml-4"
                             title="Delete ingredient"
                             onClick={() => {
-                                setAllIngredients((previous) => previous.filter((item) => item !== ingredient));
-                                if (selectedIngredients.includes(ingredient)) {
-                                    onChange(selectedIngredients.filter((item) => item !== ingredient));
-                                }
+                                setShowConfirmation(true);
+                                setIngredientDelete(ingredient);
                             }}
                         >
                             x
@@ -110,5 +121,19 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                 </ul>
             )}
         </div>
+
+        <ConfirmModal
+                open={showConfirmation}
+                message="Are you sure you want to delete this ingredient?"
+
+                onConfirm={() => {
+                    deleteIngredient(ingredientDelete);
+                    setShowConfirmation(false);
+                    }}
+                onCancel={() =>{
+                    setShowConfirmation(false);
+                }}
+            />
+        </>
     );
 }
