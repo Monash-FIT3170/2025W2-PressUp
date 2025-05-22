@@ -72,7 +72,13 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
 
     return (
         <>
-        <Modal open={isOpen} onClose={onClose}>
+        <Modal 
+        open={isOpen} //onClose={onClose}
+        onClose={() => {
+            setConfirm("cancel");
+            setShowConfirmation(true);
+        }}
+        >
         <div className="p-4 md:p-5 max-h-[80vh] overflow-y-auto w-full">
             <h2 className="text-xl font-semibold text-rose-400 mb-4">Edit Item</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
