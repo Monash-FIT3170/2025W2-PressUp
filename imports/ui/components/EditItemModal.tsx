@@ -37,8 +37,8 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     }
     }, [item]);
 
-    const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = (e?: FormEvent) => {
+        if (e) e.preventDefault();
         
         if (!item || !item.name || !item._id ) return;
         
@@ -153,7 +153,11 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 </button>
 
                 <button
-                type="submit"
+                type="button"
+                onClick={ () => {
+                    setConfirm("save");
+                    setShowConfirmation(true);
+                }}
                 className="bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 rounded-lg"
                 >
                 Save
@@ -165,9 +169,15 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
 
     <ConfirmModal
         open={showConfirmation}
-        message={"Are you sure you want to discard your changes?"}
+        message={ confirm === "cancel" ?
+            "Are you sure you want to discard your changes?":
+            "Confirm your saved changes"}
         onConfirm={() => {
-            onClose();
+            if ( confirm === "cancel") {
+                onClose();
+            } else if ( confirm === "save" ) {
+                handleSubmit();
+            }
             setShowConfirmation(false);
             setConfirm(null);
         }}
