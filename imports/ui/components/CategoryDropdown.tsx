@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useRef } from 'react';
+import { ConfirmModal } from './ConfirmModal';
 
 interface CategoryProps {
     selectedCategories: string[];
@@ -15,6 +16,8 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
     const containerRef = useRef<HTMLDivElement>(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [ searchCategory, setSearchCategory ] = useState("");
+    const [ showConfirmation, setShowConfirmation ] = useState(false);
+    const [ categoryDelete, setCategoryDelete ] = useState<string | null>(null)
 
     const updatecategories = (category: string) => {
         if (selectedCategories.includes(category)) {
@@ -27,6 +30,15 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
     const searchCategoryList = allCategories.filter(category =>
         category.toLowerCase().includes(searchCategory.toLowerCase())
     )
+
+    const deleteCategory = (category: string | null) => {
+        if (!category) return;
+
+        setAllcategories((previous) => previous.filter((item) => item !== category));
+        if (selectedCategories.includes(category)) {
+            onChange(selectedCategories.filter((item) => item !== category));
+        }
+    };
 
     useEffect(() => { setSearchCategory(""); }, [ initialCategories, selectedCategories ]);
 
@@ -46,6 +58,7 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
     }, []);
 
     return (
+        <>
         <div className="relative" ref={containerRef}>
             <input
                 type="text"
@@ -75,10 +88,8 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
                             className="text-red-500 hover:bg-red-100 rounded-full w-5 h-5 flex items-center justify-center ml-4"
                             title="Delete category"
                             onClick={() => {
-                                setAllcategories((previous) => previous.filter((item) => item !== category));
-                                if (selectedCategories.includes(category)) {
-                                    onChange(selectedCategories.filter((item) => item !== category));
-                                }
+                                setShowConfirmation(true);
+                                setCategoryDelete(category);
                             }}
                         >
                             x
@@ -110,5 +121,18 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
                 </ul>
             )}
         </div>
+        <ConfirmModal
+                open={showConfirmation}
+                message="Are you sure you want to delete this category?"
+
+                onConfirm={() => {
+                    deleteCategory(categoryDelete);
+                    setShowConfirmation(false);
+                    }}
+                onCancel={() =>{
+                    setShowConfirmation(false);
+                }}
+            />
+        </>
     );
 }
