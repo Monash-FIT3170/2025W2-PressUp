@@ -49,7 +49,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 name,
                 price,
                 ingredients,
-                categories,
+                category: categories,
                 available
             },
             (error: Meteor.Error | undefined ) => {
