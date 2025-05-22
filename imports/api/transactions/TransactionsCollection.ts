@@ -1,11 +1,11 @@
 import { Mongo } from "meteor/mongo";
 import { DBEntry } from "../database";
+import { Order } from "../orders/OrdersCollection";
 
 export interface Transaction extends DBEntry {
-  name: string;
-  quantity: number;
-  price: number;
-  createdAt: Date;
+  order: Order;
+  discount: number;
+  paidAt: Date;
 }
 
 export const TransactionsCollection = new Mongo.Collection<Transaction>("transactions");
