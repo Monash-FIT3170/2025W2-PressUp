@@ -36,11 +36,11 @@ export const mockDataGenerator = async ({
   transactionCount = transactionCount || 5;
   orderCount = orderCount || 5;
 
-  await SuppliersCollection.dropCollectionAsync();
-  await MenuItemsCollection.dropCollectionAsync();
-  await StockItemsCollection.dropCollectionAsync();
-  await TransactionsCollection.dropCollectionAsync();
-  await OrdersCollection.dropCollectionAsync();
+  if (await SuppliersCollection.countDocuments() > 0) await SuppliersCollection.dropCollectionAsync();
+  if (await MenuItemsCollection.countDocuments() > 0) await MenuItemsCollection.dropCollectionAsync();
+  if (await StockItemsCollection.countDocuments() > 0) await StockItemsCollection.dropCollectionAsync();
+  if (await TransactionsCollection.countDocuments() > 0) await TransactionsCollection.dropCollectionAsync();
+  if (await OrdersCollection.countDocuments() > 0) await OrdersCollection.dropCollectionAsync();
 
   if ((await SuppliersCollection.countDocuments()) == 0)
     for (let i = 0; i < supplierCount; ++i)
