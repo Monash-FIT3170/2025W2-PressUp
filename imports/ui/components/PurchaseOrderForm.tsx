@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { useReactToPrint } from "react-to-print";
 import {
   PurchaseOrder,
   StockItem,
@@ -123,8 +124,11 @@ export const PurchaseOrderForm = ({
     );
   };
 
+  const printRef = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({ contentRef: printRef });
+
   return (
-    <div className="flex flex-col space-y-5 p-2">
+    <div className="flex flex-col space-y-5 p-2" ref={printRef}>
       <div className="grid grid-cols-2">
         <div>
           {/* TODO: Information about company */}
@@ -132,10 +136,10 @@ export const PurchaseOrderForm = ({
           <div>123 Street Name</div>
           <div>City Name, 3170</div>
           <div>
-            <span className="font-bold">Phone:</span> +61 634 732 923
+            <span className="font-bold">Phone:</span> +...
           </div>
         </div>
-        <div className="text-5xl text-nowrap text-right text-[#6F597B]">
+        <div className="text-5xl text-nowrap text-right text-[#6F597B] print:hidden">
           New Purchase Order
         </div>
       </div>
@@ -161,7 +165,7 @@ export const PurchaseOrderForm = ({
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-12 overflow-auto max-h-50">
+      <div className="grid grid-cols-12 overflow-auto max-h-50 print:overflow-visible print:h-auto">
         {/* Headers */}
         <div className="col-span-5 border-b-2 border-b-black border-r-1 border-r-[#6F597B] sticky z-1 top-0 bg-stone-100">
           Item
@@ -177,7 +181,7 @@ export const PurchaseOrderForm = ({
         </div>
         <div className="border-b-2 border-black px-2 text-center sticky z-1 top-0 bg-stone-100"></div>
         {/* Form Section */}
-        <div className="col-span-5 border-b-1 border-b-[#F4E2E3] border-r-1 border-r-[#6F597B] flex items-center">
+        <div className="col-span-5 border-b-1 border-b-[#F4E2E3] border-r-1 border-r-[#6F597B] flex items-center print:hidden">
           <select
             onChange={(e) =>
               setSelectedStockItem(availableStockItems[e.target.value])
@@ -191,7 +195,7 @@ export const PurchaseOrderForm = ({
           >
             <option value="">
               {availableStockItems &&
-              Object.keys(availableStockItems).length > 0
+                Object.keys(availableStockItems).length > 0
                 ? "Select Item"
                 : "No associated goods available..."}
             </option>
@@ -202,7 +206,7 @@ export const PurchaseOrderForm = ({
             ))}
           </select>
         </div>
-        <div className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center">
+        <div className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center print:hidden">
           <input
             type="text"
             pattern={quantityRegex.source}
@@ -217,7 +221,7 @@ export const PurchaseOrderForm = ({
             required
           />
         </div>
-        <div className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center">
+        <div className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center print:hidden">
           <input
             type="text"
             pattern={costRegex.source}
@@ -231,12 +235,12 @@ export const PurchaseOrderForm = ({
             required
           />
         </div>
-        <div className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center truncate">
+        <div className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center truncate print:hidden">
           {totalCost(quantityStr, costStr)}
         </div>
-        <div className="border-b-1 border-b-[#F4E2E3] px-2 flex items-center justify-center">
+        <div className="border-b-1 border-b-[#F4E2E3] px-2 flex items-center justify-center print:hidden">
           <button
-            className="m-2 ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-green-500 hover:bg-green-600 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-green-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-green-600"
+            className="m-2 ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-green-500 hover:bg-green-600 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-green-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-green-600 print:hidden"
             onClick={() => {
               addStockItemLine();
             }}
@@ -276,7 +280,7 @@ export const PurchaseOrderForm = ({
               key={`ssidel-${i}`}
             >
               <button
-                className="m-2 ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-red-400 hover:bg-red-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-red-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-300 dark:hover:bg-red-400 dark:focus:ring-red-400"
+                className="m-2 ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-red-400 hover:bg-red-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-red-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-300 dark:hover:bg-red-400 dark:focus:ring-red-400 print:hidden"
                 onClick={() =>
                   setStockItems((prev) =>
                     prev.filter(
@@ -296,10 +300,10 @@ export const PurchaseOrderForm = ({
       {/* Totals */}
       <div className="grid grid-cols-12 max-h-50 text-right">
         <div className="col-span-7 text-left flex items-end">
-          <button className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-[#A43375] text-white cursor-pointer w-right-2 hover:bg-rose-500">
+          <button className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-[#A43375] text-white cursor-pointer w-right-2 hover:bg-rose-500 print:hidden">
             Save PO
           </button>
-          <button className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-[#A43375] text-white cursor-pointer w-right-2 hover:bg-rose-500">
+          <button onClick={handlePrint} className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-[#A43375] text-white cursor-pointer w-right-2 hover:bg-rose-500 print:hidden">
             Print
           </button>
           <div className="flex-1"></div>
