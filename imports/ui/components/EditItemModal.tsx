@@ -24,8 +24,11 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     const [available, setAvailable] = useState(false);
     const [ingredients, setIngredients] = useState<string[]>([]);
     const [categories, setCategories ] = useState<string[]>([]);
+    const [discount, setDiscount] = useState(0);
     const [showConfirmation, setShowConfirmation ] = useState(false);
     const [confirm, setConfirm] = useState<"cancel" | "save" | null>(null);
+
+    const discountedPrice = price * (1 - discount / 100);
 
     useEffect(() => {
     if (item) {
@@ -34,14 +37,15 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
         setAvailable(item.available);
         setIngredients(item.ingredients || []);
         setCategories(item.category || []);
+        setDiscount(item.discount || 0);
     }
     }, [item]);
 
     const handleSubmit = (e?: FormEvent) => {
         if (e) e.preventDefault();
-        
+
         if (!item || !item.name || !item._id ) return;
-        
+
         Meteor.call(
             "menuItems.update",
             item.name,
@@ -50,6 +54,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 price,
                 ingredients,
                 category: categories,
+                discount,
                 available
             },
             (error: Meteor.Error | undefined ) => {
@@ -62,6 +67,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                         price,
                         ingredients,
                         category: categories,
+                        discount,
                         available
                     });
                     onClose();
@@ -72,7 +78,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
 
     return (
         <>
-        <Modal 
+        <Modal
         open={isOpen} //onClose={onClose}
         onClose={() => {
             setConfirm("cancel");
@@ -94,17 +100,49 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             </div>
 
             <div>
-                <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Price</label>
-                <input
+            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Price</label>
+            <input
                 type="number"
                 min={0}
                 step="0.01"
                 value={price}
-                onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+                onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                setPrice(isNaN(val) ? 0 : val);
+                }}
+                onBlur={() => setPrice(parseFloat(price.toFixed(2)))}
                 className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:text-white"
                 required
-                />
+            />
             </div>
+
+            <div>
+            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Discount (%)</label>
+            <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={discount}
+                onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setDiscount(isNaN(val) ? 0 : Math.min(100, val));
+                }}
+                className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:text-white"
+                required
+            />
+            </div>
+
+            {discount > 0 && (
+            <div className="text-sm text-red-900 dark:text-white">
+                <span className="line-through opacity-50 mr-2">
+                ${price.toFixed(2)}
+                </span>
+                <span className="font-semibold">
+                ${(price * (1 - discount / 100)).toFixed(2)}
+                </span>
+            </div>
+            )}
 
             <IngredientDropdown
                 selectedIngredients={ingredients}
@@ -195,4 +233,4 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     </>
   );
 };
-  
+
