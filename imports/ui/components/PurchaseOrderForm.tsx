@@ -38,7 +38,7 @@ export const PurchaseOrderForm = ({
   const [quantityStr, setQuantityStr] = useState<string>("");
   const [costStr, setCostStr] = useState<string>("");
 
-  const costRegex = /^[0-9]*(\.[0-9]{0,2})?$/;
+  const costRegex = /^([1-9][0-9]*|0)?(\.[0-9]{0,2})?$/;
   const quantityRegex = /^[0-9]*$/;
 
   const addStockItemLine = () => {
@@ -78,7 +78,15 @@ export const PurchaseOrderForm = ({
     });
   };
 
-  const clearFields = () => {
+  const totalCost = (qty: string | number, cost: string | number) => {
+    qty = Number(qty);
+    cost = Number(cost);
+    if (isNaN(qty) || isNaN(cost)) return "";
+
+    return "$" + (qty * cost).toFixed(2);
+  };
+
+  const clearForm = () => {
     setStockItems([]);
     setSelectedStockItem(null);
     setQuantityStr("");
@@ -86,7 +94,7 @@ export const PurchaseOrderForm = ({
   };
 
   useEffect(() => {
-    clearFields();
+    clearForm();
   }, [supplier]);
 
   const handleSubmit = (e: FormEvent) => {
@@ -108,7 +116,7 @@ export const PurchaseOrderForm = ({
         if (error) {
           alert("Error: " + error.reason);
         } else {
-          clearFields();
+          clearForm();
           onSuccess(purchaseOrder);
         }
       },
@@ -116,136 +124,213 @@ export const PurchaseOrderForm = ({
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-center p-4 w-full md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-        <h3 className="text-xl font-semibold text-rose-400 dark:text-white">
+    <div className="flex flex-col space-y-5 p-2">
+      <div className="grid grid-cols-2">
+        <div>
+          {/* TODO: Information about company */}
+          <div className="font-bold pb-2">Example Company Name</div>
+          <div>123 Street Name</div>
+          <div>City Name, 3170</div>
+          <div>
+            <span className="font-bold">Phone:</span> +61 634 732 923
+          </div>
+        </div>
+        <div className="text-5xl text-nowrap text-right text-[#6F597B]">
           New Purchase Order
-        </h3>
+        </div>
       </div>
-      <div className="p-4 md:p-5">
-        <form className="space-y-4" onSubmit={handleSubmit}>
+      <div className="p-2 grid grid-cols-2 bg-gray-300">
+        <div>
+          <div className="font-bold underline pb-2 text-lg">Vendor</div>
+          <div className="font-bold">{supplier.name}</div>
+          {supplier.address ? <div>Address: {supplier.address}</div> : ""}
+          {supplier.phone ? (
+            <div>
+              <span className="font-bold">Phone:</span> {supplier.phone}
+            </div>
+          ) : (
+            ""
+          )}
+        </div>
+        <div className="text-right">
           <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Supplier
-            </label>
-            <input
-              type="text"
-              value={supplier.name}
-              placeholder="0"
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-              disabled
-              required
-            />
+            <span className="font-bold">Purchase Order #:</span> 94738285
           </div>
           <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Add Goods
-            </label>
-            <select
-              onChange={(e) =>
-                setSelectedStockItem(availableStockItems[e.target.value])
-              }
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-              required
-              disabled={
-                !availableStockItems ||
-                Object.keys(availableStockItems).length <= 0
-              }
-              value={selectedStockItem ? String(selectedStockItem._id) : ""}
-            >
-              <option value="">
-                {availableStockItems &&
-                Object.keys(availableStockItems).length > 0
-                  ? "--Select good--"
-                  : "No associated goods..."}
-              </option>
-              {Object.values(availableStockItems).map((item, i) => (
-                <option value={String(item._id)} key={i}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
+            <span className="font-bold">Date:</span> 06/05/2025
           </div>
-          <div className="flex flex-row space-x-4">
-            <input
-              type="text"
-              pattern={quantityRegex.source}
-              inputMode="numeric"
-              value={quantityStr}
-              onChange={(e) =>
-                quantityRegex.test(e.target.value) &&
-                setQuantityStr(e.target.value)
-              }
-              placeholder="Quantity"
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-              required
-            />
-            <input
-              type="text"
-              pattern={costRegex.source}
-              inputMode="numeric"
-              value={costStr}
-              onChange={(e) =>
-                costRegex.test(e.target.value) && setCostStr(e.target.value)
-              }
-              placeholder="Cost"
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-              required
-            />
-            <button
-              className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-green-500 hover:bg-green-600 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-green-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-green-600"
-              onClick={(e) => {
-                e.preventDefault();
-                addStockItemLine();
-              }}
-            >
-              +
-            </button>
-          </div>
-          <div
-            className={`dark:text-white items-center grid grid-cols-5 max-h-48 gap-2 overflow-auto ${stockItems.length > 0 && "pb-5"}`}
+        </div>
+      </div>
+      <div className="grid grid-cols-12 overflow-auto max-h-50">
+        {/* Headers */}
+        <div className="col-span-5 border-b-2 border-b-black border-r-1 border-r-[#6F597B] sticky z-1 top-0 bg-stone-100">
+          Item
+        </div>
+        <div className="col-span-2 border-b-2 border-black px-2 border-r-1 border-r-[#6F597B] text-center sticky z-1 top-0 bg-stone-100">
+          Quantity
+        </div>
+        <div className="col-span-2 border-b-2 border-black px-2 border-r-1 border-r-[#6F597B] text-center sticky z-1 top-0 bg-stone-100">
+          Unit Cost
+        </div>
+        <div className="col-span-2 border-b-2 border-black px-2 border-r-1 border-r-[#6F597B] text-center sticky z-1 top-0 bg-stone-100">
+          Total Cost
+        </div>
+        <div className="border-b-2 border-black px-2 text-center sticky z-1 top-0 bg-stone-100"></div>
+        {/* Form Section */}
+        <div className="col-span-5 border-b-1 border-b-[#F4E2E3] border-r-1 border-r-[#6F597B] flex items-center">
+          <select
+            onChange={(e) =>
+              setSelectedStockItem(availableStockItems[e.target.value])
+            }
+            required
+            disabled={
+              !availableStockItems ||
+              Object.keys(availableStockItems).length <= 0
+            }
+            value={selectedStockItem ? String(selectedStockItem._id) : ""}
           >
-            {stockItems.length > 0 && (
-              <>
-                <div className="col-span-2 font-bold">Good</div>
-                <div className="font-bold">Quantity</div>
-                <div className="font-bold">Cost</div>
-                <div></div>
-              </>
-            )}
-            {stockItems.map((stockItemLine, i) => (
-              <>
-                <div className="col-span-2" key={`ssiname-${i}`}>
-                  {availableStockItems[String(stockItemLine.stockItem)].name}
-                </div>
-                <div key={`ssiqty-${i}`}>{stockItemLine.quantity}</div>
-                <div key={`ssicost-${i}`}>{stockItemLine.cost}</div>
-                <div key={`ssidel-${i}`}>
-                  <button
-                    className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-red-400 hover:bg-red-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-red-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-300 dark:hover:bg-red-400 dark:focus:ring-red-400"
-                    onClick={() =>
-                      setStockItems((prev) =>
-                        prev.filter(
-                          (s) => s.stockItem != stockItemLine.stockItem,
-                        ),
-                      )
-                    }
-                  >
-                    x
-                  </button>
-                </div>
-              </>
+            <option value="">
+              {availableStockItems &&
+              Object.keys(availableStockItems).length > 0
+                ? "Select Item"
+                : "No associated goods available..."}
+            </option>
+            {Object.values(availableStockItems).map((item, i) => (
+              <option value={String(item._id)} key={i}>
+                {item.name}
+              </option>
             ))}
-          </div>
-          <div className="grid grid-cols-1 p-4">
-            <button
-              type="submit"
-              className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
+          </select>
+        </div>
+        <div className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center">
+          <input
+            type="text"
+            pattern={quantityRegex.source}
+            inputMode="numeric"
+            value={quantityStr}
+            onChange={(e) =>
+              quantityRegex.test(e.target.value) &&
+              setQuantityStr(e.target.value)
+            }
+            className="w-16 text-center"
+            placeholder="0"
+            required
+          />
+        </div>
+        <div className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center">
+          <input
+            type="text"
+            pattern={costRegex.source}
+            inputMode="numeric"
+            value={costStr}
+            onChange={(e) =>
+              costRegex.test(e.target.value) && setCostStr(e.target.value)
+            }
+            className="w-16 text-center"
+            placeholder="0.00"
+            required
+          />
+        </div>
+        <div className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center truncate">
+          {totalCost(quantityStr, costStr)}
+        </div>
+        <div className="border-b-1 border-b-[#F4E2E3] px-2 flex items-center justify-center">
+          <button
+            className="m-2 ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-green-500 hover:bg-green-600 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-green-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-green-600"
+            onClick={() => {
+              addStockItemLine();
+            }}
+          >
+            +
+          </button>
+        </div>
+        {/* Goods */}
+        {stockItems.map((stockItemLine, i) => (
+          <>
+            <div
+              className="col-span-5 border-b-1 border-b-[#F4E2E3] border-r-1 border-r-[#6F597B] flex items-center"
+              key={`ssiname-${i}`}
             >
-              Create Purchase Order
-            </button>
+              {availableStockItems[String(stockItemLine.stockItem)].name}
+            </div>
+            <div
+              className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center"
+              key={`ssiqty-${i}`}
+            >
+              {stockItemLine.quantity}
+            </div>
+            <div
+              className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center"
+              key={`ssicost-${i}`}
+            >
+              {stockItemLine.cost}
+            </div>
+            <div
+              className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center truncate"
+              key={`ssitotalcost-${i}`}
+            >
+              {totalCost(stockItemLine.quantity, stockItemLine.cost)}
+            </div>
+            <div
+              className="border-b-1 border-b-[#F4E2E3] px-2 flex items-center justify-center"
+              key={`ssidel-${i}`}
+            >
+              <button
+                className="m-2 ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-red-400 hover:bg-red-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-red-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-300 dark:hover:bg-red-400 dark:focus:ring-red-400"
+                onClick={() =>
+                  setStockItems((prev) =>
+                    prev.filter(
+                      (s) =>
+                        s.stockItem != stockItemLine.stockItem &&
+                        s.cost != stockItemLine.cost,
+                    ),
+                  )
+                }
+              >
+                x
+              </button>
+            </div>
+          </>
+        ))}
+      </div>
+      {/* Totals */}
+      <div className="grid grid-cols-12 max-h-50 text-right">
+        <div className="col-span-7 text-left flex items-end">
+          <button className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-[#A43375] text-white cursor-pointer w-right-2 hover:bg-rose-500">
+            Save PO
+          </button>
+          <button className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-[#A43375] text-white cursor-pointer w-right-2 hover:bg-rose-500">
+            Print
+          </button>
+          <div className="flex-1"></div>
+        </div>
+        <div className="col-span-2 flex flex-col">
+          <div className="font-bold">Subtotal:</div>
+          <div className="font-bold">Discount:</div>
+          <div className="font-bold">Tax Rate:</div>
+          <div className="font-bold">Tax:</div>
+          <div className="font-bold text-lg mt-2">Total:</div>
+        </div>
+        <div className="col-span-2 flex flex-col">
+          <div>
+            $
+            {stockItems
+              .map((s) => s.quantity * s.cost)
+              .reduce((a, v) => a + v, 0)
+              .toFixed(2)}
           </div>
-        </form>
+          <div>0%</div>
+          <div>0%</div>
+          <div>$0.00</div>
+          <div className="text-lg mt-2">
+            $
+            {stockItems
+              .map((s) => s.quantity * s.cost)
+              .reduce((a, v) => a + v, 0)
+              .toFixed(2)}
+          </div>
+        </div>
+        <div className="col-span-1"></div>
       </div>
     </div>
   );
