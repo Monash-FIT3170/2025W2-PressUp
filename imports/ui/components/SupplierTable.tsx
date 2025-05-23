@@ -3,6 +3,8 @@ import { Supplier } from "/imports/api/suppliers/SuppliersCollection";
 import { InfoSymbol, Cross } from "./symbols/GeneralSymbols";
 import { Modal } from "./Modal";
 import { PurchaseOrderForm } from "./PurchaseOrderForm";
+import { Meteor } from "meteor/meteor";
+import { Mongo } from "meteor/mongo";
 
 interface SupplierTableProps {
   suppliers: Supplier[];
@@ -17,11 +19,23 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
     );
 
   const [isOpen, setIsOpen] = useState(false);
-  const [formSupplier, setFormSupplier] = useState<Supplier>(suppliers[0]);
+  const [purchaseOrderId, setPurchaseOrderId] = useState<Mongo.ObjectID>(
+    new Mongo.ObjectID(),
+  );
 
   const onCreatePurchaseOrder = (supplier: Supplier) => {
-    setFormSupplier(supplier);
-    setIsOpen(true);
+    Meteor.call(
+      "purchaseOrders.new",
+      { supplierId: supplier._id },
+      (err: Meteor.Error | undefined, result: Mongo.ObjectID) => {
+        if (err) {
+          console.error(err.reason);
+        } else {
+          setPurchaseOrderId(result);
+          setIsOpen(true);
+        }
+      },
+    );
   };
 
   return (
@@ -103,12 +117,7 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
       </div>
 
       <Modal open={isOpen} onClose={() => setIsOpen(false)}>
-        {isOpen && (
-          <PurchaseOrderForm
-            supplier={formSupplier}
-            onSuccess={() => setIsOpen(false)}
-          />
-        )}
+        {isOpen && <PurchaseOrderForm purchaseOrderId={purchaseOrderId} />}
       </Modal>
     </div>
   );
