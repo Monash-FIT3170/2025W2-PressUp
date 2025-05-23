@@ -93,7 +93,7 @@ export const PurchaseOrderForm = ({
     if (
       !stockItemId ||
       isNaN(quantity) ||
-      quantity < 0 ||
+      quantity <= 0 ||
       isNaN(cost) ||
       cost < 0
     ) {
@@ -213,7 +213,7 @@ export const PurchaseOrderForm = ({
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-12 overflow-auto max-h-50 print:overflow-visible print:h-auto">
+      <div className="grid grid-cols-12 overflow-auto max-h-100 print:overflow-visible print:h-auto">
         {/* Headers */}
         <div className="col-span-5 border-b-2 border-b-black border-r-1 border-r-[#6F597B] sticky z-1 top-0 bg-stone-100 dark:bg-neutral-800">
           Item
@@ -311,7 +311,7 @@ export const PurchaseOrderForm = ({
               {stockItemLine.quantity}
             </div>
             <div className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center">
-              {stockItemLine.cost}
+              {"$" + stockItemLine.cost.toFixed(2)}
             </div>
             <div className="col-span-2 border-b-1 border-b-[#F4E2E3] px-2 border-r-1 border-r-[#6F597B] flex items-center justify-center truncate">
               {totalCost(stockItemLine.quantity, stockItemLine.cost)}
