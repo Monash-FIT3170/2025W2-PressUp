@@ -8,6 +8,8 @@ export interface StockItemLine {
 }
 
 export interface PurchaseOrder extends DBEntry {
+  supplier: Mongo.ObjectID;
+  number: number;
   stockItems: StockItemLine[];
   date: Date;
 }
