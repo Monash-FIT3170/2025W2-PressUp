@@ -7,19 +7,31 @@ import { Meteor } from 'meteor/meteor';
 
 export const MainDisplay = () => {
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("");
+    const [selectedCategories, setSelectedCategories] = useState([]);
     const isLoadingPosItems = useSubscribe("menuItems")
     const [filterOpen, setFilterOpen] = useState(false);
 
     const posItems = useTracker( () => MenuItemsCollection.find().fetch());
+
+    const toggleCategory = (category) => {
+      if (selectedCategories.includes(category)) {
+        setSelectedCategories(selectedCategories.filter((c) => c !== category));
+      } else {
+        setSelectedCategories([...selectedCategories, category]);
+      }
+    };
+    
     const filteredItems = posItems.filter((item) => {
       const matchesName = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-
       const matchesCategory =
-        selectedCategory === "" || (item.category && item.category.includes(selectedCategory));
-
-      return matchesName && matchesCategory;
+        selectedCategories.length === 0 ||
+        (item.category && item.category.some(cat => selectedCategories.includes(cat)));
+      const isAvailable = item.available;
+    
+      return matchesName && matchesCategory && isAvailable;
     });
+    
+    
 
     console.log(filteredItems)
 
@@ -53,35 +65,23 @@ export const MainDisplay = () => {
           </div>
         </div>
 
-        <div id="filter-section" className="mb-4 px-4">
-          <div className="relative inline-block">
+        <div className="flex space-x-4 mb-4 px-4">
+          {["Food", "Drink", "Dessert"].map((cat) => (
             <button
-              className="bg-pink-500 text-white font-bold py-2 px-4 rounded-full"
-              onClick={() => setFilterOpen(!filterOpen)}
+              key={cat}
+              onClick={() => toggleCategory(cat)}
+              className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors duration-200 ${
+                selectedCategories.includes(cat)
+                  ? "bg-pink-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
             >
-              {selectedCategory === "" ? "Filter" : selectedCategory}
+              {cat}
             </button>
-
-            {filterOpen && (
-              <div className="absolute mt-2 border rounded-lg bg-white shadow-md min-w-[120px] z-10">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => {
-                      setSelectedCategory(cat === "None" ? "" : cat); 
-                      setFilterOpen(false);
-                    }}
-                    className={`block w-full text-left px-4 py-2 hover:bg-pink-100 ${
-                      selectedCategory === cat ? "font-bold text-pink-700" : ""
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          ))}
         </div>
+
+
 
         <div id="pos-display" className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 transition-all duration-300 ease-in-out">
             {filteredItems.map((item) => (
