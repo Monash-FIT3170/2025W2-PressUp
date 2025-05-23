@@ -34,14 +34,14 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
   };
   
   return (
-    <div className="w-64 h-140 flex flex-col">
+    <div className="w-72 h-140 flex flex-col">
       <div className="flex items-center justify-between bg-rose-400 text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
         <span className="text-lg font-semibold">Table {tableNo}</span>
         <button className="text-2xl font-bold">×</button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+      <div className="flex-1 overflow-y-auto p-2 space-y-4 border-solid border-rose-400 border-4">
         {items.map((item) => (
           <div
             key={String(item._id)}
@@ -91,7 +91,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
       </div>
 
       {/* Total Cost + Discount Button + Pay Button */}
-      <div className="bg-rose-400 text-white p-4 flex-shrink-0 bottom-0">
+      <div className="bg-rose-400 text-white p-4 flex-shrink-0">
         {/* Displaying total cost*/}
         <div className="flex justify-between items-center mb-2">
           <span className="text-lg font-bold">Total</span>
