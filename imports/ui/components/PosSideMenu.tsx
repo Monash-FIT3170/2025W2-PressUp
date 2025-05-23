@@ -13,9 +13,9 @@ interface PosSideMenuProps {
 
 export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: PosSideMenuProps) => {
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
-  const [discountPercent, setDiscountPercent] = useState(0) // For the discount % button
+  const [discountPercent, setDiscountPercent] = useState(0) // For the discount % button - final value used
   const [discountPercent2, setDiscountPercent2] = useState('') // For the discount % input field
-  const [discountAmount, setDiscountAmount] = useState(0) // For the discount $ button
+  const [discountAmount, setDiscountAmount] = useState(0) // For the discount $ button - final value used
   const [discountAmount2, setDiscountAmount2] = useState('') // For the discount $ input field
   const [savedAmount, setSavedAmount] = useState(0)
   const [discountPopupScreen, setDiscountPopupScreen] = useState<'menu' | 'percentage' | 'flat'>('menu');
@@ -41,23 +41,21 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
     setOpenDiscountPopup(false);
   };
 
+  // Allow 1-100% for discount percentage
   const handleDiscountPercent2Change = (percentage: React.ChangeEvent<HTMLInputElement>) => {
     const discountVal = parseInt(percentage.target.value, 10);
     if (!isNaN(discountVal) && discountVal >= 1 && discountVal <= 100) {
       setDiscountPercent2(discountVal);
     } else {
-      // Optional: Clear or set to a fallback value if invalid
       setDiscountPercent2('');
     }
   }
 
+  // Allow $0.01-max for discount amount
   const handleDiscountAmount2Change = (amount: React.ChangeEvent<HTMLInputElement>) => {
     const discountVal = amount.target.value;
     const num = parseFloat(discountVal);
-
-    // Allow numbers greater than 0, up to 2 decimal places
     const isValid = !isNaN(num) && num > 0 && /^\d+(\.\d{1,2})?$/.test(discountVal);
-
     if (isValid) {
       setDiscountAmount2(discountVal);
     }else {
@@ -104,15 +102,16 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
         ))}
       </div>
 
-      {/* Total Cost + Discount Button + Pay Button */}
+      {/* Total Cost */}
       <div className="bg-rose-400 text-white p-4 flex-shrink-0 sticky bottom-0">
         {/* Displaying total cost*/}
         <div className="flex justify-between items-center mb-2">
           <span className="text-lg font-bold">Total</span>
-          <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span> {/* Static total for now */}
+          <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span>
         </div>
       
 
+        {/* Displaying discount infomation*/}
         {discountPercent !== 0 && (
           <div className="flex justify-between items-center mb-2 bg-blue-200 text-black text-sm rounded-lg p-1">
             <span className="text-sm font-bold">Percent Discount: {discountPercent}%</span>
@@ -131,16 +130,17 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
           </div>
         )}
 
-        {/* Discount button + popup*/}
+        {/* Discount button */}
         <button className="w-full bg-orange-400 hover:bg-orange-300 text-white font-bold py-2 px-4 mb-2 rounded-full" onClick={() => {setOpenDiscountPopup(true); setDiscountPopupScreen('menu');}}>
           Discount
         </button>
 
+        {/* Discount Popup */}
         {
           openDiscountPopup && (
           <div>
             {/* Overlay for Popup */}
-            {/* <div className="fixed inset-0 bg-gray-700 bg-opacity-25 z-40" onClick={() => setOpenDiscountPopup(false)} /> */}
+            <div className="fixed inset-0 bg-gray-700/40 z-40" onClick={() => setOpenDiscountPopup(false)} />
             
             <div className="fixed w-200 h-135 top-40 left-120 bg-pink-300 rounded-2xl z-50">
               <div className="flex flex-row justify-between mx-5 my-5">
@@ -148,7 +148,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
                 <button className="bg-red-700 rounded-2xl w-8" onClick={()=> {setOpenDiscountPopup(false); setDiscountPopupScreen('menu');}}>X</button>
               </div>
 
-              {/* Discount Menu Popup*/}
+              {/* Discount Popup - Menu */}
               {discountPopupScreen === 'menu' && (
                 <div className="w-180 h-108 bg-pink-200 rounded-2xl mx-10 px-8 py-2">
                   <div className="px-2 py-4">
@@ -183,14 +183,14 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
                           setSavedAmount(0);
                           setOpenDiscountPopup(false);
                         }}>
-                        Reset
+                        Reset Discount
                       </button>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/*Percentage Discount Popup*/}
+              {/*Discount Popup - Percentage Discount */}
               {discountPopupScreen === 'percentage' && (
                 <div className="w-180 h-108 bg-blue-100 rounded-2xl mx-10 px-8 py-8">
                   <div className="flex flex-row justify-between">
@@ -217,7 +217,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
                 </div>
               )}
 
-              {/*Flat Discount Popup*/}
+              {/*Discount Popup - Flat Discount */}
               {discountPopupScreen === 'flat' && (
                 <div className="w-180 h-108 bg-purple-200 rounded-2xl mx-10 px-8 py-8">
                   <div className="flex flex-row justify-between">
@@ -246,8 +246,6 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
             </div>
           </div>
         )}
-
-
         
         {/* Link Pay button to Receipt page with Payment Modal*/}
         <PaymentModal></PaymentModal>
