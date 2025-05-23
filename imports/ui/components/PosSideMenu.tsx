@@ -13,8 +13,13 @@ interface PosSideMenuProps {
 
 export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: PosSideMenuProps) => {
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
-  const [discountPercent, setDiscountPercent] = useState(0)
+  const [discountPercent, setDiscountPercent] = useState(0) // For the discount % button
+  const [discountPercent2, setDiscountPercent2] = useState('') // For the discount % input field
+  const [discountAmount, setDiscountAmount] = useState(0) // For the discount $ button
+  const [discountAmount2, setDiscountAmount2] = useState('') // For the discount $ input field
   const [savedAmount, setSavedAmount] = useState(0)
+  const [discountPopupScreen, setDiscountPopupScreen] = useState<'menu' | 'percentage' | 'flat'>('menu');
+
 
   // Recalculate saved amount when total or discount changes
   const finalTotal = total - (total * (discountPercent / 100));
@@ -24,10 +29,39 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
     setSavedAmount(saved);
   }, [total, discountPercent]);
 
-  const applyDiscount = (percentage: number) => {
+  const applyPercentDiscount = (percentage: number) => {
     setDiscountPercent(percentage);
     setOpenDiscountPopup(false);
   };
+
+  const applyFlatDiscount = (amount: number) => {
+    setDiscountAmount(amount);
+    setOpenDiscountPopup(false);
+  };
+
+  const handleDiscountPercent2Change = (percentage: React.ChangeEvent<HTMLInputElement>) => {
+    const discountVal = parseInt(percentage.target.value, 10);
+    if (!isNaN(discountVal) && discountVal >= 1 && discountVal <= 100) {
+      setDiscountPercent2(discountVal);
+    } else {
+      // Optional: Clear or set to a fallback value if invalid
+      setDiscountPercent2('');
+    }
+  }
+
+  const handleDiscountAmount2Change = (amount: React.ChangeEvent<HTMLInputElement>) => {
+    const discountVal = amount.target.value;
+    const num = parseFloat(discountVal);
+
+    // Allow numbers greater than 0, up to 2 decimal places
+    const isValid = !isNaN(num) && num > 0 && /^\d+(\.\d{1,2})?$/.test(discountVal);
+
+    if (isValid) {
+      setDiscountAmount2(discountVal);
+    }else {
+      setDiscountAmount2('');
+    }
+  }
 
   return (
     <div className="w-64 bg-gray-100 flex flex-col h-screen">
@@ -91,38 +125,104 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
         )}
 
         {/* Discount button + popup*/}
-        <button className="w-full bg-orange-400 hover:bg-orange-300 text-white font-bold py-2 px-4 mb-2 rounded-full" onClick={() => setOpenDiscountPopup(true)}>
+        <button className="w-full bg-orange-400 hover:bg-orange-300 text-white font-bold py-2 px-4 mb-2 rounded-full" onClick={() => {setOpenDiscountPopup(true); setDiscountPopupScreen('menu');}}>
           Discount
         </button>
 
         {
           openDiscountPopup && (
-          <div className="fixed w-200 h-130 top-40 left-120 bg-pink-300 rounded-2xl">
+          <div className="fixed w-200 h-135 top-40 left-120 bg-pink-300 rounded-2xl">
             <div className="flex flex-row justify-between mx-5 my-5">
               <h1 className="font-bold text-2xl text-black">Apply Discount</h1>
-              <button className="bg-red-700 rounded-2xl w-8" onClick={()=> setOpenDiscountPopup(false)}>X</button>
+              <button className="bg-red-700 rounded-2xl w-8" onClick={()=> {setOpenDiscountPopup(false); setDiscountPopupScreen('menu');}}>X</button>
             </div>
-            <div className="w-180 h-100 bg-pink-200 rounded-2xl mx-10 p-8">
-              <span className="font-bold text-xl text-gray-700">Select Discount Percentage</span>
-              <div className="grid grid-cols-4 gap-1 my-4">
-                {[5, 10, 25, 50].map((d) => (
-                  <button key={d} className="bg-pink-700 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full" onClick={() => applyDiscount(d)}>
-                    {d}%
-                  </button>
-                ))}
+
+            {/* Discount Menu Popup*/}
+            {discountPopupScreen === 'menu' && (
+              <div className="w-180 h-108 bg-pink-200 rounded-2xl mx-10 px-8 py-2">
+                <div className="px-2 py-4">
+                  <span className="font-bold text-2xl text-black rounded-full py-2">Discount Options</span>
+      
+                  <div className="flex flex-col items-center">
+                    <button className="bg-blue-500 hover:bg-blue-400 font-bold text-white text-xl py-4 rounded text-center w-full my-4 rounded-full" onClick={() => setDiscountPopupScreen('percentage')}>
+                      Percentage Discount (%)
+                    </button>
+                    <button className="bg-purple-500 hover:bg-purple-400 font-bold text-white text-xl py-4 rounded text-center w-full my-4 rounded-full" onClick={() => setDiscountPopupScreen('flat')}>
+                      Flat Discount ($)
+                    </button>
+                    <button className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xl py-4 w-full my-4 rounded-full"
+                      onClick={() => {
+                        setDiscountPercent(0);
+                        setDiscountPercent2('');
+                        setDiscountAmount(0);
+                        setDiscountAmount2('');
+                        setSavedAmount(0);
+                        setOpenDiscountPopup(false);
+                      }}>
+                      Reset
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/*Percentage Discount Popup*/}
+            {discountPopupScreen === 'percentage' && (
+              <div className="w-180 h-108 bg-blue-100 rounded-2xl mx-10 px-8 py-8">
+                <div className="flex flex-row justify-between">
+                  <span className="font-bold text-2xl text-black rounded-full whitespace-nowrap">Apply Percentage Discount (%)</span>
+                  <button className="text-xl text-white font-bold rounded-full bg-orange-500 hover:bg-orange-400 px-3 py-2" onClick={() => setDiscountPopupScreen('menu')}>← Back</button>
+                </div>
+                <div className="mt-4">
+                  <span className="font-bold text-xl text-gray-700">Select Discount Percentage</span>
+                  <div className="grid grid-cols-4 gap-1 my-2">
+                    {[5, 10, 25, 50].map((d) => (
+                      <button key={d} className="bg-pink-700 hover:bg-pink-600 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full" onClick={() => applyPercentDiscount(d)}>
+                        {d}%
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex flex-col my-8">
+                    <span className="mb-2 font-bold text-xl text-gray-700">Enter Discount Percentage (%)</span>
+                    <input type="number" min={1} max={100} step={1} value={discountPercent2} onChange={handleDiscountPercent2Change} className="px-4 py-3 w-full text-xl h-12 w-64 bg-pink-100 border border-gray-300 text-black rounded focus:outline-none focus:ring-2 focus:ring-pink-300"></input>
+                    <button className="bg-pink-700 hover:bg-pink-600 font-bold text-white text-xl py-2 rounded text-center mr-130 my-4 rounded-full" onClick={() => applyPercentDiscount(discountPercent2)}>
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/*Flat Discount Popup*/}
+            {discountPopupScreen === 'flat' && (
+              <div className="w-180 h-108 bg-purple-200 rounded-2xl mx-10 px-8 py-8">
+                <div className="flex flex-row justify-between">
+                  <span className="font-bold text-2xl text-black rounded-full whitespace-nowrap">Apply Flat Discount ($)</span>
+                  <button className="text-xl text-white font-bold rounded-full bg-orange-500 hover:bg-orange-400 px-3 py-2" onClick={() => setDiscountPopupScreen('menu')}>← Back</button>
+                </div>
+                <div className="mt-4">
+                  <span className="font-bold text-xl text-gray-700">Select Discount Amount</span>
+                  <div className="grid grid-cols-4 gap-1 my-2">
+                    {[5, 10, 15, 20].map((d) => (
+                      <button key={d} className="bg-pink-700 hover:bg-pink-600 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full" onClick={() => applyFlatDiscount(d)}>
+                        ${d}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex flex-col my-8">
+                    <span className="mb-2 font-bold text-xl text-gray-700">Enter Discount Amount ($)</span>
+                    <input type="number" min={0.01} step={0.01} value={discountAmount2} onChange={handleDiscountAmount2Change} className="px-4 py-3 w-full text-xl h-12 w-64 bg-pink-100 border border-gray-300 text-black rounded focus:outline-none focus:ring-2 focus:ring-pink-300"></input>
+                    <button className="bg-pink-700 hover:bg-pink-600 font-bold text-white text-xl py-2 rounded text-center mr-130 my-4 rounded-full" onClick={() => applyFlatDiscount(discountAmount2)}>
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        <button
-          className="w-full bg-orange-700 hover:bg-orange-600 text-white font-bold py-2 px-4 mb-2 rounded-full"
-          onClick={() => {
-            setDiscountPercent(0);
-            setSavedAmount(0);
-          }}>
-          Reset
-        </button>
+
         
         {/* Link Pay button to Receipt page with Payment Modal*/}
         <PaymentModal></PaymentModal>
