@@ -34,7 +34,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
   };
   
   return (
-    <div className="w-72 h-140 flex flex-col">
+    <div className="w-72 h-140 bg-gray-100 flex flex-col">
       <div className="flex items-center justify-between bg-rose-400 text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
         <span className="text-lg font-semibold">Table {tableNo}</span>
