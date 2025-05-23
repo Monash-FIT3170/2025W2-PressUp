@@ -3,8 +3,13 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { Pill } from "./Pill";
 import { ArrowLeft } from "./symbols/navigation/Arrows";
-import { PencilIcon, StockIcon } from "./symbols/navigation/Inventory";
+import {
+  PencilIcon,
+  StockIcon,
+  SupplierIcon,
+} from "./symbols/navigation/Inventory";
 import { MonitorIcon } from "./symbols/navigation/POS";
+import { CoffeeIcon } from "./symbols/navigation/Coffee";
 
 interface NavigationMenuProps {
   show: boolean;
@@ -15,7 +20,9 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
   // If you want to change the width here you should also make a change there.
   return (
     <div
-      className={`bg-primary min-h-full transition-all ease-in-out duration-300 ${show ? "w-[20vw]" : "w-0"} overflow-hidden`}
+      className={`bg-primary min-h-full transition-all ease-in-out duration-300 ${
+        show ? "w-[20vw]" : "w-0"
+      } overflow-hidden`}
     >
       <div className="flex flex-col p-6 text-lg">
         <NavigationEntry
@@ -30,11 +37,25 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             path="/inventory/stock"
             selectionType={NavigationEntrySelection.ARROW}
           />
+
+          <NavigationEntry
+            icon={<SupplierIcon fill="var(--color-primary-dark)" />}
+            name="Suppliers"
+            path="/inventory/suppliers"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
         </NavigationEntry>
+
         <NavigationEntry
           icon={<MonitorIcon fill="var(--color-primary-dark)" />}
           name="POS System"
           path="/pos/display"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        ></NavigationEntry>
+        <NavigationEntry
+          icon={<CoffeeIcon fill="var(--color-primary-dark)" />}
+          name="Menu Management"
+          path="/menuManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         ></NavigationEntry>
       </div>
@@ -101,11 +122,11 @@ const NavigationEntry = ({
           {active ? <ActiveContent /> : <div className="px-3">{name}</div>}
         </div>
       </Link>
-      <div className="grid grid-cols-3 text-[0.8em]">
+      <div className="grid grid-cols-12 text-[0.8em]">
         {React.Children.map(children, (child, index) => (
           <>
             <div key={`${index}-empty`} />
-            <div className="col-span-2" key={`${index}-navelement`}>
+            <div className="col-span-11" key={`${index}-navelement`}>
               {child}
             </div>
           </>

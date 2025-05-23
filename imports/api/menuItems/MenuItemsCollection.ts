@@ -2,6 +2,7 @@ import { Mongo } from "meteor/mongo";
 import { DBEntry } from "../database";
 
 export interface MenuItem extends DBEntry {
+  _id: Mongo.ObjectID;
   name: string;
   quantity: number;
   ingredients: string[];
