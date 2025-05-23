@@ -15,3 +15,9 @@ export {
   Transaction,
   TransactionsCollection
 } from "./transactions/TransactionsCollection"
+
+// Orders
+export {
+  Order,
+  OrdersCollection
+} from "./orders/OrdersCollection"
