@@ -35,10 +35,8 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onD
     onDelete(itemId);
   };
 
-
-  
   return (
-    <div className="w-72 h-140 bg-gray-100 flex flex-col">
+    <div className="w-96 h-140 bg-gray-100 flex flex-col">
       <div className="flex items-center justify-between bg-rose-400 text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
         <span className="text-lg font-semibold">Table {tableNo}</span>
@@ -51,14 +49,11 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onD
             key={String(item._id)}
             className="bg-white rounded-md p-3 shadow-sm space-y-2"
           >
-            {/* Item name */}
             <div className="text-sm font-semibold text-gray-800">
               {item.name}
             </div>
 
-            {/* Controls and price */}
             <div className="flex items-center justify-between">
-              {/* Quantity controls */}
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => onDecrease(item._id)}
@@ -80,10 +75,8 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onD
                 >
                   🗑
                 </button>
-
               </div>
 
-              {/* Price */}
               <div className="flex items-center space-x-2">
                 <div className="text-sm font-semibold text-gray-800">
                   ${(item.price * item.quantity).toFixed(2)}
@@ -96,13 +89,11 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onD
 
       {/* Total Cost + Discount Button + Pay Button */}
       <div className="bg-rose-400 text-white p-4 flex-shrink-0">
-        {/* Displaying total cost*/}
         <div className="flex justify-between items-center mb-2">
           <span className="text-lg font-bold">Total</span>
-          <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span> {/* Static total for now */}
+          <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span>
         </div>
-        
-        {/* Shows how much discount is applied*/}
+
         {discountPercent !== 0 && (
           <div>
             <div className="flex justify-between items-center mb-2 bg-yellow-400 text-black text-sm rounded-lg p-1">
@@ -116,17 +107,30 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onD
           </div>
         )}
 
-        {/* Discount button + popup*/}
-        <button className="w-full bg-orange-400 hover:bg-orange-300 text-white font-bold py-2 px-4 mb-2 rounded-full" onClick={() => setOpenDiscountPopup(true)}>
-          Discount
-        </button>
+        {/* Discount + Reset row */}
+        <div className="flex space-x-2 mb-2">
+          <button
+            className="w-[75%] bg-orange-400 hover:bg-orange-300 text-white font-bold py-2 px-4 rounded-full"
+            onClick={() => setOpenDiscountPopup(true)}
+          >
+            Discount
+          </button>
+          <button
+            className="w-[25%] bg-orange-700 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-full"
+            onClick={() => {
+              setDiscountPercent(0);
+              setSavedAmount(0);
+            }}
+          >
+            Reset
+          </button>
+        </div>
 
-        {
-          openDiscountPopup && (
+        {openDiscountPopup && (
           <div className="fixed w-200 h-130 top-40 left-120 bg-pink-300 rounded-2xl">
             <div className="flex flex-row justify-between mx-5 my-5">
               <h1 className="font-bold text-2xl text-black">Apply Discount</h1>
-              <button className="bg-red-700 rounded-2xl w-8" onClick={()=> setOpenDiscountPopup(false)}>X</button>
+              <button className="bg-red-700 rounded-2xl w-8" onClick={() => setOpenDiscountPopup(false)}>X</button>
             </div>
             <div className="w-180 h-100 bg-pink-200 rounded-2xl mx-10 p-8">
               <span className="font-bold text-xl text-gray-700">Select Discount Percentage</span>
@@ -141,18 +145,9 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onD
           </div>
         )}
 
-        <button
-          className="w-full bg-orange-700 hover:bg-orange-600 text-white font-bold py-2 px-4 mb-2 rounded-full"
-          onClick={() => {
-            setDiscountPercent(0);
-            setSavedAmount(0);
-          }}>
-          Reset
-        </button>
-        
-        {/* Link Pay button to Receipt page with Payment Modal*/}
-        <PaymentModal></PaymentModal>
+        {/* Pay button */}
+        <PaymentModal />
       </div>
     </div>
   );
-};
+}
