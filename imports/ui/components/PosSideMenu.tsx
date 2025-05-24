@@ -63,47 +63,69 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
     }
   }
 
+ const handleDelete = (itemId: Mongo.ObjectID) => {
+    onDecrease(itemId); 
+  };
+  
   return (
-    <div className="w-64 bg-gray-100 flex flex-col h-screen">
+    <div className="w-72 h-140 bg-gray-100 flex flex-col">
       <div className="flex items-center justify-between bg-rose-400 text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
         <span className="text-lg font-semibold">Table {tableNo}</span>
         <button className="text-2xl font-bold">×</button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+      <div className="flex-1 overflow-y-auto p-2 space-y-4 border-solid border-rose-400 border-4">
         {items.map((item) => (
           <div
-            key={item._id.toString()}
-            className="bg-white rounded-md p-3 shadow-sm flex items-center justify-between"
+            key={String(item._id)}
+            className="bg-white rounded-md p-3 shadow-sm space-y-2"
           >
-            <div>
-              <h3 className="font-semibold text-gray-800">{item.name}</h3>
+            {/* Item name */}
+            <div className="text-sm font-semibold text-gray-800">
+              {item.name}
             </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => onDecrease(item._id)}
-                className="bg-gray-200 px-2 rounded text-lg"
-              >
-                −
-              </button>
-              <span>{item.quantity}</span>
-              <button
-                onClick={() => onIncrease(item._id)}
-                className="bg-gray-200 px-2 rounded text-lg"
-              >
-                +
-              </button>
-            </div>
-            <div className="font-semibold text-gray-800">
-              ${(item.price * item.quantity).toFixed(2)}
+
+            {/* Controls and price */}
+            <div className="flex items-center justify-between">
+              {/* Quantity controls */}
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => onDecrease(item._id)}
+                  className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold"
+                >
+                  –
+                </button>
+                <span>{item.quantity}</span>
+                <button
+                  onClick={() => onIncrease(item._id)}
+                  className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold"
+                >
+                  ＋
+                </button>
+                <button
+                  onClick={() => handleDelete(item._id)}
+                  className="text-red-500 hover:text-red-700 text-lg font-bold"
+                  title="Remove item"
+                >
+                  🗑
+                </button>
+
+              </div>
+
+              {/* Price */}
+              <div className="flex items-center space-x-2">
+                <div className="text-sm font-semibold text-gray-800">
+                  ${(item.price * item.quantity).toFixed(2)}
+                </div>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Total Cost */}
-      <div className="bg-rose-400 text-white p-4 flex-shrink-0 sticky bottom-0">
+      {/* Total Cost + Discount Button + Pay Button */}
+      <div className="bg-rose-400 text-white p-4 flex-shrink-0">
         {/* Displaying total cost*/}
         <div className="flex justify-between items-center mb-2">
           <span className="text-lg font-bold">Total</span>
