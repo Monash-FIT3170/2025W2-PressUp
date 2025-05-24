@@ -174,17 +174,24 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
                       <button className="bg-purple-500 hover:bg-purple-400 font-bold text-white text-xl py-4 rounded text-center w-full my-4 rounded-full" onClick={() => setDiscountPopupScreen('flat')}>
                         Flat Discount ($)
                       </button>
-                      <button className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xl py-4 w-full my-4 rounded-full"
-                        onClick={() => {
-                          setDiscountPercent(0);
-                          setDiscountPercent2('');
-                          setDiscountAmount(0);
-                          setDiscountAmount2('');
-                          setSavedAmount(0);
-                          setOpenDiscountPopup(false);
-                        }}>
-                        Reset Discount
-                      </button>
+                      <div className="flex flex-row w-full justify-between">
+                        <button className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xl py-4 my-4 px-6 rounded-full"
+                          onClick={() => {
+                            setDiscountPercent(0);
+                            setDiscountPercent2('');
+                            setOpenDiscountPopup(false);
+                          }}>
+                          Reset Percentage Discount (%)
+                        </button>
+                        <button className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xl py-4 my-4 px-8 rounded-full"
+                          onClick={() => {
+                            setDiscountAmount(0);
+                            setDiscountAmount2('');
+                            setOpenDiscountPopup(false);
+                          }}>
+                          Reset Flat Discount ($)
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
