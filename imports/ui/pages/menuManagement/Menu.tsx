@@ -88,7 +88,7 @@ export const Menu = () => {
         </div>
 
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {[...posItems]
+          {[...filteredItems]
           .sort((a, b) => {
             // Move unavailable items to the end
             if (a.available === b.available) return 0;
