@@ -3,15 +3,17 @@ import { MenuItem } from "/imports/api";
 import { PaymentModal } from "./PaymentModal";
 import { Mongo } from "meteor/mongo";
 
+
 interface PosSideMenuProps {
   tableNo: number;
   items: MenuItem[];
   total: number;
   onIncrease: (itemId: Mongo.ObjectID) => void;
   onDecrease: (itemId: Mongo.ObjectID) => void;
+  onDelete: (itemId: Mongo.ObjectID) => void; 
 }
 
-export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: PosSideMenuProps) => {
+export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onDelete }: PosSideMenuProps) => {
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
   const [discountPercent, setDiscountPercent] = useState(0)
   const [savedAmount, setSavedAmount] = useState(0)
@@ -29,9 +31,11 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
     setOpenDiscountPopup(false);
   };
 
- const handleDelete = (itemId: Mongo.ObjectID) => {
-    onDecrease(itemId); 
+  const handleDelete = (itemId: Mongo.ObjectID) => {
+    onDelete(itemId);
   };
+
+
   
   return (
     <div className="w-72 h-140 bg-gray-100 flex flex-col">
