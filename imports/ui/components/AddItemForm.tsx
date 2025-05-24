@@ -54,7 +54,7 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
   return (
     <div>
-      <div className="flex items-center justify-center p-4 w-100 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+      <div className="flex items-center justify-center p-4 w-full md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
         <h3 className="text-xl font-semibold text-rose-400 dark:text-white">
           New Stock Item
         </h3>
