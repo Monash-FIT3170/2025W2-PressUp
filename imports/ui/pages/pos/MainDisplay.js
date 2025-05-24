@@ -57,6 +57,12 @@ export const MainDisplay = () => {
       updateOrder(updatedItems);
     };
 
+    const handleDelete = (itemId) => {
+      const updatedItems = order.menuItems.filter(i => i._id !== itemId);
+      updateOrder(updatedItems);
+    };
+
+
     const toggleCategory = (category) => {
       if (selectedCategories.includes(category)) {
         setSelectedCategories(selectedCategories.filter((c) => c !== category));
@@ -159,6 +165,7 @@ export const MainDisplay = () => {
           total={order.totalPrice}
           onIncrease={handleIncrease}
           onDecrease={handleDecrease}
+          onDelete={handleDelete}
         />
       </div>
     </div>
