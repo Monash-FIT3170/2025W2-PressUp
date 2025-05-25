@@ -176,9 +176,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                         className="text-white text-xs px-3 py-1 rounded transition-colors"
                         style={{ 
                           backgroundColor: '#6f597b'
-                        }}
-                        
-                      >
+                        }}>
                         Repurchase
                       </button>
                     </td>
