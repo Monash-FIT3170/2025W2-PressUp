@@ -164,7 +164,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
             {/* Overlay for Popup */}
             <div className="fixed inset-0 bg-gray-700/40 z-40" onClick={() => setOpenDiscountPopup(false)} />
             
-            <div className="fixed w-200 h-135 top-40 left-120 bg-pink-300 rounded-2xl z-50">
+            <div className="fixed w-200 h-135 top-40 left-120 bg-pink-300 shadow-2xl rounded-2xl z-50">
               <div className="flex flex-row justify-between mx-5 my-5">
                 <h1 className="font-bold text-2xl text-black">Apply Discount</h1>
                 <button className="bg-red-700 rounded-2xl w-8" onClick={()=> {setOpenDiscountPopup(false); setDiscountPopupScreen('menu');}}>X</button>
