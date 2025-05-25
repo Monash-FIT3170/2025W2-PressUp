@@ -1,15 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { StockItemWithSupplier } from "./types";
 import {
   StockItemsCollection,
   Supplier,
   SuppliersCollection,
+  StockItem
 } from "/imports/api";
 import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
+import { usePageTitle } from "../../hooks/PageTitleContext";
 
 export const StockPage = () => {
   // Set title
@@ -18,27 +20,22 @@ export const StockPage = () => {
     setPageTitle("Inventory Management - Stock");
   }, [setPageTitle]);
 
-  // TODO: Get from API here
-  const [stockItems] = useState<StockItem[]>(mockStockItems(30));
 
   const [filter, setFilter] = useState<
     "all" | "inStock" | "lowInStock" | "outOfStock"
   >("all");
-  const [open, setOpen] = useState(false);
   const [formResetKey, setFormResetKey] = useState(0);
 
   const isLoadingStockItems = useSubscribe("stockItems.all") === false;
   const isLoadingSuppliers = useSubscribe("suppliers") === false;
 
   const stockItems: StockItemWithSupplier[] = useTracker(() => {
-    const stockItems = StockItemsCollection.find({}, { sort: { name: 1 } }).fetch();
+    const stockItems = StockItemsCollection.find({}, { sort: { name: 1 }, limit: 10 }).fetch();  // TEMPORARY LIMIT
     const result = []
-    console.log(stockItems);
     for (let stockItem of stockItems) {
       let supplier : Supplier | null = null;
       if (stockItem.supplier != null) {
         supplier = SuppliersCollection.find({_id: stockItem.supplier}).fetch()[0];
-        console.log(supplier)
       }
       result.push({...stockItem, supplier});
     }
