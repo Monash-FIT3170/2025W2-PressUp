@@ -1,13 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { Supplier } from "/imports/api/suppliers/SuppliersCollection";
 import { InfoSymbol, Cross } from "./symbols/GeneralSymbols";
 import { Pill } from "./Pill";
+import { SupplierInfo } from "./SupplierInfo";
 
 interface SupplierTableProps {
   suppliers: Supplier[];
 }
 
 export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
+  const [expandedSupplierId, setExpandedSupplierId] = useState<string | null>(null);
+
+  const toggleExpanded = (supplierId: string) => {
+    setExpandedSupplierId(expandedSupplierId === supplierId ? null : supplierId);
+  };
+
   if (suppliers.length === 0)
     return (
       <h2 className="flex-1 text-center font-bold text-xl text-red-900">
@@ -38,14 +45,18 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
           PO
         </div>
         {suppliers.map((supplier, i) => {
+          const supplierId = supplier._id?.toString() || i.toString();
           return (
-            <React.Fragment key={i}>
+            <React.Fragment key={supplierId}>
               <div className="col-span-4 text-left truncate relative py-1 px-2 flex items-center">
                 <span className="truncate max-w-full px-1">
                   {supplier.name}
                 </span>
-                <span className="flex-shrink-0 ml-auto cursor-pointer">
-                  {<InfoSymbol fill="#E76573" viewBox="0 0 24 24" />}
+                <span 
+                  className="flex-shrink-0 ml-auto cursor-pointer"
+                  onClick={() => toggleExpanded(supplierId)}
+                >
+                  <InfoSymbol fill="#E76573" viewBox="0 0 24 24" />
                 </span>
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
@@ -64,11 +75,11 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
               <div className="col-span-3 flex flex-wrap relative py-1 px-2">
-                {supplier.goods.map((good) => (
-                  <span className="bg-rose-400 border-rose-300 text-white rounded-sm text-xs m-1 w-max h-max px-2 py-1 inline-flex items-center">
+                {supplier.goods && supplier.goods.map((good, goodIndex) => (
+                  <span key={goodIndex} className="bg-rose-400 border-rose-300 text-white rounded-sm text-xs m-1 w-max h-max px-2 py-1 inline-flex items-center">
                     {good}
                     <span className="pl-2 ml-auto cursor-pointer">
-                      {<Cross height="8px" width="8px" viewBox="0 0 14 14" />}
+                      <Cross height="8px" width="8px" viewBox="0 0 14 14" />
                     </span>
                   </span>
                 ))}
@@ -83,6 +94,17 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
                   Create PO
                 </button>
               </div>
+              
+              {/* Expandable Supplier Info */}
+              {expandedSupplierId === supplier._id?.toString() && (
+                <div className="col-span-15">
+                  <SupplierInfo
+                    supplier={supplier}
+                    isExpanded={true}
+                    onToggle={() => toggleExpanded(supplier._id?.toString() || '')}
+                  />
+                </div>
+              )}
             </React.Fragment>
           );
         })}
