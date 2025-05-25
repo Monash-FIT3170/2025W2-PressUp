@@ -1,5 +1,5 @@
 import { Meteor } from "meteor/meteor";
-import { check } from "meteor/check";
+import { check, Match } from "meteor/check";
 import { StockItemsCollection } from "..";
 import { Mongo } from "meteor/mongo";
 

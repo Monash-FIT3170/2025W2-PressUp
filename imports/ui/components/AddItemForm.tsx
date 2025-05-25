@@ -4,12 +4,20 @@ import { FormEvent, ChangeEvent, useEffect, useState } from "react";
 import { Supplier, SuppliersCollection, StockItem } from "/imports/api";
 import { Mongo } from "meteor/mongo";
 
-export const AddItemForm = ({ onSuccess, item }: { onSuccess: () => void; item?: StockItem | null }) => {
-  const [itemName, setItemName] = useState("");
-  const [quantity, setQuantity] = useState<string>("");
-  const [location, setLocation] = useState("");
-  const [supplier, setSupplier] = useState<Mongo.ObjectID | null>(null);
-  const [selectedValue, setSelectedValue] = useState<string>("");
+export const AddItemForm = ({ onSuccess, onCancel, item }: { onSuccess: () => void; onCancel: () => void; item?: StockItem | null }) => {
+  const [itemName, setItemName] = useState(item?.name ?? "");
+  const [quantity, setQuantity] = useState<string>(item ? String(item.quantity) : "");
+  const [location, setLocation] = useState(item?.location ?? "");
+  const [supplier, setSupplier] = useState<Mongo.ObjectID | null>(item?.supplier ?? null);
+  const [selectedValue, setSelectedValue] = useState<string>(item?.supplier ? String(item.supplier) : "");
+
+  useEffect(() => {
+    setItemName(item?.name ?? "");
+    setQuantity(item ? String(item.quantity) : "");
+    setLocation(item?.location ?? "");
+    setSupplier(item?.supplier ?? null);
+    setSelectedValue(item?.supplier ? String(item.supplier) : "");
+  }, [item]);
 
   useSubscribe("suppliers") === false;
   const suppliers: Supplier[] = useTracker(() => {
@@ -35,7 +43,29 @@ export const AddItemForm = ({ onSuccess, item }: { onSuccess: () => void; item?:
       return;
     }
 
-    Meteor.call(
+    if (item && item._id) {
+      console.log("Updating item:", item._id);
+      // Editing existing item
+      Meteor.call(
+        "stockItems.update",
+        item._id,
+        {
+          name: itemName,
+          quantity: parsedQuantity,
+          location,
+          supplier,
+        },
+        (error: Meteor.Error | undefined) => {
+          if (error) {
+            alert("Error: " + error.reason);
+          } else {
+            onSuccess();
+          }
+        }
+      );
+    } else {
+      console.log("Else insert");
+      Meteor.call(
       "stockItems.insert",
       {
         name: itemName,
@@ -55,6 +85,7 @@ export const AddItemForm = ({ onSuccess, item }: { onSuccess: () => void; item?:
         }
       }
     );
+    }
   };
 
     return (
@@ -129,6 +160,21 @@ export const AddItemForm = ({ onSuccess, item }: { onSuccess: () => void; item?:
               Add Item
             </button>
           </div>
+          <div className="grid grid-cols-2 p-4">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer mr-4 text-white bg-neutral-400 hover:bg-neutral-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-neutral-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-neutral-500 dark:hover:bg-neutral-600 dark:focus:ring-neutral-600"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
+          >
+            Save
+          </button>
+        </div>
         </form>
       </div>
     </div>
