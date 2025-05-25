@@ -172,7 +172,9 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                     <td className="p-2 text-gray-800">{order.quantity}</td>
                     <td className="p-2 text-gray-800">${order.totalCost.toFixed(2)}</td>
                     <td className="p-2">
-                      <button className="background-color:#6f596b bg-gray-500 text-white text-xs px-3 py-1 rounded hover:bg-gray-600 transition-colors">
+                      <button className=" text-white text-xs px-3 py-1 rounded trannsition-colors"
+                      style={{ 
+                          backgroundColor: '#6f597b'}}>
                         Repurchase
                       </button>
                     </td>
