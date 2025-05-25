@@ -30,7 +30,8 @@ export const StockPage = () => {
   const isLoadingSuppliers = useSubscribe("suppliers") === false;
 
   const stockItems: StockItemWithSupplier[] = useTracker(() => {
-    const stockItems = StockItemsCollection.find({}, { sort: { name: 1 }, limit: 10 }).fetch();  // TEMPORARY LIMIT
+    // const stockItems = StockItemsCollection.find({}, { sort: { name: 1 }, limit: 10 }).fetch();  // TEMPORARY LIMIT
+    const stockItems = StockItemsCollection.find({}, { sort: { name: 1 } }).fetch(); 
     const result = []
     for (let stockItem of stockItems) {
       let supplier : Supplier | null = null;
@@ -90,21 +91,7 @@ export const StockPage = () => {
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-        <AddItemForm key={formResetKey} onSuccess={handleSuccess} item={editItem} />
-        <div className="grid grid-cols-2 p-4">
-          <button
-            onClick={() => setOpen(false)}
-            className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer mr-4 text-white bg-neutral-400 hover:bg-neutral-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-neutral-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-neutral-500 dark:hover:bg-neutral-600 dark:focus:ring-neutral-600"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => setOpen(false)}
-            className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
-          >
-            Save
-          </button>
-        </div>
+        <AddItemForm key={formResetKey} onSuccess={handleSuccess} onCancel={handleModalClose} item={editItem} />
       </Modal>
     </div>
   );
