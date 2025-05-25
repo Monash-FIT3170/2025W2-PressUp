@@ -1,19 +1,24 @@
 import { Meteor } from "meteor/meteor";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { FormEvent, ChangeEvent, useEffect, useState } from "react";
-import { Supplier, SuppliersCollection } from "/imports/api";
+import { Supplier, SuppliersCollection, StockItem } from "/imports/api";
 import { Mongo } from "meteor/mongo";
 
-export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
+export const AddItemForm = ({ onSuccess, item }: { onSuccess: () => void; item?: StockItem | null }) => {
   const [itemName, setItemName] = useState("");
   const [quantity, setQuantity] = useState<string>("");
   const [location, setLocation] = useState("");
   const [supplier, setSupplier] = useState<Mongo.ObjectID | null>(null);
+  const [selectedValue, setSelectedValue] = useState<string>("");
 
   useSubscribe("suppliers") === false;
   const suppliers: Supplier[] = useTracker(() => {
     return SuppliersCollection.find().fetch();
   });
+
+  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setSelectedValue(event.target.value);
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -48,38 +53,11 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
           setSupplier(null);
           onSuccess();
         }
-      },
+      }
     );
   };
 
-interface AddItemFormProps {
-  item?: StockItem | null; 
-}
-
-const mockSuppliers = (amount: number) => {
-  let result: Supplier[] = [];
-  for (let i = 1; i < amount; i++) {
-    result.push({
-      _id: new Mongo.ObjectID(),
-      name: `Mock Supplier ${i}`,
-      description: "",
-      pastOrderQty: 1,
-      goods: [],
-    });
-  }
-  return result;
-};
-
-const suppliers: Supplier[] = mockSuppliers(10);
-
-export const AddItemForm = () => {
-  const [selectedValue, setSelectedValue] = useState<string>("");
-
-  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedValue(event.target.value);
-  };
-
-  return (
+    return (
     <div>
       <div className="flex items-center justify-center p-4 w-100 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
         <h3 className="text-xl font-semibold text-rose-400 dark:text-white">
@@ -107,10 +85,8 @@ export const AddItemForm = () => {
             <input
               type="number"
               value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              min="0"
-              value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
+              min="0"
               placeholder="0"
               className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
@@ -157,4 +133,18 @@ export const AddItemForm = () => {
       </div>
     </div>
   );
+
+  const mockSuppliers = (amount: number) => {
+    let result: Supplier[] = [];
+    for (let i = 1; i < amount; i++) {
+      result.push({
+        _id: new Mongo.ObjectID(),
+        name: `Mock Supplier ${i}`,
+        description: "",
+        pastOrderQty: 1,
+        goods: [],
+      });
+    }
+    return result;
+  };
 };

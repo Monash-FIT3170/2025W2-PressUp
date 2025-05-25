@@ -11,4 +11,16 @@ Meteor.methods({
 
     return StockItemsCollection.insertAsync(item);
   },
+
+  "stockItems.update"(itemId: string, updates: { name: string; quantity: number; location: string; supplier: Mongo.ObjectID }) {
+    check(itemId, String);
+    check(updates.name, String);
+    check(updates.quantity, Number);
+    check(updates.location, String);
+
+    return StockItemsCollection.updateAsync(
+      { _id: itemId },
+      { $set: updates }
+    );
+  },
 });
