@@ -153,11 +153,11 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="text-left p-2 font-medium text-gray-600 bg-red-200 rounded-l">No.</th>
-                  <th className="text-left p-2 font-medium text-gray-600 bg-red-200">Date</th>
-                  <th className="text-left p-2 font-medium text-gray-600 bg-red-200">Goods</th>
-                  <th className="text-left p-2 font-medium text-gray-600 bg-red-200">Quantity</th>
-                  <th className="text-left p-2 font-medium text-gray-600 bg-red-200 rounded-r">
+                  <th className="text-left p-2 font-medium text-white rounded-l" style={{backgroundColor: '#6f597b'}}>No.</th>
+                  <th className="text-left p-2 font-medium text-white" style={{backgroundColor: '#6f597b'}}>Date</th>
+                  <th className="text-left p-2 font-medium text-white" style={{backgroundColor: '#6f597b'}}>Goods</th>
+                  <th className="text-left p-2 font-medium text-white" style={{backgroundColor: '#6f597b'}}>Quantity</th>
+                  <th className="text-left p-2 font-medium text-white rounded-r" style={{backgroundColor: '#6f597b'}}>
                     Total Cost <span className="text-xs">(Inc GST)</span>
                   </th>
                   <th className="text-left p-2 font-medium text-gray-600"></th>
@@ -172,9 +172,13 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                     <td className="p-2 text-gray-800">{order.quantity}</td>
                     <td className="p-2 text-gray-800">${order.totalCost.toFixed(2)}</td>
                     <td className="p-2">
-                      <button className=" text-white text-xs px-3 py-1 rounded trannsition-colors"
-                      style={{ 
-                          backgroundColor: '#6f597b'}}>
+                      <button 
+                        className="text-white text-xs px-3 py-1 rounded transition-colors"
+                        style={{ 
+                          backgroundColor: '#6f597b'
+                        }}
+                        
+                      >
                         Repurchase
                       </button>
                     </td>
