@@ -65,7 +65,7 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
               </div>
               <div className="col-span-3 flex flex-wrap relative py-1 px-2">
                 {supplier.goods.map((good) => (
-                  <span className="bg-rose-400 border-rose-300 text-white rounded-sm text-xs m-1 w-max h-max px-2 py-1 inline-flex items-center">
+                  <span className="bg-press-up-purple border-rose-300 text-white rounded-sm text-xs m-1 w-max h-max px-2 py-1 inline-flex items-center">
                     {good}
                     <span className="pl-2 ml-auto cursor-pointer">
                       {<Cross height="8px" width="8px" viewBox="0 0 14 14" />}
