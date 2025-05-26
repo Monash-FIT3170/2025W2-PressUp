@@ -119,7 +119,7 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
           <div className="grid grid-cols-1 p-4">
             <button
               type="submit"
-              className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-negative-button hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-press-up-purple dark:focus:ring-press-up-purple"
+              className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-negative-button hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-500 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-press-up-purple dark:focus:ring-press-up-purple"
             >
               Add Item
             </button>
