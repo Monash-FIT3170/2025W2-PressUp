@@ -31,7 +31,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
 
   return (
     <div className="w-64 bg-gray-100 flex flex-col h-screen">
-      <div className="flex items-center justify-between bg-press-up-navy text-white px-4 py-2 rounded-t-md">
+      <div className="flex items-center justify-between bg-press-up-purple text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
         <span className="text-lg font-semibold">Table {tableNo}</span>
         <button className="text-2xl font-bold">×</button>
@@ -91,7 +91,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
         )}
 
         {/* Discount button + popup*/}
-        <button className="w-full bg-orange-400 hover:bg-orange-300 text-white font-bold py-2 px-4 mb-2 rounded-full" onClick={() => setOpenDiscountPopup(true)}>
+        <button className="w-full bg-press-up-cream hover:bg-press-up-cream text-press-up-navy font-bold py-2 px-4 mb-2 rounded-full" onClick={() => setOpenDiscountPopup(true)}>
           Discount
         </button>
 
@@ -116,7 +116,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
         )}
 
         <button
-          className="w-full bg-orange-700 hover:bg-orange-600 text-white font-bold py-2 px-4 mb-2 rounded-full"
+          className="w-full bg-press-up-negative-button hover:bg-press-up-negative-button text-white font-bold py-2 px-4 mb-2 rounded-full"
           onClick={() => {
             setDiscountPercent(0);
             setSavedAmount(0);
