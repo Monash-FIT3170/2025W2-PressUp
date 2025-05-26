@@ -1,5 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import React, { useState, useEffect } from "react";
+import { usePageTitle } from "../../hooks/PageTitleContext";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { StockItemWithSupplier } from "./types";
 import {
@@ -12,15 +13,12 @@ import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
-import { usePageTitle } from "../../hooks/PageTitleContext";
 
 export const StockPage = () => {
-  // Set title
   const [_, setPageTitle] = usePageTitle();
   useEffect(() => {
     setPageTitle("Inventory Management - Stock");
   }, [setPageTitle]);
-
 
   const [filter, setFilter] = useState<
     "all" | "inStock" | "lowInStock" | "outOfStock"

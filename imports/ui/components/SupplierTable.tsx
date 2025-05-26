@@ -8,10 +8,10 @@ interface SupplierTableProps {
 }
 
 export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
-  if (suppliers.length == 0)
+  if (suppliers.length === 0)
     return (
       <h2 className="flex-1 text-center font-bold text-xl text-red-900">
-        No suppliers.
+        No suppliers found.
       </h2>
     );
 
