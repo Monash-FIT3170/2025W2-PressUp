@@ -9,6 +9,7 @@ import {
   SupplierIcon,
 } from "./symbols/navigation/Inventory";
 import { MonitorIcon } from "./symbols/navigation/POS";
+import { CoffeeIcon } from "./symbols/navigation/Coffee";
 
 interface NavigationMenuProps {
   show: boolean;
@@ -52,7 +53,7 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         ></NavigationEntry>
         <NavigationEntry
-          icon={<MonitorIcon fill="var(--color-primary-dark)" />}
+          icon={<CoffeeIcon fill="var(--color-primary-dark)" />}
           name="Menu Management"
           path="/menuManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
@@ -121,11 +122,11 @@ const NavigationEntry = ({
           {active ? <ActiveContent /> : <div className="px-3">{name}</div>}
         </div>
       </Link>
-      <div className="grid grid-cols-3 text-[0.8em]">
+      <div className="grid grid-cols-12 text-[0.8em]">
         {React.Children.map(children, (child, index) => (
           <>
             <div key={`${index}-empty`} />
-            <div className="col-span-2" key={`${index}-navelement`}>
+            <div className="col-span-11" key={`${index}-navelement`}>
               {child}
             </div>
           </>
