@@ -23,4 +23,9 @@ Meteor.methods({
       { $set: updates }
     );
   },
+
+  "stockItems.remove"(itemId: string) {
+    check(itemId, String);
+    return StockItemsCollection.removeAsync(itemId);
+  }
 });
