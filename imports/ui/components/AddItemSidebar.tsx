@@ -11,7 +11,7 @@ const Sidebar = () => {
       {/* Add Item Button */}
       <button 
         className="w-full py-2.5 px-4 rounded-lg mb-4 font-medium text-sm transition-all hover:opacity-100 hover:shadow-md"
-        style={{ backgroundColor: "var(--color-press-up-positive-button)", color: "var(--color-press-up-cream)" }}
+        style={{ backgroundColor: "var(--color-press-up-positive-button)", color: "white" }}
       >
         Add Item
       </button>
@@ -21,7 +21,7 @@ const Sidebar = () => {
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="w-full py-2.5 px-4 rounded-lg flex items-center justify-center font-medium text-sm transition-all hover:opacity-90"
-          style={{ backgroundColor: 'var(--color-press-up-positive-button)', color: "var(--color-press-up-cream)" }}
+          style={{ backgroundColor: 'var(--color-press-up-positive-button)', color: "white" }}
         >
           {category}
         </button>

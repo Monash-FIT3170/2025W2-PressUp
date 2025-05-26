@@ -105,7 +105,7 @@ const NavigationEntry = ({
             <Pill
               bgColour="bg-press-up-grey"
               borderColour="border-press-up-grey"
-              textColour="text-white"
+              textColour="text-press-up-purple"
             >
               {name}
             </Pill>
@@ -117,7 +117,7 @@ const NavigationEntry = ({
   return (
     <div className="flex flex-col text-nowrap truncate">
       <Link to={path}>
-        <div className="flex flex-row text-white border-b-[0.15em] border-press-up-grey min-w-full items mb-2">
+        <div className="flex flex-row text-press-up-grey border-b-[0.15em] border-press-up-grey min-w-full items mb-2">
           <div className="flex-0">{icon}</div>
           {active ? <ActiveContent /> : <div className="px-3">{name}</div>}
         </div>
