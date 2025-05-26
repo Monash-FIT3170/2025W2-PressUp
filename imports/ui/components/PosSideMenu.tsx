@@ -31,7 +31,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
 
   return (
     <div className="w-64 bg-gray-100 flex flex-col h-screen">
-      <div className="flex items-center justify-between bg-rose-400 text-white px-4 py-2 rounded-t-md">
+      <div className="flex items-center justify-between bg-press-up-navy text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
         <span className="text-lg font-semibold">Table {tableNo}</span>
         <button className="text-2xl font-bold">×</button>
@@ -69,7 +69,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
       </div>
 
       {/* Total Cost + Discount Button + Pay Button */}
-      <div className="bg-rose-400 text-white p-4 flex-shrink-0 sticky bottom-0">
+      <div className="bg-press-up-purple text-white p-4 flex-shrink-0 sticky bottom-0">
         {/* Displaying total cost*/}
         <div className="flex justify-between items-center mb-2">
           <span className="text-lg font-bold">Total</span>

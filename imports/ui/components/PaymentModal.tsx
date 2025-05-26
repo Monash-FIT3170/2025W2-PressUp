@@ -44,7 +44,7 @@ export const PaymentModal = () => {
             <Link to="/receipt">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 bg-rose-400 text-white font-semibold rounded-lg"
+                className="px-4 py-2 bg-press-up-purple text-white font-semibold rounded-lg"
               >
                 Confirm
               </button>
