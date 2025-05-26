@@ -20,26 +20,26 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
   // If you want to change the width here you should also make a change there.
   return (
     <div
-      className={`bg-primary min-h-full transition-all ease-in-out duration-300 ${
+      className={`bg-press-up-purple min-h-full transition-all ease-in-out duration-300 ${
         show ? "w-[20vw]" : "w-0"
       } overflow-hidden`}
     >
       <div className="flex flex-col p-6 text-lg">
         <NavigationEntry
-          icon={<PencilIcon fill="var(--color-primary-dark)" />}
+          icon={<PencilIcon fill="var(--color-press-up-grey)" />}
           name="Inventory Management"
           path="/inventory"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         >
           <NavigationEntry
-            icon={<StockIcon fill="var(--color-primary-dark)" />}
+            icon={<StockIcon fill="var(--color-press-up-grey)" />}
             name="Stock"
             path="/inventory/stock"
             selectionType={NavigationEntrySelection.ARROW}
           />
 
           <NavigationEntry
-            icon={<SupplierIcon fill="var(--color-primary-dark)" />}
+            icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
             name="Suppliers"
             path="/inventory/suppliers"
             selectionType={NavigationEntrySelection.ARROW}
@@ -47,13 +47,13 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
         </NavigationEntry>
 
         <NavigationEntry
-          icon={<MonitorIcon fill="var(--color-primary-dark)" />}
+          icon={<MonitorIcon fill="var(--color-press-up-grey)" />}
           name="POS System"
           path="/pos/display"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         ></NavigationEntry>
         <NavigationEntry
-          icon={<CoffeeIcon fill="var(--color-primary-dark)" />}
+          icon={<CoffeeIcon fill="var(--color-press-up-grey)" />}
           name="Menu Management"
           path="/menuManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
@@ -103,8 +103,8 @@ const NavigationEntry = ({
         return (
           <div className="p-1">
             <Pill
-              bgColour="bg-primary-dark"
-              borderColour="border-primary-dark"
+              bgColour="bg-press-up-grey"
+              borderColour="border-press-up-grey"
               textColour="text-white"
             >
               {name}
@@ -117,7 +117,7 @@ const NavigationEntry = ({
   return (
     <div className="flex flex-col text-nowrap truncate">
       <Link to={path}>
-        <div className="flex flex-row text-white border-b-[0.15em] border-primary-dark min-w-full items-center mb-2">
+        <div className="flex flex-row text-white border-b-[0.15em] border-press-up-grey min-w-full items mb-2">
           <div className="flex-0">{icon}</div>
           {active ? <ActiveContent /> : <div className="px-3">{name}</div>}
         </div>
