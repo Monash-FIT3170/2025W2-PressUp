@@ -1,14 +1,15 @@
 import React from "react";
-import { StockItemWithSupplier } from "../pages/inventory/types";
+import { StockItemWithSupplier, StockItem } from "../pages/inventory/types";
 import { Pill } from "./Pill";
 import { OutOfStock, InStock, LowInStock } from "./symbols/StatusSymbols";
 
 interface StockTableProps {
   stockItems: StockItemWithSupplier[];
   onEdit: (item: StockItem) => void;
+  onDelete: (item: StockItem) => void;
 }
 
-export const StockTable = ({ stockItems, onEdit }: StockTableProps) => {
+export const StockTable = ({ stockItems, onEdit, onDelete }: StockTableProps) => {
   // TODO: Make this dynamic based on user choice
   const lowInStockThreshold = 10;
 
@@ -107,12 +108,18 @@ export const StockTable = ({ stockItems, onEdit }: StockTableProps) => {
                 {item.supplier?.name}
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
-              <div className="relative truncate py-1 px-2">
+              <div className="relative truncate py-1 px-2 flex gap-2 justify-center items-center">
                 <button
                   onClick={() => onEdit(item)} 
                   className="bg-rose-400 text-white py-1 px-3 rounded-lg text-sm font-medium transition-all hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-600 focus:ring-offset-1"
                 >
                   Edit
+                </button>
+                <button
+                  onClick={() => onDelete(item)}
+                  className="bg-red-500 text-white py-1 px-3 rounded-lg text-sm font-medium transition-all hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-1"
+                >
+                  Delete
                 </button>
               </div>
             </React.Fragment>

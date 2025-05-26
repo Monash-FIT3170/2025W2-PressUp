@@ -1,3 +1,4 @@
+import { Meteor } from "meteor/meteor";
 import React, { useState, useEffect } from "react";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { StockItemWithSupplier } from "./types";
@@ -68,6 +69,14 @@ export const StockPage = () => {
 
   const handleSuccess = () => handleModalClose();
 
+  const handleDelete = (item: StockItem) => {
+    Meteor.call("stockItems.remove", item._id, (error: Meteor.Error | undefined) => {
+      if (error) {
+        alert("Error deleting item: " + error.reason);
+      }
+    });
+  };
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="grid grid-cols-2">
@@ -86,7 +95,11 @@ export const StockPage = () => {
         {isLoadingStockItems || isLoadingSuppliers ? (
           <p className="text-gray-400 p-4">Loading inventory...</p>
         ) : (
-          <StockTable stockItems={filteredStockItems} onEdit={handleEdit}/>
+          <StockTable 
+            stockItems={filteredStockItems} 
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         )}
       </div>
 
