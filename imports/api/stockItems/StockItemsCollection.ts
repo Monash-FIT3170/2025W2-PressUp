@@ -8,7 +8,7 @@ export interface StockItem extends DBEntry<String> {
   name: string;
   quantity: number;
   location: string; // TODO: This may need to be its own collection?
-  supplier: Mongo.ObjectID | null;
+  supplier: string | null;
 }
 
 export const StockItemsCollection = new Mongo.Collection<StockItem>(
