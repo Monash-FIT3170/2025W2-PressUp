@@ -8,3 +8,4 @@ import "./orders/ordersPublishing";
 import "./suppliers/SupplierMethods";
 import "./purchaseOrders/purchaseOrdersMethods.ts";
 import "./purchaseOrders/purchaseOrdersPublishing.ts";
+import "./orders/ordersMethods";
