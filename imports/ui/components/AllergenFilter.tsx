@@ -60,7 +60,7 @@ export const AllergenFilter = ({
       </button>
 
       {showDropdown && (
-        <div className="absolute mt-2 w-56 bg-white border rounded-lg shadow-lg z-10 p-4">
+        <div className="absolute mt-2 w-56 bg-white border rounded-lg shadow-lg z-20 p-4">
           <div className="flex justify-between items-center mb-2">
             <span className="font-semibold text-sm">Allergens</span>
             <button onClick={() => setShowDropdown(false)} className="text-gray-500 text-sm">×</button> 
