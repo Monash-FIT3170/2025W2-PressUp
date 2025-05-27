@@ -133,7 +133,7 @@ export const Menu = () => {
             <div
               key={item._id?.toString()}
               className={`min-w-[160px] rounded-lg transition duration-150
-                ${selectedItem?._id === item._id ? "ring-2 ring-press-up-purple bg-rose-50" : ""}
+                ${selectedItem?._id === item._id ? "ring-2 ring-white bg-white" : ""}
                 w-full h-full p-4
                 ${!item.available ? "grayscale opacity-60" : ""}
               `}
