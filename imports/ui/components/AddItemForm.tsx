@@ -152,29 +152,33 @@ export const AddItemForm = ({ onSuccess, onCancel, item }: { onSuccess: () => vo
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-1 p-4">
+          {!item && (
+              <div className="grid grid-cols-1 p-4">
+              <button
+                type="submit"
+                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
+              >
+                Add Item
+              </button>
+            </div>
+          )}
+          {item && (
+            <div className="grid grid-cols-2 p-4">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer mr-4 text-white bg-neutral-400 hover:bg-neutral-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-neutral-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-neutral-500 dark:hover:bg-neutral-600 dark:focus:ring-neutral-600"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
             >
-              Add Item
+              Save
             </button>
           </div>
-          <div className="grid grid-cols-2 p-4">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer mr-4 text-white bg-neutral-400 hover:bg-neutral-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-neutral-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-neutral-500 dark:hover:bg-neutral-600 dark:focus:ring-neutral-600"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
-          >
-            Save
-          </button>
-        </div>
+        )}
         </form>
       </div>
     </div>
