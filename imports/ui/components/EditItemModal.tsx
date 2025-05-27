@@ -4,6 +4,7 @@ import { Modal } from "./Modal";
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { IngredientDropdown } from "./IngredientDropdown";
 import { CategoryDropdown } from "./CategoryDropdown";
+import { AllergenDropdown } from "./AllergenDropdown";
 import { ConfirmModal } from "./ConfirmModal";
 
 interface EditItemModalProps {
@@ -24,6 +25,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     const [available, setAvailable] = useState(false);
     const [ingredients, setIngredients] = useState<string[]>([]);
     const [categories, setCategories ] = useState<string[]>([]);
+    const [allergens, setAllergens] = useState<string[]>([]);
     const [discount, setDiscount] = useState(0);
     const [showConfirmation, setShowConfirmation ] = useState(false);
     const [confirm, setConfirm] = useState<"cancel" | "save" | null>(null);
@@ -36,6 +38,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
         setAvailable(item.available);
         setIngredients(item.ingredients || []);
         setCategories(item.category || []);
+        setAllergens(item.allergens || []);
         setDiscount(item.discount || 0);
     }
     }, [item]);
@@ -53,6 +56,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 price,
                 ingredients,
                 category: categories,
+                allergens,
                 discount,
                 available
             },
@@ -66,6 +70,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                         price,
                         ingredients,
                         category: categories,
+                        allergens,
                         discount,
                         available
                     });
@@ -153,6 +158,12 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 selectedCategories={categories}
                 onChange={setCategories}
                 initialCategories = {["Food", "Drink"]}
+            />
+
+            <AllergenDropdown
+                selectedAllergen={allergens}
+                onChange={setAllergens}
+                initialAllergens = {["Gluten", "Dairy", "Nuts"]}
             />
 
             <div>
