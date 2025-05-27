@@ -21,23 +21,23 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
   return (
     <div id="grid-container" className="overflow-auto flex-1">
       <div className="grid gap-y-2 text-nowrap text-center grid-cols-[minmax(0,2fr)_min-content_1fr_min-content_1fr] text-red-900">
-        <div className="bg-rose-200 py-1 px-2 border-y-3 border-rose-200 rounded-l-lg sticky top-0 z-1 text-left">
+        <div className="bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple rounded-l-lg sticky top-0 z-1 text-left">
           Item Name
           <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
         </div>
-        <div className="bg-rose-200 py-1 px-2 border-y-3 border-rose-200 sticky top-0 z-1">
+        <div className="bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple sticky top-0 z-1">
           Quantity
           <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
         </div>
-        <div className="bg-rose-200 py-1 px-2 border-y-3 border-rose-200 sticky top-0 z-1">
+        <div className="bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple sticky top-0 z-1">
           Stock Room
           <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
         </div>
-        <div className="bg-rose-200 py-1 px-2 border-y-3 border-rose-200 sticky top-0 z-1">
+        <div className="bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple sticky top-0 z-1">
           Status
           <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
         </div>
-        <div className="bg-rose-200 py-1 px-2 border-y-3 border-rose-200 rounded-r-lg sticky top-0 z-1">
+        <div className="bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple rounded-r-lg sticky top-0 z-1">
           Supplier
         </div>
         {stockItems.map((item, i) => {

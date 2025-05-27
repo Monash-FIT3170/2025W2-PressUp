@@ -70,13 +70,24 @@ export const MenuManagementCard = ({ item, onClick }: Props) => { // removed: , 
       />
 
       {/* item info */}
-      <div className="bg-rose-100 text-center py-1 px-2">
+      <div className="bg-press-up-light-purple text-center py-1 px-2">
         <h3 className="text-sm font-semibold text-gray-900 truncate">
           {item.name}
         </h3>
-        <p className="text-pink-700 font-bold text-sm">
-          ${item.price.toFixed(2)}
-        </p>
+        {item.discount ?? 0 > 0 ? (
+          <p className="text-sm">
+            <span className="line-through text-pink-700/50 mr-2 font-semibold">
+              ${item.price.toFixed(2)}
+            </span>
+            <span className="text-pink-700 font-bold">
+              ${(item.price * (1 - (item.discount ?? 0) / 100)).toFixed(2)}
+            </span>
+          </p>
+        ) : (
+          <p className="text-pink-700 font-bold text-sm">
+            ${item.price.toFixed(2)}
+          </p>
+        )}
       </div>
     </div>
   );

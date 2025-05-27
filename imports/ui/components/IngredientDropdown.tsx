@@ -1,5 +1,4 @@
 import React, {useState, useEffect, useRef } from 'react';
-import { ConfirmModal } from './ConfirmModal';
 
 interface IngredientProps {
     selectedIngredients: string[];
@@ -7,17 +6,15 @@ interface IngredientProps {
     initialIngredients?: string[];
 }
 
-export const IngredientDropdown: React.FC<IngredientProps> = ({ 
-    selectedIngredients, 
-    onChange, 
+export const IngredientDropdown: React.FC<IngredientProps> = ({
+    selectedIngredients,
+    onChange,
     initialIngredients = []
-}) => { 
+}) => {
     const [allIngredients, setAllIngredients] = useState<string[]>(initialIngredients);
     const containerRef = useRef<HTMLDivElement>(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [ searchIngredient, setSearchIngredient ] = useState("");
-    const [ showConfirmation, setShowConfirmation ] = useState(false);
-    const [ ingredientDelete, setIngredientDelete ] = useState<string | null>(null)
 
     const updateIngredients = (ingredient: string) => {
         if (selectedIngredients.includes(ingredient)) {
@@ -58,13 +55,12 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
     }, []);
 
     return (
-        <>
         <div className="relative" ref={containerRef}>
             <input
                 type="text"
                 value={searchIngredient}
                 onChange={(e) => setSearchIngredient(e.target.value)}
-                className="border rounded p-2 w-full"
+                className="border rounded p-2 w-full dark:placeholder-white"
                 placeholder="--Search ingredients--"
                 onFocus={() => setShowDropdown(true)}
             />
@@ -88,8 +84,7 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                             className="text-red-500 hover:bg-red-100 rounded-full w-5 h-5 flex items-center justify-center ml-4"
                             title="Delete ingredient"
                             onClick={() => {
-                                setShowConfirmation(true);
-                                setIngredientDelete(ingredient);
+                                deleteIngredient(ingredient);
                             }}
                         >
                             x
@@ -101,9 +96,9 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                     <li className="p-2 text-sm text-gray-500">
                         <button
                             type="button"
-                            onClick={() => { 
+                            onClick={() => {
                                 const trimInput = searchIngredient.trim();
-                                if ( 
+                                if (
                                     trimInput !== "" && !allIngredients.includes(trimInput)
                                 ) {
                                     const newIngredient = trimInput.charAt(0).toUpperCase() + trimInput.slice(1);
@@ -111,29 +106,15 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                                     onChange([...selectedIngredients, newIngredient]);
                                     setSearchIngredient("");
                                 }
-                            }} 
-                            className="text-rose-500 hover:underline"
+                            }}
+                            className="text-press-up-purple hover:underline"
                         >
                         Add "{searchIngredient}"
                         </button>
                     </li>
-                )} 
+                )}
                 </ul>
             )}
         </div>
-
-        <ConfirmModal
-                open={showConfirmation}
-                message="Are you sure you want to delete this ingredient?"
-
-                onConfirm={() => {
-                    deleteIngredient(ingredientDelete);
-                    setShowConfirmation(false);
-                    }}
-                onCancel={() =>{
-                    setShowConfirmation(false);
-                }}
-            />
-        </>
     );
 }

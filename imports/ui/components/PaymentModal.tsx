@@ -10,7 +10,7 @@ export const PaymentModal = () => {
     <div>
       <button
         onClick={openModal}
-        className="w-full bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 px-4 rounded-full"
+        className="w-full bg-press-up-positive-button hover:bg-press-up-hover text-white font-bold py-2 px-4 rounded-full"
       >
         Pay
       </button>
@@ -44,7 +44,7 @@ export const PaymentModal = () => {
             <Link to="/receipt">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 bg-rose-400 text-white font-semibold rounded-lg"
+                className="px-4 py-2 bg-press-up-purple text-white font-semibold rounded-lg"
               >
                 Confirm
               </button>
