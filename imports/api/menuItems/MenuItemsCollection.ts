@@ -11,6 +11,7 @@ export interface MenuItem extends DBEntry {
   category?: string[];
   allergens?: string[];
   image: string;
+  discount?: number;
 }
 
 export const MenuItemsCollection = new Mongo.Collection<MenuItem>("menuItems");
