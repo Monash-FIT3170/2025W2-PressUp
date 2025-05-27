@@ -164,7 +164,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
             {/* Overlay for Popup */}
             <div className="fixed inset-0 bg-gray-700/40 z-40" onClick={() => setOpenDiscountPopup(false)} />
             
-            <div className="fixed w-200 h-135 top-40 left-120 bg-pink-300 shadow-2xl rounded-2xl z-50">
+            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-pink-300 rounded-2xl z-50">
               <div className="flex flex-row justify-between mx-5 my-5">
                 <h1 className="font-bold text-2xl text-black">Apply Discount</h1>
                 <button className="bg-red-700 rounded-2xl w-8" onClick={()=> {setOpenDiscountPopup(false); setDiscountPopupScreen('menu');}}>X</button>
@@ -172,20 +172,18 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
 
               {/* Discount Popup - Menu */}
               {discountPopupScreen === 'menu' && (
-                <div className="w-180 h-108 bg-pink-200 rounded-2xl mx-10 px-8 py-2">
+                <div className="w-180 h-108 bg-pink-200 rounded-2xl mx-10 px-8 py-2 mb-10">
                   <div className="px-2 py-4">
                     <div className="flex flex-row justify-between">
                       <span className="font-bold text-2xl text-black rounded-full py-2">Discount Options</span>
                       {discountPercent !== 0 && (
                         <div className="flex justify-between items-center mb-2 bg-blue-300 text-black text-sm rounded-lg p-2 px-4">
-                          <span className="text-sm font-bold">Percentage Discount (%): </span>
-                          <span className="text-sm font-bold">{discountPercent}%</span>
+                          <span className="text-sm font-bold">Percentage Discount (%): {discountPercent}%</span>
                         </div>
                       )}
                      {discountAmount !== 0 && (
                         <div className="flex justify-between items-center mb-2 bg-purple-300 text-black text-sm rounded-lg p-2">
-                          <span className="text-sm font-bold">Flat Discount ($): </span>
-                          <span className="text-sm font-bold">${discountAmount}</span>
+                          <span className="text-sm font-bold">Flat Discount ($): ${discountAmount}</span>
                         </div>
                       )}                      
                     </div>
@@ -221,7 +219,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
 
               {/*Discount Popup - Percentage Discount */}
               {discountPopupScreen === 'percentage' && (
-                <div className="w-180 h-108 bg-blue-100 rounded-2xl mx-10 px-8 py-8">
+                <div className="w-180 h-108 bg-blue-100 rounded-2xl mx-10 px-8 py-8 mb-10">
                   <div className="flex flex-row justify-between">
                     <span className="font-bold text-2xl text-black rounded-full whitespace-nowrap">Apply Percentage Discount (%)</span>
                     <button className="text-xl text-white font-bold rounded-full bg-orange-500 hover:bg-orange-400 px-3 py-2" onClick={() => setDiscountPopupScreen('menu')}>← Back</button>
@@ -248,7 +246,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
 
               {/*Discount Popup - Flat Discount */}
               {discountPopupScreen === 'flat' && (
-                <div className="w-180 h-108 bg-purple-200 rounded-2xl mx-10 px-8 py-8">
+                <div className="w-180 h-108 bg-purple-200 rounded-2xl mx-10 px-8 py-8 mb-10">
                   <div className="flex flex-row justify-between">
                     <span className="font-bold text-2xl text-black rounded-full whitespace-nowrap">Apply Flat Discount ($)</span>
                     <button className="text-xl text-white font-bold rounded-full bg-orange-500 hover:bg-orange-400 px-3 py-2" onClick={() => setDiscountPopupScreen('menu')}>← Back</button>
