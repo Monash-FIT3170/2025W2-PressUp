@@ -126,7 +126,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             <AllergenDropdown
                 selectedAllergen={allergens}
                 onChange={setAllergens}
-                initialAllergens = {["Nuts", "Soy", "Fish", "Sesame"]}
+                initialAllergens = {["Gluten", "Dairy", "Nuts"]}
             />
 
             <div>
