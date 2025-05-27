@@ -223,8 +223,8 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     <ConfirmModal
         open={showConfirmation}
         message={ confirm === "cancel" ?
-            "Are you sure you want to discard your changes?":
-            "Confirm your saved changes"}
+            "Discard changes?":
+            "Save changes?"}
         onConfirm={() => {
             if ( confirm === "cancel") {
                 onClose();
