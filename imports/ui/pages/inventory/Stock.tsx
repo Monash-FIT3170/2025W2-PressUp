@@ -29,7 +29,6 @@ export const StockPage = () => {
   const isLoadingSuppliers = useSubscribe("suppliers") === false;
 
   const stockItems: StockItemWithSupplier[] = useTracker(() => {
-    // const stockItems = StockItemsCollection.find({}, { sort: { name: 1 }, limit: 10 }).fetch();  // TEMPORARY LIMIT
     const stockItems = StockItemsCollection.find({}, { sort: { name: 1 } }).fetch(); 
     const result = []
     for (let stockItem of stockItems) {
