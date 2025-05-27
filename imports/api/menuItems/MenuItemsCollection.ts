@@ -10,6 +10,7 @@ export interface MenuItem extends DBEntry {
   price: number;
   category?: string[];
   image: string;
+  discount?: number;
 }
 
 export const MenuItemsCollection = new Mongo.Collection<MenuItem>("menuItems");
