@@ -2,6 +2,8 @@ import React , { useState, useEffect } from "react";
 import { MenuItem } from "/imports/api";
 import { PaymentModal } from "./PaymentModal";
 import { Mongo } from "meteor/mongo";
+import { useTracker } from "meteor/react-meteor-data";
+import { Order, OrdersCollection } from '/imports/api';
 
 
 interface PosSideMenuProps {
@@ -13,9 +15,11 @@ interface PosSideMenuProps {
   onDecrease: (itemId: Mongo.ObjectID) => void;
   onDelete: (itemId: Mongo.ObjectID) => void; 
   onUpdateOrder?: (fields: any) => void;
+  selectedTable: number;
+  setSelectedTable: (tableNo: number) => void;
 }
 
-export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecrease, onDelete, onUpdateOrder }: PosSideMenuProps) => {
+export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecrease, onDelete, onUpdateOrder, selectedTable, setSelectedTable }: PosSideMenuProps) => {
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
   const [discountPercent, setDiscountPercent] = useState(0)
   const [savedAmount, setSavedAmount] = useState(0)
@@ -41,11 +45,30 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
     onDelete(itemId);
   };
 
+  // Fetch all orders for dropdown
+  const orders: Order[] = useTracker(() => OrdersCollection.find({}, { sort: { tableNo: 1 } }).fetch());
+
+  // Handler for table change
+  const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = parseInt(e.target.value, 10);
+    setSelectedTable(selected); // update parent state
+  };
+
   return (
     <div className="w-96 h-140 bg-gray-100 flex flex-col">
       <div className="flex items-center justify-between bg-rose-400 text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
-        <span className="text-lg font-semibold">Table {tableNo}</span>
+        <select
+          className="text-lg font-semibold bg-rose-400 text-white border-none outline-none"
+          value={selectedTable}
+          onChange={handleTableChange}
+        >
+          {orders.map((order: Order) => (
+            <option key={String(order._id)} value={order.tableNo}>
+              Table {order.tableNo}
+            </option>
+          ))}
+        </select>
         <button className="text-2xl font-bold">×</button>
       </div>
 

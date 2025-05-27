@@ -3,7 +3,7 @@ import { StockItemsCollection } from "./stockItems/StockItemsCollection";
 import { SuppliersCollection } from "./suppliers/SuppliersCollection";
 import { faker } from "@faker-js/faker";
 import { TransactionsCollection } from "./transactions/TransactionsCollection";
-import { OrderMenuItem, OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
+import { OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
 
 const possibleImages = [
   "/menu_items/cappuccino.png",
@@ -110,51 +110,25 @@ export const mockDataGenerator = async ({
         createdAt: new Date(),
       });
 
-    if ((await OrdersCollection.countDocuments()) == 0)
+    if ((await OrdersCollection.countDocuments()) == 0) {
+      const usedTableNumbers = new Set<number>();
       for (let i = 0; i < orderCount; ++i) {
-        const allMenuItems = await MenuItemsCollection.find().fetch();
-        const numberOfItems = faker.number.int({ min: 1, max: 5 });
-        const selectedItems = faker.helpers.arrayElements(allMenuItems, numberOfItems);
-
-        const orderItems: OrderMenuItem[] = selectedItems.map((item) => {
-          const quantity = faker.number.int({ min: 1, max: 3 });
-          return {
-            name: item.name,
-            quantity: quantity,
-            ingredients: item.ingredients,
-            available: item.available,
-            price: item.price,
-            category: item.category,
-            image: item.image,
-          };
-        });
-
-        const totalPrice = orderItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        );
+        let tableNo;
+        // Ensure unique table numbers
+        do {
+          tableNo = faker.number.int({ min: 1, max: 20 });
+        } while (usedTableNumbers.has(tableNo));
+        usedTableNumbers.add(tableNo);
         
         await OrdersCollection.insertAsync({
           orderNo: faker.number.int({ min: 1000, max: 9999 }),
-          tableNo: faker.number.int({ min: 1, max: 20 }),
-          menuItems: orderItems,
-          totalPrice: parseFloat(totalPrice.toFixed(2)),
-          paid: faker.datatype.boolean(),
+          tableNo,
+          menuItems: [],
+          totalPrice: 0,
+          paid: false,
           orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
           createdAt: faker.date.recent({ days: 7 }),
-})};
-
-    // Ensure Table 1 order exists (empty)
-    const table1 = await OrdersCollection.findOneAsync({ tableNo: 1 });
-    if (!table1) {
-      await OrdersCollection.insertAsync({
-        orderNo: 1,
-        tableNo: 1,
-        menuItems: [],
-        totalPrice: 0,
-        paid: false,
-        orderStatus: OrderStatus.Pending,
-        createdAt: new Date(),
-      });
+        });
+      }
     }
 };

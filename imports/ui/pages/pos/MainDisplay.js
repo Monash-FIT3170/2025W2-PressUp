@@ -8,11 +8,12 @@ import { useState } from "react";
 export const MainDisplay = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategories, setSelectedCategories] = useState([]);
+    const [selectedTable, setSelectedTable] = useState(1); // NEW: selected table state
     const isLoadingPosItems = useSubscribe("menuItems");
     const isLoadingOrders = useSubscribe("orders");
     const posItems = useTracker(() => MenuItemsCollection.find().fetch());
-    // Fetch the current order for table 1 (hardcoded for now)
-    const order = useTracker(() => OrdersCollection.findOne({ tableNo: 1 }), []);
+    // Fetch the current order for the selected table
+    const order = useTracker(() => OrdersCollection.findOne({ tableNo: selectedTable }), [selectedTable]);
 
     const filteredItems = posItems.filter((item) => {
       const matchesName = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -139,7 +140,7 @@ export const MainDisplay = () => {
       {/* Side Panel */}
       <div id="pos-side-panel" className="p-4">
         <PosSideMenu
-          tableNo={order?.tableNo || 1}
+          tableNo={order?.tableNo || selectedTable}
           items={order?.menuItems || []}
           total={order?.totalPrice || 0}
           orderId={order?._id}
@@ -147,6 +148,8 @@ export const MainDisplay = () => {
           onDecrease={handleDecrease}
           onDelete={handleDelete}
           onUpdateOrder={updateOrderInDb}
+          selectedTable={selectedTable} // pass down
+          setSelectedTable={setSelectedTable} // pass down
         />
       </div>
     </div>
