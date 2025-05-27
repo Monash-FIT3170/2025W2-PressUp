@@ -142,4 +142,19 @@ export const mockDataGenerator = async ({
           paid: faker.datatype.boolean(),
           orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
           createdAt: faker.date.recent({ days: 7 }),
-})}};
+})};
+
+    // Ensure Table 1 order exists (empty)
+    const table1 = await OrdersCollection.findOneAsync({ tableNo: 1 });
+    if (!table1) {
+      await OrdersCollection.insertAsync({
+        orderNo: 1,
+        tableNo: 1,
+        menuItems: [],
+        totalPrice: 0,
+        paid: false,
+        orderStatus: OrderStatus.Pending,
+        createdAt: new Date(),
+      });
+    }
+};
