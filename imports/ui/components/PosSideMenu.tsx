@@ -44,7 +44,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onD
         <button className="text-2xl font-bold">×</button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 space-y-4 border-solid border-rose-400 border-4">
+      <div className="flex-1 overflow-y-auto p-2 space-y-4 border-solid border-[#6f597b] border-4">
         {items.map((item) => (
           <div
             key={String(item._id)}
@@ -114,13 +114,13 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onD
         {/* Discount + Reset row */}
         <div className="flex space-x-2 mb-2">
           <button
-            className="w-full bg-press-up-blue hover:bg-bg-press-up-blue hover:bg-press-up-hover text-press-up-navy font-bold py-2 px-4 rounded-full"
+            className="w-full bg-[#1e032e] hover:bg-press-up-hover text-[#f3ead0] font-bold py-2 px-4 rounded-full"
             onClick={() => setOpenDiscountPopup(true)}
           >
             Discount
           </button>
           <button
-            className="w-full bg-press-up-negative-button hover:bg-press-up-hover text-white font-bold py-2 px-4 mb-2 rounded-full"
+            className="w-full bg-[#1e032e] hover:bg-press-up-hover text-[#f3ead0] font-bold py-2 px-4 rounded-full"
             onClick={() => {
               setDiscountPercent(0);
               setSavedAmount(0);
