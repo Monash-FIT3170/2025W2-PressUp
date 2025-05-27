@@ -34,7 +34,7 @@ export const Menu = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   // Allergen filter state
-  const [selectedAllergen, setSelectedAllergen] = useState('');
+  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
 
   const handleItemClick = (item: MenuItem) => {
     Meteor.call("menuItems.updateQuantity", item._id , 1);
@@ -53,14 +53,14 @@ export const Menu = () => {
     .filter(item => {
       searchTerm === ""
 
-    // Check for ingredients
-    const ingredientsMatch =
-      Array.isArray(item.ingredients) &&
-      item.ingredients.some(ingredient =>
-        ingredient.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      // Check for ingredients
+      const ingredientsMatch =
+        Array.isArray(item.ingredients) &&
+        item.ingredients.some(ingredient =>
+          ingredient.toLowerCase().includes(searchTerm.toLowerCase())
+        );
 
-    return item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || ingredientsMatch;
+      return item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || ingredientsMatch;
     }
     )
     // Filter by category
@@ -70,10 +70,12 @@ export const Menu = () => {
     )
     // Filter by allergen
     .filter(item => {
-      if (!Array.isArray(item.allergens) || item.allergens.length === 0) {
-      return true; // By default nothing selected does not filter
-    }
-      return Array.isArray(item.allergens) && item.allergens.includes(selectedAllergen)
+      if (selectedAllergens.length === 0) return true;
+
+      return (
+        Array.isArray(item.allergens) &&
+        selectedAllergens.every(allergen => item.allergens.includes(allergen))
+      );
     });
 
 
@@ -99,8 +101,9 @@ export const Menu = () => {
 
         {/* Allergen Filter */}
           <AllergenFilter 
-            items={posItems}
-            onAllergenSelect={setSelectedAllergen}
+          items={posItems}
+          selectedAllergen={selectedAllergens}
+          onAllergenSelect={setSelectedAllergens}               
           />
         </div>
 
