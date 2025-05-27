@@ -10,7 +10,7 @@ export const PaymentModal = () => {
     <div>
       <button
         onClick={openModal}
-        className="w-full bg-press-up-positive-button hover:bg-press-up-positive-button text-white font-bold py-2 px-4 rounded-full"
+        className="w-full bg-press-up-positive-button hover:bg-press-up-hover text-white font-bold py-2 px-4 rounded-full"
       >
         Pay
       </button>

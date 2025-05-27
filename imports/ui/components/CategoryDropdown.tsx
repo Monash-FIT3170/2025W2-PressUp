@@ -112,7 +112,7 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
                                     setSearchCategory("");
                                 }
                             }} 
-                            className="text-rose-500 hover:underline"
+                            className="text-press-up-purple hover:underline"
                         >
                         Add "{searchCategory}"
                         </button>
