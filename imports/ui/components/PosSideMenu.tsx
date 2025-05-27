@@ -76,7 +76,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
         <button className="text-2xl font-bold">×</button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 space-y-4 border-solid border-rose-400 border-4">
+      <div className="flex-1 overflow-y-auto p-2 space-y-4 border-solid border-[#6f597b] border-4">
         {items.map((item) => (
           <div
             key={String(item._id)}
