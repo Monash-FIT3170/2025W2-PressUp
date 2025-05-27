@@ -10,6 +10,7 @@ import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { EditItemModal } from "../../components/EditItemModal";
 import { SearchBar } from "../../components/SearchBar";
 import { CategoryFilter } from "../../components/CategoryFilter";
+import { AllergenFilter } from "../../components/AllergenFilter";
 
 export const Menu = () => {
   // Set title
@@ -31,6 +32,9 @@ export const Menu = () => {
 
   // Category filter state
   const [selectedCategory, setSelectedCategory] = useState('All');
+
+  // Allergen filter state
+  const [selectedAllergen, setSelectedAllergen] = useState('');
 
   const handleItemClick = (item: MenuItem) => {
     Meteor.call("menuItems.updateQuantity", item._id , 1);
@@ -80,10 +84,16 @@ export const Menu = () => {
         </div>
 
         {/* Category Filter */}
-        <div className="w-full md-6">
+        <div className="w-full md-6 flex">
           <CategoryFilter
             onCategorySelect={setSelectedCategory} 
             initialCategory='All'
+          />
+
+        {/* Allergen Filter */}
+          <AllergenFilter 
+            items={posItems}
+            onAllergenSelect={setSelectedAllergen}
           />
         </div>
 
