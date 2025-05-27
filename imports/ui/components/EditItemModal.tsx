@@ -90,7 +90,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
         }}
         >
         <div className="p-4 md:p-5 max-h-[80vh] overflow-y-auto w-full">
-            <h2 className="text-xl font-semibold text-press-up-purple mb-4">Edit Item</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">Edit Item</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
             <div>
                 <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Name</label>
@@ -98,7 +98,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200 dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white dark:focus:ring-purple-400 dark:focus:border-purple-400"
                 required
                 />
             </div>
@@ -115,7 +115,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 setPrice(isNaN(val) ? 0 : val);
                 }}
                 onBlur={() => setPrice(parseFloat(price.toFixed(2)))}
-                className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:text-white"
+                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200 dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white dark:focus:ring-purple-400 dark:focus:border-purple-400"
                 required
             />
             </div>
@@ -132,8 +132,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 const val = parseInt(e.target.value);
                 setDiscount(isNaN(val) ? 0 : Math.min(100, val));
                 }}
-                className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:text-white"
-                required
+                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200 dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white dark:focus:ring-purple-400 dark:focus:border-purple-400"
             />
             </div>
 
@@ -157,7 +156,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             <CategoryDropdown
                 selectedCategories={categories}
                 onChange={setCategories}
-                initialCategories = {["Food", "Drink"]}
+                initialCategories = {["Food", "Drink", "Dessert"]}
             />
 
             <AllergenDropdown
