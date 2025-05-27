@@ -8,6 +8,8 @@ import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { Meteor } from 'meteor/meteor';
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { EditItemModal } from "../../components/EditItemModal";
+import { SearchBar } from "../../components/SearchBar";
+import { CategoryFilter } from "../../components/CategoryFilter";
 
 export const Menu = () => {
   // Set title
@@ -24,6 +26,12 @@ export const Menu = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
+  // Search term state
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Category filter state
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
   const handleItemClick = (item: MenuItem) => {
     Meteor.call("menuItems.updateQuantity", item._id , 1);
     setSelectedItem(item);
@@ -35,12 +43,52 @@ export const Menu = () => {
     setSelectedItem(null);
   };
 
+  // Filter items by search and category
+  const filteredItems = posItems
+    // Filter by search term (item name)
+    .filter(item => {
+      searchTerm === ""
+
+    // Check for ingredients
+    const ingredientsMatch =
+      Array.isArray(item.ingredients) &&
+      item.ingredients.some(ingredient =>
+        ingredient.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+    return item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || ingredientsMatch;
+    }
+    )
+    // Filter by category
+    .filter(item =>
+      selectedCategory === 'All' || 
+      Array.isArray(item.category) && item.category.includes(selectedCategory)
+    );
+
+
   return (
     <div id="pos" className="flex flex-1 overflow-auto">
       {/* Main content area */}
       <div className="flex-1 overflow-auto p-4">
+
+        {/* Search Bar */}
+        <div className="w-full md-6">
+          <SearchBar 
+            onSearch={setSearchTerm} 
+            initialSearchTerm={searchTerm} 
+          />
+        </div>
+
+        {/* Category Filter */}
+        <div className="w-full md-6">
+          <CategoryFilter
+            onCategorySelect={setSelectedCategory} 
+            initialCategory='All'
+          />
+        </div>
+
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {[...posItems]
+          {[...filteredItems]
           .sort((a, b) => {
             // Move unavailable items to the end
             if (a.available === b.available) return 0;
@@ -74,7 +122,7 @@ export const Menu = () => {
       </div>
 
       {/* Sidebar positioned on the right */}
-      <Sidebar />
+      <Sidebar/> 
     </div>
   );
 };
