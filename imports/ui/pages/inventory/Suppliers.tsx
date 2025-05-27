@@ -54,7 +54,7 @@ export const SuppliersPage = () => {
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-rose-400 text-white cursor-pointer w-right-2 hover:bg-rose-500"
+          className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-press-up-purple text-white cursor-pointer w-right-2 hover:bg-press-up-purple"
         >
           Add Supplier
         </button>

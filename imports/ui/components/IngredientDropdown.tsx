@@ -107,7 +107,7 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                                     setSearchIngredient("");
                                 }
                             }} 
-                            className="text-rose-500 hover:underline"
+                            className="text-press-up-purple hover:underline"
                         >
                         Add "{searchIngredient}"
                         </button>
