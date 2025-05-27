@@ -28,7 +28,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     const [showConfirmation, setShowConfirmation ] = useState(false);
     const [confirm, setConfirm] = useState<"cancel" | "save" | null>(null);
 
-    const discountedPrice = price * (1 - discount / 100);
 
     useEffect(() => {
     if (item) {
