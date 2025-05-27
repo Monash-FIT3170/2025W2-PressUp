@@ -8,7 +8,7 @@ import { useState } from "react";
 export const MainDisplay = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategories, setSelectedCategories] = useState([]);
-    const [selectedTable, setSelectedTable] = useState(1); // NEW: selected table state
+    const [selectedTable, setSelectedTable] = useState(1);
     const isLoadingPosItems = useSubscribe("menuItems");
     const isLoadingOrders = useSubscribe("orders");
     const posItems = useTracker(() => MenuItemsCollection.find().fetch());
@@ -56,6 +56,14 @@ export const MainDisplay = () => {
       const updatedItems = order.menuItems.filter(i => i._id !== itemId);
       const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
       updateOrderInDb({ menuItems: updatedItems, totalPrice: parseFloat(newTotal.toFixed(2)) });
+    };
+
+    const toggleCategory = (category) => {
+      if (selectedCategories.includes(category)) {
+        setSelectedCategories(selectedCategories.filter((c) => c !== category));
+      } else {
+        setSelectedCategories([...selectedCategories, category]);
+      }
     };
 
     const handleItemClick = (item) => {
