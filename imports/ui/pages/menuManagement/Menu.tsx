@@ -10,6 +10,7 @@ import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { EditItemModal } from "../../components/EditItemModal";
 import { SearchBar } from "../../components/SearchBar";
 import { CategoryFilter } from "../../components/CategoryFilter";
+import { AllergenFilter } from "../../components/AllergenFilter";
 
 export const Menu = () => {
   // Set title
@@ -32,12 +33,9 @@ export const Menu = () => {
   // Category filter state
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-<<<<<<< HEAD
-=======
   // Allergen filter state
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
 
->>>>>>> 0cc1f8e (Added AllergenFilter to Menu)
   const handleItemClick = (item: MenuItem) => {
     Meteor.call("menuItems.updateQuantity", item._id , 1);
     setSelectedItem(item);
@@ -95,13 +93,11 @@ export const Menu = () => {
         </div>
 
         {/* Category Filter */}
-        <div className="w-full md-6">
+        <div className="w-full md-6 flex">
           <CategoryFilter
             onCategorySelect={setSelectedCategory} 
             initialCategory='All'
           />
-<<<<<<< HEAD
-=======
 
         {/* Allergen Filter */}
           <AllergenFilter 
@@ -109,7 +105,6 @@ export const Menu = () => {
             selectedAllergen={selectedAllergens}
             onAllergenSelect={setSelectedAllergens}               
           />
->>>>>>> 0cc1f8e (Added AllergenFilter to Menu)
         </div>
 
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
