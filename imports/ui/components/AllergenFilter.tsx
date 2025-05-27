@@ -28,7 +28,7 @@ export const AllergenFilter = ({
       }
     });
 
-    return ["None", ...Array.from(allergenSet).sort()];
+    return Array.from(allergenSet).sort();
   }, [items]);
 
   const toggleAllergen = (allergen: string) => {
