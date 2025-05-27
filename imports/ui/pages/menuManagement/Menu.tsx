@@ -105,9 +105,9 @@ export const Menu = () => {
 
         {/* Allergen Filter */}
           <AllergenFilter 
-          items={posItems}
-          selectedAllergen={selectedAllergens}
-          onAllergenSelect={setSelectedAllergens}               
+            items={posItems}
+            selectedAllergen={selectedAllergens}
+            onAllergenSelect={setSelectedAllergens}               
           />
 >>>>>>> 0cc1f8e (Added AllergenFilter to Menu)
         </div>
