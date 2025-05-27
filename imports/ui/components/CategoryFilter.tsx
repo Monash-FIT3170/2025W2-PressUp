@@ -1,7 +1,7 @@
  import React, { useState } from "react";
 
-export const CategoryFilter = ({ 
-  onCategorySelect, 
+export const CategoryFilter = ({
+  onCategorySelect,
   initialCategory = 'All'
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
@@ -19,7 +19,7 @@ export const CategoryFilter = ({
     <div className="mb-4 px-4">
       <div className="relative inline-block w-20">
         <button
-          className="bg-pink-500 text-white font-bold py-2 px-4 rounded-full"
+          className="bg-press-up-light-purple text-black font-bold py-2 px-4 rounded-full"
           onClick={() => setIsOpen(!isOpen)}
         >
           {selectedCategory === "" ? "Filter" : selectedCategory}
@@ -35,7 +35,7 @@ export const CategoryFilter = ({
                 className={`w-full text-left py-2.5 px-4 transition-all ${
                   selectedCategory === option ? 'opacity-100' : 'opacity-90'
                 }`}
-                style={{ 
+                style={{
                   backgroundColor: selectedCategory === option ? '#f7aed9' : 'white',
                   color: '#a43375'
                 }}
@@ -48,4 +48,4 @@ export const CategoryFilter = ({
       </div>
     </div>
   );
-};                  
+};

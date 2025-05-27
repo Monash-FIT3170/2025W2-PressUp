@@ -6,11 +6,11 @@ interface IngredientProps {
     initialIngredients?: string[];
 }
 
-export const IngredientDropdown: React.FC<IngredientProps> = ({ 
-    selectedIngredients, 
-    onChange, 
+export const IngredientDropdown: React.FC<IngredientProps> = ({
+    selectedIngredients,
+    onChange,
     initialIngredients = []
-}) => { 
+}) => {
     const [allIngredients, setAllIngredients] = useState<string[]>(initialIngredients);
     const containerRef = useRef<HTMLDivElement>(null);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -60,7 +60,7 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                 type="text"
                 value={searchIngredient}
                 onChange={(e) => setSearchIngredient(e.target.value)}
-                className="border rounded p-2 w-full"
+                className="border rounded p-2 w-full dark:placeholder-white"
                 placeholder="--Search ingredients--"
                 onFocus={() => setShowDropdown(true)}
             />
@@ -96,9 +96,9 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                     <li className="p-2 text-sm text-gray-500">
                         <button
                             type="button"
-                            onClick={() => { 
+                            onClick={() => {
                                 const trimInput = searchIngredient.trim();
-                                if ( 
+                                if (
                                     trimInput !== "" && !allIngredients.includes(trimInput)
                                 ) {
                                     const newIngredient = trimInput.charAt(0).toUpperCase() + trimInput.slice(1);
@@ -106,13 +106,13 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                                     onChange([...selectedIngredients, newIngredient]);
                                     setSearchIngredient("");
                                 }
-                            }} 
-                            className="text-rose-500 hover:underline"
+                            }}
+                            className="text-press-up-purple hover:underline"
                         >
                         Add "{searchIngredient}"
                         </button>
                     </li>
-                )} 
+                )}
                 </ul>
             )}
         </div>
