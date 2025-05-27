@@ -54,16 +54,16 @@ export const AllergenFilter = ({
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="bg-gray-100 border border-gray-300 px-4 py-2 rounded-full text-sm font-medium"
+        className="bg-pink-500 text-white font-bold py-2 px-4 rounded-full"
       >
-        Allergens ▾
+        Allergens
       </button>
 
       {showDropdown && (
         <div className="absolute mt-2 w-56 bg-white border rounded-lg shadow-lg z-10 p-4">
           <div className="flex justify-between items-center mb-2">
             <span className="font-semibold text-sm">Allergens</span>
-            <button onClick={() => setShowDropdown(false)} className="text-gray-500 text-sm">×</button>
+            <button onClick={() => setShowDropdown(false)} className="text-gray-500 text-sm">×</button> 
           </div>
           <ul className="max-h-48 overflow-y-auto">
             {allAllergens.length > 0 ? (
