@@ -9,7 +9,6 @@ import { Meteor } from 'meteor/meteor';
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { EditItemModal } from "../../components/EditItemModal";
 import { SearchBar } from "../../components/SearchBar";
-import { CategoryFilter } from "../../components/CategoryFilter";
 import { AllergenFilter } from "../../components/AllergenFilter";
 
 export const Menu = () => {
@@ -31,7 +30,7 @@ export const Menu = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Category filter state
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
   // Allergen filter state
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
@@ -47,11 +46,19 @@ export const Menu = () => {
     setSelectedItem(null);
   };
 
+  const toggleCategory = (category) => {
+      if (selectedCategories.includes(category)) {
+        setSelectedCategories(selectedCategories.filter((c) => c !== category));
+      } else {
+        setSelectedCategories([...selectedCategories, category]);
+      }
+    };
+
   // Filter items by search and category
   const filteredItems = posItems
     // Filter by search term (item name)
     .filter(item => {
-      searchTerm === ""
+      if (searchTerm === "") return true;
 
       // Check for ingredients
       const ingredientsMatch =
@@ -61,12 +68,11 @@ export const Menu = () => {
         );
 
       return item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || ingredientsMatch;
-    }
-    )
+    })
     // Filter by category
     .filter(item =>
-      selectedCategory === 'All' || 
-      Array.isArray(item.category) && item.category.includes(selectedCategory)
+      selectedCategories.length === 0 ||
+      (item.category && item.category.some(cat => selectedCategories.includes(cat)))
     )
     // Filter by allergen
     .filter(item => {
@@ -92,12 +98,21 @@ export const Menu = () => {
           />
         </div>
 
-        {/* Category Filter */}
-        <div className="w-full md-6 flex">
-          <CategoryFilter
-            onCategorySelect={setSelectedCategory} 
-            initialCategory='All'
-          />
+        {/* Category Filter Buttons */}
+        <div className="flex space-x-4">
+          {["Food", "Drink", "Dessert"].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => toggleCategory(cat)}
+              className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors duration-200 ${
+                selectedCategories.includes(cat)
+                  ? "bg-[#6f597b] text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
 
         {/* Allergen Filter */}
           <AllergenFilter 
