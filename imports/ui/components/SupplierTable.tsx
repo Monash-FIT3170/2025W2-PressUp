@@ -1,7 +1,7 @@
 import React from "react";
 import { Supplier } from "/imports/api/suppliers/SuppliersCollection";
 import { InfoSymbol, Cross } from "./symbols/GeneralSymbols";
-import { Pill } from "./Pill";
+import { StockItemsCollection } from "/imports/api";
 
 interface SupplierTableProps {
   suppliers: Supplier[];
@@ -64,14 +64,19 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
               <div className="col-span-3 flex flex-wrap relative py-1 px-2">
-                {supplier.goods.map((good) => (
-                  <span className="bg-rose-400 border-rose-300 text-white rounded-sm text-xs m-1 w-max h-max px-2 py-1 inline-flex items-center">
-                    {good}
-                    <span className="pl-2 ml-auto cursor-pointer">
-                      {<Cross height="8px" width="8px" viewBox="0 0 14 14" />}
+                {StockItemsCollection.find(
+                  { supplier: supplier._id },
+                  { sort: { name: 1 } },
+                )
+                  .fetch()
+                  .map((stockItem) => (
+                    <span className="bg-rose-400 border-rose-300 text-white rounded-sm text-xs m-1 w-max h-max px-2 py-1 inline-flex items-center">
+                      {stockItem.name}
+                      <span className="pl-2 ml-auto cursor-pointer">
+                        {<Cross height="8px" width="8px" viewBox="0 0 14 14" />}
+                      </span>
                     </span>
-                  </span>
-                ))}
+                  ))}
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
               <div className="col-span-2 relative py-1 px-2 flex items-center justify-center">
