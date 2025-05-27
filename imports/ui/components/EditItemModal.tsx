@@ -85,7 +85,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
         }}
         >
         <div className="p-4 md:p-5 max-h-[80vh] overflow-y-auto w-full">
-            <h2 className="text-xl font-semibold text-rose-400 mb-4">Edit Item</h2>
+            <h2 className="text-xl font-semibold text-press-up-purple mb-4">Edit Item</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
             <div>
                 <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Name</label>
@@ -160,8 +160,8 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             <button
                 type="button"
                 onClick={() => setAvailable(!available)}
-                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-400 ${
-                available ? "bg-rose-400" : "bg-gray-300"
+                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-press-up-purple ${
+                available ? "bg-press-up-purple" : "bg-gray-300"
                 }`}
             >
                 <span
@@ -177,7 +177,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 <button
                 type="button"
                 onClick={ () => {}}
-                className="bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 rounded-lg"
+                className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg"
                 >
                     Add Image
                 </button>
@@ -201,7 +201,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                     setConfirm("save");
                     setShowConfirmation(true);
                 }}
-                className="bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 rounded-lg"
+                className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg"
                 >
                 Save
                 </button>
