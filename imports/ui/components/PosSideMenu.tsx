@@ -55,11 +55,12 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
   };
 
   return (
-    <div className="w-96 h-140 bg-gray-100 flex flex-col">
-      <div className="flex items-center justify-between bg-rose-400 text-white px-4 py-2 rounded-t-md">
+    <div className="w-64 bg-gray-100 flex flex-col h-screen">
+      <div className="flex items-center justify-between bg-press-up-purple text-white px-4 py-2 rounded-t-md">
+
         <button className="text-2xl font-bold">⋯</button>
         <select
-          className="text-lg font-semibold bg-rose-400 text-white border-none outline-none"
+          className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none"
           value={selectedTable}
           onChange={handleTableChange}
         >
@@ -72,7 +73,7 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
         <button className="text-2xl font-bold">×</button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 space-y-4 border-solid border-rose-400 border-4">
+      <div className="flex-1 overflow-y-auto p-2 space-y-4 border-solid border-[#6f597b] border-4">
         {items.map((item) => (
           <div
             key={String(item._id)}
@@ -86,14 +87,14 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => onDecrease(item._id)}
-                  className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold"
+                  className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
                 >
                   –
                 </button>
                 <span>{item.quantity}</span>
                 <button
                   onClick={() => onIncrease(item._id)}
-                  className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold"
+                  className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
                 >
                   ＋
                 </button>
@@ -117,7 +118,9 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
       </div>
 
       {/* Total Cost + Discount Button + Pay Button */}
-      <div className="bg-rose-400 text-white p-4 flex-shrink-0">
+      <div className="bg-press-up-purple text-white p-4 flex-shrink-0 sticky bottom-0">
+        {/* Displaying total cost*/}
+
         <div className="flex justify-between items-center mb-2">
           <span className="text-lg font-bold">Total</span>
           <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span>
@@ -125,27 +128,28 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
 
         {discountPercent !== 0 && (
           <div>
-            <div className="flex justify-between items-center mb-2 bg-yellow-400 text-black text-sm rounded-lg p-1">
+            <div className="flex justify-between items-center mb-2 bg-press-up-light-purple text-white text-sm rounded-lg p-1">
               <span className="text-sm font-bold">Last Discount Applied</span>
               <span className="text-sm font-bold">{discountPercent}%</span>
             </div>
-            <div className="flex justify-between items-center mb-2 bg-yellow-200 text-black text-sm rounded-lg p-1">
-              <span className="text-sm font-bold">Cost Saved</span>
+            <div className="flex justify-between items-center mb-2 bg-press-up-light-purple text-white text-sm rounded-lg p-1">
+              <span className="text-sm font-bold">Total Discount</span>
               <span className="text-sm font-bold">- ${savedAmount.toFixed(2)}</span>
             </div>
           </div>
         )}
 
+
         {/* Discount + Reset row */}
         <div className="flex space-x-2 mb-2">
           <button
-            className="w-[75%] bg-orange-400 hover:bg-orange-300 text-white font-bold py-2 px-4 rounded-full"
+            className="w-full bg-[#1e032e] hover:bg-press-up-hover text-[#f3ead0] font-bold py-2 px-4 rounded-full"
             onClick={() => setOpenDiscountPopup(true)}
           >
             Discount
           </button>
           <button
-            className="w-[25%] bg-orange-700 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-full"
+            className="w-full bg-[#1e032e] hover:bg-press-up-hover text-[#f3ead0] font-bold py-2 px-4 rounded-full"
             onClick={() => {
               setDiscountPercent(0);
               setSavedAmount(0);
@@ -159,16 +163,16 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
         </div>
 
         {openDiscountPopup && (
-          <div className="fixed w-200 h-130 top-40 left-120 bg-pink-300 rounded-2xl">
+          <div className="fixed w-200 h-130 top-40 left-120 bg-press-up-purple rounded-2xl">
             <div className="flex flex-row justify-between mx-5 my-5">
-              <h1 className="font-bold text-2xl text-black">Apply Discount</h1>
-              <button className="bg-red-700 rounded-2xl w-8" onClick={() => setOpenDiscountPopup(false)}>X</button>
+              <h1 className="text-2xl text-white">Select Discount</h1>
+              <button className="rounded-2xl w-8 text-white text-2xl" onClick={()=> setOpenDiscountPopup(false)}>X</button>
             </div>
-            <div className="w-180 h-100 bg-pink-200 rounded-2xl mx-10 p-8">
-              <span className="font-bold text-xl text-gray-700">Select Discount Percentage</span>
+            <div className="w-190 h-80 bg-press-up-grey rounded-2xl mx-5 p-8">
+              <span className="font-bold text-xl text-press-up-purple">Select Discount Percentage</span>
               <div className="grid grid-cols-4 gap-1 my-4">
                 {[5, 10, 25, 50].map((d) => (
-                  <button key={d} className="bg-pink-700 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full" onClick={() => applyDiscount(d)}>
+                  <button key={d} className="bg-press-up-positive-button hover:bg-press-up-hover font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full" onClick={() => applyDiscount(d)}>
                     {d}%
                   </button>
                 ))}
@@ -176,9 +180,9 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
             </div>
           </div>
         )}
-
         {/* Pay button */}
         <PaymentModal />
+
       </div>
     </div>
   );
