@@ -10,7 +10,7 @@ interface PosSideMenuProps {
   total: number;
   onIncrease: (itemId: Mongo.ObjectID) => void;
   onDecrease: (itemId: Mongo.ObjectID) => void;
-  onDelete: (itemId: Mongo.ObjectID) => void; 
+  onDelete: (itemId: Mongo.ObjectID) => void;
 }
 
 export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onDelete }: PosSideMenuProps) => {
@@ -114,8 +114,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onD
         {/* Discount + Reset row */}
         <div className="flex space-x-2 mb-2">
           <button
-            className="w-full bg-press-up-blue hover:bg-
-        <button className="w-full bg-press-up-blue hover:bg-press-up-hover text-press-up-navy font-bold py-2 px-4 rounded-full"
+            className="w-full bg-press-up-blue hover:bg-bg-press-up-blue hover:bg-press-up-hover text-press-up-navy font-bold py-2 px-4 rounded-full"
             onClick={() => setOpenDiscountPopup(true)}
           >
             Discount
