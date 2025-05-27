@@ -31,7 +31,7 @@ export const mockDataGenerator = async ({
   orderCount?: number;
 }) => {
   supplierCount = supplierCount || 10;
-  menuItemCount = menuItemCount || 10;
+  menuItemCount = menuItemCount || 20;
   stockItemCount = stockItemCount || 50;
   transactionCount = transactionCount || 5;
   orderCount = orderCount || 5;

@@ -1,5 +1,4 @@
 import React, {useState, useEffect, useRef } from 'react';
-import { ConfirmModal } from './ConfirmModal';
 
 interface IngredientProps {
     selectedIngredients: string[];
@@ -16,8 +15,6 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
     const containerRef = useRef<HTMLDivElement>(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [ searchIngredient, setSearchIngredient ] = useState("");
-    const [ showConfirmation, setShowConfirmation ] = useState(false);
-    const [ ingredientDelete, setIngredientDelete ] = useState<string | null>(null)
 
     const updateIngredients = (ingredient: string) => {
         if (selectedIngredients.includes(ingredient)) {
@@ -58,7 +55,6 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
     }, []);
 
     return (
-        <>
         <div className="relative" ref={containerRef}>
             <input
                 type="text"
@@ -88,8 +84,7 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                             className="text-red-500 hover:bg-red-100 rounded-full w-5 h-5 flex items-center justify-center ml-4"
                             title="Delete ingredient"
                             onClick={() => {
-                                setShowConfirmation(true);
-                                setIngredientDelete(ingredient);
+                                deleteIngredient(ingredient);
                             }}
                         >
                             x
@@ -121,19 +116,5 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                 </ul>
             )}
         </div>
-
-        <ConfirmModal
-                open={showConfirmation}
-                message="Are you sure you want to delete this ingredient?"
-
-                onConfirm={() => {
-                    deleteIngredient(ingredientDelete);
-                    setShowConfirmation(false);
-                    }}
-                onCancel={() =>{
-                    setShowConfirmation(false);
-                }}
-            />
-        </>
     );
 }
