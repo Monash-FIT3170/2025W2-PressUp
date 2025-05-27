@@ -4,12 +4,15 @@
 @theme {
   --color-press-up-purple: #6f597b;
   --color-press-up-light-purple: #c6b6cf;
-  --color-press-up-negative-button: #99352e;
+  --color-press-up-negative-button: #963861;
   --color-press-up-grey: #e0dee0;
   --color-press-up-positive-button: #c97f97;
   --color-press-up-black: #0a0a0a;
   --color-press-up-cream: #f3ead0;
   --color-press-up-navy: #1e032e;
+  --color-press-up-blue:#c45887;
+  --color-press-up-washed-blue:#6c6787;
+  --color-press-up-hover: #e8cad7;
 }
 
 body {

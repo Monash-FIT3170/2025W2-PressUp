@@ -140,7 +140,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 <button
                 type="button"
                 onClick={ () => {}}
-                className="bg-press-up-purple hover:bg-rose-500 text-white px-4 py-2 rounded-lg"
+                className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg"
                 >
                     Add Image
                 </button>
@@ -164,7 +164,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                     setConfirm("save");
                     setShowConfirmation(true);
                 }}
-                className="bg-press-up-purple hover:bg-rose-500 text-white px-4 py-2 rounded-lg"
+                className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg"
                 >
                 Save
                 </button>
