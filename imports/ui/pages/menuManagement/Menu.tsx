@@ -32,6 +32,12 @@ export const Menu = () => {
   // Category filter state
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+<<<<<<< HEAD
+=======
+  // Allergen filter state
+  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
+
+>>>>>>> 0cc1f8e (Added AllergenFilter to Menu)
   const handleItemClick = (item: MenuItem) => {
     Meteor.call("menuItems.updateQuantity", item._id , 1);
     setSelectedItem(item);
@@ -49,14 +55,14 @@ export const Menu = () => {
     .filter(item => {
       searchTerm === ""
 
-    // Check for ingredients
-    const ingredientsMatch =
-      Array.isArray(item.ingredients) &&
-      item.ingredients.some(ingredient =>
-        ingredient.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      // Check for ingredients
+      const ingredientsMatch =
+        Array.isArray(item.ingredients) &&
+        item.ingredients.some(ingredient =>
+          ingredient.toLowerCase().includes(searchTerm.toLowerCase())
+        );
 
-    return item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || ingredientsMatch;
+      return item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || ingredientsMatch;
     }
     )
     // Filter by category
@@ -66,10 +72,12 @@ export const Menu = () => {
     )
     // Filter by allergen
     .filter(item => {
-      if (!Array.isArray(item.allergens) || item.allergens.length === 0) {
-      return true; // By default nothing selected does not filter
-    }
-      return Array.isArray(item.allergens) && item.allergens.includes(selectedAllergen)
+      if (selectedAllergens.length === 0) return true;
+
+      return (
+        Array.isArray(item.allergens) &&
+        selectedAllergens.every(allergen => item.allergens.includes(allergen))
+      );
     });
 
 
@@ -92,6 +100,16 @@ export const Menu = () => {
             onCategorySelect={setSelectedCategory} 
             initialCategory='All'
           />
+<<<<<<< HEAD
+=======
+
+        {/* Allergen Filter */}
+          <AllergenFilter 
+          items={posItems}
+          selectedAllergen={selectedAllergens}
+          onAllergenSelect={setSelectedAllergens}               
+          />
+>>>>>>> 0cc1f8e (Added AllergenFilter to Menu)
         </div>
 
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
