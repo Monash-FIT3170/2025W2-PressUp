@@ -60,16 +60,16 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                 type="text"
                 value={searchIngredient}
                 onChange={(e) => setSearchIngredient(e.target.value)}
-                className="border rounded p-2 w-full dark:placeholder-white"
+                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200 dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white dark:focus:ring-purple-400 dark:focus:border-purple-400"
                 placeholder="--Search ingredients--"
                 onFocus={() => setShowDropdown(true)}
             />
             { showDropdown && (
                 // displaying the ingredients within dropdown
-            <ul className="z-10 absolute bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white max-h-48 overflow-y-auto">
+            <ul className="z-10 absolute bg-press-up-purple-50 border border-press-up-purple-300 text-white text-sm rounded-lg focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white max-h-48 overflow-y-auto">
                 {searchIngredientList.length > 0 ? (
                     searchIngredientList.map((ingredient) => (
-                        <li key={ingredient} className="flex p-2 hover:bg-gray-200 rounded justify-between items-center">
+                        <li key={ingredient} className="flex p-2 hover:bg-press-up-purple-200 rounded justify-between items-center">
                         <label className="flex items-center space-x-2 cursor-pointer">
                             <input
                                 type="checkbox"
@@ -93,7 +93,7 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                     ))
                 ) : (
                     // for adding an ingredient, if not found within search
-                    <li className="p-2 text-sm text-gray-500">
+                    <li className="p-2 text-sm text-press-up-purple-500">
                         <button
                             type="button"
                             onClick={() => {
