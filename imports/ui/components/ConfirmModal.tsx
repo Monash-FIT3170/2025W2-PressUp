@@ -30,14 +30,14 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         `}
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-lg mb-6 text-center">{message}</p>
+        <p className="text-black dark:text-white mb-6 text-center">{message}</p>
         <div className="flex justify-end gap-4">
           <button
             type="button"
             onClick={onCancel}
             className="px-4 py-2 rounded-lg text-sm font-medium
-              bg-gray-300 hover:bg-gray-400
-              dark:bg-neutral-600 dark:hover:bg-neutral-700
+              text-black bg-gray-300 hover:bg-gray-400
+              bg-neutral-600 hover:bg-neutral-700 text-white
               transition-colors"
           >
             Cancel
@@ -46,8 +46,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             type="button"
             onClick={onConfirm}
             className="px-4 py-2 rounded-lg text-sm font-medium
-              text-white bg-press-up-purple hover:bg-press-up-navy
-              dark:bg-press-up-purple dark:hover:bg-press-up-purple
+              text-black bg-press-up-purple hover:bg-press-up-navy
+              bg-press-up-purple hover:bg-press-up-purple text-white
               transition-colors"
           >
             Confirm
