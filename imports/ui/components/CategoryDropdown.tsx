@@ -60,7 +60,7 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
                 type="text"
                 value={searchCategory}
                 onChange={(e) => setSearchCategory(e.target.value)}
-                className="border rounded p-2 w-full placeholder-white"
+                className="border rounded p-2 w-full placeholder-black dark:placeholder-white"
                 placeholder="--Search categories--"
                 onFocus={() => setShowDropdown(true)}
             />
