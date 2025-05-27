@@ -11,7 +11,7 @@ export const Header = ({ onHamburgerClick }: HeaderProps) => {
   const [title] = usePageTitle();
 
   return (
-    <div className="bg-primary min-w-full z-100 sticky grid grid-cols-5 border-b-6 border-primary-dark items-center p-5">
+    <div className="bg-press-up-purple min-w-full z-100 sticky grid grid-cols-5 border-b-6 border-press-up-grey items-center p-5">
       {/* NOTE: The col-span here is related to the size of the navigation bar.
        /*  If you want to change it here you should also make a change there */}
       <div className="col-span-1 flex">
@@ -19,7 +19,7 @@ export const Header = ({ onHamburgerClick }: HeaderProps) => {
           <HamburgerMenuIcon
             width="72px"
             height="72px"
-            fill="var(--color-primary-dark)"
+            fill="var(--color-press-up-grey)"
           />
         </div>
       </div>

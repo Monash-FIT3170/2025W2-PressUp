@@ -70,7 +70,7 @@ export const MenuManagementCard = ({ item, onClick }: Props) => { // removed: , 
       />
 
       {/* item info */}
-      <div className="bg-rose-100 text-center py-1 px-2">
+      <div className="bg-press-up-light-purple text-center py-1 px-2">
         <h3 className="text-sm font-semibold text-gray-900 truncate">
           {item.name}
         </h3>
