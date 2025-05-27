@@ -189,10 +189,10 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
                       )}                      
                     </div>
                     <div className="flex flex-col items-center mt-7">
-                      <button className="bg-blue-500 hover:bg-blue-400 font-bold text-white text-xl py-4 rounded text-center w-full my-4 rounded-full" onClick={() => setDiscountPopupScreen('percentage')}>
+                      <button className="bg-blue-300 hover:bg-blue-200 font-bold text-gray-800 text-xl py-4 rounded text-center w-full my-4 rounded-full" onClick={() => setDiscountPopupScreen('percentage')}>
                         Percentage Discount (%)
                       </button>
-                      <button className="bg-purple-500 hover:bg-purple-400 font-bold text-white text-xl py-4 rounded text-center w-full my-4 rounded-full" onClick={() => setDiscountPopupScreen('flat')}>
+                      <button className="bg-purple-400 hover:bg-purple-300 font-bold text-gray-800 text-xl py-4 rounded text-center w-full my-4 rounded-full" onClick={() => setDiscountPopupScreen('flat')}>
                         Flat Discount ($)
                       </button>
                       <div className="flex flex-row w-full justify-between">
