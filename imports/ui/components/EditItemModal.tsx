@@ -4,6 +4,7 @@ import { Modal } from "./Modal";
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { IngredientDropdown } from "./IngredientDropdown";
 import { CategoryDropdown } from "./CategoryDropdown";
+import { AllergenDropdown } from "./AllergenDropdown";
 import { ConfirmModal } from "./ConfirmModal";
 
 interface EditItemModalProps {
@@ -24,6 +25,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     const [available, setAvailable] = useState(false);
     const [ingredients, setIngredients] = useState<string[]>([]);
     const [categories, setCategories ] = useState<string[]>([]);
+    const [allergens, setAllergens] = useState<string[]>([]);
     const [showConfirmation, setShowConfirmation ] = useState(false);
     const [confirm, setConfirm] = useState<"cancel" | "save" | null>(null);
 
@@ -116,6 +118,12 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 selectedCategories={categories}
                 onChange={setCategories}
                 initialCategories = {["Food", "Drink"]}
+            />
+
+            <AllergenDropdown
+                selectedAllergen={allergens}
+                onChange={setAllergens}
+                initialAllergens = {["Nuts", "Soy", "Fish", "Sesame"]}
             />
 
             <div>
