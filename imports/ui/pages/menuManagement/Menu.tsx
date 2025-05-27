@@ -86,43 +86,46 @@ export const Menu = () => {
 
 
   return (
-    <div id="pos" className="flex flex-1 overflow-auto">
+    <div className="flex flex-1 overflow-auto">
       {/* Main content area */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 p-4">
+        {/* Search & Filter Section */}
+        <div className="mb-4 space-y-2">
+          {/* Search Bar */}
+          <div className="w-full md-6">
+            <SearchBar 
+              onSearch={setSearchTerm} 
+              initialSearchTerm={searchTerm} 
+            />
+          </div>
 
-        {/* Search Bar */}
-        <div className="w-full md-6">
-          <SearchBar 
-            onSearch={setSearchTerm} 
-            initialSearchTerm={searchTerm} 
-          />
+          {/* Category Filter Buttons */}
+          <div className="flex space-x-4">
+            {["Food", "Drink", "Dessert"].map((cat) => (
+              <button
+                key={cat}
+                onClick={() => toggleCategory(cat)}
+                className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors duration-200 ${
+                  selectedCategories.includes(cat)
+                    ? "bg-[#6f597b] text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+
+          {/* Allergen Filter */}
+            <AllergenFilter 
+              items={posItems}
+              selectedAllergen={selectedAllergens}
+              onAllergenSelect={setSelectedAllergens}               
+            />
+          </div>
         </div>
-
-        {/* Category Filter Buttons */}
-        <div className="flex space-x-4">
-          {["Food", "Drink", "Dessert"].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => toggleCategory(cat)}
-              className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors duration-200 ${
-                selectedCategories.includes(cat)
-                  ? "bg-[#6f597b] text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-
-        {/* Allergen Filter */}
-          <AllergenFilter 
-            items={posItems}
-            selectedAllergen={selectedAllergens}
-            onAllergenSelect={setSelectedAllergens}               
-          />
-        </div>
-
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        
+        {/*Item cards */}
+        <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {[...filteredItems]
           .sort((a, b) => {
             // Move unavailable items to the end
