@@ -8,12 +8,14 @@ interface PosSideMenuProps {
   tableNo: number;
   items: MenuItem[];
   total: number;
+  orderId?: string;
   onIncrease: (itemId: Mongo.ObjectID) => void;
   onDecrease: (itemId: Mongo.ObjectID) => void;
   onDelete: (itemId: Mongo.ObjectID) => void; 
+  onUpdateOrder?: (fields: any) => void;
 }
 
-export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onDelete }: PosSideMenuProps) => {
+export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecrease, onDelete, onUpdateOrder }: PosSideMenuProps) => {
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
   const [discountPercent, setDiscountPercent] = useState(0)
   const [savedAmount, setSavedAmount] = useState(0)
@@ -29,6 +31,10 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onD
   const applyDiscount = (percentage: number) => {
     setDiscountPercent(percentage);
     setOpenDiscountPopup(false);
+    if (onUpdateOrder && orderId) {
+      const discountedTotal = total - (total * (percentage / 100));
+      onUpdateOrder({ discountPercent: percentage, totalPrice: parseFloat(discountedTotal.toFixed(2)) });
+    }
   };
 
   const handleDelete = (itemId: Mongo.ObjectID) => {
@@ -120,6 +126,9 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onD
             onClick={() => {
               setDiscountPercent(0);
               setSavedAmount(0);
+              if (onUpdateOrder && orderId) {
+                onUpdateOrder({ discountPercent: 0, totalPrice: total });
+              }
             }}
           >
             Reset
