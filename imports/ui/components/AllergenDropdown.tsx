@@ -7,7 +7,7 @@ interface AllergenProps {
     initialAllergens?: string[];
 }
 
-export const allergenDropdown = ({
+export const AllergenDropdown = ({
     selectedAllergen,
     onChange,
     initialAllergens = []
@@ -20,7 +20,7 @@ export const allergenDropdown = ({
     const [ showConfirmation, setShowConfirmation ] = useState(false);
     const [ allergenDelete, setAllergenDelete ] = useState<string | null>(null)
 
-    const updateallergens = (allergen: string) => {
+    const updateAllergens = (allergen: string) => {
         if (selectedAllergen.includes(allergen)) {
             onChange(selectedAllergen.filter((item) => item !== allergen));
         } else {
@@ -79,7 +79,7 @@ export const allergenDropdown = ({
                             <input
                                 type="checkbox"
                                 checked={selectedAllergen.includes(allergen)}
-                                onChange={() => updateallergens(allergen)}
+                                onChange={() => updateAllergens(allergen)}
                             />
                             {allergen}
                         </label>
