@@ -65,7 +65,7 @@ export const AllergenDropdown = ({
                 type="text"
                 value={searchAllergen}
                 onChange={(e) => setSearchAllergen(e.target.value)}
-                className="border rounded p-2 w-full placeholder-black dark:placeholder-white"
+                className="border rounded p-2 w-full dark:placeholder-white"
                 placeholder="--Search allergens--"
                 onFocus={() => setShowDropdown(true)}
             />
@@ -102,9 +102,9 @@ export const AllergenDropdown = ({
                     <li className="p-2 text-sm text-gray-500">
                         <button
                             type="button"
-                            onClick={() => { 
+                            onClick={() => {
                                 const trimInput = searchAllergen.trim();
-                                if ( 
+                                if (
                                     trimInput !== "" && !allAllergens.includes(trimInput)
                                 ) {
                                     const newAllergen = trimInput.charAt(0).toUpperCase() + trimInput.slice(1);
@@ -112,13 +112,13 @@ export const AllergenDropdown = ({
                                     onChange([...selectedAllergen, newAllergen]);
                                     setSearchAllergen("");
                                 }
-                            }} 
+                            }}
                             className="text-rose-500 hover:underline"
                         >
                         Add "{searchAllergen}"
                         </button>
                     </li>
-                )} 
+                )}
                 </ul>
             )}
         </div>
