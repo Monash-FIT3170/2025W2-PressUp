@@ -6,11 +6,11 @@ interface CategoryProps {
     initialCategories?: string[];
 }
 
-export const CategoryDropdown: React.FC<CategoryProps> = ({ 
-    selectedCategories, 
-    onChange, 
+export const CategoryDropdown: React.FC<CategoryProps> = ({
+    selectedCategories,
+    onChange,
     initialCategories = []
-}) => { 
+}) => {
     const [allCategories, setAllcategories] = useState<string[]>(initialCategories);
     const containerRef = useRef<HTMLDivElement>(null);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -60,7 +60,7 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
                 type="text"
                 value={searchCategory}
                 onChange={(e) => setSearchCategory(e.target.value)}
-                className="border rounded p-2 w-full placeholder-black dark:placeholder-white"
+                className="border rounded p-2 w-full dark:placeholder-white"
                 placeholder="--Search categories--"
                 onFocus={() => setShowDropdown(true)}
             />
@@ -96,9 +96,9 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
                     <li className="p-2 text-sm text-gray-500">
                         <button
                             type="button"
-                            onClick={() => { 
+                            onClick={() => {
                                 const trimInput = searchCategory.trim();
-                                if ( 
+                                if (
                                     trimInput !== "" && !allCategories.includes(trimInput)
                                 ) {
                                     const newCategory = trimInput.charAt(0).toUpperCase() + trimInput.slice(1);
@@ -106,13 +106,13 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
                                     onChange([...selectedCategories, newCategory]);
                                     setSearchCategory("");
                                 }
-                            }} 
+                            }}
                             className="text-press-up-purple hover:underline"
                         >
                         Add "{searchCategory}"
                         </button>
                     </li>
-                )} 
+                )}
                 </ul>
             )}
         </div>
