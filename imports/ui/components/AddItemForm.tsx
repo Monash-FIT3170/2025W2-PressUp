@@ -1,19 +1,50 @@
-import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-import { FormEvent, useState } from "react";
 import { Meteor } from "meteor/meteor";
-import { Supplier, SuppliersCollection } from "/imports/api";
-import { Mongo } from "meteor/mongo";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { FormEvent, useEffect, useState } from "react";
+import { Supplier, SuppliersCollection, StockItem } from "/imports/api";
 
-export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
-  const [itemName, setItemName] = useState("");
-  const [quantity, setQuantity] = useState<string>("");
-  const [location, setLocation] = useState("");
-  const [supplier, setSupplier] = useState<Mongo.ObjectID | null>(null);
-
+export const AddItemForm = ({
+  onSuccess,
+  onCancel,
+  item,
+}: {
+  onSuccess: () => void;
+  onCancel: () => void;
+  item?: StockItem | null;
+}) => {
   useSubscribe("suppliers") === false;
   const suppliers: Supplier[] = useTracker(() => {
     return SuppliersCollection.find().fetch();
   });
+
+  const [itemName, setItemName] = useState(item?.name ?? "");
+  const [quantity, setQuantity] = useState<string>(
+    item ? String(item.quantity) : ""
+  );
+  const [location, setLocation] = useState(item?.location ?? "");
+  const [supplier, setSupplier] = useState<string | null>(
+    item?.supplier ?? null
+  );
+  const [selectedValue, setSelectedValue] = useState<string>(
+    item?.supplier ? String(item.supplier) : ""
+  );
+
+  useEffect(() => {
+    setItemName(item?.name ?? "");
+    setQuantity(item ? String(item.quantity) : "");
+    setLocation(item?.location ?? "");
+
+    let supplierId = "";
+    if (item?.supplier) {
+      if (typeof item.supplier === "object" && "_id" in item.supplier) {
+        supplierId = (item.supplier as Supplier)._id ?? "";
+      } else if (typeof item.supplier === "string") {
+        supplierId = item.supplier;
+      }
+    }
+    setSupplier(supplierId || null);
+    setSelectedValue(supplierId);
+  }, [item]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -30,33 +61,54 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
       return;
     }
 
-    Meteor.call(
-      "stockItems.insert",
-      {
-        name: itemName,
-        quantity: parsedQuantity,
-        location,
-        supplier,
-      },
-      (error: Meteor.Error | undefined) => {
-        if (error) {
-          alert("Error: " + error.reason);
-        } else {
-          setItemName("");
-          setQuantity("");
-          setLocation("");
-          setSupplier(null);
-          onSuccess();
+    if (item && item._id) {
+      // Editing existing item
+      Meteor.call(
+        "stockItems.update",
+        item._id,
+        {
+          name: itemName,
+          quantity: parsedQuantity,
+          location,
+          supplier,
+        },
+        (error: Meteor.Error | undefined) => {
+          if (error) {
+            alert("Error: " + error.reason);
+          } else {
+            onSuccess();
+          }
         }
-      },
-    );
+      );
+    } else {
+      Meteor.call(
+        "stockItems.insert",
+        {
+          name: itemName,
+          quantity: parsedQuantity,
+          location,
+          supplier,
+        },
+        (error: Meteor.Error | undefined) => {
+          if (error) {
+            alert("Error: " + error.reason);
+          } else {
+            setItemName("");
+            setQuantity("");
+            setLocation("");
+            setSupplier(null);
+            onSuccess();
+          }
+        }
+      );
+    }
   };
 
   return (
     <div>
       <div className="flex items-center justify-center p-4 w-100 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
         <h3 className="text-xl font-semibold text-press-up-purple dark:text-white">
-          New Stock Item
+          {item ? "Edit Stock Item" : "New Stock Item"}
         </h3>
       </div>
       <div className="p-4 md:p-5">
@@ -79,9 +131,9 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
             </label>
             <input
               type="number"
-              min="0"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
+              min="0"
               placeholder="0"
               className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
@@ -104,7 +156,18 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
               Supplier
             </label>
             <select
-              onChange={(e) => setSupplier(suppliers.find(s => e.target.value == String(s._id))?._id ?? null)}
+              value={selectedValue}
+              onChange={(e) => {
+                setSelectedValue(e.target.value);
+                if (e.target.value === "") {
+                  setSupplier(null);
+                } else {
+                  const found = suppliers.find(
+                    (s) => String(s._id) === e.target.value
+                  );
+                  setSupplier(found && found._id ? found._id : null);
+                }
+              }}
               className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             >
@@ -116,14 +179,33 @@ export const AddItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-1 p-4">
-            <button
-              type="submit"
-              className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-negative-button hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-press-up-purple font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-press-up-purple dark:focus:ring-press-up-purple"
-            >
-              Add Item
-            </button>
-          </div>
+          {!item && (
+            <div className="grid grid-cols-1 p-4">
+              <button
+                type="submit"
+                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-negative-button hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
+              >
+                Add Item
+              </button>
+            </div>
+          )}
+          {item && (
+            <div className="grid grid-cols-2 p-4">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer mr-4 text-white bg-neutral-400 hover:bg-neutral-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-neutral-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-neutral-500 dark:hover:bg-neutral-600 dark:focus:ring-neutral-600"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-press-up-positive-button hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-press-up-positive-button dark:hover:bg-press-up-positive-button dark:focus:bg-press-up-positive-button"
+              >
+                Save
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>
