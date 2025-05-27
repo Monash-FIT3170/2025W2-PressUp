@@ -11,8 +11,8 @@
   "dependencies": {
     "@babel/core": "^7.26.10",
     "@babel/plugin-transform-react-jsx": "^7.25.9",
-    "@babel/runtime": "^7.20.7",
-    "@faker-js/faker": "^9.7.0",
+    "@babel/runtime": "^7.27.1",
+    "@faker-js/faker": "^9.8.0",
     "@tailwindcss/postcss": "^4.1.4",
     "imports": "^1.0.0",
     "lucide-react": "^0.510.0",
