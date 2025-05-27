@@ -10,6 +10,7 @@ import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { EditItemModal } from "../../components/EditItemModal";
 import { SearchBar } from "../../components/SearchBar";
 import { CategoryFilter } from "../../components/CategoryFilter";
+import { AllergenFilter } from "../../components/AllergenFilter";
 
 export const Menu = () => {
   // Set title
@@ -32,6 +33,9 @@ export const Menu = () => {
   // Category filter state
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+  // Allergen filter state
+  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
+
   const handleItemClick = (item: MenuItem) => {
     Meteor.call("menuItems.updateQuantity", item._id , 1);
     setSelectedItem(item);
@@ -49,21 +53,30 @@ export const Menu = () => {
     .filter(item => {
       searchTerm === ""
 
-    // Check for ingredients
-    const ingredientsMatch =
-      Array.isArray(item.ingredients) &&
-      item.ingredients.some(ingredient =>
-        ingredient.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      // Check for ingredients
+      const ingredientsMatch =
+        Array.isArray(item.ingredients) &&
+        item.ingredients.some(ingredient =>
+          ingredient.toLowerCase().includes(searchTerm.toLowerCase())
+        );
 
-    return item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || ingredientsMatch;
+      return item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || ingredientsMatch;
     }
     )
     // Filter by category
     .filter(item =>
       selectedCategory === 'All' || 
       Array.isArray(item.category) && item.category.includes(selectedCategory)
-    );
+    )
+    // Filter by allergen
+    .filter(item => {
+      if (selectedAllergens.length === 0) return true;
+
+      return (
+        Array.isArray(item.allergens) &&
+        selectedAllergens.every(allergen => item.allergens.includes(allergen))
+      );
+    });
 
 
   return (
@@ -80,10 +93,17 @@ export const Menu = () => {
         </div>
 
         {/* Category Filter */}
-        <div className="w-full md-6">
+        <div className="w-full md-6 flex">
           <CategoryFilter
             onCategorySelect={setSelectedCategory} 
             initialCategory='All'
+          />
+
+        {/* Allergen Filter */}
+          <AllergenFilter 
+            items={posItems}
+            selectedAllergen={selectedAllergens}
+            onAllergenSelect={setSelectedAllergens}               
           />
         </div>
 
@@ -98,7 +118,7 @@ export const Menu = () => {
             <div
               key={item._id?.toString()}
               className={`min-w-[160px] rounded-lg transition duration-150
-                ${selectedItem?._id === item._id ? "ring-2 ring-rose-500 bg-rose-50" : ""}
+                ${selectedItem?._id === item._id ? "ring-2 ring-press-up-purple bg-rose-50" : ""}
                 w-full h-full p-4
                 ${!item.available ? "grayscale opacity-60" : ""}
               `}

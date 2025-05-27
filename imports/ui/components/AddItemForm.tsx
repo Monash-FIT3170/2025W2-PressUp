@@ -107,7 +107,7 @@ export const AddItemForm = ({
   return (
     <div>
       <div className="flex items-center justify-center p-4 w-100 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-        <h3 className="text-xl font-semibold text-rose-400 dark:text-white">
+        <h3 className="text-xl font-semibold text-press-up-purple dark:text-white">
           {item ? "Edit Stock Item" : "New Stock Item"}
         </h3>
       </div>
@@ -155,19 +155,6 @@ export const AddItemForm = ({
             <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
               Supplier
             </label>
-            {/* <select
-              onChange={(e) => setSupplier(suppliers.find(s => e.target.value == String(s._id))?._id ?? null)}
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-              required
-            >
-              <option value="">--Select supplier--</option>
-              {suppliers.map((supplier, i) => (
-                <option value={String(supplier._id)} key={i}>
-                  {supplier.name}
-                </option>
-              ))}
-            </select> */}
-
             <select
               value={selectedValue}
               onChange={(e) => {
@@ -196,7 +183,7 @@ export const AddItemForm = ({
             <div className="grid grid-cols-1 p-4">
               <button
                 type="submit"
-                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
+                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-negative-button hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
               >
                 Add Item
               </button>
@@ -213,7 +200,7 @@ export const AddItemForm = ({
               </button>
               <button
                 type="submit"
-                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-rose-400 hover:bg-rose-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
+                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-press-up-positive-button hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-press-up-positive-button dark:hover:bg-press-up-positive-button dark:focus:bg-press-up-positive-button"
               >
                 Save
               </button>
