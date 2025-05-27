@@ -36,6 +36,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
         setAvailable(item.available);
         setIngredients(item.ingredients || []);
         setCategories(item.category || []);
+        setAllergens(item.allergens || []);
     }
     }, [item]);
 
@@ -52,6 +53,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 price,
                 ingredients,
                 category: categories,
+                allergens,
                 available
             },
             (error: Meteor.Error | undefined ) => {
@@ -64,6 +66,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                         price,
                         ingredients,
                         category: categories,
+                        allergens,
                         available
                     });
                     onClose();
