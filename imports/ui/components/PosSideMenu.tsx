@@ -3,15 +3,17 @@ import { MenuItem } from "/imports/api";
 import { PaymentModal } from "./PaymentModal";
 import { Mongo } from "meteor/mongo";
 
+
 interface PosSideMenuProps {
   tableNo: number;
   items: MenuItem[];
   total: number;
   onIncrease: (itemId: Mongo.ObjectID) => void;
   onDecrease: (itemId: Mongo.ObjectID) => void;
+  onDelete: (itemId: Mongo.ObjectID) => void;
 }
 
-export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: PosSideMenuProps) => {
+export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease, onDelete }: PosSideMenuProps) => {
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
   const [discountPercent, setDiscountPercent] = useState(0) // For the discount % button - final value used
   const [discountPercent2, setDiscountPercent2] = useState('') // For the discount % input field
@@ -65,11 +67,14 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
 
  const handleDelete = (itemId: Mongo.ObjectID) => {
     onDecrease(itemId); 
+  const handleDelete = (itemId: Mongo.ObjectID) => {
+    onDelete(itemId);
   };
-  
+
   return (
-    <div className="w-72 h-140 bg-gray-100 flex flex-col">
-      <div className="flex items-center justify-between bg-rose-400 text-white px-4 py-2 rounded-t-md">
+    <div className="w-64 bg-gray-100 flex flex-col h-screen">
+      <div className="flex items-center justify-between bg-press-up-purple text-white px-4 py-2 rounded-t-md">
+
         <button className="text-2xl font-bold">⋯</button>
         <span className="text-lg font-semibold">Table {tableNo}</span>
         <button className="text-2xl font-bold">×</button>
@@ -81,14 +86,11 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
             key={String(item._id)}
             className="bg-white rounded-md p-3 shadow-sm space-y-2"
           >
-            {/* Item name */}
             <div className="text-sm font-semibold text-gray-800">
               {item.name}
             </div>
 
-            {/* Controls and price */}
             <div className="flex items-center justify-between">
-              {/* Quantity controls */}
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => onDecrease(item._id)}
@@ -110,10 +112,8 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
                 >
                   🗑
                 </button>
-
               </div>
 
-              {/* Price */}
               <div className="flex items-center space-x-2">
                 <div className="text-sm font-semibold text-gray-800">
                   ${(item.price * item.quantity).toFixed(2)}
@@ -125,8 +125,9 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
       </div>
 
       {/* Total Cost + Discount Button + Pay Button */}
-      <div className="bg-rose-400 text-white p-4 flex-shrink-0">
+      <div className="bg-press-up-purple text-white p-4 flex-shrink-0 sticky bottom-0">
         {/* Displaying total cost*/}
+
         <div className="flex justify-between items-center mb-2">
           <span className="text-lg font-bold">Total</span>
           <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span>
@@ -273,10 +274,10 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
             </div>
           </div>
         )}
-        
-        {/* Link Pay button to Receipt page with Payment Modal*/}
-        <PaymentModal></PaymentModal>
+        {/* Pay button */}
+        <PaymentModal />
+
       </div>
     </div>
   );
-};
+}
