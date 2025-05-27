@@ -60,7 +60,7 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
                 type="text"
                 value={searchIngredient}
                 onChange={(e) => setSearchIngredient(e.target.value)}
-                className="border rounded p-2 w-full"
+                className="border rounded p-2 w-full placeholder-white"
                 placeholder="--Search ingredients--"
                 onFocus={() => setShowDropdown(true)}
             />
