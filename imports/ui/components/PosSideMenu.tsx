@@ -154,7 +154,7 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
         )}
 
         {/* Discount button */}
-        <button className="w-full bg-orange-400 hover:bg-orange-300 text-white font-bold py-2 px-4 mb-2 rounded-full" onClick={() => {setOpenDiscountPopup(true); setDiscountPopupScreen('menu');}}>
+        <button className="w-full bg-[#1e032e] hover:bg-press-up-hover text-[#f3ead0] font-bold py-2 px-4 rounded-full mb-2" onClick={() => {setOpenDiscountPopup(true); setDiscountPopupScreen('menu');}}>
           Discount
         </button>
 
@@ -275,8 +275,8 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
           </div>
         )}
         
-        {/* Link Pay button to Receipt page with Payment Modal*/}
-        <PaymentModal></PaymentModal>
+        {/* Pay button */}
+        <PaymentModal />
       </div>
     </div>
   );
