@@ -63,7 +63,14 @@ export const Menu = () => {
     .filter(item =>
       selectedCategory === 'All' || 
       Array.isArray(item.category) && item.category.includes(selectedCategory)
-    );
+    )
+    // Filter by allergen
+    .filter(item => {
+      if (!Array.isArray(item.allergens) || item.allergens.length === 0) {
+      return true; // By default nothing selected does not filter
+    }
+      return Array.isArray(item.allergens) && item.allergens.includes(selectedAllergen)
+    });
 
 
   return (
