@@ -4,7 +4,7 @@ import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Supplier, SuppliersCollection } from "/imports/api";
 import { Modal } from "../../components/Modal";
 import { AddSupplierForm } from "../../components/AddSupplierForm";
-import { Search } from "lucide-react";
+import { SearchBar } from "../../components/SearchBar";
 import { SupplierTable } from "../../components/SupplierTable";
 import { ConfirmModal } from "../../components/ConfirmModal";
 
@@ -48,17 +48,7 @@ export const SuppliersPage = () => {
     <div className="flex flex-1 flex-col">
       <div className="flex justify-between items-center p-4 gap-2">
         <div className="relative w-full">
-          <input
-            type="text"
-            placeholder="Search suppliers or goods"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 w-70 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-400"
-          />
-          <Search
-            size={20}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-          />
+          <SearchBar onSearch={setSearchTerm} initialSearchTerm={searchTerm} />
         </div>
         <button
           onClick={() => setOpen(true)}
