@@ -13,7 +13,7 @@ export const SearchBar = ({
     };
 
     return (
-        <div id="search-bar" className="mb-4 px-4">
+        <div id="search-bar">
             <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-pink-400">
                 <svg 
                     xmlns="http://www.w3.org/2000/svg" 

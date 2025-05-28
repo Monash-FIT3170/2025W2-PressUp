@@ -54,7 +54,7 @@ export const AllergenFilter = ({
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="bg-press-up-light-purple text-black font-bold py-2 px-4 rounded-full"
+        className="bg-gray-200 text-gray-700 hover:bg-gray-300 font-bold py-2 px-4 rounded-full"
       >
         Allergens
       </button>
