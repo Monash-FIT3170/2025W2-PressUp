@@ -101,7 +101,7 @@ export const MainDisplay = () => {
         <div className="mb-4 space-y-2">
           {/* Search Bar */}
           <div id="search-bar">
-            <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-pink-400">
+            <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#1e032e]">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -134,7 +134,7 @@ export const MainDisplay = () => {
                 onClick={() => toggleCategory(cat)}
                 className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors duration-200 ${
                   selectedCategories.includes(cat)
-                    ? "bg-pink-600 text-white"
+                    ? "bg-[#6f597b] text-white"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
