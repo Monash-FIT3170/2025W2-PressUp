@@ -12,6 +12,7 @@ export const StockFilter = ({ filter, onFilterChange }: StockFilterProps) => {
         src="/filter-icon.svg"
         alt="Filter Icon"
         className="mr-2 w-5 h-5 text-red-900"
+        draggable={false}
       />
       <label htmlFor="stock-filter" className="mr-2 font-bold text-red-900">
         Status:

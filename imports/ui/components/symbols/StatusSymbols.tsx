@@ -9,6 +9,7 @@ export const OutOfStock = ({ size }: SizeProp) => {
       alt="Out of Stock Icon"
       width={size ?? DEFAULT_SIZE}
       height={size ?? DEFAULT_SIZE}
+      draggable={false}
     />
   );
 };
@@ -20,6 +21,7 @@ export const LowInStock = ({ size }: SizeProp) => {
       alt="Low in Stock Icon"
       width={size ?? DEFAULT_SIZE}
       height={size ?? DEFAULT_SIZE}
+      draggable={false}
     />
   );
 };
@@ -31,6 +33,7 @@ export const InStock = ({ size }: SizeProp) => {
       alt="In Stock Icon"
       width={size ?? DEFAULT_SIZE}
       height={size ?? DEFAULT_SIZE}
+      draggable={false}
     />
   );
 };

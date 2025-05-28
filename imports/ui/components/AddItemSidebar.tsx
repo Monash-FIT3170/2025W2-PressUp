@@ -337,6 +337,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess 
                           // Fallback if image doesn't exist
                           e.currentTarget.style.display = 'none';
                         }}
+                        draggable={false}
                       />
                       <span className="text-xs text-gray-600 capitalize">
                         {imageName.replace(/[_-]/g, ' ')}
@@ -374,6 +375,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess 
                       // Show placeholder if image fails to load
                       e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="%23a43375" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>';
                     }}
+                    draggable={false}
                   />
                   <div>
                     <p className="text-sm font-medium text-gray-700">Selected Image:</p>

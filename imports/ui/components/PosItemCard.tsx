@@ -16,6 +16,7 @@ export const PosItemCard = ({ item, onClick }: Props) => {
           src={item.image}
           alt={item.name}
           className="w-full h-28 object-contain bg-gray-50"
+          draggable={false}
         />
   
         {/* item info */}

@@ -9,6 +9,7 @@ export const Logo = ({ size }: SizeProp) => {
       alt="PressUp Logo"
       width={size ?? DEFAULT_SIZE}
       height={size ?? DEFAULT_SIZE}
+      draggable={false}
     />
   );
 };
