@@ -3,9 +3,8 @@ import { SVGIcon, SVGProps } from "../SVGIcon";
 export const CoffeeIcon = (props: SVGProps) => {
   return (
     <SVGIcon
-      viewBox="0 0 32 32"
+      viewBox="0 0 18 32"
       fill="#a52836"
-      width="48px"
       height="40px"
       {...props}
     >
