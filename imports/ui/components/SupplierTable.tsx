@@ -12,7 +12,6 @@ interface SupplierTableProps {
 }
 
 export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
-  const [expandedSupplierId, setExpandedSupplierId] = useState<string | null>(null);
 
   const toggleExpanded = (supplierId: string) => {
     setExpandedSupplierId(expandedSupplierId === supplierId ? null : supplierId);
@@ -26,6 +25,7 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
     );
 
   const [isOpen, setIsOpen] = useState(false);
+  const [expandedSupplierId, setExpandedSupplierId] = useState<string | null>(null);
   const [purchaseOrderId, setPurchaseOrderId] = useState<Mongo.ObjectID>(
     new Mongo.ObjectID(),
   );
