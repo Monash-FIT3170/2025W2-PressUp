@@ -19,14 +19,14 @@ export const AddItemForm = ({
 
   const [itemName, setItemName] = useState(item?.name ?? "");
   const [quantity, setQuantity] = useState<string>(
-    item ? String(item.quantity) : ""
+    item ? String(item.quantity) : "",
   );
   const [location, setLocation] = useState(item?.location ?? "");
   const [supplier, setSupplier] = useState<string | null>(
-    item?.supplier ?? null
+    item?.supplier ?? null,
   );
   const [selectedValue, setSelectedValue] = useState<string>(
-    item?.supplier ? String(item.supplier) : ""
+    item?.supplier ? String(item.supplier) : "",
   );
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export const AddItemForm = ({
           } else {
             onSuccess();
           }
-        }
+        },
       );
     } else {
       Meteor.call(
@@ -99,7 +99,7 @@ export const AddItemForm = ({
             setSupplier(null);
             onSuccess();
           }
-        }
+        },
       );
     }
   };
@@ -163,7 +163,7 @@ export const AddItemForm = ({
                   setSupplier(null);
                 } else {
                   const found = suppliers.find(
-                    (s) => String(s._id) === e.target.value
+                    (s) => String(s._id) === e.target.value,
                   );
                   setSupplier(found && found._id ? found._id : null);
                 }
@@ -183,7 +183,7 @@ export const AddItemForm = ({
             <div className="grid grid-cols-1 p-4">
               <button
                 type="submit"
-                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-negative-button hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
+                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-press-up-positive-button hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
               >
                 Add Item
               </button>
