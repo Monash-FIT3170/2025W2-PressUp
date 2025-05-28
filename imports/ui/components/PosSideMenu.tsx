@@ -20,14 +20,24 @@ interface PosSideMenuProps {
 }
 
 export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecrease, onDelete, onUpdateOrder, selectedTable, setSelectedTable }: PosSideMenuProps) => {
+  // Fetch the current order for this table
+  const order: Order | undefined = useTracker(() => OrdersCollection.findOne({ tableNo: selectedTable }), [selectedTable]);
+
+  // Local state for discounts, initialized from order
+  const [discountPercent, setDiscountPercent] = useState(order?.discountPercent || 0);
+  const [discountAmount, setDiscountAmount] = useState(order?.discountAmount || 0);
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
-  const [discountPercent, setDiscountPercent] = useState(0) // For the discount % button - final value used
   const [discountPercent2, setDiscountPercent2] = useState('') // For the discount % input field
-  const [discountAmount, setDiscountAmount] = useState(0) // For the discount $ button - final value used
   const [discountAmount2, setDiscountAmount2] = useState('') // For the discount $ input field
   const [savedAmount, setSavedAmount] = useState(0)
   const [discountPopupScreen, setDiscountPopupScreen] = useState<'menu' | 'percentage' | 'flat'>('menu');
   const [finalTotal, setFinalTotal] = useState(total);
+
+
+  useEffect(() => {
+    setDiscountPercent(order?.discountPercent || 0);
+    setDiscountAmount(order?.discountAmount || 0);
+  }, [order?._id, order?.discountPercent, order?.discountAmount]);
 
 
   useEffect(() => {
@@ -39,18 +49,24 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
   }, [total, discountPercent, discountAmount]);
 
 
+  // When applying a percent discount, update DB
   const applyPercentDiscount = (percentage: number) => {
     setDiscountPercent(percentage);
     setOpenDiscountPopup(false);
     if (onUpdateOrder && orderId) {
-      const discountedTotal = total - (total * (percentage / 100));
-      onUpdateOrder({ discountPercent: percentage, totalPrice: parseFloat(discountedTotal.toFixed(2)) });
+      const discountedTotal = total - (total * (percentage / 100)) - discountAmount;
+      onUpdateOrder({ discountPercent: percentage, discountAmount, totalPrice: parseFloat(discountedTotal.toFixed(2)) });
     }
   };
 
+  // When applying a flat discount, update DB
   const applyFlatDiscount = (amount: number) => {
     setDiscountAmount(amount);
     setOpenDiscountPopup(false);
+    if (onUpdateOrder && orderId) {
+      const discountedTotal = total - (total * (discountPercent / 100)) - amount;
+      onUpdateOrder({ discountPercent, discountAmount: amount, totalPrice: parseFloat(discountedTotal.toFixed(2)) });
+    }
   };
 
   // Allow 1-100% for discount percentage
