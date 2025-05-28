@@ -7,12 +7,13 @@ import {
   StockItemsCollection,
   Supplier,
   SuppliersCollection,
-  StockItem
+  StockItem,
 } from "/imports/api";
 import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 export const StockPage = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -27,18 +28,25 @@ export const StockPage = () => {
 
   const isLoadingStockItems = useSubscribe("stockItems.all") === false;
   const isLoadingSuppliers = useSubscribe("suppliers") === false;
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirm, setConfirm] = useState<"cancel" | "delete" | null>(null);
 
   const stockItems: StockItemWithSupplier[] = useTracker(() => {
-    const stockItems = StockItemsCollection.find({}, { sort: { name: 1 } }).fetch(); 
-    const result = []
+    const stockItems = StockItemsCollection.find(
+      {},
+      { sort: { name: 1 } },
+    ).fetch();
+    const result = [];
     for (let stockItem of stockItems) {
-      let supplier : Supplier | null = null;
+      let supplier: Supplier | null = null;
       if (stockItem.supplier != null) {
-        supplier = SuppliersCollection.find({_id: stockItem.supplier}).fetch()[0];
+        supplier = SuppliersCollection.find({
+          _id: stockItem.supplier,
+        }).fetch()[0];
       }
-      result.push({...stockItem, supplier});
+      result.push({ ...stockItem, supplier });
     }
-    return result
+    return result;
   });
 
   const lowStockThreshold = 10;
@@ -53,10 +61,11 @@ export const StockPage = () => {
   // Modal state
   const [open, setOpen] = useState<boolean>(false);
   const [editItem, setEditItem] = useState<StockItem | null>(null);
+  const [deleteItem, setDeleteItem] = useState<StockItem | null>(null);
 
   const handleEdit = (item: StockItem) => {
-    setEditItem(item); 
-    setOpen(true); 
+    setEditItem(item);
+    setOpen(true);
   };
 
   const handleModalClose = () => {
@@ -66,12 +75,22 @@ export const StockPage = () => {
 
   const handleSuccess = () => handleModalClose();
 
-  const handleDelete = (item: StockItem) => {
-    Meteor.call("stockItems.remove", item._id, (error: Meteor.Error | undefined) => {
-      if (error) {
-        alert("Error deleting item: " + error.reason);
-      }
-    });
+  const handleDeleteRequest = (item: StockItem) => {
+    setConfirm("delete");
+    setShowConfirmation(true);
+    setDeleteItem(item);
+  };
+
+  const handleDelete = () => {
+    Meteor.call(
+      "stockItems.remove",
+      deleteItem._id,
+      (error: Meteor.Error | undefined) => {
+        if (error) {
+          alert("Error deleting item: " + error.reason);
+        }
+      },
+    );
   };
 
   return (
@@ -80,8 +99,8 @@ export const StockPage = () => {
         <StockFilter filter={filter} onFilterChange={setFilter} />
         <button
           onClick={() => {
-            setEditItem(null)
-            setOpen(true)
+            setEditItem(null);
+            setOpen(true);
           }}
           className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-press-up-purple text-white cursor-pointer w-24 right-2 hover:bg-press-up-purple"
         >
@@ -92,17 +111,49 @@ export const StockPage = () => {
         {isLoadingStockItems || isLoadingSuppliers ? (
           <p className="text-gray-400 p-4">Loading inventory...</p>
         ) : (
-          <StockTable 
-            stockItems={filteredStockItems} 
+          <StockTable
+            stockItems={filteredStockItems}
             onEdit={handleEdit}
-            onDelete={handleDelete}
+            onDelete={handleDeleteRequest}
           />
         )}
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <AddItemForm key={formResetKey} onSuccess={handleSuccess} onCancel={handleModalClose} item={editItem} />
+      <Modal
+        open={open}
+        onClose={() => {
+          setConfirm("cancel");
+          setShowConfirmation(true);
+        }}
+      >
+        <AddItemForm
+          key={formResetKey}
+          onSuccess={handleSuccess}
+          onCancel={handleModalClose}
+          item={editItem}
+        />
       </Modal>
+      <ConfirmModal
+        open={showConfirmation}
+        message={
+          confirm === "cancel"
+            ? "Are you sure you want to discard your changes?"
+            : "Are you sure you want to delete this item?"
+        }
+        onConfirm={() => {
+          if (confirm === "cancel") {
+            handleModalClose();
+          } else if (confirm === "delete") {
+            handleDelete();
+          }
+          setShowConfirmation(false);
+          setConfirm(null);
+        }}
+        onCancel={() => {
+          setShowConfirmation(false);
+          setConfirm(null);
+        }}
+      />
     </div>
   );
 };
