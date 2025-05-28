@@ -116,7 +116,7 @@ export const mockDataGenerator = async ({
         let tableNo;
         // Ensure unique table numbers
         do {
-          tableNo = faker.number.int({ min: 1, max: 20 });
+          tableNo = i+1;
         } while (usedTableNumbers.has(tableNo));
         usedTableNumbers.add(tableNo);
         
