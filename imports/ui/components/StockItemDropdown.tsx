@@ -1,48 +1,49 @@
 import React, { useState, useEffect, useRef } from "react";
+import { StockItem } from "/imports/api/stockItems/StockItemsCollection";
 
 interface StockItemProps {
-  selectedStockItem: string[];
-  onChange: (stockItems: string[]) => void;
-  initialIngredients?: string[];
+  selectedStockItem: StockItem[];
+  onChange: (stockItems: StockItem[]) => void;
+  initialStockItems?: StockItem[];
 }
 
-export const IngredientDropdown: React.FC<IngredientProps> = ({
-  selectedIngredients,
+export const StockItemDropdown: React.FC<StockItemProps> = ({
+  selectedStockItem,
   onChange,
-  initialIngredients = [],
+  initialStockItems = [],
 }) => {
-  const [allIngredients, setAllIngredients] =
-    useState<string[]>(initialIngredients);
+  const [allStockItems, setAllStockItems] =
+    useState<StockItem[]>(initialStockItems);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [searchIngredient, setSearchIngredient] = useState("");
+  const [searchStockItem, setSearchStockItem] = useState("");
 
-  const updateIngredients = (ingredient: string) => {
-    if (selectedIngredients.includes(ingredient)) {
-      onChange(selectedIngredients.filter((i) => i !== ingredient));
+  const updateStockItems = (stockItem: StockItem) => {
+    if (selectedStockItem.includes(stockItem)) {
+      onChange(selectedStockItem.filter((i) => i !== stockItem));
     } else {
-      onChange([...selectedIngredients, ingredient]);
+      onChange([...selectedStockItem, stockItem]);
     }
   };
 
-  const searchIngredientList = allIngredients.filter((ingredient) =>
-    ingredient.toLowerCase().includes(searchIngredient.toLowerCase()),
+  const searchStockItemList = allStockItems.filter((stockItem) =>
+    stockItem.name.toLowerCase().includes(searchStockItem.toLowerCase()),
   );
 
-  const deleteIngredient = (ingredient: string | null) => {
-    if (!ingredient) return;
+  const deleteStockItem = (stockItem: StockItem | null) => {
+    if (!stockItem) return;
 
-    setAllIngredients((previous) =>
-      previous.filter((item) => item !== ingredient),
+    setAllStockItems((previous) =>
+      previous.filter((item) => item !== stockItem),
     );
-    if (selectedIngredients.includes(ingredient)) {
-      onChange(selectedIngredients.filter((item) => item !== ingredient));
+    if (selectedStockItem.includes(stockItem)) {
+      onChange(selectedStockItem.filter((item) => item !== stockItem));
     }
   };
 
   useEffect(() => {
-    setSearchIngredient("");
-  }, [initialIngredients, selectedIngredients]);
+    setSearchStockItem("");
+  }, [initialStockItems, selectedStockItem]);
 
   // to close dropdown with an outside click
   useEffect(() => {
@@ -65,65 +66,44 @@ export const IngredientDropdown: React.FC<IngredientProps> = ({
     <div className="relative" ref={containerRef}>
       <input
         type="text"
-        value={searchIngredient}
-        onChange={(e) => setSearchIngredient(e.target.value)}
+        value={searchStockItem}
+        onChange={(e) => setSearchStockItem(e.target.name)}
         className="border rounded p-2 w-full"
-        placeholder="--Search ingredients--"
+        placeholder="--Search StockItems--"
         onFocus={() => setShowDropdown(true)}
       />
       {showDropdown && (
-        // displaying the ingredients within dropdown
+        // displaying the StockItems within dropdown
         <ul className="z-10 absolute bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white max-h-48 overflow-y-auto">
-          {searchIngredientList.length > 0 ? (
-            searchIngredientList.map((ingredient) => (
+          {searchStockItemList.length > 0 ? (
+            searchStockItemList.map((stockItem) => (
               <li
-                key={ingredient}
+                key={stockItem._id}
                 className="flex p-2 hover:bg-gray-200 rounded justify-between items-center"
               >
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={selectedIngredients.includes(ingredient)}
-                    onChange={() => updateIngredients(ingredient)}
+                    checked={selectedStockItem.includes(stockItem)}
+                    onChange={() => updateStockItems(stockItem)}
                   />
-                  {ingredient}
+                  {stockItem.name}
+                  {/* for deleting a stock item */}
+                  <button
+                    type="button"
+                    className="text-red-500 hover:bg-red-100 rounded-full w-5 h-5 flex items-center justify-center ml-4"
+                    title="Delete stock item"
+                    onClick={() => {
+                      deleteStockItem(stockItem);
+                    }}
+                  >
+                    x
+                  </button>
                 </label>
-                {/* for deleting an ingredient */}
-                <button
-                  type="button"
-                  className="text-red-500 hover:bg-red-100 rounded-full w-5 h-5 flex items-center justify-center ml-4"
-                  title="Delete ingredient"
-                  onClick={() => {
-                    deleteIngredient(ingredient);
-                  }}
-                >
-                  x
-                </button>
               </li>
             ))
           ) : (
-            // for adding an ingredient, if not found within search
-            <li className="p-2 text-sm text-gray-500">
-              <button
-                type="button"
-                onClick={() => {
-                  const trimInput = searchIngredient.trim();
-                  if (trimInput !== "" && !allIngredients.includes(trimInput)) {
-                    const newIngredient =
-                      trimInput.charAt(0).toUpperCase() + trimInput.slice(1);
-                    setAllIngredients((previous) => [
-                      ...previous,
-                      newIngredient,
-                    ]);
-                    onChange([...selectedIngredients, newIngredient]);
-                    setSearchIngredient("");
-                  }
-                }}
-                className="text-rose-500 hover:underline"
-              >
-                Add "{searchIngredient}"
-              </button>
-            </li>
+            <span>No inventory items.</span>
           )}
         </ul>
       )}
