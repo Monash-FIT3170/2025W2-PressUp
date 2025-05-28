@@ -66,8 +66,10 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
             />
             { showDropdown && (
                 // displaying the categories within dropdown
-            <ul className="z-10 absolute bg-press-up-purple-50 border border-press-up-purple-300 text-white text-sm rounded-lg focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white max-h-48 overflow-y-auto">
-                {searchCategoryList.length > 0 ? (
+            <ul 
+            style={{ backgroundColor: "var(--color-press-up-light-purple)" }}
+            className="absolute z-50 border border-press-up-purple text-white text-sm rounded-lg p-2.5 max-h-48 overflow-y-auto w-full">                
+            {searchCategoryList.length > 0 ? (
                     searchCategoryList.map((category) => (
                         <li key={category} className="flex p-2 hover:bg-press-up-purple-200 rounded justify-between items-center">
                         <label className="flex items-center space-x-2 cursor-pointer">
