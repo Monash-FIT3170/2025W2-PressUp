@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { MenuItem } from './MenuItemsCollection'; // Adjust import path as needed
 
+
 // Import possible images from mockData
 const possibleImages = [
   "/menu_items/cappuccino.png",
