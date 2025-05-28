@@ -94,14 +94,14 @@ const NavigationEntry = ({
     switch (selectionType) {
       case NavigationEntrySelection.ARROW:
         return (
-          <>
+          <div className="items-center flex">
             <div className="ps-3 content-center">{name}</div>
             <ArrowLeft />
-          </>
+          </div>
         );
       case NavigationEntrySelection.HIGHLIGHT:
         return (
-          <div className="p-1">
+          <div className="p-1 content-center">
             <Pill
               bgColour="bg-press-up-grey"
               borderColour="border-press-up-grey"
@@ -118,7 +118,7 @@ const NavigationEntry = ({
     <div className="flex flex-col text-nowrap truncate">
       <Link to={path}>
         <div className="flex flex-row text-press-up-grey border-b-[0.15em] border-press-up-grey min-w-full items mb-2">
-          <div className="flex-0 content-center">{icon}</div>
+          <div className="flex-0 content-center min-h-[2.3em]">{icon}</div>
           {active ? <ActiveContent /> : <div className="px-3 content-center">{name}</div>}
         </div>
       </Link>
