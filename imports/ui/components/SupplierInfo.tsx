@@ -16,6 +16,7 @@ interface SupplierInfoProps {
 }
 
 export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
+  // Define sort
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc'>('date-desc');
   
   
