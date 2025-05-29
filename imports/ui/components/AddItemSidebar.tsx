@@ -156,20 +156,38 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess 
 
           {/* Price */}
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: '#a43375' }}>
-              Price
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
-              required
-            />
-          </div>
+  <label className="block text-sm font-medium mb-1" style={{ color: '#a43375' }}>
+    Price ($)
+  </label>
+  <input
+    type="number"
+    step="any"
+    min="0"
+    placeholder="10.65"
+    value={formData.price || ''}
+    onChange={(e) => {
+      const value = e.target.value;
+      // Allow empty string for better user experience while typing
+      if (value === '') {
+        setFormData({ ...formData, price: 0 });
+      } else {
+        const numValue = parseFloat(value);
+        if (!isNaN(numValue)) {
+          setFormData({ ...formData, price: numValue });
+        }
+      }
+    }}
+    onBlur={(e) => {
+      // Ensure we have a valid number when user leaves the field
+      const value = parseFloat(e.target.value);
+      if (isNaN(value) || value < 0) {
+        setFormData({ ...formData, price: 0 });
+      }
+    }}
+    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+    required
+  />
+</div>
 
           {/* Quantity */}
           <div>
