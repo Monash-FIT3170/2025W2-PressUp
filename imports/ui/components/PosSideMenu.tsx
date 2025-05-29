@@ -107,7 +107,7 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
   }
 
  const handleDelete = (itemId: Mongo.ObjectID) => {
-    onDecrease(itemId); 
+    onDelete(itemId); 
   };
 
   // Fetch all orders for dropdown
