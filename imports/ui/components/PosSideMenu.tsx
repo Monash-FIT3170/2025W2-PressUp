@@ -2,51 +2,93 @@ import React , { useState, useEffect } from "react";
 import { MenuItem } from "/imports/api";
 import { PaymentModal } from "./PaymentModal";
 import { Mongo } from "meteor/mongo";
+import { useTracker } from "meteor/react-meteor-data";
+import { Order, OrdersCollection } from '/imports/api';
+
+// Patch: allow originalPrice to be present on order (for discount logic)
+type OrderWithOriginal = Order & { originalPrice?: number };
+
 
 interface PosSideMenuProps {
   tableNo: number;
   items: MenuItem[];
   total: number;
+  orderId?: string;
   onIncrease: (itemId: Mongo.ObjectID) => void;
   onDecrease: (itemId: Mongo.ObjectID) => void;
-  onDelete: (itemId: Mongo.ObjectID) => void;
+  onDelete: (itemId: Mongo.ObjectID) => void; 
+  onUpdateOrder?: (fields: any) => void;
+  selectedTable: number;
+  setSelectedTable: (tableNo: number) => void;
 }
 
-export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: PosSideMenuProps) => {
+export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecrease, onDelete, onUpdateOrder, selectedTable, setSelectedTable }: PosSideMenuProps) => {
+  // Fetch the current order for this table
+  const order: OrderWithOriginal | undefined = useTracker(() => OrdersCollection.findOne({ tableNo: selectedTable }), [selectedTable]);
+
+  // Local state for discounts, initialized from order
+  const [discountPercent, setDiscountPercent] = useState(order?.discountPercent || 0);
+  const [discountAmount, setDiscountAmount] = useState(order?.discountAmount || 0);
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false)
-  const [discountPercent, setDiscountPercent] = useState(0) // For the discount % button - final value used
   const [discountPercent2, setDiscountPercent2] = useState('') // For the discount % input field
-  const [discountAmount, setDiscountAmount] = useState(0) // For the discount $ button - final value used
   const [discountAmount2, setDiscountAmount2] = useState('') // For the discount $ input field
   const [savedAmount, setSavedAmount] = useState(0)
   const [discountPopupScreen, setDiscountPopupScreen] = useState<'menu' | 'percentage' | 'flat'>('menu');
   const [finalTotal, setFinalTotal] = useState(total);
 
+  // Store original price in state, and always use it for discount calculations
+  const [originalPrice, setOriginalPrice] = useState(total);
 
   useEffect(() => {
-    const paymentTotal = total - (total * (discountPercent / 100)) - discountAmount;
+    setDiscountPercent(order?.discountPercent || 0);
+    setDiscountAmount(order?.discountAmount || 0);
+  }, [order?._id, order?.discountPercent, order?.discountAmount]);
+
+
+  useEffect(() => {
+    // When the order or total changes, update the original price ONLY if this order has no discount
+    if ((order?.discountPercent ?? 0) === 0 && (order?.discountAmount ?? 0) === 0) {
+      setOriginalPrice(total);
+    } else if (order?.originalPrice) {
+      setOriginalPrice(order.originalPrice);
+    }
+  }, [total, order?._id, order?.originalPrice, order?.discountPercent, order?.discountAmount]);
+
+  useEffect(() => {
+    // Always calculate discounts from originalPrice
+    const paymentTotal = originalPrice - (originalPrice * (discountPercent / 100)) - discountAmount;
     const final = paymentTotal < 0 ? 0 : paymentTotal;
     setFinalTotal(final);
-    const saved = total - final;
+    const saved = originalPrice - final;
     setSavedAmount(saved);
-  }, [total, discountPercent, discountAmount]);
+  }, [originalPrice, discountPercent, discountAmount]);
 
 
+  // When applying a percent discount, update DB
   const applyPercentDiscount = (percentage: number) => {
     setDiscountPercent(percentage);
     setOpenDiscountPopup(false);
+    if (onUpdateOrder && orderId) {
+      const discountedTotal = originalPrice - (originalPrice * (percentage / 100)) - discountAmount;
+      onUpdateOrder({ discountPercent: percentage, discountAmount, totalPrice: parseFloat(discountedTotal.toFixed(2)), originalPrice });
+    }
   };
 
+  // When applying a flat discount, update DB
   const applyFlatDiscount = (amount: number) => {
     setDiscountAmount(amount);
     setOpenDiscountPopup(false);
+    if (onUpdateOrder && orderId) {
+      const discountedTotal = originalPrice - (originalPrice * (discountPercent / 100)) - amount;
+      onUpdateOrder({ discountPercent, discountAmount: amount, totalPrice: parseFloat(discountedTotal.toFixed(2)), originalPrice });
+    }
   };
 
   // Allow 1-100% for discount percentage
   const handleDiscountPercent2Change = (percentage: React.ChangeEvent<HTMLInputElement>) => {
     const discountVal = parseInt(percentage.target.value, 10);
     if (!isNaN(discountVal) && discountVal >= 1 && discountVal <= 100) {
-      setDiscountPercent2(discountVal);
+      setDiscountPercent2(discountVal.toString());
     } else {
       setDiscountPercent2('');
     }
@@ -65,14 +107,33 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
   }
 
  const handleDelete = (itemId: Mongo.ObjectID) => {
-    onDecrease(itemId); 
+    onDelete(itemId); 
   };
-  
+
+  // Fetch all orders for dropdown
+  const orders: Order[] = useTracker(() => OrdersCollection.find({}, { sort: { tableNo: 1 } }).fetch());
+
+  // Handler for table change
+  const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = parseInt(e.target.value, 10);
+    setSelectedTable(selected); // update parent state
+  };
+
   return (
     <div className="w-64 bg-gray-100 flex flex-col h-screen">
       <div className="flex items-center justify-between bg-press-up-purple text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
-        <span className="text-lg font-semibold">Table {tableNo}</span>
+        <select
+          className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none"
+          value={selectedTable}
+          onChange={handleTableChange}
+        >
+          {orders.map((order: Order) => (
+            <option key={String(order._id)} value={order.tableNo}>
+              Table {order.tableNo}
+            </option>
+          ))}
+        </select>
         <button className="text-2xl font-bold">×</button>
       </div>
 
@@ -93,14 +154,14 @@ export const PosSideMenu = ({ tableNo, items, total, onIncrease, onDecrease }: P
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => onDecrease(item._id)}
-                  className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold"
+                  className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
                 >
                   –
                 </button>
                 <span>{item.quantity}</span>
                 <button
                   onClick={() => onIncrease(item._id)}
-                  className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded text-lg font-bold"
+                  className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
                 >
                   ＋
                 </button>

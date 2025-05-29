@@ -1,4 +1,4 @@
-import { MenuItemsCollection } from "/imports/api";
+import { MenuItemsCollection, Order, OrdersCollection } from "/imports/api";
 import { PosItemCard } from "../../components/PosItemCard";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { PosSideMenu } from "../../components/PosSideMenu";
@@ -8,8 +8,12 @@ import { useState } from "react";
 export const MainDisplay = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategories, setSelectedCategories] = useState([]);
-    const isLoadingPosItems = useSubscribe("menuItems")
-    const posItems = useTracker( () => MenuItemsCollection.find().fetch());
+    const [selectedTable, setSelectedTable] = useState(1);
+    const isLoadingPosItems = useSubscribe("menuItems");
+    const isLoadingOrders = useSubscribe("orders");
+    const posItems = useTracker(() => MenuItemsCollection.find().fetch());
+    // Fetch the current order for the selected table
+    const order = useTracker(() => OrdersCollection.findOne({ tableNo: selectedTable }), [selectedTable]);
 
     const filteredItems = posItems.filter((item) => {
       const matchesName = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -21,47 +25,81 @@ export const MainDisplay = () => {
     });
     
 
-    // Current order, hard coded table number at the moment
-    const [order, setOrder] = useState({
-      menuItems: [],
-      totalPrice: 0,
-      tableNo: 1,
-    });
-
     // Update order status
-    const updateOrder = (updatedItems) => {
-      const newTotal = updatedItems.reduce(
-        (sum, i) => sum + i.quantity * i.price,
-        0
-      );
-      setOrder({
-        ...order,
-        menuItems: updatedItems,
-        totalPrice: parseFloat(newTotal.toFixed(2)),
-      });
+    const updateOrderInDb = (updatedFields) => {
+      if (!order || !order._id) return;
+      // Always include discount fields if present
+      const discountFields = {
+        discountPercent: order.discountPercent || 0,
+        discountAmount: order.discountAmount || 0,
+        originalPrice: order.originalPrice || order.totalPrice || 0,
+      };
+      Meteor.call("orders.updateOrder", order._id, { ...discountFields, ...updatedFields });
     };
 
     const handleIncrease = (itemId) => {
+      if (!order) return;
       const updatedItems = order.menuItems.map((i) =>
         i._id === itemId ? { ...i, quantity: i.quantity + 1 } : i
       );
-      updateOrder(updatedItems);
+      const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
+      // Recalculate discounted total if discount is present
+      let discountedTotal = newTotal;
+      if ((order.discountPercent || 0) > 0) {
+        discountedTotal = newTotal - (newTotal * (order.discountPercent / 100)) - (order.discountAmount || 0);
+      } else if ((order.discountAmount || 0) > 0) {
+        discountedTotal = newTotal - order.discountAmount;
+      }
+      updateOrderInDb({
+        menuItems: updatedItems,
+        totalPrice: parseFloat(discountedTotal.toFixed(2)),
+        discountPercent: order.discountPercent || 0,
+        discountAmount: order.discountAmount || 0,
+        originalPrice: parseFloat(newTotal.toFixed(2)),
+      });
     };
 
     const handleDecrease = (itemId) => {
+      if (!order) return;
       const updatedItems = order.menuItems
         .map((i) =>
           i._id === itemId ? { ...i, quantity: i.quantity - 1 } : i
         )
-        .filter((i) => i.quantity > 0); // Remove if 0
-      updateOrder(updatedItems);
+        .filter((i) => i.quantity > 0);
+      const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
+      let discountedTotal = newTotal;
+      if ((order.discountPercent || 0) > 0) {
+        discountedTotal = newTotal - (newTotal * (order.discountPercent / 100)) - (order.discountAmount || 0);
+      } else if ((order.discountAmount || 0) > 0) {
+        discountedTotal = newTotal - order.discountAmount;
+      }
+      updateOrderInDb({
+        menuItems: updatedItems,
+        totalPrice: parseFloat(discountedTotal.toFixed(2)),
+        discountPercent: order.discountPercent || 0,
+        discountAmount: order.discountAmount || 0,
+        originalPrice: parseFloat(newTotal.toFixed(2)),
+      });
     };
 
     const handleDelete = (itemId) => {
+      if (!order) return;
       const updatedItems = order.menuItems.filter(i => i._id !== itemId);
-      updateOrder(updatedItems);
+      const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
+      let discountedTotal = newTotal;
+      if ((order.discountPercent || 0) > 0) {
+        discountedTotal = newTotal - (newTotal * (order.discountPercent / 100)) - (order.discountAmount || 0);
+      } else if ((order.discountAmount || 0) > 0) {
+        discountedTotal = newTotal - order.discountAmount;
+      }
+      updateOrderInDb({
+        menuItems: updatedItems,
+        totalPrice: parseFloat(discountedTotal.toFixed(2)),
+        discountPercent: order.discountPercent || 0,
+        discountAmount: order.discountAmount || 0,
+        originalPrice: parseFloat(newTotal.toFixed(2)),
+      });
     };
-
 
     const toggleCategory = (category) => {
       if (selectedCategories.includes(category)) {
@@ -70,12 +108,11 @@ export const MainDisplay = () => {
         setSelectedCategories([...selectedCategories, category]);
       }
     };
-    
+
     const handleItemClick = (item) => {
+      if (!order) return;
       const existing = order.menuItems.find((i) => i._id === item._id);
       let updatedItems;
-
-      // If item is already in order, increment quantity, otherwise add normally
       if (existing) {
         updatedItems = order.menuItems.map((i) =>
           i._id === item._id ? { ...i, quantity: i.quantity + 1 } : i
@@ -83,14 +120,20 @@ export const MainDisplay = () => {
       } else {
         updatedItems = [...order.menuItems, { ...item, quantity: 1 }];
       }
-
-      // Calculate total price of order
-      const newTotal = updatedItems.reduce(
-        (sum, i) => sum + i.quantity * i.price,
-        0
-      );
-
-      updateOrder(updatedItems);
+      const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
+      let discountedTotal = newTotal;
+      if ((order.discountPercent || 0) > 0) {
+        discountedTotal = newTotal - (newTotal * (order.discountPercent / 100)) - (order.discountAmount || 0);
+      } else if ((order.discountAmount || 0) > 0) {
+        discountedTotal = newTotal - order.discountAmount;
+      }
+      updateOrderInDb({
+        menuItems: updatedItems,
+        totalPrice: parseFloat(discountedTotal.toFixed(2)),
+        discountPercent: order.discountPercent || 0,
+        discountAmount: order.discountAmount || 0,
+        originalPrice: parseFloat(newTotal.toFixed(2)),
+      });
     };
 
   return (
@@ -160,12 +203,16 @@ export const MainDisplay = () => {
       {/* Side Panel */}
       <div id="pos-side-panel" className="p-4">
         <PosSideMenu
-          tableNo={order.tableNo}
-          items={order.menuItems}
-          total={order.totalPrice}
+          tableNo={order?.tableNo || selectedTable}
+          items={order?.menuItems || []}
+          total={order?.totalPrice || 0}
+          orderId={order?._id}
           onIncrease={handleIncrease}
           onDecrease={handleDecrease}
           onDelete={handleDelete}
+          onUpdateOrder={updateOrderInDb}
+          selectedTable={selectedTable} // pass down
+          setSelectedTable={setSelectedTable} // pass down
         />
       </div>
     </div>
