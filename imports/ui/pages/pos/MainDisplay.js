@@ -28,7 +28,13 @@ export const MainDisplay = () => {
     // Update order status
     const updateOrderInDb = (updatedFields) => {
       if (!order || !order._id) return;
-      Meteor.call("orders.updateOrder", order._id, updatedFields);
+      // Always include discount fields if present
+      const discountFields = {
+        discountPercent: order.discountPercent || 0,
+        discountAmount: order.discountAmount || 0,
+        originalPrice: order.originalPrice || order.totalPrice || 0,
+      };
+      Meteor.call("orders.updateOrder", order._id, { ...discountFields, ...updatedFields });
     };
 
     const handleIncrease = (itemId) => {
@@ -37,7 +43,20 @@ export const MainDisplay = () => {
         i._id === itemId ? { ...i, quantity: i.quantity + 1 } : i
       );
       const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
-      updateOrderInDb({ menuItems: updatedItems, totalPrice: parseFloat(newTotal.toFixed(2)) });
+      // Recalculate discounted total if discount is present
+      let discountedTotal = newTotal;
+      if ((order.discountPercent || 0) > 0) {
+        discountedTotal = newTotal - (newTotal * (order.discountPercent / 100)) - (order.discountAmount || 0);
+      } else if ((order.discountAmount || 0) > 0) {
+        discountedTotal = newTotal - order.discountAmount;
+      }
+      updateOrderInDb({
+        menuItems: updatedItems,
+        totalPrice: parseFloat(discountedTotal.toFixed(2)),
+        discountPercent: order.discountPercent || 0,
+        discountAmount: order.discountAmount || 0,
+        originalPrice: parseFloat(newTotal.toFixed(2)),
+      });
     };
 
     const handleDecrease = (itemId) => {
@@ -48,14 +67,38 @@ export const MainDisplay = () => {
         )
         .filter((i) => i.quantity > 0);
       const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
-      updateOrderInDb({ menuItems: updatedItems, totalPrice: parseFloat(newTotal.toFixed(2)) });
+      let discountedTotal = newTotal;
+      if ((order.discountPercent || 0) > 0) {
+        discountedTotal = newTotal - (newTotal * (order.discountPercent / 100)) - (order.discountAmount || 0);
+      } else if ((order.discountAmount || 0) > 0) {
+        discountedTotal = newTotal - order.discountAmount;
+      }
+      updateOrderInDb({
+        menuItems: updatedItems,
+        totalPrice: parseFloat(discountedTotal.toFixed(2)),
+        discountPercent: order.discountPercent || 0,
+        discountAmount: order.discountAmount || 0,
+        originalPrice: parseFloat(newTotal.toFixed(2)),
+      });
     };
 
     const handleDelete = (itemId) => {
       if (!order) return;
       const updatedItems = order.menuItems.filter(i => i._id !== itemId);
       const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
-      updateOrderInDb({ menuItems: updatedItems, totalPrice: parseFloat(newTotal.toFixed(2)) });
+      let discountedTotal = newTotal;
+      if ((order.discountPercent || 0) > 0) {
+        discountedTotal = newTotal - (newTotal * (order.discountPercent / 100)) - (order.discountAmount || 0);
+      } else if ((order.discountAmount || 0) > 0) {
+        discountedTotal = newTotal - order.discountAmount;
+      }
+      updateOrderInDb({
+        menuItems: updatedItems,
+        totalPrice: parseFloat(discountedTotal.toFixed(2)),
+        discountPercent: order.discountPercent || 0,
+        discountAmount: order.discountAmount || 0,
+        originalPrice: parseFloat(newTotal.toFixed(2)),
+      });
     };
 
     const toggleCategory = (category) => {
@@ -78,7 +121,19 @@ export const MainDisplay = () => {
         updatedItems = [...order.menuItems, { ...item, quantity: 1 }];
       }
       const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
-      updateOrderInDb({ menuItems: updatedItems, totalPrice: parseFloat(newTotal.toFixed(2)) });
+      let discountedTotal = newTotal;
+      if ((order.discountPercent || 0) > 0) {
+        discountedTotal = newTotal - (newTotal * (order.discountPercent / 100)) - (order.discountAmount || 0);
+      } else if ((order.discountAmount || 0) > 0) {
+        discountedTotal = newTotal - order.discountAmount;
+      }
+      updateOrderInDb({
+        menuItems: updatedItems,
+        totalPrice: parseFloat(discountedTotal.toFixed(2)),
+        discountPercent: order.discountPercent || 0,
+        discountAmount: order.discountAmount || 0,
+        originalPrice: parseFloat(newTotal.toFixed(2)),
+      });
     };
 
   return (
