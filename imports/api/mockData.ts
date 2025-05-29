@@ -5,7 +5,7 @@ import { faker } from "@faker-js/faker";
 import { TransactionsCollection } from "./transactions/TransactionsCollection";
 import { OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
 
-const possibleImages = [
+export const possibleImages = [
   "/menu_items/cappuccino.png",
   "/menu_items/cookie.png",
   "/menu_items/croissant.png",
