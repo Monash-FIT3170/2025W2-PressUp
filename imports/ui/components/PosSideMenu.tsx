@@ -5,6 +5,9 @@ import { Mongo } from "meteor/mongo";
 import { useTracker } from "meteor/react-meteor-data";
 import { Order, OrdersCollection } from '/imports/api';
 
+// Patch: allow originalPrice to be present on order (for discount logic)
+type OrderWithOriginal = Order & { originalPrice?: number };
+
 
 interface PosSideMenuProps {
   tableNo: number;
@@ -21,7 +24,7 @@ interface PosSideMenuProps {
 
 export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecrease, onDelete, onUpdateOrder, selectedTable, setSelectedTable }: PosSideMenuProps) => {
   // Fetch the current order for this table
-  const order: Order | undefined = useTracker(() => OrdersCollection.findOne({ tableNo: selectedTable }), [selectedTable]);
+  const order: OrderWithOriginal | undefined = useTracker(() => OrdersCollection.findOne({ tableNo: selectedTable }), [selectedTable]);
 
   // Local state for discounts, initialized from order
   const [discountPercent, setDiscountPercent] = useState(order?.discountPercent || 0);
@@ -33,6 +36,8 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
   const [discountPopupScreen, setDiscountPopupScreen] = useState<'menu' | 'percentage' | 'flat'>('menu');
   const [finalTotal, setFinalTotal] = useState(total);
 
+  // Store original price in state, and always use it for discount calculations
+  const [originalPrice, setOriginalPrice] = useState(total);
 
   useEffect(() => {
     setDiscountPercent(order?.discountPercent || 0);
@@ -41,12 +46,22 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
 
 
   useEffect(() => {
-    const paymentTotal = total - (total * (discountPercent / 100)) - discountAmount;
+    // When the order or total changes, update the original price ONLY if this order has no discount
+    if ((order?.discountPercent ?? 0) === 0 && (order?.discountAmount ?? 0) === 0) {
+      setOriginalPrice(total);
+    } else if (order?.originalPrice) {
+      setOriginalPrice(order.originalPrice);
+    }
+  }, [total, order?._id, order?.originalPrice, order?.discountPercent, order?.discountAmount]);
+
+  useEffect(() => {
+    // Always calculate discounts from originalPrice
+    const paymentTotal = originalPrice - (originalPrice * (discountPercent / 100)) - discountAmount;
     const final = paymentTotal < 0 ? 0 : paymentTotal;
     setFinalTotal(final);
-    const saved = total - final;
+    const saved = originalPrice - final;
     setSavedAmount(saved);
-  }, [total, discountPercent, discountAmount]);
+  }, [originalPrice, discountPercent, discountAmount]);
 
 
   // When applying a percent discount, update DB
@@ -54,8 +69,8 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
     setDiscountPercent(percentage);
     setOpenDiscountPopup(false);
     if (onUpdateOrder && orderId) {
-      const discountedTotal = total - (total * (percentage / 100)) - discountAmount;
-      onUpdateOrder({ discountPercent: percentage, discountAmount, totalPrice: parseFloat(discountedTotal.toFixed(2)) });
+      const discountedTotal = originalPrice - (originalPrice * (percentage / 100)) - discountAmount;
+      onUpdateOrder({ discountPercent: percentage, discountAmount, totalPrice: parseFloat(discountedTotal.toFixed(2)), originalPrice });
     }
   };
 
@@ -64,8 +79,8 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
     setDiscountAmount(amount);
     setOpenDiscountPopup(false);
     if (onUpdateOrder && orderId) {
-      const discountedTotal = total - (total * (discountPercent / 100)) - amount;
-      onUpdateOrder({ discountPercent, discountAmount: amount, totalPrice: parseFloat(discountedTotal.toFixed(2)) });
+      const discountedTotal = originalPrice - (originalPrice * (discountPercent / 100)) - amount;
+      onUpdateOrder({ discountPercent, discountAmount: amount, totalPrice: parseFloat(discountedTotal.toFixed(2)), originalPrice });
     }
   };
 
@@ -73,7 +88,7 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
   const handleDiscountPercent2Change = (percentage: React.ChangeEvent<HTMLInputElement>) => {
     const discountVal = parseInt(percentage.target.value, 10);
     if (!isNaN(discountVal) && discountVal >= 1 && discountVal <= 100) {
-      setDiscountPercent2(discountVal);
+      setDiscountPercent2(discountVal.toString());
     } else {
       setDiscountPercent2('');
     }
