@@ -6,7 +6,7 @@ type AllergenFilterProps = {
   selectedAllergen: string[];
 };
 
-export const AllergenFilter = ({ 
+export const AllergenFilter = ({
     items,
     onAllergenSelect,
     selectedAllergen,
@@ -54,7 +54,7 @@ export const AllergenFilter = ({
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="bg-gray-200 text-gray-700 hover:bg-gray-300 font-bold py-2 px-4 rounded-full"
+        className="bg-gray-200 text-gray-700 hover:bg-gray-300 font-semibold py-2 px-4 rounded-full text-sm"
       >
         Allergens
       </button>
@@ -63,7 +63,7 @@ export const AllergenFilter = ({
         <div className="absolute mt-2 w-56 bg-white border rounded-lg shadow-lg z-20 p-4">
           <div className="flex justify-between items-center mb-2">
             <span className="font-semibold text-sm">Allergens</span>
-            <button onClick={() => setShowDropdown(false)} className="text-gray-500 text-sm">×</button> 
+            <button onClick={() => setShowDropdown(false)} className="text-gray-500 text-sm">×</button>
           </div>
           <ul className="max-h-48 overflow-y-auto">
             {allAllergens.length > 0 ? (
