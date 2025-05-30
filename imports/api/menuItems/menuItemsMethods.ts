@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { check, Match } from "meteor/check";
 import { MenuItem, MenuItemsCollection } from "./MenuItemsCollection";
+import { ItemCategoriesCollection } from "./ItemCategoriesCollection";
 
 Meteor.methods({
   async 'menuItems.insert'(item: Omit<MenuItem, '_id'>) {
@@ -46,23 +47,23 @@ Meteor.methods({
 
   async 'menuItems.delete'(itemName: string) {
     check(itemName, String);
-    
+
     if (!itemName) {
       throw new Meteor.Error('invalid-name', 'Item name is required');
     }
-    
+
     const result = await MenuItemsCollection.removeAsync({ name: itemName });
     if (result === 0) {
       throw new Meteor.Error('not-found', 'Item not found');
     }
-    
+
     return result;
   },
 
   async 'menuItems.update'(itemName: string, updatedFields: Partial<Omit<MenuItem, '_id'>>) {
     check(itemName, String);
     check(updatedFields, Object);
-    
+
     if (!itemName || !updatedFields) {
       throw new Meteor.Error('invalid-arguments', 'Item name and updated fields are required');
     }
@@ -83,7 +84,7 @@ Meteor.methods({
     };
 
     const result = await MenuItemsCollection.updateAsync(
-      { name: itemName }, 
+      { name: itemName },
       { $set: fieldsWithTimestamp }
     );
 
@@ -101,7 +102,7 @@ Meteor.methods({
   async 'menuItems.updateQuantity'(itemId: string, change: number) {
     check(itemId, String);
     check(change, Number);
-    
+
     if (!itemId || typeof change !== 'number') {
       throw new Meteor.Error('invalid-arguments', 'Item ID and change number are required');
     }
@@ -113,7 +114,7 @@ Meteor.methods({
 
     const newQuantity = Math.max(0, item.quantity + change);
     const result = await MenuItemsCollection.updateAsync(itemId, {
-      $set: { 
+      $set: {
         quantity: newQuantity,
         updatedAt: new Date()
       }
@@ -123,21 +124,33 @@ Meteor.methods({
   },
 
   // Additional helper methods using your interface
+  /*
   async 'menuItems.getByCategory'(categories: string[]) {
     check(categories, [String]);
-    return MenuItemsCollection.find({ 
-      category: { $in: categories } 
+    return MenuItemsCollection.find({
+      category: { $in: categories }
     }).fetch();
-  },
+  },*/
+  async 'menuItems.getByCategory'(categoryNames) {
+    check(categoryNames, [String]);
 
-  async 'menuItems.getByName'(name: string) {
-    check(name, String);
-    return await MenuItemsCollection.findOneAsync({ name });
+    // Find categories that match the provided names
+    const categories = ItemCategoriesCollection.find({
+      name: { $in: categoryNames }
+    }).fetch();
+
+    // Extract the names from found categories just to be safe
+    const validCategoryNames = categories.map(cat => cat.name);
+
+    // Query menu items that have category names in validCategoryNames
+    return MenuItemsCollection.find({
+      category: { $in: validCategoryNames }
+    }).fetch();
   },
 
   async 'menuItems.toggleAvailability'(itemName: string) {
     check(itemName, String);
-    
+
     const item = await MenuItemsCollection.findOneAsync({ name: itemName });
     if (!item) {
       throw new Meteor.Error('not-found', 'Item not found');
@@ -145,8 +158,8 @@ Meteor.methods({
 
     const result = await MenuItemsCollection.updateAsync(
       { name: itemName },
-      { 
-        $set: { 
+      {
+        $set: {
           available: !item.available,
           updatedAt: new Date()
         }
@@ -162,8 +175,8 @@ Meteor.methods({
 
   async 'menuItems.searchByIngredient'(ingredient: string) {
     check(ingredient, String);
-    return MenuItemsCollection.find({ 
-      ingredients: { $regex: ingredient, $options: 'i' } 
+    return MenuItemsCollection.find({
+      ingredients: { $regex: ingredient, $options: 'i' }
     }).fetch();
   }
 });

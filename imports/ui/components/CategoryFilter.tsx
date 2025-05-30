@@ -1,4 +1,6 @@
- import React, { useState } from "react";
+ import React, { useState, useEffect } from "react";
+ import { Meteor } from "meteor/meteor";
+ import { ItemCategory } from "/imports/api/menuItems/ItemCategoriesCollection";
 
 export const CategoryFilter = ({
   onCategorySelect,
@@ -6,10 +8,22 @@ export const CategoryFilter = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [isOpen, setIsOpen] = useState(false);
-  const categories = ['All', 'Food', 'Drink'];
+  //const categories = ['All', 'Food', 'Drink'];
+  const [categories, setCategories] = useState(['All']);
+
+  useEffect(() => {
+    Meteor.call('itemCategories.getAll', (err: Meteor.Error | null, result?: ItemCategory[]) => {
+      if (!err && result) {
+        // Add 'All' at the beginning for the option to select all
+        setCategories(['All', ...result.map((cat) => cat.name)]);
+      } else if (err) {
+        console.error('Error fetching categories:', err);
+      }
+    });
+  }, []);
 
   const handleCategoryChange = (category) => {
-    const newCategory = category === "None" ? "" : category;
+    const newCategory = category === "All" ? "" : category;
     setSelectedCategory(newCategory);
     onCategorySelect(newCategory);
     setIsOpen(false);

@@ -30,6 +30,17 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     const [showConfirmation, setShowConfirmation ] = useState(false);
     const [confirm, setConfirm] = useState<"cancel" | "save" | null>(null);
 
+    useEffect(() => {
+        // Fetch categories dynamically from server
+        Meteor.call("itemCategories.getAll", (err: Meteor.Error | null, result?: { name: string }[]) => {
+          if (!err && result) {
+            // Map item categories collection documents to array of strings for category names
+            setCategories(result.map((cat) => cat.name));
+          } else if (err) {
+            console.error("Failed to load categories", err);
+          }
+        });
+    }, []);
 
     useEffect(() => {
     if (item) {
@@ -37,7 +48,14 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
         setPrice(item.price);
         setAvailable(item.available);
         setIngredients(item.ingredients || []);
-        setCategories(item.category || []);
+        //setCategories(item.category || []);
+        if (Array.isArray(item.category)) {
+            setCategories(item.category.map(cat => typeof cat === "string" ? cat : cat.name));
+          } else if (typeof item.category === "string") {
+            setCategories([item.category]);
+          } else {
+            setCategories([]);
+          }
         setAllergens(item.allergens || []);
         setDiscount(item.discount || 0);
     }
@@ -98,7 +116,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200 
+                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200
                 dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white dark:focus:ring-purple-400 dark:focus:border-purple-400"
                 required
                 />
@@ -116,7 +134,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 setPrice(isNaN(val) ? 0 : val);
                 }}
                 onBlur={() => setPrice(parseFloat(price.toFixed(2)))}
-                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200 
+                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200
                 dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white dark:focus:ring-purple-400 dark:focus:border-purple-400"
                 required
             />
@@ -134,7 +152,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 const val = parseInt(e.target.value);
                 setDiscount(isNaN(val) ? 0 : Math.min(100, val));
                 }}
-                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200 
+                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200
                 dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white dark:focus:ring-purple-400 dark:focus:border-purple-400"
             />
             </div>
@@ -159,7 +177,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             <CategoryDropdown
                 selectedCategories={categories}
                 onChange={setCategories}
-                initialCategories = {["Food", "Drink", "Dessert"]}
+                initialCategories={[]}
             />
 
             <AllergenDropdown

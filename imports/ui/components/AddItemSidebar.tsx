@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { MenuItem } from './MenuItemsCollection'; // Adjust import path as needed
+import { AddCategoryModal } from "../components/AddCategoryButton";
 
 
 // Import possible images from mockData
@@ -444,7 +445,8 @@ const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const categories = ['Food', 'Drinks', 'All'];
+  //const categories = ['Food', 'Drinks', 'All'];
+  const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
 
   const handleAddItemSuccess = () => {
     // You can add any additional logic here, like refreshing a list
@@ -453,7 +455,7 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-        <div className="w-32 p-3 min-h-screen mt-1">
+        <div className="w-32 p-3 min-h-screen mt-1 flex flex-col space-y-2">
         {/* Add Item Button */}
         <button
           onClick={() => setIsModalOpen(true)}
@@ -461,6 +463,19 @@ const Sidebar: React.FC = () => {
         >
           Add Item
         </button>
+
+
+      <div className="relative">
+        <button
+          onClick={() => setCategoryModalOpen(true)}
+          className="w-full py-2.5 px-4 rounded-lg mb-4 font-semibold text-sm transition-all hover:opacity-90 hover:shadow-md bg-press-up-light-purple text-grey-700"
+        >
+          Add Category
+        </button>
+        <AddCategoryModal
+          isOpen={isCategoryModalOpen}
+          onClose={() => setCategoryModalOpen(false)}
+        />
       </div>
 
       {/* Add Item Modal */}
@@ -469,6 +484,7 @@ const Sidebar: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleAddItemSuccess}
       />
+      </div>
     </>
   );
 };

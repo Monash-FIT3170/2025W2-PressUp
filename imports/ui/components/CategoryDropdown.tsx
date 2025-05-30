@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useRef } from 'react';
+import { Meteor } from "meteor/meteor";
 
 interface CategoryProps {
     selectedCategories: string[];
@@ -15,6 +16,16 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
     const containerRef = useRef<HTMLDivElement>(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [ searchCategory, setSearchCategory ] = useState("");
+    useEffect(() => {
+        Meteor.call("itemCategories.getAll", (err: Meteor.Error, result?: { name: string }[]) => {
+          if (!err && result) {
+            const categoryNames = result.map((cat: { name: string }) => cat.name);
+            setAllcategories(categoryNames);
+          } else if (err) {
+            console.error("Failed to load categories:", err);
+          }
+        });
+      }, []);
 
     const updatecategories = (category: string) => {
         if (selectedCategories.includes(category)) {
@@ -66,9 +77,9 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
             />
             { showDropdown && (
                 // displaying the categories within dropdown
-            <ul 
+            <ul
             style={{ backgroundColor: "var(--color-press-up-light-purple)" }}
-            className="absolute z-50 border border-press-up-purple text-white text-sm rounded-lg p-2.5 max-h-48 overflow-y-auto w-full">                
+            className="absolute z-50 border border-press-up-purple text-white text-sm rounded-lg p-2.5 max-h-48 overflow-y-auto w-full">
             {searchCategoryList.length > 0 ? (
                     searchCategoryList.map((category) => (
                         <li key={category} className="flex p-2 hover:bg-press-up-purple-200 rounded justify-between items-center">
@@ -97,21 +108,44 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
                     // for adding a category, if not found within search
                     <li className="p-2 text-sm text-press-up-purple-500">
                         <button
-                            type="button"
-                            onClick={() => {
+                              type="button"
+                              onClick={async () => {
                                 const trimInput = searchCategory.trim();
-                                if (
-                                    trimInput !== "" && !allCategories.includes(trimInput)
-                                ) {
-                                    const newCategory = trimInput.charAt(0).toUpperCase() + trimInput.slice(1);
-                                    setAllcategories((previous) => [...previous, newCategory]);
-                                    onChange([...selectedCategories, newCategory]);
-                                    setSearchCategory("");
+                                if (!trimInput) return;
+
+                                const capitalized = trimInput.charAt(0).toUpperCase() + trimInput.slice(1);
+
+                                try {
+                                  await new Promise<void>((resolve, reject) => {
+                                    Meteor.call("itemCategories.add", capitalized, (err: Meteor.Error) => {
+                                      if (err) {
+                                        if (err.error === "duplicate-category") {
+                                          // Category exists — still select it
+                                          if (!selectedCategories.includes(capitalized)) {
+                                            onChange([...selectedCategories, capitalized]);
+                                          }
+                                          resolve();
+                                        } else {
+                                          console.error("Failed to add category:", err.reason);
+                                          reject(err);
+                                        }
+                                      } else {
+                                        // Successfully added
+                                        setAllcategories((prev) => [...prev, capitalized]);
+                                        onChange([...selectedCategories, capitalized]);
+                                        resolve();
+                                      }
+                                    });
+                                  });
+
+                                  setSearchCategory(""); // Clear input only if success
+                                } catch (err) {
+                                  // Optional: UI feedback
                                 }
-                            }}
-                            className="text-press-up-purple hover:underline"
-                        >
-                        Add "{searchCategory}"
+                              }}
+                              className="text-press-up-purple hover:underline"
+                            >
+                              Add "{searchCategory}"
                         </button>
                     </li>
                 )}

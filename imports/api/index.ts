@@ -3,6 +3,7 @@ export { Supplier, SuppliersCollection } from "./suppliers/SuppliersCollection";
 
 // MenuItems
 export { MenuItem, MenuItemsCollection } from "./menuItems/MenuItemsCollection";
+export { ItemCategory, ItemCategoriesCollection } from "./menuItems/ItemCategoriesCollection";
 
 // StockItems
 export {
