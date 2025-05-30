@@ -118,7 +118,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess 
       const timestamp = Date.now();
       const extension = file.name.split('.').pop();
       const newFileName = `custom_${timestamp}.${extension}`;
-      
+
       // In a real app, you'd upload to a service like Cloudinary or AWS S3
       // For now, we'll store the custom filename
       setFormData({ ...formData, image: `/menu_items/${newFileName}` });
@@ -137,7 +137,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess 
         <h2 className="text-xl font-bold mb-4" style={{ color: '#a43375' }}>
           Add New Menu Item
         </h2>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <div>
@@ -299,7 +299,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess 
             <label className="block text-sm font-medium mb-2" style={{ color: '#a43375' }}>
               Image
             </label>
-            
+
             {/* Image Type Toggle */}
             <div className="flex mb-3 bg-gray-200 rounded-lg p-1">
               <button
@@ -453,50 +453,14 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-      <div className="w-32 bg-gray-50 p-3 border-r border-gray-200 min-h-screen">
+        <div className="w-32 p-3 min-h-screen mt-1">
         {/* Add Item Button */}
-        <button 
+        <button
           onClick={() => setIsModalOpen(true)}
-          className="w-full py-2.5 px-4 rounded-lg mb-4 font-medium text-sm transition-all hover:opacity-90 hover:shadow-md"
-          style={{ backgroundColor: '#a43375', color: 'white' }}
+          className="w-full py-2.5 px-4 rounded-lg mb-4 font-semibold text-sm transition-all hover:opacity-90 hover:shadow-md bg-press-up-light-purple text-grey-700"
         >
           Add Item
         </button>
-
-        {/* Category Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="w-full py-2.5 px-4 rounded-lg flex items-center justify-center font-medium text-sm transition-all hover:opacity-90"
-            style={{ backgroundColor: '#a43375', color: 'white' }}
-          >
-            {category}
-          </button>
-
-          {/* Dropdown Options */}
-          {isOpen && (
-            <div className="absolute top-full left-0 w-full mt-1 rounded-lg shadow-lg overflow-hidden z-10">
-              {categories.map((option, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setCategory(option);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full text-left py-2.5 px-4 transition-all ${
-                    category === option ? 'opacity-100' : 'opacity-90'
-                  }`}
-                  style={{ 
-                    backgroundColor: category === option ? '#f7aed9' : 'white',
-                    color: '#a43375'
-                  }}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Add Item Modal */}

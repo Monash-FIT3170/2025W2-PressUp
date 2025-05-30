@@ -93,9 +93,9 @@ export const Menu = () => {
         <div className="mb-4 space-y-2">
           {/* Search Bar */}
           <div className="w-full md-6">
-            <SearchBar 
-              onSearch={setSearchTerm} 
-              initialSearchTerm={searchTerm} 
+            <SearchBar
+              onSearch={setSearchTerm}
+              initialSearchTerm={searchTerm}
             />
           </div>
 
@@ -116,14 +116,14 @@ export const Menu = () => {
             ))}
 
           {/* Allergen Filter */}
-            <AllergenFilter 
+            <AllergenFilter
               items={posItems}
               selectedAllergen={selectedAllergens}
-              onAllergenSelect={setSelectedAllergens}               
+              onAllergenSelect={setSelectedAllergens}
             />
           </div>
         </div>
-        
+
         {/*Item cards */}
         <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {[...filteredItems]
@@ -160,7 +160,7 @@ export const Menu = () => {
       </div>
 
       {/* Sidebar positioned on the right */}
-      <Sidebar/> 
+      <Sidebar/>
     </div>
   );
 };
