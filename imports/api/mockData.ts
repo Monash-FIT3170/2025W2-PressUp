@@ -10,7 +10,7 @@ import {
   OrderStatus,
 } from "./orders/OrdersCollection";
 
-const possibleImages = [
+export const possibleImages = [
   "/menu_items/cappuccino.png",
   "/menu_items/cookie.png",
   "/menu_items/croissant.png",
@@ -36,16 +36,16 @@ export const mockDataGenerator = async ({
   orderCount?: number;
 }) => {
   supplierCount = supplierCount || 10;
-  menuItemCount = menuItemCount || 10;
+  menuItemCount = menuItemCount || 20;
   stockItemCount = stockItemCount || 50;
   transactionCount = transactionCount || 5;
   orderCount = orderCount || 5;
 
-  await SuppliersCollection.dropCollectionAsync();
-  await MenuItemsCollection.dropCollectionAsync();
-  await StockItemsCollection.dropCollectionAsync();
-  await TransactionsCollection.dropCollectionAsync();
-  await OrdersCollection.dropCollectionAsync();
+  if (await SuppliersCollection.countDocuments() > 0) await SuppliersCollection.dropCollectionAsync();
+  if (await MenuItemsCollection.countDocuments() > 0) await MenuItemsCollection.dropCollectionAsync();
+  if (await StockItemsCollection.countDocuments() > 0) await StockItemsCollection.dropCollectionAsync();
+  if (await TransactionsCollection.countDocuments() > 0) await TransactionsCollection.dropCollectionAsync();
+  if (await OrdersCollection.countDocuments() > 0) await OrdersCollection.dropCollectionAsync();
 
   if ((await SuppliersCollection.countDocuments()) == 0)
     for (let i = 0; i < supplierCount; ++i)
@@ -106,47 +106,29 @@ export const mockDataGenerator = async ({
       });
     }
 
-  if ((await OrdersCollection.countDocuments()) == 0)
-    for (let i = 0; i < orderCount; ++i) {
-      const allMenuItems = await MenuItemsCollection.find().fetch();
-      const numberOfItems = faker.number.int({ min: 1, max: 5 });
-      const selectedItems = faker.helpers.arrayElements(
-        allMenuItems,
-        numberOfItems
-      );
-
-      const orderItems: OrderMenuItem[] = selectedItems.map((item) => {
-        const quantity = faker.number.int({ min: 1, max: 3 });
-        return {
-          name: item.name,
-          quantity: quantity,
-          ingredients: item.ingredients,
-          available: item.available,
-          price: item.price,
-          category: item.category,
-          image: item.image,
-        };
-      });
-
-      const totalPrice = orderItems.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-      );
-
-      await OrdersCollection.insertAsync({
-        orderNo: faker.number.int({ min: 1000, max: 9999 }),
-        tableNo: faker.number.int({ min: 1, max: 20 }),
-        menuItems: orderItems,
-        totalPrice: parseFloat(totalPrice.toFixed(2)),
-        paid: faker.datatype.boolean(),
-        orderStatus: faker.helpers.arrayElement(
-          Object.values(OrderStatus)
-        ) as OrderStatus,
-        createdAt: faker.date.recent({ days: 7 }),
-      });
+    if ((await OrdersCollection.countDocuments()) == 0) {
+      const usedTableNumbers = new Set<number>();
+      for (let i = 0; i < orderCount; ++i) {
+        let tableNo;
+        // Ensure unique table numbers
+        do {
+          tableNo = i+1;
+        } while (usedTableNumbers.has(tableNo));
+        usedTableNumbers.add(tableNo);
+        
+        await OrdersCollection.insertAsync({
+          orderNo: faker.number.int({ min: 1000, max: 9999 }),
+          tableNo,
+          menuItems: [],
+          totalPrice: 0,
+          paid: false,
+          orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
+          createdAt: faker.date.recent({ days: 7 }),
+        });
+      }
     }
-
-  if ((await TransactionsCollection.countDocuments()) == 0) {
+    
+    if ((await TransactionsCollection.countDocuments()) == 0) {
     for (let i = 0; i < transactionCount; ++i) {
       const total = await OrdersCollection.rawCollection().countDocuments();
 
