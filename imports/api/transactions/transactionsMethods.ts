@@ -1,10 +1,21 @@
 import { Meteor } from "meteor/meteor";
 import { Transaction, TransactionsCollection } from "./TransactionsCollection";
 import { Mongo } from "meteor/mongo";
+import { Order, OrdersCollection } from "../orders/OrdersCollection";
 
 Meteor.methods({
-  'transactions.insert'(transaction: Transaction) {
-    TransactionsCollection.insertAsync(transaction);
+  'transactions.insert'(orderId : string) {
+    console.log(orderId)
+    if (!orderId) {
+      throw new Meteor.Error('invalid-ID', 'Order ID is required');
+    }
+    const order : Order = OrdersCollection.find({_id: orderId,}).fetch()[0];
+    console.log(order)
+    TransactionsCollection.insertAsync({
+        order: order,
+        // discount: order.discountAmount,
+        paidAt: new Date(),
+      });
   },
 
   'transactions.delete'(transactionID: Mongo.ObjectID) {

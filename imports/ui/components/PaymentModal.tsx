@@ -1,10 +1,19 @@
+import { Meteor } from "meteor/meteor";
 import { useState } from "react";
 import { Link } from "react-router";
 
-export const PaymentModal = () => {
+interface PaymentModalProps {
+  orderId: string,
+}
+
+export const PaymentModal = ({orderId} : PaymentModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
+
+  const handleInsertTransaction = (orderId : string) => {
+    Meteor.call("transactions.insert", orderId);
+  }
 
   return (
     <div>
@@ -43,7 +52,7 @@ export const PaymentModal = () => {
             {/* Linke to receipt page */}
             <Link to="/receipt">
               <button
-                onClick={closeModal}
+                onClick={()=>{closeModal();handleInsertTransaction(orderId)}}
                 className="px-4 py-2 bg-press-up-purple text-white font-semibold rounded-lg"
               >
                 Confirm

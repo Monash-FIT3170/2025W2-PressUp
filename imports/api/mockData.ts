@@ -128,20 +128,20 @@ export const mockDataGenerator = async ({
       }
     }
     
-    if ((await TransactionsCollection.countDocuments()) == 0) {
-    for (let i = 0; i < transactionCount; ++i) {
-      const total = await OrdersCollection.rawCollection().countDocuments();
+  //   if ((await TransactionsCollection.countDocuments()) == 0) {
+  //   for (let i = 0; i < transactionCount; ++i) {
+  //     const total = await OrdersCollection.rawCollection().countDocuments();
 
-      if (total === 0) throw new Error("No orders in the collection");
-      const randomOrder = await OrdersCollection.rawCollection().find().skip(i).limit(1).next() as unknown as Order;
+  //     if (total === 0) throw new Error("No orders in the collection");
+  //     const randomOrder = await OrdersCollection.rawCollection().find().skip(i).limit(1).next() as unknown as Order;
 
-      if (!randomOrder) throw new Error("Failed to fetch random order");
+  //     if (!randomOrder) throw new Error("Failed to fetch random order");
 
-      await TransactionsCollection.insertAsync({
-        order: randomOrder,
-        discount: faker.number.int({ min: 0, max: randomOrder.totalPrice }),
-        paidAt: new Date(),
-      });
-    }
-  }
+  //     await TransactionsCollection.insertAsync({
+  //       order: randomOrder,
+  //       // discount: faker.number.int({ min: 0, max: randomOrder.totalPrice }),
+  //       paidAt: new Date(),
+  //     });
+  //   }
+  // }
 };

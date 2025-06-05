@@ -4,7 +4,7 @@ import { Order } from "../orders/OrdersCollection";
 
 export interface Transaction extends DBEntry {
   order: Order;
-  discount: number;
+  // discount: number;
   paidAt: Date;
 }
 

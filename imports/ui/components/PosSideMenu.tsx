@@ -1,6 +1,6 @@
 import React , { useState, useEffect } from "react";
 import { MenuItem } from "/imports/api";
-import { PaymentModal } from "./PaymentModal";
+import { PaymentModal } from "./PaymentModal.tsx";
 import { Mongo } from "meteor/mongo";
 import { useTracker } from "meteor/react-meteor-data";
 import { Order, OrdersCollection } from '/imports/api';
@@ -13,7 +13,7 @@ interface PosSideMenuProps {
   tableNo: number;
   items: MenuItem[];
   total: number;
-  orderId?: string;
+  orderId: string;
   onIncrease: (itemId: Mongo.ObjectID) => void;
   onDecrease: (itemId: Mongo.ObjectID) => void;
   onDelete: (itemId: Mongo.ObjectID) => void; 
@@ -337,7 +337,9 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
         )}
         
         {/* Pay button */}
-        <PaymentModal />
+        {order && (
+          <PaymentModal orderId={orderId}></PaymentModal>
+        )}
       </div>
     </div>
   );

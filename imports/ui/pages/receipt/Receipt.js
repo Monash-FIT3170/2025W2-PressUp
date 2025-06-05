@@ -8,7 +8,7 @@ export const ReceiptPage = () => {
   const isLoadingTransactions = useSubscribe("transactions");
   const transaction = useTracker(() => {
     const allTransactions = TransactionsCollection.find().fetch();
-    return allTransactions[Math.floor(Math.random() * allTransactions.length)];
+    return allTransactions[0];
   }, []);
 
   if (isLoadingTransactions() || !transaction) {
