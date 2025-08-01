@@ -11,7 +11,7 @@ import { EditItemModal } from "../../components/EditItemModal";
 import { SearchBar } from "../../components/SearchBar";
 import { AllergenFilter } from "../../components/AllergenFilter";
 import { AddCategoryModal } from "../../components/AddCategoryButton";
-import { ItemCategory } from "/imports/api/menuItems/ItemCategoriesCollection";
+import { ItemCategoriesCollection, ItemCategory } from "/imports/api/menuItems/ItemCategoriesCollection";
 
 export const Menu = () => {
   // Set title
@@ -53,7 +53,7 @@ export const Menu = () => {
         console.error("Failed to fetch categories:", err);
       }
     });
-  }, []);
+  }, [allCategories]);
 
   // Allergen filter state
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
