@@ -5,5 +5,11 @@
         "clientStorage": "session"
       }
     }
+  },
+  "private": {
+    "defaultUser": {
+      "username": "admin",
+      "password": "changeme"
+    }
   }
 }
