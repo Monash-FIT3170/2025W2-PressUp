@@ -11,24 +11,19 @@ export function requireLoginMethod<Args extends any[], R>(
   };
 }
 
+interface PublishContext {
+  userId?: string | null;
+  ready: () => void;
+}
+
 export function requireLoginPublish<Args extends any[]>(
-  name: string,
-  fn: (
-    this: { userId?: string | null; ready: () => void },
-    ...args: Args
-  ) => any,
-) {
-  Meteor.publish(
-    name,
-    function (
-      this: { userId?: string | null; ready: () => void },
-      ...args: Args
-    ) {
-      if (!this.userId) {
-        this.ready();
-        return;
-      }
-      return fn.apply(this, args);
-    },
-  );
+  fn: (this: PublishContext & { userId: string }, ...args: Args) => any,
+): (this: PublishContext, ...args: Args) => any {
+  return function (this: PublishContext, ...args: Args) {
+    if (!this.userId) {
+      this.ready();
+      return;
+    }
+    return fn.apply(this as PublishContext & { userId: string }, args);
+  };
 }
