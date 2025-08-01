@@ -9,29 +9,29 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
-    "@babel/core": "^7.26.10",
-    "@babel/plugin-transform-react-jsx": "^7.25.9",
-    "@babel/runtime": "^7.27.1",
-    "@faker-js/faker": "^9.8.0",
-    "@tailwindcss/postcss": "^4.1.4",
+    "@babel/core": "^7.28.0",
+    "@babel/plugin-transform-react-jsx": "^7.27.1",
+    "@babel/runtime": "^7.28.2",
+    "@faker-js/faker": "^9.9.0",
+    "@tailwindcss/postcss": "^4.1.11",
     "imports": "^1.0.0",
-    "lucide-react": "^0.510.0",
-    "meteor-node-stubs": "^1.2.5",
-    "postcss": "^8.5.3",
+    "lucide-react": "^0.535.0",
+    "meteor-node-stubs": "^1.2.22",
+    "postcss": "^8.5.6",
     "postcss-load-config": "^6.0.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router": "^7.5.0",
-    "react-to-print": "^3.1.0",
-    "tailwindcss": "^4.1.4"
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router": "^7.7.1",
+    "react-to-print": "^3.1.1",
+    "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
-    "@types/mocha": "^8.2.3",
-    "@types/node": "^18.13.0",
-    "@types/react": "^18.0.26",
-    "@types/react-dom": "^18.0.10",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.1.0",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
     "patch-package": "^8.0.0",
-    "typescript": "^4.9.4"
+    "typescript": "^5.9.2"
   },
   "meteor": {
     "mainModule": {
