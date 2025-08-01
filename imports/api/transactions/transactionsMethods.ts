@@ -1,31 +1,30 @@
 import { Meteor } from "meteor/meteor";
 import { Transaction, TransactionsCollection } from "./TransactionsCollection";
 import { Mongo } from "meteor/mongo";
+import { requireLoginMethod } from "../accounts/wrappers";
 
 Meteor.methods({
-  'transactions.insert'(transaction: Transaction) {
-    TransactionsCollection.insertAsync(transaction);
-  },
+  'transactions.insert': requireLoginMethod(async function (transaction: Transaction) {
+    await TransactionsCollection.insertAsync(transaction);
+  }),
 
-  'transactions.delete'(transactionID: Mongo.ObjectID) {
+  'transactions.delete': requireLoginMethod(async function (transactionID: Mongo.ObjectID) {
     if (!transactionID) {
       throw new Meteor.Error('invalid-ID', 'Transaction ID is required');
     }
-    TransactionsCollection.removeAsync({ id: transactionID });
-  },
+    await TransactionsCollection.removeAsync({ id: transactionID });
+  }),
 
-  'transactions.update'(transactionID: Mongo.ObjectID, updatedFields: Partial<Transaction>) {
+  'transactions.update': requireLoginMethod(async function (transactionID: Mongo.ObjectID, updatedFields: Partial<Transaction>) {
     if (!transactionID || !updatedFields) {
       throw new Meteor.Error('invalid-arguments', 'Transaction ID and updated fields are required');
     }
-    TransactionsCollection.updateAsync({ transactionID: Mongo.ObjectID }, {
+    await TransactionsCollection.updateAsync({ transactionID: Mongo.ObjectID }, {
       $set: updatedFields
     });
-  },
+  }),
 
-  'transactions.getAll'() {
+  'transactions.getAll': requireLoginMethod(async function () {
     return TransactionsCollection.find().fetch();
-  },
-
-  
+  }),
 });
