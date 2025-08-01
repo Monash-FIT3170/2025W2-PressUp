@@ -1,0 +1,9 @@
+{
+  "public": {
+    "packages": {
+      "accounts": {
+        "clientStorage": "session"
+      }
+    }
+  }
+}

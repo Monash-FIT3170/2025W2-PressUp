@@ -2,7 +2,6 @@ import { createBrowserRouter, RouterProvider, Navigate } from "react-router";
 import { RootPage } from "./pages/Root";
 import { StockPage } from "./pages/inventory/Stock";
 import { SuppliersPage } from "./pages/inventory/Suppliers";
-import { InventoryIndex } from "./pages/inventory/Index";
 import { Menu } from "./pages/menuManagement/Menu";
 
 // pos system
@@ -10,8 +9,13 @@ import { MainDisplay } from "./pages/pos/MainDisplay";
 import { PosIndex } from "./pages/pos/Index";
 import { ReceiptIndex } from "./pages/receipt/Index";
 import { ReceiptPage } from "./pages/receipt/Receipt";
+import { LoginPage } from "./pages/Login";
 
 const router = createBrowserRouter([
+  {
+    path: "/login",
+    Component: LoginPage,
+  },
   {
     path: "/",
     Component: RootPage,
