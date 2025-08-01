@@ -1,6 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import { useState } from "react";
-import { Navigate, useLocation } from "react-router";
+import { Navigate, useLocation, useNavigate } from "react-router";
 import { LoginInput } from "../components/interaction/LoginInput";
 import { BigLogo } from "../components/symbols/BigLogo";
 import { Button } from "../components/interaction/Button";
@@ -8,7 +8,9 @@ import { Button } from "../components/interaction/Button";
 export const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
+  const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname ?? "/";
 
@@ -17,6 +19,23 @@ export const LoginPage = () => {
 
   const onSubmitLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    Meteor.loginWithPassword(username, password, (err) => {
+      if (err) {
+        console.error(err);
+        setError("Invalid username or password.");
+      } else {
+        navigate(from, { replace: true });
+      }
+    });
+  };
+
+  const onChangeUsername = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value);
+    if (error) setError(null);
+  };
+  const onChangePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (error) setError(null);
   };
 
   return (
@@ -33,7 +52,7 @@ export const LoginPage = () => {
           <LoginInput
             type="text"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={onChangeUsername}
             placeholder="Username"
             autoComplete="username"
             required
@@ -42,11 +61,17 @@ export const LoginPage = () => {
           <LoginInput
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={onChangePassword}
             placeholder="Password"
             autoComplete="current-password"
             required
           />
+
+          {error && (
+            <div role="alert" className="text-sm text-red-600">
+              {error}
+            </div>
+          )}
 
           <div className="w-1/2">
             <Button type="submit">Log In</Button>
