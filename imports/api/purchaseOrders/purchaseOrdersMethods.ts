@@ -5,9 +5,10 @@ import {
   PurchaseOrdersCollection,
   StockItemLine,
 } from "./PurchaseOrdersCollection";
+import { requireLoginMethod } from "../accounts/wrappers";
 
 Meteor.methods({
-  async "purchaseOrders.new"({ supplierId }: { supplierId: Mongo.ObjectID }) {
+  "purchaseOrders.new": requireLoginMethod(async function ({ supplierId }: { supplierId: Mongo.ObjectID }) {
     const number = await PurchaseOrdersCollection.countDocuments();
     return await PurchaseOrdersCollection.insertAsync({
       supplier: supplierId,
@@ -15,9 +16,9 @@ Meteor.methods({
       stockItems: [],
       date: new Date(),
     });
-  },
+  }),
 
-  async "purchaseOrders.update"({
+  "purchaseOrders.update": requireLoginMethod(async function ({
     id,
     stockItems,
   }: {
@@ -28,5 +29,5 @@ Meteor.methods({
     check(stockItems, Array);
 
     await PurchaseOrdersCollection.updateAsync(id, { $set: { stockItems } });
-  },
+  }),
 });
