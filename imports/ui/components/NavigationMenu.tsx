@@ -10,6 +10,7 @@ import {
 } from "./symbols/navigation/Inventory";
 import { MonitorIcon } from "./symbols/navigation/POS";
 import { CoffeeIcon } from "./symbols/navigation/Coffee";
+import { Clock3, Clock3Icon, ClockIcon, TimerIcon } from "lucide-react";
 
 interface NavigationMenuProps {
   show: boolean;
@@ -56,6 +57,12 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           icon={<CoffeeIcon fill="var(--color-press-up-grey)" />}
           name="Menu Management"
           path="/menuManagement"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        ></NavigationEntry>
+        <NavigationEntry
+          icon={<Clock3Icon />}
+          name="Kitchen Management"
+          path="/kitchenManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         ></NavigationEntry>
       </div>
