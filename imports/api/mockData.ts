@@ -101,14 +101,8 @@ export const mockDataGenerator = async ({
       });
     }
   
-  if ((await TransactionsCollection.countDocuments()) == 0)
-    for (let i = 0; i < transactionCount; ++i)
-      await TransactionsCollection.insertAsync({
-        name: faker.food.dish(),
-        quantity: faker.number.int({ min: 1, max: 5 }),
-        price: faker.number.int({ min: 1, max: 20 }),
-        createdAt: new Date(),
-      });
+  if ((await TransactionsCollection.countDocuments()) == 0) {
+  }
 
     if ((await OrdersCollection.countDocuments()) == 0) {
       const usedTableNumbers = new Set<number>();

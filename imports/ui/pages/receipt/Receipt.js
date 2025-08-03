@@ -1,20 +1,39 @@
 import React from "react";
-import { Meteor } from "meteor/meteor";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
-import { MenuItemsCollection } from "/imports/api/menuItems/MenuItemsCollection";
 import { TransactionsCollection } from "/imports/api/transactions/TransactionsCollection";
 
 export const ReceiptPage = () => {
 
   const isLoadingPosItems = useSubscribe("transactions")
-  const paymentItems = useTracker( () => TransactionsCollection.find().fetch());
+
+    // Get the latest transaction
+  const latestTransaction = useTracker(() =>
+    TransactionsCollection.findOne({}, { sort: { createdAt: -1 } })
+  );
+
+  console.log("Transaction")
+  console.log(latestTransaction)
+
+  // Get the latest order in that transaction
+  const latestOrder = latestTransaction && latestTransaction.orders && latestTransaction.orders.length > 0
+    ? [...latestTransaction.orders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+    : null;
+
+    console.log("Latest Order")
+    console.log(latestOrder)
+
+  const menuItems = latestOrder ? latestOrder.menuItems : [];
 
   const order = {
-    orderNumber: Math.floor(100000 + Math.random() * 900000).toString(), // Generate random order number
-    date: new Date().toLocaleString(), // date of order is current date time
-    menuItems: paymentItems
+    orderNumber: latestOrder?.orderNo || "N/A",
+    date: latestOrder?.createdAt
+      ? new Date(latestOrder.createdAt).toLocaleString()
+      : new Date().toLocaleString(),
+    menuItems,
   };
-  
+
+  console.log("order")
+  console.log(order)
 
   // Calculate total cost
   const getTotal = (menuItems) => {

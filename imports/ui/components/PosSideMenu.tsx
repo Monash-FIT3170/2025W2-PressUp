@@ -337,7 +337,9 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
         )}
         
         {/* Pay button */}
-        <PaymentModal />
+        {order && (
+          <PaymentModal tableNo={selectedTable} order={order} />
+        )}
       </div>
     </div>
   );
