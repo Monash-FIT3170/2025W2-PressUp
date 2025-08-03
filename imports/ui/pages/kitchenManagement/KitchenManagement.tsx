@@ -17,21 +17,21 @@ const INITIAL_ORDERS: Order[] = [
     status: 'NEW_ORDERS',
     tableNo: 1,
     menuItems: ["Pizza", "Pasta"],
-    createdAt: new Date().toLocaleString()
+    createdAt: new Date().toLocaleTimeString().toUpperCase()
   },
   {
     orderNo: 2,
     status: 'IN_PROGRESS',
     tableNo: 2,
     menuItems: ["Burger", "Fries"],
-    createdAt: new Date().toLocaleString()
+    createdAt: new Date().toLocaleTimeString().toUpperCase()
   },
   {
     orderNo: 3,
     status: 'READY',
     tableNo: 3,
     menuItems: ["Salad"],
-    createdAt: new Date().toLocaleString()
+    createdAt: new Date().toLocaleTimeString().toUpperCase()
   },
 ];
 
@@ -68,7 +68,7 @@ export const KitchenManagement = () => {
     <div className="flex flex-1 overflow-auto">
       {/* Main content area */}
       <div className="p-4">
-        <div className="flex gap-8">
+        <div className="flex gap-10">
           <DndContext onDragEnd={handleDragEnd}>
             {COLUMNS.map((column) => {
               return (

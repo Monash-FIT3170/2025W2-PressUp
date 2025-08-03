@@ -21,11 +21,17 @@ export const OrderCard = ({order}: OrderCardProps) => {
       ref={setNodeRef} 
       {...listeners} 
       {...attributes} 
-      className="cursor-grab rounded-lg bg-neutral-700 p-4 shadow-sm hover:shadow-md" 
+      className="cursor-grab rounded-lg bg-white p-4 shadow-sm hover:shadow-md border-press-up-purple border-3" 
       style={style}
     >
-      <h3 className="font-medium text-neutral-100">{order.orderNo}</h3>
-      <p className="mt-2 text-sm text-neutral-400">{order.menuItems.join(", ")}</p>
+      <h3 className="font-medium text-press-up-purple text-xl">Order #{order.orderNo}</h3>
+      <p className="font-bold text-lg  text-press-up-purple">Table {order.tableNo}</p>
+      <p className="text-sm text-press-up-purple">{order.createdAt}</p>
+      <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
+        {order.menuItems.map((item, index) => (
+          <li key={index}>{item}</li>
+        ))}
+      </ul>
     </div>
   );
 };
