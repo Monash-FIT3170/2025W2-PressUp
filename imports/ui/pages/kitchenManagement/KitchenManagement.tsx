@@ -33,6 +33,13 @@ const INITIAL_ORDERS: Order[] = [
     menuItems: ["Salad"],
     createdAt: new Date().toLocaleTimeString().toUpperCase()
   },
+  {
+    orderNo: 4,
+    status: 'READY',
+    tableNo: 4,
+    menuItems: ["Coffee", "Cake"],
+    createdAt: new Date().toLocaleTimeString().toUpperCase()
+  },
 ];
 
 
