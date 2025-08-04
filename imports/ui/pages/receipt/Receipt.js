@@ -7,41 +7,28 @@ export const ReceiptPage = () => {
   const isLoadingPosItems = useSubscribe("transactions")
 
     // Get the latest transaction
-  const latestTransaction = useTracker(() =>
+  const transaction = useTracker(() =>
     TransactionsCollection.findOne({}, { sort: { createdAt: -1 } })
   );
 
   console.log("Transaction")
-  console.log(latestTransaction)
+  console.log(transaction)
 
   // Get the latest order in that transaction
-  const latestOrder = latestTransaction && latestTransaction.orders && latestTransaction.orders.length > 0
-    ? [...latestTransaction.orders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
-    : null;
-
-    console.log("Latest Order")
-    console.log(latestOrder)
-
-  const menuItems = latestOrder ? latestOrder.menuItems : [];
-
-  const order = {
-    orderNumber: latestOrder?.orderNo || "N/A",
-    date: latestOrder?.createdAt
-      ? new Date(latestOrder.createdAt).toLocaleString()
-      : new Date().toLocaleString(),
-    menuItems,
-  };
-
-  console.log("order")
+  const order = transaction ? transaction.orders[transaction.orders.length - 1]: null;
+  
+  console.log("Order")
   console.log(order)
+  
+  const menuItems = order ? order.menuItems : [];
 
-  // Calculate total cost
-  const getTotal = (menuItems) => {
-    return menuItems.reduce(
-      (sum, menuItem) => sum + menuItem.quantity * menuItem.price,
-      0
+  if (!order) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center h-full">
+        <p className="text-gray-500">Loading receipt...</p>
+      </div>
     );
-  };
+  }
 
   return (
     <div className="flex flex-1 flex-col">
@@ -50,9 +37,16 @@ export const ReceiptPage = () => {
 
           {/* Display cafe and receipt details */}
           <h2 className="text-center text-xl font-bold mb-4">Cafe</h2>
-          <p className="mb-2">Order #: {order.orderNumber}</p>
-          <p className="mb-2">Date: {order.date}</p>
-          
+          <div className="flex justify-between mb-2">
+            <p>Order #: {order.orderNo}</p>
+            <p>Table #: {order.tableNo}</p>
+          </div>
+          <p className="mb-2">
+            Date: {order.createdAt
+              ? new Date(order.createdAt).toLocaleString()
+              : new Date().toLocaleString()}
+          </p>
+            
           {/* Horizontal divider */}
           <hr className="my-2" />
 
@@ -76,10 +70,24 @@ export const ReceiptPage = () => {
 
           {/* Horizontal divider */}
           <hr className="my-2" />
-          <div className="flex justify-between text-lg">
+          <div className="flex justify-between">
             <span>Total:</span>
-            <span>${getTotal(order.menuItems).toFixed(2)}</span>
+            <span>${order.originalPrice.toFixed(2)}</span>
           </div>
+          {(order.totalPrice < order.originalPrice) && (
+            <div>
+              <div className="flex justify-between">
+                <span>Discounted Amount:</span>
+                <span>
+                  -${(order.originalPrice - order.totalPrice).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Subtotal:</span>
+                <span>${(order.totalPrice).toFixed(2)}</span>
+              </div>
+            </div>
+          )}
           <p className="text-center mt-4 text-sm text-gray-600">
             Thank you for your order!
           </p>
