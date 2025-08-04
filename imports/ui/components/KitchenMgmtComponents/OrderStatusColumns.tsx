@@ -1,10 +1,10 @@
 import { useDroppable } from "@dnd-kit/core";
-import type { Order, Column as ColumnType } from "./KitchenMgmtTypes";
+import type { UiOrder, Column as ColumnType } from "./KitchenMgmtTypes";
 import { OrderCard } from "./OrderCard";
 
 type ColumnProps = {
   column: ColumnType;
-  orders: Order[];
+  orders: UiOrder[];
 };
 
 export const Column = ({column, orders}: ColumnProps) => {

@@ -1,15 +1,15 @@
 import { useDraggable } from "@dnd-kit/core";
-import type { Order } from "./KitchenMgmtTypes";
+import type { UiOrder } from "./KitchenMgmtTypes";
 
 type OrderCardProps = {
-  order: Order;
+  order: UiOrder;
 };
 
 
 export const OrderCard = ({order}: OrderCardProps) => {
 
   const {attributes, listeners, setNodeRef, transform} = useDraggable({
-    id: order.orderNo,
+    id: order._id, 
   });
 
   const style = {

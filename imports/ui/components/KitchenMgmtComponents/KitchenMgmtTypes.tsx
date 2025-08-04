@@ -1,6 +1,6 @@
 export type OrderStatus = "pending" | "preparing" | "ready" | "served";
 
-export type Order = {
+export type UiOrder = {
   _id: string; 
   orderNo: number;
   status: OrderStatus;

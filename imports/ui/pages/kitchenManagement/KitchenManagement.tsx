@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Meteor } from "meteor/meteor";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 // import Sidebar from "../../components/AddItemSidebar";
-import type { Order, Column as ColumnType, OrderStatus }  from "../../components/KitchenMgmtComponents/KitchenMgmtTypes";
+import type { UiOrder, Column as ColumnType, OrderStatus }  from "../../components/KitchenMgmtComponents/KitchenMgmtTypes";
 import { Column } from "../../components/KitchenMgmtComponents/OrderStatusColumns";
 import { useTracker } from "meteor/react-meteor-data";
 import { OrdersCollection, Order as DBOrder, OrderMenuItem, OrderStatus as DBStatus } from "../../../api/orders/OrdersCollection";
@@ -75,18 +75,18 @@ export const KitchenManagement = () => {
   //     );
   //   };
 
-  const orders = useTracker(() => {
+  const orders: UiOrder[] = useTracker(() => {
     const handler = Meteor.subscribe("orders");
     if (!handler.ready()) return [];
   
     const docs = OrdersCollection.find().fetch();
   
-    return docs.map((doc: DBOrder): Order => ({
-      _id: doc._id as string, // ObjectID를 string으로 변환
+    return docs.map((doc: DBOrder): UiOrder => ({
+      _id: doc._id as string, 
       orderNo: doc.orderNo,
       tableNo: doc.tableNo,
       createdAt: new Date(doc.createdAt).toLocaleTimeString().toUpperCase(),
-      status: doc.orderStatus as OrderStatus, // 변환 없이 직접 사용
+      status: doc.orderStatus as OrderStatus, 
       menuItems: doc.menuItems.map((item: OrderMenuItem) => item.name),
     }));
   }, []);
@@ -98,13 +98,12 @@ export const KitchenManagement = () => {
       const { active, over } = event;
       if (!over) return;
     
-      const orderNo = active.id as number;
+      const orderId = active.id as string; 
       const newStatus = over.id as ColumnType["id"];
     
       const newDbStatus = newStatus;
     
-      // 해당 order를 찾아서 _id 얻기 (중요!)
-      const order = OrdersCollection.findOne({ orderNo });
+      const order = OrdersCollection.findOne({ _id: orderId });
       if (!order) return;
     
       Meteor.call("orders.updateOrder", order._id, {
