@@ -1,6 +1,7 @@
-export type OrderStatus = 'NEW_ORDERS' | 'IN_PROGRESS' | 'READY' | 'COMPLETED';
+export type OrderStatus = "pending" | "preparing" | "ready" | "served";
 
 export type Order = {
+  _id: string; 
   orderNo: number;
   status: OrderStatus;
   tableNo: number;

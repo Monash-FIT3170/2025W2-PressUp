@@ -1,46 +1,51 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { Meteor } from "meteor/meteor";
 import { usePageTitle } from "../../hooks/PageTitleContext";
-import Sidebar from "../../components/AddItemSidebar";
-import type { Order, Column as ColumnType } from "../../components/KitchenMgmtComponents/KitchenMgmtTypes";
+// import Sidebar from "../../components/AddItemSidebar";
+import type { Order, Column as ColumnType, OrderStatus }  from "../../components/KitchenMgmtComponents/KitchenMgmtTypes";
 import { Column } from "../../components/KitchenMgmtComponents/OrderStatusColumns";
+import { useTracker } from "meteor/react-meteor-data";
+import { OrdersCollection, Order as DBOrder, OrderMenuItem, OrderStatus as DBStatus } from "../../../api/orders/OrdersCollection";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 
 const COLUMNS: ColumnType[] = [
-  { id: 'NEW_ORDERS', title: 'New Orders' },
-  { id: 'IN_PROGRESS', title: 'In Progress' },
-  { id: 'READY', title: 'Ready' },
+  { id: 'pending', title: 'Pending' },
+  { id: 'preparing', title: 'Preparing' },
+  { id: 'ready', title: 'Ready' },
+  { id: 'served', title: 'Served' }, 
 ];
 
-const INITIAL_ORDERS: Order[] = [
-  {
-    orderNo: 1,
-    status: 'NEW_ORDERS',
-    tableNo: 1,
-    menuItems: ["Pizza", "Pasta"],
-    createdAt: new Date().toLocaleTimeString().toUpperCase()
-  },
-  {
-    orderNo: 2,
-    status: 'IN_PROGRESS',
-    tableNo: 2,
-    menuItems: ["Burger", "Fries"],
-    createdAt: new Date().toLocaleTimeString().toUpperCase()
-  },
-  {
-    orderNo: 3,
-    status: 'READY',
-    tableNo: 3,
-    menuItems: ["Salad"],
-    createdAt: new Date().toLocaleTimeString().toUpperCase()
-  },
-  {
-    orderNo: 4,
-    status: 'READY',
-    tableNo: 4,
-    menuItems: ["Coffee", "Cake"],
-    createdAt: new Date().toLocaleTimeString().toUpperCase()
-  },
-];
+
+// const INITIAL_ORDERS: Order[] = [
+//   {
+//     orderNo: 1,
+//     status: 'NEW_ORDERS',
+//     tableNo: 1,
+//     menuItems: ["Pizza", "Pasta"],
+//     createdAt: new Date().toLocaleTimeString().toUpperCase()
+//   },
+//   {
+//     orderNo: 2,
+//     status: 'IN_PROGRESS',
+//     tableNo: 2,
+//     menuItems: ["Burger", "Fries"],
+//     createdAt: new Date().toLocaleTimeString().toUpperCase()
+//   },
+//   {
+//     orderNo: 3,
+//     status: 'READY',
+//     tableNo: 3,
+//     menuItems: ["Salad"],
+//     createdAt: new Date().toLocaleTimeString().toUpperCase()
+//   },
+//   {
+//     orderNo: 4,
+//     status: 'READY',
+//     tableNo: 4,
+//     menuItems: ["Coffee", "Cake"],
+//     createdAt: new Date().toLocaleTimeString().toUpperCase()
+//   },
+// ];
 
 
 export const KitchenManagement = () => {
@@ -50,25 +55,63 @@ export const KitchenManagement = () => {
     setPageTitle("Kitchen Management");
   }, [setPageTitle]);
 
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
+  // const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
+
+
+  //   const handleDragEnd = (event: DragEndEvent) => {
+  //     const { active, over } = event;
+
+  //     if (!over) return;
+
+  //     const orderNo = active.id as number;
+  //     const newStatus = over.id as Order['status'];
+
+  //     setOrders(() =>
+  //       orders.map((order) =>
+  //         order.orderNo === orderNo
+  //           ? { ...order, status: newStatus }
+  //           : order
+  //       )
+  //     );
+  //   };
+
+  const orders = useTracker(() => {
+    const handler = Meteor.subscribe("orders");
+    if (!handler.ready()) return [];
+  
+    const docs = OrdersCollection.find().fetch();
+  
+    return docs.map((doc: DBOrder): Order => ({
+      _id: doc._id as string, // ObjectID를 string으로 변환
+      orderNo: doc.orderNo,
+      tableNo: doc.tableNo,
+      createdAt: new Date(doc.createdAt).toLocaleTimeString().toUpperCase(),
+      status: doc.orderStatus as OrderStatus, // 변환 없이 직접 사용
+      menuItems: doc.menuItems.map((item: OrderMenuItem) => item.name),
+    }));
+  }, []);
+
+
 
 
     const handleDragEnd = (event: DragEndEvent) => {
       const { active, over } = event;
-
       if (!over) return;
-
+    
       const orderNo = active.id as number;
-      const newStatus = over.id as Order['status'];
-
-      setOrders(() =>
-        orders.map((order) =>
-          order.orderNo === orderNo
-            ? { ...order, status: newStatus }
-            : order
-        )
-      );
+      const newStatus = over.id as ColumnType["id"];
+    
+      const newDbStatus = newStatus;
+    
+      // 해당 order를 찾아서 _id 얻기 (중요!)
+      const order = OrdersCollection.findOne({ orderNo });
+      if (!order) return;
+    
+      Meteor.call("orders.updateOrder", order._id, {
+        orderStatus: newDbStatus
+      });
     };
+    
 
  
   return (
