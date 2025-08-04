@@ -4,7 +4,7 @@ import { Order } from "../orders/OrdersCollection";
 
 export interface Transaction extends DBEntry {
   tableNo: number;
-  orders: Order[];
+  order: Order;
 }
 
 export const TransactionsCollection = new Mongo.Collection<Transaction>("transactions");

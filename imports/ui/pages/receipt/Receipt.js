@@ -14,8 +14,8 @@ export const ReceiptPage = () => {
   console.log("Transaction")
   console.log(transaction)
 
-  // Get the latest order in that transaction
-  const order = transaction ? transaction.orders[transaction.orders.length - 1]: null;
+  // Get order in that transaction
+  const order = transaction ? transaction.order: null;
   
   console.log("Order")
   console.log(order)
@@ -42,9 +42,7 @@ export const ReceiptPage = () => {
             <p>Table #: {order.tableNo}</p>
           </div>
           <p className="mb-2">
-            Date: {order.createdAt
-              ? new Date(order.createdAt).toLocaleString()
-              : new Date().toLocaleString()}
+            Date: {transaction.createdAt.toLocaleString()}
           </p>
             
           {/* Horizontal divider */}

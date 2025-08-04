@@ -4,13 +4,13 @@ import { Mongo } from "meteor/mongo";
 import { requireLoginMethod } from "../accounts/wrappers";
 
 Meteor.methods({
-  'transactions.insert': requireLoginMethod(async function (tableNo: number, order: Order) {
-    if (!tableNo || !order) {
+  'transactions.insert': requireLoginMethod(async function (tableNo: number, ord: Order) {
+    if (!tableNo || !ord) {
       throw new Meteor.Error('invalid-arguments', 'Valid table number and Order are required');
     }
       await TransactionsCollection.insertAsync({
         tableNo,
-        orders: [order],
+        order: ord,
         createdAt: new Date(),
       } as Transaction);
   }),
