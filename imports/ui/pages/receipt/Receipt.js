@@ -1,9 +1,16 @@
 import React from "react";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { TransactionsCollection } from "/imports/api/transactions/TransactionsCollection";
+import { useNavigate } from "react-router";
 
 export const ReceiptPage = () => {
 
+  const navigate = useNavigate();
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+    
   const isLoadingPosItems = useSubscribe("transactions")
 
     // Get the latest transaction
@@ -32,6 +39,16 @@ export const ReceiptPage = () => {
 
   return (
     <div className="flex flex-1 flex-col">
+      <button
+        onClick={handleGoBack}
+        className="inline-flex items-center space-x-2 p-2 rounded-md hover:bg-gray-300 transition-colors w-auto self-start"
+        type="button"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+        <span>Back</span>
+      </button>
       <div className="flex-1 overflow-auto">
         <div className="max-w-md mx-auto border border-gray-300 p-6 rounded-lg shadow-md bg-white">
 
@@ -68,24 +85,24 @@ export const ReceiptPage = () => {
 
           {/* Horizontal divider */}
           <hr className="my-2" />
-          <div className="flex justify-between">
-            <span>Total:</span>
-            <span>${order.originalPrice.toFixed(2)}</span>
-          </div>
           {(order.totalPrice < order.originalPrice) && (
             <div>
+            <div className="flex justify-between">
+              <span>Subotal:</span>
+              <span>${order.originalPrice.toFixed(2)}</span>
+            </div>
               <div className="flex justify-between">
-                <span>Discounted Amount:</span>
+                <span>Discount:</span>
                 <span>
                   -${(order.originalPrice - order.totalPrice).toFixed(2)}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span>Subtotal:</span>
-                <span>${(order.totalPrice).toFixed(2)}</span>
-              </div>
             </div>
           )}
+          <div className="flex justify-between">
+            <span>Total:</span>
+            <span>${(order.totalPrice).toFixed(2)}</span>
+          </div>
           <p className="text-center mt-4 text-sm text-gray-600">
             Thank you for your order!
           </p>
