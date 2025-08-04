@@ -106,6 +106,26 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
     }
   }
 
+  const removePercentDiscount = () => {
+    setDiscountPercent(0);
+    setDiscountPercent2('');
+    setOpenDiscountPopup(false);
+    if (onUpdateOrder && orderId) {
+      const discountedTotal = originalPrice - discountAmount;
+      onUpdateOrder({ discountPercent: 0, discountAmount, totalPrice: parseFloat(discountedTotal.toFixed(2)), originalPrice });
+    }
+  }
+
+  const removeFlatDiscount = () => {
+    setDiscountAmount(0);
+    setDiscountAmount2('');
+    setOpenDiscountPopup(false);
+    if (onUpdateOrder && orderId) {
+      const discountedTotal = originalPrice - (originalPrice * (discountPercent / 100));
+      onUpdateOrder({ discountPercent, discountAmount: 0, totalPrice: parseFloat(discountedTotal.toFixed(2)), originalPrice });
+    }
+  }
+
  const handleDelete = (itemId: Mongo.ObjectID) => {
     onDelete(itemId); 
   };
@@ -259,17 +279,13 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
                       <div className="flex flex-row w-full justify-between">
                         <button className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xl py-4 my-4 px-6 rounded-full shadow-lg"
                           onClick={() => {
-                            setDiscountPercent(0);
-                            setDiscountPercent2('');
-                            setOpenDiscountPopup(false);
+                            removePercentDiscount();
                           }}>
                           Reset Percentage Discount (%)
                         </button>
                         <button className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xl py-4 my-4 px-8 rounded-full shadow-lg"
                           onClick={() => {
-                            setDiscountAmount(0);
-                            setDiscountAmount2('');
-                            setOpenDiscountPopup(false);
+                            removeFlatDiscount();
                           }}>
                           Reset Flat Discount ($)
                         </button>
