@@ -55,8 +55,8 @@ export const ReceiptPage = () => {
           {/* Display cafe and receipt details */}
           <h2 className="text-center text-xl font-bold mb-4">Cafe</h2>
           <div className="flex justify-between mb-2">
-            <p>Order #: {order.orderNo}</p>
-            <p>Table #: {order.tableNo}</p>
+            <p>Order No: {order.orderNo}</p>
+            <p>Table No: {order.tableNo}</p>
           </div>
           <p className="mb-2">
             Date: {transaction.createdAt.toLocaleString()}
