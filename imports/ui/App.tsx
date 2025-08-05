@@ -6,7 +6,7 @@ import { Menu } from "./pages/menuManagement/Menu";
 
 // pos system
 import { MainDisplay } from "./pages/pos/MainDisplay";
-import { PosIndex } from "./pages/pos/Index";
+import { TablesPage } from "./pages/pos/Tables";
 import { ReceiptIndex } from "./pages/receipt/Index";
 import { ReceiptPage } from "./pages/receipt/Receipt";
 import { LoginPage } from "./pages/Login";
@@ -30,11 +30,10 @@ const router = createBrowserRouter([
       },
       {
         path: "pos",
-        Component: PosIndex,
         children: [
           { index: true, Component: () => <Navigate replace to={"orders"} /> },
           { path: "orders", Component: MainDisplay },
-          { path: "tables", Component: MainDisplay }
+          { path: "tables", Component: TablesPage }
         ],
       },
       {
