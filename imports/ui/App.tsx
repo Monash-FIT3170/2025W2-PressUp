@@ -31,7 +31,11 @@ const router = createBrowserRouter([
       {
         path: "pos",
         Component: PosIndex,
-        children: [{ path: "display", Component: MainDisplay }],
+        children: [
+          { index: true, Component: () => <Navigate replace to={"orders"} /> },
+          { path: "orders", Component: MainDisplay },
+          { path: "tables", Component: MainDisplay }
+        ],
       },
       {
         path: "menuManagement",
