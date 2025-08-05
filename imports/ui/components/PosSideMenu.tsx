@@ -140,7 +140,7 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
   };
 
   return (
-    <div className="w-64 bg-gray-100 flex flex-col h-screen">
+    <div className="w-64 h-[75vh] flex flex-col">
       <div className="flex items-center justify-between bg-press-up-purple text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
         <select
@@ -157,7 +157,7 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
         <button className="text-2xl font-bold">×</button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 space-y-4 border-solid border-[#6f597b] border-4">
+      <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
         {items.map((item) => (
           <div
             key={String(item._id)}
