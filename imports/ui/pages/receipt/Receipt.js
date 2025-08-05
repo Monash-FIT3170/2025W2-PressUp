@@ -94,7 +94,7 @@ export const ReceiptPage = () => {
               <div className="flex justify-between">
                 <span>Discount:</span>
                 <span>
-                  -${(order.originalPrice - order.totalPrice).toFixed(2)}
+                  -${(order.originalPrice.toFixed(2) - order.totalPrice.toFixed(2)).toFixed(2)}
                 </span>
               </div>
             </div>

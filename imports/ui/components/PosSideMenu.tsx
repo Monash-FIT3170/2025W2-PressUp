@@ -70,7 +70,7 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
     setOpenDiscountPopup(false);
     if (onUpdateOrder && orderId) {
       const discountedTotal = originalPrice - (originalPrice * (percentage / 100)) - discountAmount;
-      onUpdateOrder({ discountPercent: percentage, discountAmount, totalPrice: parseFloat(discountedTotal.toFixed(2)), originalPrice });
+      onUpdateOrder({ discountPercent: percentage, discountAmount, totalPrice: parseFloat(Math.max(0, discountedTotal).toFixed(2)), originalPrice });
     }
   };
 
@@ -80,7 +80,7 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
     setOpenDiscountPopup(false);
     if (onUpdateOrder && orderId) {
       const discountedTotal = originalPrice - (originalPrice * (discountPercent / 100)) - amount;
-      onUpdateOrder({ discountPercent, discountAmount: amount, totalPrice: parseFloat(discountedTotal.toFixed(2)), originalPrice });
+      onUpdateOrder({ discountPercent, discountAmount: amount, totalPrice: parseFloat(Math.max(0, discountedTotal).toFixed(2)), originalPrice });
     }
   };
 
