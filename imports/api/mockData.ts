@@ -4,6 +4,7 @@ import { SuppliersCollection } from "./suppliers/SuppliersCollection";
 import { faker } from "@faker-js/faker";
 import { TransactionsCollection } from "./transactions/TransactionsCollection";
 import { OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
+import { TablesCollection } from "./tables/TablesCollection";
 
 export const possibleImages = [
   "/menu_items/cappuccino.png",
@@ -23,24 +24,28 @@ export const mockDataGenerator = async ({
   stockItemCount,
   transactionCount,
   orderCount,
+  tableCount,
 }: {
   supplierCount?: number;
   menuItemCount?: number;
   stockItemCount?: number;
   transactionCount?: number;
   orderCount?: number;
+  tableCount?: number;
 }) => {
   supplierCount = supplierCount || 10;
   menuItemCount = menuItemCount || 20;
   stockItemCount = stockItemCount || 50;
   transactionCount = transactionCount || 5;
   orderCount = orderCount || 5;
+  tableCount = tableCount || 20;
 
   if (await SuppliersCollection.countDocuments() > 0) await SuppliersCollection.dropCollectionAsync();
   if (await MenuItemsCollection.countDocuments() > 0) await MenuItemsCollection.dropCollectionAsync();
   if (await StockItemsCollection.countDocuments() > 0) await StockItemsCollection.dropCollectionAsync();
   if (await TransactionsCollection.countDocuments() > 0) await TransactionsCollection.dropCollectionAsync();
   if (await OrdersCollection.countDocuments() > 0) await OrdersCollection.dropCollectionAsync();
+  if (await TablesCollection.countDocuments() > 0) await TablesCollection.dropCollectionAsync();
 
   if ((await SuppliersCollection.countDocuments()) == 0)
     for (let i = 0; i < supplierCount; ++i)
@@ -128,6 +133,14 @@ export const mockDataGenerator = async ({
           paid: false,
           orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
           createdAt: faker.date.recent({ days: 7 }),
+        });
+      }
+    }
+
+    if ((await TablesCollection.countDocuments()) == 0) {
+      for (let i = 1; i < tableCount+1; ++i) {
+        await TablesCollection.insertAsync({
+          tableNo: i,
         });
       }
     }
