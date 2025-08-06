@@ -5,7 +5,7 @@ import { usePageTitle } from "../../hooks/PageTitleContext";
 import type { UiOrder, Column as ColumnType, OrderStatus }  from "../../components/KitchenMgmtComponents/KitchenMgmtTypes";
 import { Column } from "../../components/KitchenMgmtComponents/OrderStatusColumns";
 import { useTracker } from "meteor/react-meteor-data";
-import { OrdersCollection, Order as DBOrder, OrderMenuItem, OrderStatus as DBStatus } from "../../../api/orders/OrdersCollection";
+import { OrdersCollection, Order as DBOrder } from "../../../api/orders/OrdersCollection";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 
 const COLUMNS: ColumnType[] = [
@@ -15,65 +15,12 @@ const COLUMNS: ColumnType[] = [
   { id: 'served', title: 'Served' }, 
 ];
 
-
-// const INITIAL_ORDERS: Order[] = [
-//   {
-//     orderNo: 1,
-//     status: 'NEW_ORDERS',
-//     tableNo: 1,
-//     menuItems: ["Pizza", "Pasta"],
-//     createdAt: new Date().toLocaleTimeString().toUpperCase()
-//   },
-//   {
-//     orderNo: 2,
-//     status: 'IN_PROGRESS',
-//     tableNo: 2,
-//     menuItems: ["Burger", "Fries"],
-//     createdAt: new Date().toLocaleTimeString().toUpperCase()
-//   },
-//   {
-//     orderNo: 3,
-//     status: 'READY',
-//     tableNo: 3,
-//     menuItems: ["Salad"],
-//     createdAt: new Date().toLocaleTimeString().toUpperCase()
-//   },
-//   {
-//     orderNo: 4,
-//     status: 'READY',
-//     tableNo: 4,
-//     menuItems: ["Coffee", "Cake"],
-//     createdAt: new Date().toLocaleTimeString().toUpperCase()
-//   },
-// ];
-
-
 export const KitchenManagement = () => {
   // Set title
   const [_, setPageTitle] = usePageTitle();
   useEffect(() => {
     setPageTitle("Kitchen Management");
   }, [setPageTitle]);
-
-  // const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
-
-
-  //   const handleDragEnd = (event: DragEndEvent) => {
-  //     const { active, over } = event;
-
-  //     if (!over) return;
-
-  //     const orderNo = active.id as number;
-  //     const newStatus = over.id as Order['status'];
-
-  //     setOrders(() =>
-  //       orders.map((order) =>
-  //         order.orderNo === orderNo
-  //           ? { ...order, status: newStatus }
-  //           : order
-  //       )
-  //     );
-  //   };
 
   const orders: UiOrder[] = useTracker(() => {
     const handler = Meteor.subscribe("orders");
@@ -90,8 +37,6 @@ export const KitchenManagement = () => {
       menuItems: doc.menuItems,
     }));
   }, []);
-
-
 
 
     const handleDragEnd = (event: DragEndEvent) => {
