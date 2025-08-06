@@ -14,7 +14,7 @@ export interface OrderMenuItem {
 export interface Order extends DBEntry {
     orderNo: number;
     tableNo: number;
-    menuItems: OrderMenuItem[];
+    menuItems: string[];
     totalPrice: number;
     discountedPrice?: number;
     discountPercent?: number;

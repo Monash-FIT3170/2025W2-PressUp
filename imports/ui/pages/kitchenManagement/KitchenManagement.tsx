@@ -87,7 +87,7 @@ export const KitchenManagement = () => {
       tableNo: doc.tableNo,
       createdAt: new Date(doc.createdAt).toLocaleTimeString().toUpperCase(),
       status: doc.orderStatus as OrderStatus, 
-      menuItems: doc.menuItems.map((item: OrderMenuItem) => item.name),
+      menuItems: doc.menuItems,
     }));
   }, []);
 

@@ -28,9 +28,13 @@ export const OrderCard = ({order}: OrderCardProps) => {
       <p className="font-bold text-lg  text-press-up-purple">Table {order.tableNo}</p>
       <p className="text-sm text-press-up-purple">{order.createdAt}</p>
       <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
-        {order.menuItems.map((item, index) => (
-          <li key={index}>{item}</li>
-        ))}
+        {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
+          order.menuItems.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))
+        ) : (
+          <li className="italic text-sm text-press-up-purple">No items</li>
+        )}
       </ul>
     </div>
   );
