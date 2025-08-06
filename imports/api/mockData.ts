@@ -122,6 +122,7 @@ export const mockDataGenerator = async ({
           paid: false,
           orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
           createdAt: faker.date.recent({ days: 7 }),
+          seats: faker.number.int({ min: 2, max: 8 }),
         });
       }
     }
