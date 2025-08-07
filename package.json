@@ -14,6 +14,7 @@
     "@babel/runtime": "^7.28.2",
     "@faker-js/faker": "^9.9.0",
     "@tailwindcss/postcss": "^4.1.11",
+    "date-fns": "^4.1.0",
     "imports": "^1.0.0",
     "lucide-react": "^0.535.0",
     "meteor-node-stubs": "^1.2.22",

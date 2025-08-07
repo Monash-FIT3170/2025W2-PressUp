@@ -23,7 +23,7 @@ interface FinanceDateFilterProps {
 
 export const FinanceDateFilter = ({ range, onRangeChange }: FinanceDateFilterProps) => {
   return (
-    <div className="mb-4 flex items-center">
+    <div className="mb-4 flex">
       <img
         src="/filter-icon.svg"
         alt="Filter Icon"
