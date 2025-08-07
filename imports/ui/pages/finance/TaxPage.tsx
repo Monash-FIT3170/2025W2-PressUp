@@ -56,7 +56,7 @@ export const TaxPage = () => {
     };
 
     useEffect(() => {
-        setPageTitle("Finance - Tax Page");
+        setPageTitle("Finance - Tax Management");
 
         const fetchData = async () => {
             //fetch relevant data
