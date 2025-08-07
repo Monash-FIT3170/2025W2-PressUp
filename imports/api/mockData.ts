@@ -139,8 +139,14 @@ export const mockDataGenerator = async ({
 
     if ((await TablesCollection.countDocuments()) == 0) {
       for (let i = 1; i < tableCount+1; ++i) {
+        let capacity = faker.number.int({ min: 1, max: 20 })
+        let noOccupants = faker.number.int({ min: 0, max: capacity}) // number of occupants can be 0 to max capacity of table
+        let isOccupied = noOccupants > 0 ? true : false // if table has occupants, set isOccupied to true, otherwise false
         await TablesCollection.insertAsync({
           tableNo: i,
+          capacity: capacity,
+          isOccupied: isOccupied,
+          noOccupants: noOccupants,
         });
       }
     }

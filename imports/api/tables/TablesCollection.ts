@@ -5,7 +5,7 @@ export interface Tables extends DBEntry {
   tableNo: number;
   orderNo?: number;
   capacity: number;
-  occupied: boolean;
+  isOccupied: boolean;
   noOccupants: number;
 }
 

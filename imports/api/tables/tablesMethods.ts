@@ -21,6 +21,6 @@ Meteor.methods({
 
   "tables.updateOccupants": requireLoginMethod(async function (tableID: Mongo.ObjectID, occupants: number) {
     if (!tableID || !occupants) throw new Meteor.Error("invalid-arguments", "Table number and number of occupants are required");
-    return await TablesCollection.updateAsync(tableID, { $set: {noOccupants: occupants} } );
+    return await TablesCollection.updateAsync(tableID, { $set: {isOccupied: true, noOccupants: occupants} } );
   }),
 });
