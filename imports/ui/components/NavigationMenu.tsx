@@ -52,19 +52,25 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           name="POS System"
           path="/pos/display"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
-        ></NavigationEntry>
+        />
         <NavigationEntry
           icon={<CoffeeIcon fill="var(--color-press-up-grey)" />}
           name="Menu Management"
           path="/menuManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
-        ></NavigationEntry>
+        />
         <NavigationEntry
           icon={<Clock3Icon />}
           name="Kitchen Management"
           path="/kitchenManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
-        ></NavigationEntry>
+        />
+        <NavigationEntry
+          icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
+          name="Accounts"
+          path="/accounts"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        />
       </div>
     </div>
   );
