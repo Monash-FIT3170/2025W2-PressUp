@@ -9,3 +9,4 @@ import "./suppliers/SupplierMethods";
 import "./purchaseOrders/purchaseOrdersMethods.ts";
 import "./purchaseOrders/purchaseOrdersPublishing.ts";
 import "./orders/ordersMethods";
+import "./analytics/analyticsMethods";

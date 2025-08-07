@@ -3,6 +3,7 @@ import { RootPage } from "./pages/Root";
 import { StockPage } from "./pages/inventory/Stock";
 import { SuppliersPage } from "./pages/inventory/Suppliers";
 import { Menu } from "./pages/menuManagement/Menu";
+import { AnalyticsPage } from "./pages/analytics/Analytics";
 
 // pos system
 import { MainDisplay } from "./pages/pos/MainDisplay";
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
       {
         path: "menuManagement",
         Component: Menu,
+      },
+      {
+        path: "analytics",
+        Component: AnalyticsPage,
       },
       {
         path: "receipt",
