@@ -1,11 +1,11 @@
 import { Meteor } from "meteor/meteor";
 import React, { useState, useEffect } from "react";
-import { User } from "/imports/api";
+import { AppUser } from "/imports/api";
 
 interface AddUserFormProps {
   onSuccess: () => void;
   onCancel: () => void;
-  user?: User | null;
+  user?: AppUser | null;
 }
 
 export const AddUserForm = ({ onSuccess, onCancel, user }: AddUserFormProps) => {
@@ -53,7 +53,7 @@ export const AddUserForm = ({ onSuccess, onCancel, user }: AddUserFormProps) => 
       ...(password && { password }),
     };
 
-    const method = user ? "users.update" : "users.insert";
+    const method = user ? "appUsers.update" : "appUsers.insert";
     const params = user ? [user._id, userData] : [userData];
 
     Meteor.call(method, ...params, (error: Meteor.Error | undefined) => {
@@ -83,7 +83,7 @@ export const AddUserForm = ({ onSuccess, onCancel, user }: AddUserFormProps) => 
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-            style={{ borderColor:'#6f597b' }}
+            style={{ borderColor: '#6f597b' }}
             required
           />
         </div>
@@ -144,19 +144,6 @@ export const AddUserForm = ({ onSuccess, onCancel, user }: AddUserFormProps) => 
             <option value="Casual">Casual</option>
             <option value="Manager">Manager</option>
           </select>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="active"
-            checked={active}
-            onChange={(e) => setActive(e.target.checked)}
-            className="mr-2 rounded"
-          />
-          <label htmlFor="active" className="text-sm font-medium text-gray-700">
-            Active User
-          </label>
         </div>
 
         <div className="flex gap-3 pt-4">

@@ -27,4 +27,4 @@ export {
 } from "./purchaseOrders/PurchaseOrdersCollection";
 
 // User Management
-export { User, UsersCollection } from "./users/UsersCollection";
+export { AppUser, AppUsersCollection } from "./appUsers/AppUsersCollection";

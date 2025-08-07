@@ -1,14 +1,14 @@
 import { Meteor } from "meteor/meteor";
 import React, { useState, useEffect } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
-import {  useTracker } from "meteor/react-meteor-data";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import {
-  UsersCollection,
-  User,
+  AppUsersCollection,
+  AppUser,
 } from "/imports/api";
-
+import { UserTable } from "../../components/UserTable";
 import { Modal } from "../../components/Modal";
-import { AddUserForm } from "../../components/addUserForm";
+import { AddUserForm } from "../../components/AddUserForm";
 import { ConfirmModal } from "../../components/ConfirmModal";
 
 export const UserManagementPage = () => {
@@ -19,23 +19,24 @@ export const UserManagementPage = () => {
 
   const [formResetKey, setFormResetKey] = useState(0);
 
+  const isLoadingUsers = !useSubscribe("appUsers.all");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirm, setConfirm] = useState<"cancel" | "delete" | "remove" | null>(null);
-  const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<AppUser[]>([]);
 
-  const users: User[] = useTracker(() => {
-    return UsersCollection.find(
+  const users: AppUser[] = useTracker(() => {
+    return AppUsersCollection.find(
       {},
       { sort: { lastName: 1, firstName: 1 } },
     ).fetch();
   });
 
-  // Modal
+  // Modal state
   const [open, setOpen] = useState<boolean>(false);
-  const [editUser, setEditUser] = useState<User | null>(null);
-  const [deleteUser, setDeleteUser] = useState<User | null>(null);
+  const [editUser, setEditUser] = useState<AppUser | null>(null);
+  const [deleteUser, setDeleteUser] = useState<AppUser | null>(null);
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: AppUser) => {
     setEditUser(user);
     setOpen(true);
   };
@@ -48,7 +49,7 @@ export const UserManagementPage = () => {
 
   const handleSuccess = () => handleModalClose();
 
-  const handleDeleteRequest = (user: User) => {
+  const handleDeleteRequest = (user: AppUser) => {
     setConfirm("delete");
     setShowConfirmation(true);
     setDeleteUser(user);
@@ -66,7 +67,7 @@ export const UserManagementPage = () => {
   const handleDelete = () => {
     if (confirm === "delete" && deleteUser) {
       Meteor.call(
-        "users.remove",
+        "appUsers.remove",
         deleteUser._id,
         (error: Meteor.Error | undefined) => {
           if (error) {
@@ -77,7 +78,7 @@ export const UserManagementPage = () => {
     } else if (confirm === "remove" && selectedUsers.length > 0) {
       const userIds = selectedUsers.map(user => user._id);
       Meteor.call(
-        "users.removeMultiple",
+        "appUsers.removeMultiple",
         userIds,
         (error: Meteor.Error | undefined) => {
           if (error) {
@@ -102,7 +103,7 @@ export const UserManagementPage = () => {
       ].join(","))
     ].join("\n");
 
-    // Exporting the user list
+    // Create and download file
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -127,7 +128,7 @@ export const UserManagementPage = () => {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex justify-end items-center p-4">
+      <div className="flex justify-between items-center p-4">
         <div className="flex gap-2">
           <button
             onClick={() => {
@@ -142,9 +143,11 @@ export const UserManagementPage = () => {
           <button
             onClick={handleRemoveUsers}
             className="text-nowrap shadow-lg/20 ease-in-out transition-all duration-300 p-2 rounded-xl px-4 bg-red-600 text-white cursor-pointer hover:bg-red-700"
-          >
-            - Remove User
+            style={{ backgroundColor: '#c97f97' }}>
+            Delete User
           </button>
+        </div>
+        <div>
           <button
             onClick={handleExportUserList}
             className="text-nowrap shadow-lg/20 ease-in-out transition-all duration-300 p-2 rounded-xl px-4 text-white cursor-pointer hover:bg-purple-700"
@@ -154,7 +157,7 @@ export const UserManagementPage = () => {
           </button>
         </div>
       </div>
-      
+      <div>
       <div className="px-4">
         <div className="flex items-center gap-2 mb-4">
           <span>Show</span>
@@ -171,6 +174,20 @@ export const UserManagementPage = () => {
         </div>
       </div>
 
+      <div id="users" className="flex flex-1 flex-col overflow-auto px-4">
+        {isLoadingUsers ? (
+          <p className="text-gray-400 p-4">Loading users...</p>
+        ) : (
+          <UserTable
+            users={users}
+            onEdit={handleEdit}
+            onDelete={handleDeleteRequest}
+            selectedUsers={selectedUsers}
+            onSelectionChange={setSelectedUsers}
+          />
+        )}
+      </div>
+      </div>
 
       <Modal
         open={open}

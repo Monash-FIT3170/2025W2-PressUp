@@ -17,7 +17,7 @@ interface NavigationMenuProps {
 }
 
 export const NavigationMenu = ({ show }: NavigationMenuProps) => {
-  
+
   return (
     <div
       className={`bg-press-up-purple min-h-full transition-all ease-in-out duration-300 ${
@@ -59,12 +59,11 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         ></NavigationEntry>
         <NavigationEntry
-          icon={<UserIcon fill="var(--color-press-up-grey)" />}
-          name="User Management"
-          path="/userManagement"
+          icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
+          name="Accounts"
+          path="/accounts"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         ></NavigationEntry>
-        
       </div>
     </div>
   );

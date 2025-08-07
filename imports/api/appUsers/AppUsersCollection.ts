@@ -1,7 +1,6 @@
 import { Mongo } from "meteor/mongo";
 
-
-export interface User {
+export interface AppUser {
   _id?: string;
   firstName: string;
   lastName: string;
@@ -12,4 +11,4 @@ export interface User {
   updatedAt?: Date;
 }
 
-export const UsersCollection = new Mongo.Collection<User>("users");
+export const AppUsersCollection = new Mongo.Collection<AppUser>("appUsers");

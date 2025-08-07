@@ -10,6 +10,8 @@ import { PosIndex } from "./pages/pos/Index";
 import { ReceiptIndex } from "./pages/receipt/Index";
 import { ReceiptPage } from "./pages/receipt/Receipt";
 import { LoginPage } from "./pages/Login";
+import { Accounts } from "./pages/accounts/Accounts";
+import { UserManagementPage } from "./pages/userManagement/userManagement";
 
 const router = createBrowserRouter([
   {
@@ -42,6 +44,10 @@ const router = createBrowserRouter([
         Component: ReceiptIndex,
         children: [{ path: "", Component: ReceiptPage }],
       },
+      {
+        path: "accounts",
+        Component: UserManagementPage ,
+      }
     ],
   },
 ]);
