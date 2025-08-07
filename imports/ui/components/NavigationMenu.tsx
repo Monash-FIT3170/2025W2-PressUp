@@ -18,6 +18,9 @@ const FinanceIcon = ({ fill }: { fill: string }) => (
 const ProfitLossIcon = ({ fill }: { fill: string }) => (
   <div style={{ width: '24px', height: '24px' }}></div>
 );
+const TaxIcon = ({ fill }: { fill: string }) => (
+  <div style={{ width: '24px', height: '24px' }}></div>
+);
 
 interface NavigationMenuProps {
   show: boolean;
@@ -43,6 +46,13 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           icon={<ProfitLossIcon fill="var(--color-press-up-grey)" />}
           name="P/L Reporting"
           path="/finance/profit-loss"
+          selectionType={NavigationEntrySelection.ARROW}
+        />
+
+        <NavigationEntry
+          icon={<TaxIcon fill="var(--color-press-up-grey)" />}
+          name="Tax Management"
+          path="/finance/tax"
           selectionType={NavigationEntrySelection.ARROW}
         />
         </NavigationEntry>
