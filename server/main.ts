@@ -10,3 +10,6 @@ Meteor.startup(async () => {
 
   await mockDataGenerator({});
 });
+
+import "/imports/api/appUsers/AppUsersMethods"; 
+import "/imports/api/appUsers/AppUsersCollection";
