@@ -25,3 +25,6 @@ export {
   StockItemLine,
   PurchaseOrdersCollection,
 } from "./purchaseOrders/PurchaseOrdersCollection";
+
+// User Management
+export { User, UsersCollection } from "./users/UsersCollection";
