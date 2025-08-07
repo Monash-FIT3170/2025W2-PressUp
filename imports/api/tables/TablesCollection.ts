@@ -3,7 +3,7 @@ import { DBEntry } from "../database";
 
 export interface Tables extends DBEntry {
   tableNo: number;
-  orderNo?: number;
+  orderNo: number | null;
   capacity: number;
   isOccupied: boolean;
   noOccupants: number;
