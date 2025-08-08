@@ -1,30 +1,31 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { StockItemsCollection } from "..";
+import { requireLoginMethod } from "../accounts/wrappers";
 
 Meteor.methods({
-  "stockItems.insert"(item: { name: string; quantity: number; location: string; supplier: string }) {
+  "stockItems.insert": requireLoginMethod(async function (item: { name: string; quantity: number; location: string; supplier: string }) {
     check(item.name, String);
     check(item.quantity, Number);
     check(item.location, String);
 
-    return StockItemsCollection.insertAsync(item);
-  },
+    return await StockItemsCollection.insertAsync(item);
+  }),
 
-  "stockItems.update"(itemId: string, updates: { name: string; quantity: number; location: string; supplier: string }) {
+  "stockItems.update": requireLoginMethod(async function (itemId: string, updates: { name: string; quantity: number; location: string; supplier: string }) {
     check(itemId, String);
     check(updates.name, String);
     check(updates.quantity, Number);
     check(updates.location, String);
 
-    return StockItemsCollection.updateAsync(
+    return await StockItemsCollection.updateAsync(
       { _id: itemId },
       { $set: updates }
     );
-  },
+  }),
 
-  "stockItems.remove"(itemId: string) {
+  "stockItems.remove": requireLoginMethod(async function (itemId: string) {
     check(itemId, String);
-    return StockItemsCollection.removeAsync(itemId);
-  }
+    return await StockItemsCollection.removeAsync(itemId);
+  })
 });

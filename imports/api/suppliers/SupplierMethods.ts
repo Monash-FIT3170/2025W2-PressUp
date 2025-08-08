@@ -1,9 +1,10 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { SuppliersCollection } from "..";
+import { requireLoginMethod } from "../accounts/wrappers";
 
 Meteor.methods({
-  "suppliers.insert"(supplier: { name: string;   description: string;
+  "suppliers.insert": requireLoginMethod(async function (supplier: { name: string;   description: string;
   pastOrderQty: number; phone: string; email?: string; website?: string; address?: string; goods: string[];}) {
     check(supplier.name, String);
     //check(supplier.description, String);
@@ -15,6 +16,6 @@ Meteor.methods({
     check(supplier.goods, Array);
 
 
-    return SuppliersCollection.insertAsync(supplier);
-  },
+    return await SuppliersCollection.insertAsync(supplier);
+  }),
 });

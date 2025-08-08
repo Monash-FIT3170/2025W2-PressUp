@@ -8,7 +8,7 @@ In order to run the project:
 1. Install [Meteor](https://docs.meteor.com/about/install.html)
 2. Clone the project and navigate into the cloned directory
 3. After ensuring that `meteor` is on your PATH run `meteor npm install`
-4. Run `meteor run`
+4. Run `meteor npm start`
 
 ## In a Production Environment using Docker
 1. Install [Docker](https://docs.docker.com/engine/install/)

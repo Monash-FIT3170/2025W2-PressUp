@@ -1,18 +1,22 @@
 import { useState } from "react";
-import { Outlet } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
 import { Header } from "../components/Header";
 import { NavigationMenu } from "../components/NavigationMenu";
 import { PageTitleProvider } from "../hooks/PageTitleContext";
+import { Meteor } from "meteor/meteor";
 
 export const RootPage = () => {
   const [menuOpen, setMenuOpen] = useState(true);
+  const location = useLocation();
+
+  // Logged in check
+  if (Meteor.userId() === null)
+    return <Navigate replace to={"/login"} state={{ from: location }} />;
 
   return (
     <PageTitleProvider>
       <header>
-        <Header
-          onHamburgerClick={() => setMenuOpen(!menuOpen)}
-        />
+        <Header onHamburgerClick={() => setMenuOpen(!menuOpen)} />
       </header>
       <div className="flex-1 flex flex-rows overflow-hidden">
         <nav>

@@ -167,6 +167,12 @@ export const PurchaseOrderForm = ({
 
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({ contentRef: printRef });
+  const gst = 10;
+  let subtotal = stockItems
+              .map((s) => s.quantity * s.cost)
+              .reduce((a, v) => a + v, 0)
+  let taxAmount = subtotal*gst/100
+  let totalAmount = (subtotal + taxAmount)
 
   return (
     <div className="flex flex-col space-y-5 p-2 dark:text-white" ref={printRef}>
@@ -354,28 +360,18 @@ export const PurchaseOrderForm = ({
         </div>
         <div className="col-span-2 flex flex-col">
           <div className="font-bold">Subtotal:</div>
-          <div className="font-bold">Discount:</div>
           <div className="font-bold">Tax Rate:</div>
           <div className="font-bold">Tax:</div>
           <div className="font-bold text-lg mt-2">Total:</div>
         </div>
         <div className="col-span-2 flex flex-col">
           <div>
-            $
-            {stockItems
-              .map((s) => s.quantity * s.cost)
-              .reduce((a, v) => a + v, 0)
-              .toFixed(2)}
+            ${subtotal.toFixed(2)}
           </div>
-          <div>0%</div>
-          <div>0%</div>
-          <div>$0.00</div>
+          <div>{gst}%</div>
+          <div>${taxAmount.toFixed(2)}</div>
           <div className="text-lg mt-2">
-            $
-            {stockItems
-              .map((s) => s.quantity * s.cost)
-              .reduce((a, v) => a + v, 0)
-              .toFixed(2)}
+            ${totalAmount.toFixed(2)}
           </div>
         </div>
         <div className="col-span-1"></div>

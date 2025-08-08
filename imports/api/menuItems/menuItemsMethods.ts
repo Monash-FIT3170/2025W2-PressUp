@@ -2,9 +2,10 @@ import { Meteor } from "meteor/meteor";
 import { check, Match } from "meteor/check";
 import { MenuItem, MenuItemsCollection } from "./MenuItemsCollection";
 import { ItemCategoriesCollection } from "./ItemCategoriesCollection";
+import { requireLoginMethod } from "../accounts/wrappers";
 
 Meteor.methods({
-  async 'menuItems.insert'(item: Omit<MenuItem, '_id'>) {
+  'menuItems.insert': requireLoginMethod(async function (item: Omit<MenuItem, '_id'>) {
     // Validate the item data
     check(item, {
       name: String,
@@ -43,9 +44,9 @@ Meteor.methods({
     };
 
     return await MenuItemsCollection.insertAsync(itemWithTimestamps);
-  },
+  }),
 
-  async 'menuItems.delete'(itemName: string) {
+  'menuItems.delete': requireLoginMethod(async function (itemName: string) {
     check(itemName, String);
 
     if (!itemName) {
@@ -58,9 +59,9 @@ Meteor.methods({
     }
 
     return result;
-  },
+  }),
 
-  async 'menuItems.update'(itemName: string, updatedFields: Partial<Omit<MenuItem, '_id'>>) {
+  'menuItems.update': requireLoginMethod(async function (itemName: string, updatedFields: Partial<Omit<MenuItem, '_id'>>) {
     check(itemName, String);
     check(updatedFields, Object);
 
@@ -93,13 +94,13 @@ Meteor.methods({
     }
 
     return result;
-  },
+  }),
 
-  'menuItems.getAll'() {
+  'menuItems.getAll': requireLoginMethod(async function () {
     return MenuItemsCollection.find().fetch();
-  },
+  }),
 
-  async 'menuItems.updateQuantity'(itemId: string, change: number) {
+  'menuItems.updateQuantity': requireLoginMethod(async function (itemId: string, change: number) {
     check(itemId, String);
     check(change, Number);
 
@@ -121,34 +122,23 @@ Meteor.methods({
     });
 
     return result;
-  },
+  }),
 
   // Additional helper methods using your interface
-  /*
-  async 'menuItems.getByCategory'(categories: string[]) {
+
+  'menuItems.getByCategory': requireLoginMethod(async function (categories: string[]) {
     check(categories, [String]);
     return MenuItemsCollection.find({
       category: { $in: categories }
     }).fetch();
-  },*/
-  async 'menuItems.getByCategory'(categoryNames) {
-    check(categoryNames, [String]);
+  }),
 
-    // Find categories that match the provided names
-    const categories = ItemCategoriesCollection.find({
-      name: { $in: categoryNames }
-    }).fetch();
+  'menuItems.getByName': requireLoginMethod(async function (name: string) {
+    check(name, String);
+    return await MenuItemsCollection.findOneAsync({ name });
+  }),
 
-    // Extract the names from found categories just to be safe
-    const validCategoryNames = categories.map(cat => cat.name);
-
-    // Query menu items that have category names in validCategoryNames
-    return MenuItemsCollection.find({
-      category: { $in: validCategoryNames }
-    }).fetch();
-  },
-
-  async 'menuItems.toggleAvailability'(itemName: string) {
+  'menuItems.toggleAvailability': requireLoginMethod(async function (itemName: string) {
     check(itemName, String);
 
     const item = await MenuItemsCollection.findOneAsync({ name: itemName });
@@ -167,16 +157,16 @@ Meteor.methods({
     );
 
     return result;
-  },
+  }),
 
-  async 'menuItems.getAvailable'() {
+  'menuItems.getAvailable': requireLoginMethod(async function () {
     return MenuItemsCollection.find({ available: true }).fetch();
-  },
+  }),
 
-  async 'menuItems.searchByIngredient'(ingredient: string) {
+  'menuItems.searchByIngredient': requireLoginMethod(async function (ingredient: string) {
     check(ingredient, String);
     return MenuItemsCollection.find({
       ingredients: { $regex: ingredient, $options: 'i' }
     }).fetch();
-  }
+  })
 });
