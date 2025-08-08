@@ -2,7 +2,7 @@ import { MenuItemsCollection } from "./menuItems/MenuItemsCollection";
 import { StockItemsCollection } from "./stockItems/StockItemsCollection";
 import { SuppliersCollection } from "./suppliers/SuppliersCollection";
 import { faker } from "@faker-js/faker";
-import { OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
+import { OrderMenuItem, OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
 import { TablesCollection } from "./tables/TablesCollection";
 
 export const possibleImages = [
@@ -40,7 +40,7 @@ export const mockDataGenerator = async ({
   if (await MenuItemsCollection.countDocuments() > 0) await MenuItemsCollection.dropCollectionAsync();
   if (await StockItemsCollection.countDocuments() > 0) await StockItemsCollection.dropCollectionAsync();
   if (await TablesCollection.countDocuments() > 0) await TablesCollection.dropCollectionAsync();
-  // if (await OrdersCollection.countDocuments() > 0) await OrdersCollection.dropCollectionAsync();
+  if (await OrdersCollection.countDocuments() > 0) await OrdersCollection.dropCollectionAsync();
 
   if ((await SuppliersCollection.countDocuments()) == 0)
     for (let i = 0; i < supplierCount; ++i)
@@ -134,15 +134,16 @@ export const mockDataGenerator = async ({
         let isOccupied = noOccupants > 0 ? true : false // if table has occupants, set isOccupied to true, otherwise false
 
         let randomOrderNo = null;
+        let randomOrder = null;
 
         if (isOccupied) {
-          // Get a random unused orderNo
+          // Get a random unused order
           const remainingOrders = await OrdersCollection.find({ orderNo: { $nin: Array.from(usedOrderNos) }, }).fetch();
           
           if ( remainingOrders.length > 0 &&
               faker.datatype.boolean(0.8) // 80% chance of assigning an order if table is occupied
           ) {
-              const randomOrder = faker.helpers.arrayElement(remainingOrders);
+              randomOrder = faker.helpers.arrayElement(remainingOrders);
               randomOrderNo = randomOrder.orderNo;
               usedOrderNos.add(randomOrderNo); // Mark order as used
             }
@@ -150,7 +151,7 @@ export const mockDataGenerator = async ({
 
         await TablesCollection.insertAsync({
           tableNo: i,
-          orderNo: randomOrderNo,
+          order: randomOrder,
           capacity: capacity,
           isOccupied: isOccupied,
           noOccupants: noOccupants,
