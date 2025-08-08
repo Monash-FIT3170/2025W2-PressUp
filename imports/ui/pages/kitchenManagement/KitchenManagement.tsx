@@ -58,7 +58,7 @@ export const KitchenManagement = () => {
 
  
   return (
-    <div className="flex flex-1 overflow-auto">
+    <div className="flex-1 w-full overflow-auto">
       {/* Main content area */}
       <div className="p-4">
         <div className="flex gap-10">
