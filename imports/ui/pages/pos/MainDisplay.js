@@ -16,6 +16,7 @@ export const MainDisplay = () => {
     const isLoadingTables = useSubscribe("tables");
     
     const tables = useTracker(() => TablesCollection.find().fetch());
+    const orders = useTracker(() => OrdersCollection.find().fetch());
     const posItems = useTracker(() => MenuItemsCollection.find().fetch());
     // Fetch the current order for the selected table
     const order = useTracker(() => OrdersCollection.findOne({ tableNo: selectedTable }), [selectedTable]);
@@ -30,10 +31,18 @@ export const MainDisplay = () => {
     });
     
     useEffect(() => {
-      if (!selectedTable && tables.length > 0) {
-        setSelectedTable(tables[0].tableNo); // Set to first available table
+      if (selectedTable !== null) return; // Only set on initial load
+
+      if (orders.length > 0) {
+        // Find the unpaid order with the lowest table number
+        const unpaidOrders = orders.filter(ord => !ord.paid);
+        if (unpaidOrders.length > 0) {
+          const lowestUnpaidTableNo = Math.min(...unpaidOrders.map(o => o.tableNo));
+          setSelectedTable(lowestUnpaidTableNo);
+          return;
+        }
       }
-    }, [tables]);
+    }, [tables, orders, selectedTable]);
 
     // Update order status
     const updateOrderInDb = (updatedFields) => {

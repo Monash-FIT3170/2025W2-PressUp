@@ -130,8 +130,8 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
     onDelete(itemId); 
   };
 
-  // Fetch all orders for dropdown
-  const orders: Order[] = useTracker(() => OrdersCollection.find({}, { sort: { tableNo: 1 } }).fetch());
+  // Fetch all unpaid orders for dropdown
+  const orders: Order[] = useTracker(() => OrdersCollection.find({ paid: { $ne: true } }, { sort: { tableNo: 1 } }).fetch(),[]);
 
   // Handler for table change
   const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
