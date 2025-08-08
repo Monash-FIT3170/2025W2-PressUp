@@ -126,10 +126,12 @@ Meteor.methods({
 
   // Additional helper methods using your interface
 
-  'menuItems.getByCategory': requireLoginMethod(async function (categories: string[]) {
-    check(categories, [String]);
-    return MenuItemsCollection.find({
-      category: { $in: categories }
+  'menuItems.getByCategory': requireLoginMethod(async function (categoryNames: string[]) {
+    check(categoryNames, [String]);
+
+    // Find categories that match the provided names
+    const categories = ItemCategoriesCollection.find({
+      name: { $in: categoryNames }
     }).fetch();
   }),
 

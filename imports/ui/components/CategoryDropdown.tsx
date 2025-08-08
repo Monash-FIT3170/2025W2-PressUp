@@ -1,5 +1,6 @@
 import React, {useState, useEffect, useRef } from 'react';
 import { Meteor } from "meteor/meteor";
+import { ItemCategoriesCollection } from '/imports/api';
 
 interface CategoryProps {
     selectedCategories: string[];
@@ -25,7 +26,7 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
             console.error("Failed to load categories:", err);
           }
         });
-      }, []);
+      }, [ItemCategoriesCollection]);
 
     const updatecategories = (category: string) => {
         if (selectedCategories.includes(category)) {
@@ -47,8 +48,8 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
             onChange(selectedCategories.filter((item) => item !== category));
         }
     };
-
-    useEffect(() => { setSearchCategory(""); }, [ initialCategories, selectedCategories ]);
+    //, selectedCategories
+    useEffect(() => { setSearchCategory(""); }, [ initialCategories]);
 
     // to close dropdown with an outside click
     useEffect(() => {
