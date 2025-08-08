@@ -130,8 +130,8 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
     onDelete(itemId); 
   };
 
-  // Fetch all orders for dropdown
-  const orders: Order[] = useTracker(() => OrdersCollection.find({}, { sort: { tableNo: 1 } }).fetch());
+  // Fetch all unpaid orders for dropdown
+  const orders: Order[] = useTracker(() => OrdersCollection.find({ paid: { $ne: true } }, { sort: { tableNo: 1 } }).fetch(),[]);
 
   // Handler for table change
   const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -148,11 +148,15 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
           value={selectedTable}
           onChange={handleTableChange}
         >
-          {orders.map((order: Order) => (
-            <option key={String(order._id)} value={order.tableNo}>
-              Table {order.tableNo}
-            </option>
-          ))}
+          {orders.length === 0 ? (
+            <option value="">No Orders</option>
+          ) : (
+            orders.map((order: Order) => (
+              <option key={String(order._id)} value={order.tableNo}>
+                Table {order.tableNo}
+              </option>
+            ))
+          )}
         </select>
         <button className="text-2xl font-bold">×</button>
       </div>
