@@ -100,47 +100,7 @@ export const mockDataGenerator = async ({
         supplier: randomSupplierId,
       });
     }
-  
-
-    if ((await OrdersCollection.countDocuments()) == 0) {
-      const usedTableNumbers = new Set<number>();
-      for (let i = 0; i < orderCount; ++i) {
-        let tableNo;
-        // Ensure unique table numbers
-        do {
-          tableNo = i+1;
-        } while (usedTableNumbers.has(tableNo));
-        usedTableNumbers.add(tableNo);
-
-        const rawMenuItems = await MenuItemsCollection.rawCollection()
-          .aggregate([{ $sample: { size: faker.number.int({ min: 0, max: 3 }) } }])
-          .toArray();
-
-        const orderMenuItems: OrderMenuItem[] = rawMenuItems.map((item: any) => ({
-          name: item.name,
-          quantity: faker.number.int({ min: 1, max: 3 }),
-          ingredients: item.ingredients ?? [],
-          available: item.available ?? true,
-          price: item.price ?? 0,
-          category: item.category ?? [],
-          image: item.image ?? '',
-        }));
-
-        const nonServedOrderStatuses = Object.values(OrderStatus).filter( (status) => status !== OrderStatus.Served );
-
-        await OrdersCollection.insertAsync({
-          orderNo: faker.number.int({ min: 1000, max: 9999 }),
-          tableNo,
-          menuItems: orderMenuItems,
-          totalPrice: orderMenuItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
-          paid: false,
-          orderStatus: faker.helpers.arrayElement(nonServedOrderStatuses),
-          createdAt: faker.date.recent({ days: 7 }),
-        });
-      }
-    }
-  
-  
+    
     if ((await TablesCollection.countDocuments()) == 0) {
       const usedOrderNos = new Set<number>(); // Track used orderNo values
 
@@ -174,4 +134,44 @@ export const mockDataGenerator = async ({
         });
       }
     }
+
+  if ((await OrdersCollection.countDocuments()) == 0) {
+    // Fetch all existing table numbers
+    const allTables = await TablesCollection.find({}, { fields: { tableNo: 1 } }).fetch();
+    const availableTableNos = allTables.map(t => t.tableNo);
+
+    // Shuffle table numbers and get up to orderCount amount
+    const shuffledTableNos = faker.helpers.shuffle(availableTableNos).slice(0, orderCount);
+
+    // Create orders using these table numbers
+    for (let i = 0; i < shuffledTableNos.length; ++i) {
+      const tableNo = shuffledTableNos[i];
+
+      const rawMenuItems = await MenuItemsCollection.rawCollection()
+        .aggregate([{ $sample: { size: faker.number.int({ min: 0, max: 3 }) } }])
+        .toArray();
+
+      const orderMenuItems: OrderMenuItem[] = rawMenuItems.map((item: any) => ({
+        name: item.name,
+        quantity: faker.number.int({ min: 1, max: 3 }),
+        ingredients: item.ingredients ?? [],
+        available: item.available ?? true,
+        price: item.price ?? 0,
+        category: item.category ?? [],
+        image: item.image ?? '',
+      }));
+
+      const nonServedOrderStatuses = Object.values(OrderStatus).filter( (status) => status !== OrderStatus.Served );
+
+      await OrdersCollection.insertAsync({
+        orderNo: faker.number.int({ min: 1000, max: 9999 }),
+        tableNo: tableNo,
+        menuItems: orderMenuItems,
+        totalPrice: orderMenuItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+        paid: false,
+        orderStatus: faker.helpers.arrayElement(nonServedOrderStatuses),
+        createdAt: faker.date.recent({ days: 7 }),
+      });
+    }
+  }
 };
