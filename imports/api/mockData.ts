@@ -102,27 +102,41 @@ export const mockDataGenerator = async ({
     }
   
 
-    // if ((await OrdersCollection.countDocuments()) == 0) {
-    //   const usedTableNumbers = new Set<number>();
-    //   for (let i = 0; i < orderCount; ++i) {
-    //     let tableNo;
-    //     // Ensure unique table numbers
-    //     do {
-    //       tableNo = i+1;
-    //     } while (usedTableNumbers.has(tableNo));
-    //     usedTableNumbers.add(tableNo);
-    //
-    //     await OrdersCollection.insertAsync({
-    //       orderNo: faker.number.int({ min: 1000, max: 9999 }),
-    //       tableNo,
-    //       menuItems: [],
-    //       totalPrice: 0,
-    //       paid: false,
-    //       orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
-    //       createdAt: faker.date.recent({ days: 7 }),
-    //     });
-    //   }
-    // }
+    if ((await OrdersCollection.countDocuments()) == 0) {
+      const usedTableNumbers = new Set<number>();
+      for (let i = 0; i < orderCount; ++i) {
+        let tableNo;
+        // Ensure unique table numbers
+        do {
+          tableNo = i+1;
+        } while (usedTableNumbers.has(tableNo));
+        usedTableNumbers.add(tableNo);
+
+        const rawMenuItems = await MenuItemsCollection.rawCollection()
+          .aggregate([{ $sample: { size: faker.number.int({ min: 0, max: 3 }) } }])
+          .toArray();
+
+        const orderMenuItems: OrderMenuItem[] = rawMenuItems.map((item: any) => ({
+          name: item.name,
+          quantity: faker.number.int({ min: 1, max: 3 }),
+          ingredients: item.ingredients ?? [],
+          available: item.available ?? true,
+          price: item.price ?? 0,
+          category: item.category ?? [],
+          image: item.image ?? '',
+        }));
+
+        await OrdersCollection.insertAsync({
+          orderNo: faker.number.int({ min: 1000, max: 9999 }),
+          tableNo,
+          menuItems: orderMenuItems,
+          totalPrice: orderMenuItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+          paid: false,
+          orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
+          createdAt: faker.date.recent({ days: 7 }),
+        });
+      }
+    }
   
   
     if ((await TablesCollection.countDocuments()) == 0) {
