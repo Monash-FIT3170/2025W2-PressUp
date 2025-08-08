@@ -126,13 +126,15 @@ export const mockDataGenerator = async ({
           image: item.image ?? '',
         }));
 
+        const nonServedOrderStatuses = Object.values(OrderStatus).filter( (status) => status !== OrderStatus.Served );
+
         await OrdersCollection.insertAsync({
           orderNo: faker.number.int({ min: 1000, max: 9999 }),
           tableNo,
           menuItems: orderMenuItems,
           totalPrice: orderMenuItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
           paid: false,
-          orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
+          orderStatus: faker.helpers.arrayElement(nonServedOrderStatuses),
           createdAt: faker.date.recent({ days: 7 }),
         });
       }
