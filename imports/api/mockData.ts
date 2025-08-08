@@ -161,7 +161,17 @@ export const mockDataGenerator = async ({
         image: item.image ?? '',
       }));
 
-      const nonServedOrderStatuses = Object.values(OrderStatus).filter( (status) => status !== OrderStatus.Served );
+      // Set orderStatus Pending if no items, otherwise 50% chance Preparing, 30% Ready and 20% Pending
+      let orderStatus: OrderStatus;
+      if (orderMenuItems.length === 0) {
+        orderStatus = OrderStatus.Pending;
+      } else {
+        orderStatus = faker.datatype.boolean(0.5)
+          ? OrderStatus.Preparing
+          : faker.datatype.boolean(0.3)
+          ? OrderStatus.Ready
+          : OrderStatus.Pending
+      }
 
       await OrdersCollection.insertAsync({
         orderNo: faker.number.int({ min: 1000, max: 9999 }),
@@ -169,7 +179,7 @@ export const mockDataGenerator = async ({
         menuItems: orderMenuItems,
         totalPrice: orderMenuItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
         paid: false,
-        orderStatus: faker.helpers.arrayElement(nonServedOrderStatuses),
+        orderStatus,
         createdAt: faker.date.recent({ days: 7 }),
       });
     }

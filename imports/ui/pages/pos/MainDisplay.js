@@ -5,6 +5,7 @@ import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { PosSideMenu } from "../../components/PosSideMenu";
 import { Meteor } from 'meteor/meteor';
 import { useState, useEffect } from "react";
+import { OrderStatus } from "/imports/api/orders/OrdersCollection";
 
 export const MainDisplay = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -75,6 +76,7 @@ export const MainDisplay = () => {
         discountPercent: order.discountPercent || 0,
         discountAmount: order.discountAmount || 0,
         originalPrice: parseFloat(newTotal.toFixed(2)),
+        orderStatus: OrderStatus.Pending,
       });
     };
 
@@ -152,6 +154,7 @@ export const MainDisplay = () => {
         discountPercent: order.discountPercent || 0,
         discountAmount: order.discountAmount || 0,
         originalPrice: parseFloat(newTotal.toFixed(2)),
+        orderStatus: OrderStatus.Pending,
       });
     };
 
