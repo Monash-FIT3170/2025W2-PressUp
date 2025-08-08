@@ -153,7 +153,7 @@ export const mockDataGenerator = async ({
           orderNo: faker.number.int({ min: 1000, max: 9999 }),
           tableNo,
           menuItems: [],
-          totalPrice: faker.number.float({ min: 3, max: 300}),
+          totalPrice: faker.number.int({ min: 1, max: 50 }),
           paid: false,
           orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
           createdAt: faker.date.recent({ days: 7 }),
