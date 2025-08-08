@@ -1,16 +1,21 @@
 import { MenuItemsCollection, Order, OrdersCollection } from "/imports/api";
+import { TablesCollection } from "/imports/api";
 import { PosItemCard } from "../../components/PosItemCard";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { PosSideMenu } from "../../components/PosSideMenu";
 import { Meteor } from 'meteor/meteor';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const MainDisplay = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategories, setSelectedCategories] = useState([]);
-    const [selectedTable, setSelectedTable] = useState(1);
+    const [selectedTable, setSelectedTable] = useState(null);
+    
     const isLoadingPosItems = useSubscribe("menuItems");
     const isLoadingOrders = useSubscribe("orders");
+    const isLoadingTables = useSubscribe("tables");
+    
+    const tables = useTracker(() => TablesCollection.find().fetch());
     const posItems = useTracker(() => MenuItemsCollection.find().fetch());
     // Fetch the current order for the selected table
     const order = useTracker(() => OrdersCollection.findOne({ tableNo: selectedTable }), [selectedTable]);
@@ -24,6 +29,11 @@ export const MainDisplay = () => {
       return matchesName && matchesCategory && isAvailable;
     });
     
+    useEffect(() => {
+      if (!selectedTable && tables.length > 0) {
+        setSelectedTable(tables[0].tableNo); // Set to first available table
+      }
+    }, [tables]);
 
     // Update order status
     const updateOrderInDb = (updatedFields) => {
