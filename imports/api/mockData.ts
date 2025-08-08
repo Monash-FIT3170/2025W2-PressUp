@@ -100,7 +100,7 @@ export const mockDataGenerator = async ({
         supplier: randomSupplierId,
       });
     }
-  
+
   if ((await TransactionsCollection.countDocuments()) == 0)
     for (let i = 0; i < transactionCount; ++i)
       await TransactionsCollection.insertAsync({
@@ -119,12 +119,12 @@ export const mockDataGenerator = async ({
           tableNo = i+1;
         } while (usedTableNumbers.has(tableNo));
         usedTableNumbers.add(tableNo);
-        
+
         await OrdersCollection.insertAsync({
           orderNo: faker.number.int({ min: 1000, max: 9999 }),
           tableNo,
           menuItems: [],
-          totalPrice: 0,
+          totalPrice: faker.number.float({ min: 3, max: 300}),
           paid: false,
           orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
           createdAt: faker.date.recent({ days: 7 }),
