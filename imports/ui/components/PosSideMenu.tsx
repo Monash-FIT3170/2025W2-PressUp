@@ -148,11 +148,15 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
           value={selectedTable}
           onChange={handleTableChange}
         >
-          {orders.map((order: Order) => (
-            <option key={String(order._id)} value={order.tableNo}>
-              Table {order.tableNo}
-            </option>
-          ))}
+          {orders.length === 0 ? (
+            <option value="">No Orders</option>
+          ) : (
+            orders.map((order: Order) => (
+              <option key={String(order._id)} value={order.tableNo}>
+                Table {order.tableNo}
+              </option>
+            ))
+          )}
         </select>
         <button className="text-2xl font-bold">×</button>
       </div>
