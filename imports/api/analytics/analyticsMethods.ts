@@ -120,6 +120,7 @@ Meteor.methods({
   }),
 
   'analytics.exportReport': requireLoginMethod(async function (format: string, timeFrame: string, startDate: Date, endDate: Date) {
+    console.log(format);
     // This would implement actual export functionality
     // For now, return a summary of the data
     const transactions = await TransactionsCollection.find({

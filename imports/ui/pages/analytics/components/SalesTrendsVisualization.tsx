@@ -75,6 +75,7 @@ export const SalesTrendsVisualization: React.FC<SalesTrendsVisualizationProps> =
     filteredTransactions.forEach((transaction) => {
       const transactionDate = new Date(transaction.createdAt);
       let period: string;
+      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
       if (timeFrame === "custom" && customDateRange) {
         const dayDiff = Math.floor((transactionDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
@@ -91,7 +92,7 @@ export const SalesTrendsVisualization: React.FC<SalesTrendsVisualizationProps> =
             else period = "20-24";
             break;
           case "week":
-            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            // const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
             period = days[transactionDate.getDay()];
             break;
           case "month":
@@ -103,7 +104,6 @@ export const SalesTrendsVisualization: React.FC<SalesTrendsVisualizationProps> =
             period = months[transactionDate.getMonth()];
             break;
           default:
-            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
             period = days[transactionDate.getDay()];
         }
       }
