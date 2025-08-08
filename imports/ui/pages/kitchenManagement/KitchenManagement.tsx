@@ -12,7 +12,6 @@ const COLUMNS: ColumnType[] = [
   { id: 'pending', title: 'Pending' },
   { id: 'preparing', title: 'Preparing' },
   { id: 'ready', title: 'Ready' },
-  { id: 'served', title: 'Served' }, 
 ];
 
 export const KitchenManagement = () => {
