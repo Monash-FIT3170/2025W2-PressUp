@@ -90,6 +90,12 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           path="/menuManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         ></NavigationEntry>
+        <NavigationEntry
+          icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
+          name="Accounts"
+          path="/accounts"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        ></NavigationEntry>
       </div>
     </div>
   );
