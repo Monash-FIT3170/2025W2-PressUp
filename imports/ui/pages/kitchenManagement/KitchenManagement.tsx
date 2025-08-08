@@ -12,7 +12,6 @@ const COLUMNS: ColumnType[] = [
   { id: 'pending', title: 'Pending' },
   { id: 'preparing', title: 'Preparing' },
   { id: 'ready', title: 'Ready' },
-  { id: 'served', title: 'Served' }, 
 ];
 
 export const KitchenManagement = () => {
@@ -34,7 +33,7 @@ export const KitchenManagement = () => {
       tableNo: doc.tableNo,
       createdAt: new Date(doc.createdAt).toLocaleTimeString().toUpperCase(),
       status: doc.orderStatus as OrderStatus, 
-      menuItems: doc.menuItems,
+      menuItems: (doc.menuItems ?? []).map(item => item.name),
     }));
   }, []);
 
@@ -59,7 +58,7 @@ export const KitchenManagement = () => {
 
  
   return (
-    <div className="flex flex-1 overflow-auto">
+    <div className="flex-1 w-full overflow-auto">
       {/* Main content area */}
       <div className="p-4">
         <div className="flex gap-10">
