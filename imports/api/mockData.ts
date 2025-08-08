@@ -2,7 +2,6 @@ import { MenuItemsCollection } from "./menuItems/MenuItemsCollection";
 import { StockItemsCollection } from "./stockItems/StockItemsCollection";
 import { SuppliersCollection } from "./suppliers/SuppliersCollection";
 import { faker } from "@faker-js/faker";
-import { TransactionsCollection } from "./transactions/TransactionsCollection";
 import { OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
 
 export const possibleImages = [
@@ -21,25 +20,21 @@ export const mockDataGenerator = async ({
   supplierCount,
   menuItemCount,
   stockItemCount,
-  transactionCount,
   orderCount,
 }: {
   supplierCount?: number;
   menuItemCount?: number;
   stockItemCount?: number;
-  transactionCount?: number;
   orderCount?: number;
 }) => {
   supplierCount = supplierCount || 10;
   menuItemCount = menuItemCount || 20;
   stockItemCount = stockItemCount || 50;
-  transactionCount = transactionCount || 5;
   orderCount = orderCount || 5;
 
   if (await SuppliersCollection.countDocuments() > 0) await SuppliersCollection.dropCollectionAsync();
   if (await MenuItemsCollection.countDocuments() > 0) await MenuItemsCollection.dropCollectionAsync();
   if (await StockItemsCollection.countDocuments() > 0) await StockItemsCollection.dropCollectionAsync();
-  if (await TransactionsCollection.countDocuments() > 0) await TransactionsCollection.dropCollectionAsync();
   // if (await OrdersCollection.countDocuments() > 0) await OrdersCollection.dropCollectionAsync();
 
   if ((await SuppliersCollection.countDocuments()) == 0)
@@ -101,14 +96,6 @@ export const mockDataGenerator = async ({
       });
     }
   
-  if ((await TransactionsCollection.countDocuments()) == 0)
-    for (let i = 0; i < transactionCount; ++i)
-      await TransactionsCollection.insertAsync({
-        name: faker.food.dish(),
-        quantity: faker.number.int({ min: 1, max: 5 }),
-        price: faker.number.int({ min: 1, max: 20 }),
-        createdAt: new Date(),
-      });
 
     // if ((await OrdersCollection.countDocuments()) == 0) {
     //   const usedTableNumbers = new Set<number>();
