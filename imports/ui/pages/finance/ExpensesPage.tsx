@@ -3,11 +3,59 @@ import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { FinanceDateFilter } from "../../components/FinanceDateFilter";
 import { Meteor } from "meteor/meteor";
+import {
+  format,
+  startOfToday,
+  startOfWeek,
+  startOfMonth,
+  startOfYear,
+  subDays,
+} from "date-fns";
 
 export const ExpensesPage = () => {
     const [_, setPageTitle] = usePageTitle();
     const [selectedMetric, setSelectedMetric] = useState<"revenue" | "expenses">("revenue");
     const [financialData, setFinancialData] = useState<any | null>(null);
+
+    const [dateRange, setDateRange] = useState<
+            | "all"
+            | "today"
+            | "thisWeek"
+            | "thisMonth"
+            | "thisYear"
+            | "past7Days"
+            | "past30Days"
+        >("all");
+    
+        const getDateRangeText = (range: typeof dateRange): string => {
+            const today = startOfToday();
+            const end = today;
+            let start: Date;
+            switch (range) {
+            case "today":
+                start = today;
+                break;
+            case "thisWeek":
+                start = startOfWeek(today, { weekStartsOn: 1 });
+                break;
+            case "thisMonth":
+                start = startOfMonth(today);
+                break;
+            case "thisYear":
+                start = startOfYear(today);
+                break;
+            case "past7Days":
+                start = subDays(today, 6);
+                break;
+            case "past30Days":
+                start = subDays(today, 29);
+                break;
+            case "all":
+            default:
+                return "All Time";
+            }
+            return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
+        };
 
     useEffect(() => {
         setPageTitle("Finance - Expense Tracking");
@@ -49,7 +97,15 @@ export const ExpensesPage = () => {
 
     return (
         <div className="flex flex-col flex-1 overflow-y-auto max-h-screen">
-            <div className="w-full p-6 bg-gray-50 min-h-[100vh]"> 
+            <div className="w-full p-6 bg-gray-50 min-h-[100vh]">
+            <div className="flex items-baseline gap-4 mb-4">
+                <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
+                <h2 className="ml-4 text-red-900">
+                <span className="font-bold">Viewing Period:</span>{" "}
+                <span className="font-normal">{getDateRangeText(dateRange)}</span>
+                </h2>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {mainMetrics.map((metric) => (
                 <FinanceCard
