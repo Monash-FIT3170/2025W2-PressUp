@@ -22,6 +22,10 @@ const TaxIcon = ({ fill }: { fill: string }) => (
   <div style={{ width: '24px', height: '24px' }}></div>
 );
 
+const ExpensesIcon = ({ fill }: { fill: string }) => (
+  <div style={{ width: '24px', height: '24px' }}></div>
+);
+
 interface NavigationMenuProps {
   show: boolean;
 }
@@ -53,6 +57,13 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           icon={<TaxIcon fill="var(--color-press-up-grey)" />}
           name="Tax Management"
           path="/finance/tax"
+          selectionType={NavigationEntrySelection.ARROW}
+        />
+
+        <NavigationEntry
+          icon={<ExpensesIcon fill="var(--color-press-up-grey)" />}
+          name="Expense Tracking"
+          path="/finance/Expenses"
           selectionType={NavigationEntrySelection.ARROW}
         />
         </NavigationEntry>
