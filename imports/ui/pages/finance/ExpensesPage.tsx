@@ -12,6 +12,32 @@ import {
   subDays,
 } from "date-fns";
 
+interface DetailItemProps {
+  label: string;
+  amount: number;
+  percentage?: number;
+}
+
+const DetailItem = ({ label, amount, percentage }: DetailItemProps) => {
+  const isPositive = amount > 0;
+  const sign = amount < 0 ? "-" : "";
+
+  return (
+    <div className="flex justify-between items-center py-3 px-4 bg-white rounded-lg shadow-sm border border-gray-100">
+      <div className="flex-1">
+        <span className="font-medium text-gray-800">{label}</span>
+        {percentage !== undefined && (
+          <span className="ml-2 text-sm text-gray-500">({percentage}% of total)</span>
+        )}
+      </div>
+      <div className={`font-semibold text-lg ${isPositive ? "text-green-700" : "text-red-700"}`}>
+        ${sign}
+        {Math.abs(amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+      </div>
+    </div>
+  );
+};
+
 export const ExpensesPage = () => {
     const [_, setPageTitle] = usePageTitle();
     const [selectedMetric, setSelectedMetric] = useState<"revenue" | "expenses">("revenue");
@@ -116,6 +142,27 @@ export const ExpensesPage = () => {
                     onClick={() => setSelectedMetric(metric.key)}
                 />
                 ))}
+            </div>
+
+            {/* Detail Section */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                    {selectedMetric === "revenue" ? "Sales breakdown" : "Expenditure breakdown"}
+                </h2>
+                <p className="text-gray-600">{currentData.title} — {currentData.description}</p>
+                </div>
+
+                <div className="space-y-3">
+                {(currentData.items || []).map((item: any, index: number) => (
+                    <DetailItem
+                    key={index}
+                    label={item.label}
+                    amount={item.amount ?? 0}
+                    percentage={item.percentage}
+                    />
+                ))}
+                </div>
             </div>
             </div>
         </div>
