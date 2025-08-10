@@ -4,6 +4,7 @@ import { SuppliersCollection } from "./suppliers/SuppliersCollection";
 import { faker } from "@faker-js/faker";
 import { OrderMenuItem, OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
 import { TablesCollection } from "./tables/TablesCollection";
+import { Mongo } from "meteor/mongo";
 
 export const possibleImages = [
   "/menu_items/cappuccino.png",
@@ -152,6 +153,7 @@ export const mockDataGenerator = async ({
         .toArray();
 
       const orderMenuItems: OrderMenuItem[] = rawMenuItems.map((item: any) => ({
+        _id: new Mongo.ObjectID(),
         name: item.name,
         quantity: faker.number.int({ min: 1, max: 3 }),
         ingredients: item.ingredients ?? [],
