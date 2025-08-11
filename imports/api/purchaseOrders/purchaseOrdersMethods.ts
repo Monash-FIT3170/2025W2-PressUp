@@ -14,6 +14,7 @@ Meteor.methods({
       supplier: supplierId,
       number,
       stockItems: [],
+      totalCost: number,
       date: new Date(),
     });
   }),
@@ -28,6 +29,11 @@ Meteor.methods({
     check(id, String);
     check(stockItems, Array);
 
-    await PurchaseOrdersCollection.updateAsync(id, { $set: { stockItems } });
+    const totalCost = stockItems.reduce((sum, item) => {
+      const itemTotal = (item.cost || 0) * (item.quantity || 0);
+      return sum + itemTotal;
+    }, 0);
+
+    await PurchaseOrdersCollection.updateAsync(id, { $set: { stockItems, totalCost } });
   }),
 });

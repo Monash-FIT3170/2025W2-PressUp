@@ -4,6 +4,7 @@ import { SuppliersCollection } from "./suppliers/SuppliersCollection";
 import { faker } from "@faker-js/faker";
 import { TransactionsCollection } from "./transactions/TransactionsCollection";
 import { OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
+import { PurchaseOrdersCollection } from "./purchaseOrders/PurchaseOrdersCollection";
 
 export const possibleImages = [
   "/menu_items/cappuccino.png",
@@ -23,18 +24,21 @@ export const mockDataGenerator = async ({
   stockItemCount,
   transactionCount,
   orderCount,
+  purchaseOrderCount
 }: {
   supplierCount?: number;
   menuItemCount?: number;
   stockItemCount?: number;
   transactionCount?: number;
   orderCount?: number;
+  purchaseOrderCount?: number;
 }) => {
   supplierCount = supplierCount || 10;
   menuItemCount = menuItemCount || 20;
   stockItemCount = stockItemCount || 50;
   transactionCount = transactionCount || 5;
   orderCount = orderCount || 5;
+  purchaseOrderCount = purchaseOrderCount || 10;
 
   if (await SuppliersCollection.countDocuments() > 0) await SuppliersCollection.dropCollectionAsync();
   if (await MenuItemsCollection.countDocuments() > 0) await MenuItemsCollection.dropCollectionAsync();
@@ -109,6 +113,31 @@ export const mockDataGenerator = async ({
         price: faker.number.int({ min: 1, max: 20 }),
         createdAt: new Date(),
       });
+
+  if ((await PurchaseOrdersCollection.countDocuments()) == 0)
+    for (let i = 0; i < purchaseOrderCount; ++i) {
+      const randomSupplier = (
+        await SuppliersCollection.rawCollection()
+          .aggregate([{ $sample: { size: 1 } }, { $project: { _id: 1 } }])
+          .toArray()
+      )[0];
+
+      const randomSupplierId = faker.datatype.boolean(0.75)
+        ? randomSupplier
+          ? randomSupplier._id
+            ? randomSupplier._id
+            : null
+          : null
+        : null;
+
+      await PurchaseOrdersCollection.insertAsync({
+        supplier: randomSupplierId,
+        number: faker.number.int({ min: 1, max: 15 }),
+        stockItems: [],
+        totalCost: faker.number.int({ min: 1, max: 300 }),
+        date: new Date(),
+      });
+    }
 
     if ((await OrdersCollection.countDocuments()) == 0) {
       const usedTableNumbers = new Set<number>();

@@ -11,6 +11,9 @@ import {
     startOfYear,
     subDays,
   } from "date-fns";
+import { PurchaseOrder } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
+import { PurchaseOrdersCollection } from "/imports/api";
+import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 
 export const TaxPage = () => {
     const [_, setPageTitle] = usePageTitle();
@@ -54,6 +57,8 @@ export const TaxPage = () => {
     }
     return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
     };
+    const isLoadingPurchaseOrders = useSubscribe("purchaseOrders");
+    const purchaseOrders:PurchaseOrder[] = useTracker(() => PurchaseOrdersCollection.find().fetch());
 
     useEffect(() => {
         setPageTitle("Finance - Tax Management");
@@ -80,7 +85,7 @@ export const TaxPage = () => {
     }, {});
 
     const mainMetrics = [
-        { key: 'GST', title: 'GST Collected', amount: itemMap['Total GST'] ?? 0 },
+        { key: 'GST', title: 'GST Collected', amount: itemMap['Total GST'] ?? purchaseOrders[0].totalCost },
         { key: 'payrollTax', title: 'Payroll Tax Payable', amount: itemMap['Payroll Tax'] ?? 0 },
         { key: 'incomeTax', title: 'Income Tax on Profits', amount: itemMap['Income Tax'] ?? 0 },
     ];
