@@ -71,7 +71,7 @@ export const FinanceCard = ({
       <div className={`${amountSizes[variant]} font-semibold mb-1 ${
         isNegative ? 'text-red-700' : 'text-green-700'
       }`}>
-        ({sign}) {Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+        {sign}{Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
       </div>
       
       <div className="text-sm text-gray-600 font-medium">

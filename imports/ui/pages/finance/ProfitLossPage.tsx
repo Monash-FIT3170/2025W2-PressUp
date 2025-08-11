@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { Meteor } from 'meteor/meteor'
-import { Order, OrderMenuItem } from "../../api/orders/orders";
+import { Order } from "../../api/orders/orders";
+import { PurchaseOrder } from "../../api/purchaseOrders/PurchaseOrdersCollection";
 
 interface FinancialData {
   revenue: {
@@ -15,6 +16,7 @@ interface FinancialData {
     title: string;
     description: string;
     items: { label: string; amount: number; percentage: number }[];
+    total: number;
   };
   netProfitLoss: {
     title: string;
@@ -57,8 +59,8 @@ export const ProfitLossPage = () => {
     const [selectedMetric, setSelectedMetric] = useState('netProfitLoss');
     const [financialData, setFinancialData] = useState<FinancialData | null>(null);
 
-    // processes and calculates order data
-    const processOrderData = (orders: Order[]): FinancialData => {
+    // calculates revenue
+    const processOrderData = (orders: Order[]): { revenue: number; revenueItems: { label: string; amount: number; percentage: number }[] } => {
       const revenueByCat: { [key: string]: number } = {};
 
       let totalRevenue = 0;
@@ -88,39 +90,71 @@ export const ProfitLossPage = () => {
         percentage: (revenueByCat[category] / totalRevenue) * 100,
       }));
 
-      const totalExpenses = 10; // assume
+      return { revenue: totalRevenue, revenueItems };
+    }
+
+    // calculates expenses
+    const processPurchaseOrderData = (purchaseOrders: PurchaseOrder[]): { expenses: number; expenseItems: { label: string; amount: number; percentage: number }[] } => {
+      const expensesBySupplier: { [key: string]: number } = {};
+      let totalExpenses = 0;
+
+      purchaseOrders.forEach(purchaseOrder => {
+        const orderCost = purchaseOrder.totalCost;
+        totalExpenses += orderCost;
+
+        const supplierKey = purchaseOrder.supplier?.toString() || 'Unknown Supplier'; // replace toString with .name when ids and names correctly match in database
+        expensesBySupplier[supplierKey] = (expensesBySupplier[supplierKey] || 0) + orderCost;
+      });
+
+      const expenseItems = Object.keys(expensesBySupplier).map(supplier => ({
+        label: supplier, 
+        amount: expensesBySupplier[supplier],
+        percentage: (expensesBySupplier[supplier] / totalExpenses) * 100,
+      }));
+
+      return { expenses: totalExpenses, expenseItems };
+    };
+
+    const processFinancialData = (orders: Order[], purchaseOrders: PurchaseOrder[]): FinancialData => {
+      const { revenue: totalRevenue, revenueItems } = processOrderData(orders);
+      const { expenses: totalExpenses, expenseItems } = processPurchaseOrderData(purchaseOrders);
+      
       const netProfit = totalRevenue - totalExpenses;
 
       return {
         revenue: {
           title: "Revenue Breakdown",
-          description: "Detailed breakdown of revenue.",
+          description: "Detailed breakdown of revenue by category.",
           items: revenueItems,
           total: totalRevenue
         },
         expenses: {
-          title: "Revenue Breakdown",
-          description: "Detailed breakdown of expenses.",
-          items: [{ label: "Operating Expenses", amount: totalExpenses, percentage: 100 }] // need to change later to actual expenses
+          title: "Expenses Breakdown",
+          description: "Detailed breakdown of expenses from purchase orders.",
+          items: expenseItems,
+          total: totalExpenses
         },
         netProfitLoss: {
-          title: "Revenue Breakdown",
-          description: "Detailed breakdown of net profit/loss.",
+          title: "Net Profit/Loss",
+          description: "Summary of financial performance.",
           items: [
             { label: "Total Revenue", amount: totalRevenue },
             { label: "Total Expenses", amount: -totalExpenses },
             { label: "Net Profit/Loss", amount: netProfit }
           ]
         }
-      }}
+      };
+    };
     
     useEffect(() => {
       setPageTitle("Finance - Profit Loss Page");
     
       const fetchOrders = async () => {
         try {
-            const result = await Meteor.callAsync('orders.getAll') as Order[];
-            const processedData = processOrderData(result);
+            const orderData = await Meteor.callAsync('orders.getAll') as Order[];
+            const purchaseOrderData = await Meteor.callAsync('purchaseOrders.getAll') as PurchaseOrder[];
+            
+            const processedData = processFinancialData(orderData, purchaseOrderData);
             setFinancialData(processedData);
         } catch (error) {
             console.error("Error fetching order data", error);
@@ -145,7 +179,7 @@ export const ProfitLossPage = () => {
         key: 'expenses', 
         title: 'Total Expenses', 
         description: financialData.expenses.description,
-        amount: financialData.expenses.items.reduce((sum, item) => sum + item.amount, 0),
+        amount: financialData.expenses.total,
         items: financialData.expenses.items
       },
       { 
