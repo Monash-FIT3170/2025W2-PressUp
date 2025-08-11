@@ -152,9 +152,27 @@ export const mockDataGenerator = async ({
         await OrdersCollection.insertAsync({
           orderNo: faker.number.int({ min: 1000, max: 9999 }),
           tableNo,
-          menuItems: [],
-          totalPrice: faker.number.int({ min: 1, max: 50 }),
-          paid: false,
+          menuItems: [
+            {
+              name: "Cappuccino",
+              quantity: 1,
+              ingredients: ["espresso", "steamed milk", "milk foam"],
+              available: true,
+              price: 5,
+              category: ["Drink"],
+              image: "/menu_items/cappuccino.png"
+            },
+            {
+              name: "Croissant",
+              quantity: 1,
+              ingredients: ["butter", "flour", "yeast"],
+              available: true,
+              price: 8,
+              category: ["Food", "Breakfast"],
+              image: "/menu_items/croissant.png"
+            }],
+          totalPrice: 13,
+          paid: faker.datatype.boolean(),
           orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
           createdAt: faker.date.recent({ days: 7 }),
         });
