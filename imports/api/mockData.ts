@@ -2,9 +2,9 @@ import { MenuItemsCollection } from "./menuItems/MenuItemsCollection";
 import { StockItemsCollection } from "./stockItems/StockItemsCollection";
 import { SuppliersCollection } from "./suppliers/SuppliersCollection";
 import { faker } from "@faker-js/faker";
-import { TransactionsCollection } from "./transactions/TransactionsCollection";
 import { OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
 import { PurchaseOrdersCollection } from "./purchaseOrders/PurchaseOrdersCollection";
+import { TablesCollection } from "./tables/TablesCollection";
 
 export const possibleImages = [
   "/menu_items/cappuccino.png",
@@ -22,29 +22,29 @@ export const mockDataGenerator = async ({
   supplierCount,
   menuItemCount,
   stockItemCount,
-  transactionCount,
   orderCount,
   purchaseOrderCount
+  tableCount,
 }: {
   supplierCount?: number;
   menuItemCount?: number;
   stockItemCount?: number;
-  transactionCount?: number;
   orderCount?: number;
   purchaseOrderCount?: number;
+  tableCount?: number;
 }) => {
   supplierCount = supplierCount || 10;
   menuItemCount = menuItemCount || 20;
   stockItemCount = stockItemCount || 50;
-  transactionCount = transactionCount || 5;
   orderCount = orderCount || 5;
   purchaseOrderCount = purchaseOrderCount || 10;
+  tableCount = tableCount || 20;
 
   if (await SuppliersCollection.countDocuments() > 0) await SuppliersCollection.dropCollectionAsync();
   if (await MenuItemsCollection.countDocuments() > 0) await MenuItemsCollection.dropCollectionAsync();
   if (await StockItemsCollection.countDocuments() > 0) await StockItemsCollection.dropCollectionAsync();
-  if (await TransactionsCollection.countDocuments() > 0) await TransactionsCollection.dropCollectionAsync();
-  if (await OrdersCollection.countDocuments() > 0) await OrdersCollection.dropCollectionAsync();
+  if (await TablesCollection.countDocuments() > 0) await TablesCollection.dropCollectionAsync();
+  // if (await OrdersCollection.countDocuments() > 0) await OrdersCollection.dropCollectionAsync();
 
   if ((await SuppliersCollection.countDocuments()) == 0)
     for (let i = 0; i < supplierCount; ++i)
@@ -175,6 +175,37 @@ export const mockDataGenerator = async ({
           paid: faker.datatype.boolean(),
           orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
           createdAt: faker.date.recent({ days: 7 }),
+  
+  
+    if ((await TablesCollection.countDocuments()) == 0) {
+      const usedOrderNos = new Set<number>(); // Track used orderNo values
+
+      for (let i = 1; i < tableCount+1; ++i) {
+        let capacity = faker.number.int({ min: 1, max: 20 })
+        let noOccupants = faker.number.int({ min: 0, max: capacity}) // number of occupants can be 0 to max capacity of table
+        let isOccupied = noOccupants > 0 ? true : false // if table has occupants, set isOccupied to true, otherwise false
+
+        let randomOrderNo = null;
+
+        if (isOccupied) {
+          // Get a random unused orderNo
+          const remainingOrders = await OrdersCollection.find({ orderNo: { $nin: Array.from(usedOrderNos) }, }).fetch();
+          
+          if ( remainingOrders.length > 0 &&
+              faker.datatype.boolean(0.8) // 80% chance of assigning an order if table is occupied
+          ) {
+              const randomOrder = faker.helpers.arrayElement(remainingOrders);
+              randomOrderNo = randomOrder.orderNo;
+              usedOrderNos.add(randomOrderNo); // Mark order as used
+            }
+          };
+
+        await TablesCollection.insertAsync({
+          tableNo: i,
+          orderNo: randomOrderNo,
+          capacity: capacity,
+          isOccupied: isOccupied,
+          noOccupants: noOccupants,
         });
       }
     }
