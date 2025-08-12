@@ -13,4 +13,8 @@ Meteor.methods({
     if (!order) throw new Meteor.Error("invalid-arguments", "Order data is required");
     return await OrdersCollection.insertAsync(order);
   }),
+
+  'orders.getAll': requireLoginMethod(async function () {
+    return OrdersCollection.find().fetch();
+  }),
 });
