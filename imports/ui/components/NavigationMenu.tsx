@@ -10,7 +10,7 @@ import {
 } from "./symbols/navigation/Inventory";
 import { MonitorIcon } from "./symbols/navigation/POS";
 import { CoffeeIcon } from "./symbols/navigation/Coffee";
-import { Clock3, Clock3Icon, ClockIcon, TimerIcon } from "lucide-react";
+import { Clock3Icon, Users, Calendar } from "lucide-react";
 
 interface NavigationMenuProps {
   show: boolean;
@@ -60,15 +60,28 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         />
         <NavigationEntry
-          icon={<Clock3Icon />}
-          name="Kitchen Management"
-          path="/kitchenManagement"
-          selectionType={NavigationEntrySelection.HIGHLIGHT}
-        />
-        <NavigationEntry
           icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
           name="Accounts"
           path="/accounts"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        />
+        <NavigationEntry
+          icon={<Users />}
+          name="Staff Management"
+          path="/staff"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        >
+          <NavigationEntry
+            icon={<Calendar />}
+            name="Roster"
+            path="/staff/roster"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+        </NavigationEntry>
+        <NavigationEntry
+          icon={<Clock3Icon />}
+          name="Kitchen Management"
+          path="/kitchenManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         />
       </div>
@@ -132,7 +145,11 @@ const NavigationEntry = ({
       <Link to={path}>
         <div className="flex flex-row text-press-up-grey border-b-[0.15em] border-press-up-grey min-w-full items mb-2">
           <div className="flex-0 content-center min-h-[2.3em]">{icon}</div>
-          {active ? <ActiveContent /> : <div className="px-3 content-center">{name}</div>}
+          {active ? (
+            <ActiveContent />
+          ) : (
+            <div className="px-3 content-center">{name}</div>
+          )}
         </div>
       </Link>
       <div className="grid grid-cols-12 text-[0.8em]">

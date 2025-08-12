@@ -11,6 +11,7 @@ import { ReceiptIndex } from "./pages/receipt/Index";
 import { ReceiptPage } from "./pages/receipt/Receipt";
 import { LoginPage } from "./pages/Login";
 import { Accounts } from "./pages/accounts/Accounts";
+import { RosterPage } from "./pages/staff/Roster";
 
 const router = createBrowserRouter([
   {
@@ -50,7 +51,14 @@ const router = createBrowserRouter([
       {
         path: "accounts",
         Component: Accounts,
-      }
+      },
+      {
+        path: "staff",
+        children: [
+          { index: true, Component: () => <Navigate replace to={"roster"} /> },
+          { path: "roster", Component: RosterPage },
+        ],
+      },
     ],
   },
 ]);
