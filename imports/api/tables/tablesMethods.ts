@@ -2,17 +2,16 @@ import { Meteor } from "meteor/meteor";
 import { requireLoginMethod } from "../accounts/wrappers";
 import { TablesCollection } from "./TablesCollection";
 import { Mongo } from "meteor/mongo";
-import { Order } from "../orders/OrdersCollection";
 
 Meteor.methods({
-  "tables.addOrder": requireLoginMethod(async function (tableID: Mongo.ObjectID, order: Order) {
-    if (!tableID || !order) throw new Meteor.Error("invalid-arguments", "Table ID and Order are required");
-    return await TablesCollection.updateAsync(tableID, {$set: {order: order, occupied: true} } );
+  "tables.addOrder": requireLoginMethod(async function (tableID: Mongo.ObjectID, orderID: string) {
+    if (!tableID || !orderID) throw new Meteor.Error("invalid-arguments", "Table ID and Order ID are required");
+    return await TablesCollection.updateAsync(tableID, {$set: {orderID: orderID, occupied: true} } );
   }),
 
-  "tables.changeOrder": requireLoginMethod(async function (tableID: Mongo.ObjectID, order: Order) {
-    if (!tableID || !order) throw new Meteor.Error("invalid-arguments", "Table ID and order are required");
-    return await TablesCollection.updateAsync(tableID, {$set: {order: order} } );
+  "tables.changeOrder": requireLoginMethod(async function (tableID: Mongo.ObjectID, orderID: string) {
+    if (!tableID || !orderID) throw new Meteor.Error("invalid-arguments", "Table ID and Order ID are required");
+    return await TablesCollection.updateAsync(tableID, {$set: {orderID: orderID} } );
   }),
 
   "tables.changeCapacity": requireLoginMethod(async function (tableID: Mongo.ObjectID, newCapacity: number) {

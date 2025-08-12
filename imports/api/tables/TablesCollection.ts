@@ -1,10 +1,9 @@
 import { Mongo } from "meteor/mongo";
 import { DBEntry } from "../database";
-import { Order } from "../orders/OrdersCollection";
 
 export interface Tables extends DBEntry {
   tableNo: number;
-  order: Order | null;
+  orderID: string | null; // OrderID stored as string rather than Mongo.ObjectID
   capacity: number;
   isOccupied: boolean;
   noOccupants: number;
