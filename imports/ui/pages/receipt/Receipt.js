@@ -1,39 +1,63 @@
 import React from "react";
-import { Meteor } from "meteor/meteor";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
-import { MenuItemsCollection } from "/imports/api/menuItems/MenuItemsCollection";
-import { TransactionsCollection } from "/imports/api/transactions/TransactionsCollection";
+import { useNavigate, useLocation} from "react-router";
+import { OrdersCollection, OrderStatus } from "/imports/api/orders/OrdersCollection";
 
 export const ReceiptPage = () => {
 
-  const isLoadingPosItems = useSubscribe("transactions")
-  const paymentItems = useTracker( () => TransactionsCollection.find().fetch());
+  const navigate = useNavigate(); // For navigating between PaymentModal and Receipt
+  
+  const location = useLocation(); // Get URL details
+  const searchParams = new URLSearchParams(location.search); // Get URL search parameters
+  const orderNumber = searchParams.get("orderNo"); // Get order number based on URL
 
-  const order = {
-    orderNumber: Math.floor(100000 + Math.random() * 900000).toString(), // Generate random order number
-    date: new Date().toLocaleString(), // date of order is current date time
-    menuItems: paymentItems
+  const handleGoBack = () => {
+    navigate(-1);
   };
   
+  const isLoadingOrders = useSubscribe("orders")
+  // Retrieve order based on order number in URL from PaymentModal
+  const parsedOrderNumber = Number(orderNumber);
+  const order = useTracker(() => {
+    return OrdersCollection.findOne({ orderNo: parsedOrderNumber });
+  }, [orderNumber]);
+  
+  // Defining menuItems
+  const menuItems = order ? order.menuItems : [];
 
-  // Calculate total cost
-  const getTotal = (menuItems) => {
-    return menuItems.reduce(
-      (sum, menuItem) => sum + menuItem.quantity * menuItem.price,
-      0
+  if (!order) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center h-full">
+        <p className="text-gray-500">Loading receipt...</p>
+      </div>
     );
-  };
+  }
 
   return (
     <div className="flex flex-1 flex-col">
+      <button
+        onClick={handleGoBack}
+        className="inline-flex items-center space-x-2 p-2 rounded-md hover:bg-gray-300 transition-colors w-auto self-start"
+        type="button"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+        <span>Back</span>
+      </button>
       <div className="flex-1 overflow-auto">
         <div className="max-w-md mx-auto border border-gray-300 p-6 rounded-lg shadow-md bg-white">
 
           {/* Display cafe and receipt details */}
           <h2 className="text-center text-xl font-bold mb-4">Cafe</h2>
-          <p className="mb-2">Order #: {order.orderNumber}</p>
-          <p className="mb-2">Date: {order.date}</p>
-          
+          <div className="flex justify-between mb-2">
+            <p>Order No: {order.orderNo}</p>
+            <p>Table No: {order.tableNo}</p>
+          </div>
+          <p className="mb-2">
+            Date: {(new Date()).toLocaleString()}
+          </p>
+            
           {/* Horizontal divider */}
           <hr className="my-2" />
 
@@ -57,9 +81,23 @@ export const ReceiptPage = () => {
 
           {/* Horizontal divider */}
           <hr className="my-2" />
-          <div className="flex justify-between text-lg">
+          {(order.totalPrice < order.originalPrice) && (
+            <div>
+            <div className="flex justify-between">
+              <span>Subotal:</span>
+              <span>${order.originalPrice.toFixed(2)}</span>
+            </div>
+              <div className="flex justify-between">
+                <span>Discount:</span>
+                <span>
+                  -${(order.originalPrice.toFixed(2) - order.totalPrice.toFixed(2)).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-between">
             <span>Total:</span>
-            <span>${getTotal(order.menuItems).toFixed(2)}</span>
+            <span>${(order.totalPrice).toFixed(2)}</span>
           </div>
           <p className="text-center mt-4 text-sm text-gray-600">
             Thank you for your order!
