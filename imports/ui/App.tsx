@@ -3,9 +3,9 @@ import { RootPage } from "./pages/Root";
 import { StockPage } from "./pages/inventory/Stock";
 import { SuppliersPage } from "./pages/inventory/Suppliers";
 import { Menu } from "./pages/menuManagement/Menu";
-import { KitchenManagement } from "./pages/kitchenManagement/KitchenManagement";import { ProfitLossPage } from "./pages/finance/ProfitLossPage";
+import { ProfitLossPage } from "./pages/finance/ProfitLossPage";
 import { TaxPage } from "./pages/finance/TaxPage";
-
+import { KitchenManagement } from "./pages/kitchenManagement/KitchenManagement";
 // pos system
 import { MainDisplay } from "./pages/pos/MainDisplay";
 import { PosIndex } from "./pages/pos/Index";

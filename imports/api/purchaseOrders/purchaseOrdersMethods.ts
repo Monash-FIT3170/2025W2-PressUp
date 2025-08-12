@@ -36,4 +36,8 @@ Meteor.methods({
 
     await PurchaseOrdersCollection.updateAsync(id, { $set: { stockItems, totalCost } });
   }),
+
+  'purchaseOrders.getAll': requireLoginMethod(async function () {
+      return PurchaseOrdersCollection.find().fetch();
+    }),
 });
