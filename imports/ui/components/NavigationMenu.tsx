@@ -14,7 +14,7 @@ import {
   TableIcon,
 } from "./symbols/navigation/POS";
 import { CoffeeIcon } from "./symbols/navigation/Coffee";
-import { Calendar, Clock3Icon, HistoryIcon, Users,  } from "lucide-react";
+import { Calendar, Clock3Icon, HistoryIcon, Users } from "lucide-react";
 
 // Create empty icons, NEED TO FIND ICON
 const FinanceIcon = ({ fill }: { fill: string }) => (
@@ -26,7 +26,6 @@ const ProfitLossIcon = ({ fill }: { fill: string }) => (
 const TaxIcon = ({ fill }: { fill: string }) => (
   <div style={{ width: '24px', height: '24px' }}></div>
 );
-
 const ExpensesIcon = ({ fill }: { fill: string }) => (
   <div style={{ width: '24px', height: '24px' }}></div>
 );
@@ -121,19 +120,6 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         />
         <NavigationEntry
-          icon={<Clock3Icon />}
-          name="Kitchen Management"
-          path="/kitchenManagement"
-          selectionType={NavigationEntrySelection.HIGHLIGHT}
-        >
-          <NavigationEntry
-            icon={<HistoryIcon />}                  
-            name="Order History"
-            path="/kitchenManagement/history"    
-            selectionType={NavigationEntrySelection.ARROW}
-          />
-        </NavigationEntry>
-        <NavigationEntry
           icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
           name="Accounts"
           path="/accounts"
@@ -149,6 +135,19 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             icon={<Calendar />}
             name="Roster"
             path="/staff/roster"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+        </NavigationEntry>
+        <NavigationEntry
+          icon={<Clock3Icon />}
+          name="Kitchen Management"
+          path="/kitchenManagement"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        >
+          <NavigationEntry
+            icon={<HistoryIcon />}                  
+            name="Order History"
+            path="/kitchenManagement/history"    
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>
