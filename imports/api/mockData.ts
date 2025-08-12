@@ -5,6 +5,7 @@ import { faker } from "@faker-js/faker";
 import { PurchaseOrdersCollection } from "./purchaseOrders/PurchaseOrdersCollection";
 import { OrderMenuItem, OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
 import { TablesCollection } from "./tables/TablesCollection";
+//import {TransactionsCollection } from "./"
 import { Mongo } from "meteor/mongo";
 
 export const possibleImages = [
@@ -116,17 +117,6 @@ export const mockDataGenerator = async ({
           : 0,
         location: faker.location.secondaryAddress(),
         supplier: randomSupplierId,
-      });
-    }
-  }
-
-  if ((await TransactionsCollection.countDocuments()) === 0) {
-    for (let i = 0; i < transactionCount; ++i) {
-      await TransactionsCollection.insertAsync({
-        name: faker.food.dish(),
-        quantity: faker.number.int({ min: 1, max: 5 }),
-        price: faker.number.int({ min: 1, max: 20 }),
-        createdAt: new Date(),
       });
     }
   }
