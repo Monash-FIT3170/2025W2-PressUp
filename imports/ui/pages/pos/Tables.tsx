@@ -3,13 +3,14 @@ import React, { useEffect, useState } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
+import { TablesCollection } from "/imports/api/tables/TablesCollection";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 // Helper to get seat positions around a square
 const getSeatPositions = (seatCount: number): { left: number; top: number }[] => {
   const positions = [];
   const radius = 85;
-  const center = 70;
+  const center = 68;
   for (let i = 0; i < seatCount; i++) {
     const angle = (2 * Math.PI * i) / seatCount;
     const x = center + radius * Math.cos(angle);
@@ -24,6 +25,8 @@ interface Table {
   seats?: number;
   orderStatus?: string;
   paid?: boolean;
+  capacity?: number;
+  noOccupants?: number;
 }
 
 interface TableCardProps {
@@ -33,25 +36,34 @@ interface TableCardProps {
   dragRef: React.Ref<HTMLDivElement>;
 }
 
-const TableCard = ({ table, paidColor, isDragging, dragRef }: TableCardProps) => {
+const TableCard = ({ table, cardColour, isDragging, dragRef }: TableCardProps) => {
   // Seats around border
-  const seatPositions = getSeatPositions(table?.seats ?? 0);
+  const seatPositions = getSeatPositions(table?.capacity ?? 0);
+  const occupied = typeof table.noOccupants === "number" ? table.noOccupants : 0;
+  const capacity = table?.capacity ?? 0;
+  // Distribute occupied seats evenly
+  let occupiedIndexes: number[] = [];
+  if (occupied > 0 && capacity > 0) {
+    const gap = capacity / occupied;
+    for (let j = 0; j < occupied; j++) {
+      occupiedIndexes.push(Math.round(j * gap));
+    }
+  }
   return (
     <div
       ref={dragRef}
-      className={`${paidColor} border-2 shadow-md relative flex flex-col items-center justify-center cursor-move ${isDragging ? "opacity-50" : ""} rounded-full`}
+      className={`${cardColour} border-2 shadow-md relative flex flex-col items-center justify-center cursor-move ${isDragging ? "opacity-50" : ""} rounded-full`}
       style={{ width: 140, height: 140 }}
     >
       {/* Seats around border */}
       {seatPositions.map((pos, i) => (
         <div
           key={i}
-          className="w-7 h-7 rounded-full bg-gray-300 border border-gray-500 absolute"
+          className={`w-7 h-7 rounded-full border border-gray-500 absolute ${occupiedIndexes.includes(i) ? "bg-press-up-purple" : "bg-press-up-grey"}`}
           style={{ left: pos.left, top: pos.top, transform: "translate(-50%, -50%)" }}
         />
       ))}
       <span className="text-lg font-semibold mb-2 z-10">Table {table?.tableNo ?? ""}</span>
-      <span className="text-xs text-gray-500 z-10">Status: {table?.orderStatus || "Unknown"}</span>
     </div>
   );
 };
@@ -59,13 +71,10 @@ const TableCard = ({ table, paidColor, isDragging, dragRef }: TableCardProps) =>
 export const TablesPage = () => {
   const [_, setPageTitle] = usePageTitle();
   useEffect(() => { setPageTitle("POS System - Tables"); }, [setPageTitle]);
-  useSubscribe("orders");
+  useSubscribe("tables");
   const tablesFromDb = useTracker(() =>
-    OrdersCollection.find({}, { sort: { tableNo: 1 } }).fetch()
+    TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch()
   );
-  const paidColour = (paid: boolean) => {
-    return paid ? "bg-green-100" : "bg-red-100";
-  };
 
   // Grid size
   const GRID_ROWS = 3;
@@ -136,7 +145,7 @@ export const TablesPage = () => {
         {table ? (
           <TableCard
             table={table}
-            paidColor={paidColour(table.paid ?? false)}
+            cardColour={table.isOccupied ? "bg-press-up-light-purple" : "bg-press-up-grey"}
             isDragging={isDragging}
             dragRef={drag as unknown as React.Ref<HTMLDivElement>}
           />
