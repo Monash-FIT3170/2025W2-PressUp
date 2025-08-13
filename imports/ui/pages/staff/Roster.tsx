@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "../../components/interaction/Button";
 import { Modal } from "../../components/Modal";
 import { PublishShiftForm } from "../../components/PublishShiftForm";
+import { RosterTable } from "../../components/RosterTable";
 
 export const RosterPage = () => {
   const [shiftModalOpen, setShiftModalOpen] = useState(false);
@@ -12,6 +13,7 @@ export const RosterPage = () => {
       <Modal open={shiftModalOpen} onClose={() => {}}>
         <PublishShiftForm />
       </Modal>
+      <RosterTable />
     </div>
   );
 };
