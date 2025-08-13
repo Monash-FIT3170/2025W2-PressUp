@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from 'react-router';
 import { Meteor } from "meteor/meteor";
 import { Order } from "/imports/api";
+import { OrderStatus } from "/imports/api/orders/OrdersCollection";
 
 interface PaymentModalProps {
   tableNo: number;
@@ -15,8 +16,18 @@ export const PaymentModal = ({ tableNo, order }: PaymentModalProps) => {
 
   const navigate = useNavigate();
 
+  // Update order status
+  const updateOrderStatus = async () => {
+    if (!order || !order._id) {return;}
+    const fields = {
+      orderStatus: OrderStatus.Served,
+      paid: true,
+    };
+    await Meteor.call("orders.updateOrder", order._id, { ...fields });
+  };
+
   const handleConfirm = async () => {
-    await Meteor.call("transactions.insert", tableNo, order);
+    updateOrderStatus();
     closeModal();
     navigate(`/receipt?orderNo=${order.orderNo}`);
   };

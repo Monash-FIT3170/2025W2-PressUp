@@ -70,7 +70,7 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
     setOpenDiscountPopup(false);
     if (onUpdateOrder && orderId) {
       const discountedTotal = originalPrice - (originalPrice * (percentage / 100)) - discountAmount;
-      onUpdateOrder({ discountPercent: percentage, discountAmount, totalPrice: parseFloat(discountedTotal.toFixed(2)), originalPrice });
+      onUpdateOrder({ discountPercent: percentage, discountAmount, totalPrice: parseFloat(Math.max(0, discountedTotal).toFixed(2)), originalPrice });
     }
   };
 
@@ -80,7 +80,7 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
     setOpenDiscountPopup(false);
     if (onUpdateOrder && orderId) {
       const discountedTotal = originalPrice - (originalPrice * (discountPercent / 100)) - amount;
-      onUpdateOrder({ discountPercent, discountAmount: amount, totalPrice: parseFloat(discountedTotal.toFixed(2)), originalPrice });
+      onUpdateOrder({ discountPercent, discountAmount: amount, totalPrice: parseFloat(Math.max(0, discountedTotal).toFixed(2)), originalPrice });
     }
   };
 
@@ -130,8 +130,8 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
     onDelete(itemId); 
   };
 
-  // Fetch all orders for dropdown
-  const orders: Order[] = useTracker(() => OrdersCollection.find({}, { sort: { tableNo: 1 } }).fetch());
+  // Fetch all unpaid orders for dropdown
+  const orders: Order[] = useTracker(() => OrdersCollection.find({ paid: { $ne: true } }, { sort: { tableNo: 1 } }).fetch(),[]);
 
   // Handler for table change
   const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -140,7 +140,7 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
   };
 
   return (
-    <div className="w-64 bg-gray-100 flex flex-col h-screen">
+    <div className="w-64 h-[75vh] flex flex-col">
       <div className="flex items-center justify-between bg-press-up-purple text-white px-4 py-2 rounded-t-md">
         <button className="text-2xl font-bold">⋯</button>
         <select
@@ -148,16 +148,20 @@ export const PosSideMenu = ({ tableNo, items, total, orderId, onIncrease, onDecr
           value={selectedTable}
           onChange={handleTableChange}
         >
-          {orders.map((order: Order) => (
-            <option key={String(order._id)} value={order.tableNo}>
-              Table {order.tableNo}
-            </option>
-          ))}
+          {orders.length === 0 ? (
+            <option value="">No Orders</option>
+          ) : (
+            orders.map((order: Order) => (
+              <option key={String(order._id)} value={order.tableNo}>
+                Table {order.tableNo}
+              </option>
+            ))
+          )}
         </select>
         <button className="text-2xl font-bold">×</button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 space-y-4 border-solid border-[#6f597b] border-4">
+      <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
         {items.map((item) => (
           <div
             key={String(item._id)}

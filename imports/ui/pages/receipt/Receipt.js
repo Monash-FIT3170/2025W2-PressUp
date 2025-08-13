@@ -1,32 +1,28 @@
 import React from "react";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
-import { TransactionsCollection } from "/imports/api/transactions/TransactionsCollection";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation} from "react-router";
+import { OrdersCollection, OrderStatus } from "/imports/api/orders/OrdersCollection";
 
 export const ReceiptPage = () => {
 
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // For navigating between PaymentModal and Receipt
+  
+  const location = useLocation(); // Get URL details
+  const searchParams = new URLSearchParams(location.search); // Get URL search parameters
+  const orderNumber = searchParams.get("orderNo"); // Get order number based on URL
 
   const handleGoBack = () => {
     navigate(-1);
   };
-    
-  const isLoadingPosItems = useSubscribe("transactions")
-
-    // Get the latest transaction
-  const transaction = useTracker(() =>
-    TransactionsCollection.findOne({}, { sort: { createdAt: -1 } })
-  );
-
-  console.log("Transaction")
-  console.log(transaction)
-
-  // Get order in that transaction
-  const order = transaction ? transaction.order: null;
   
-  console.log("Order")
-  console.log(order)
+  const isLoadingOrders = useSubscribe("orders")
+  // Retrieve order based on order number in URL from PaymentModal
+  const parsedOrderNumber = Number(orderNumber);
+  const order = useTracker(() => {
+    return OrdersCollection.findOne({ orderNo: parsedOrderNumber });
+  }, [orderNumber]);
   
+  // Defining menuItems
   const menuItems = order ? order.menuItems : [];
 
   if (!order) {
@@ -55,11 +51,11 @@ export const ReceiptPage = () => {
           {/* Display cafe and receipt details */}
           <h2 className="text-center text-xl font-bold mb-4">Cafe</h2>
           <div className="flex justify-between mb-2">
-            <p>Order #: {order.orderNo}</p>
-            <p>Table #: {order.tableNo}</p>
+            <p>Order No: {order.orderNo}</p>
+            <p>Table No: {order.tableNo}</p>
           </div>
           <p className="mb-2">
-            Date: {transaction.createdAt.toLocaleString()}
+            Date: {(new Date()).toLocaleString()}
           </p>
             
           {/* Horizontal divider */}
@@ -94,7 +90,7 @@ export const ReceiptPage = () => {
               <div className="flex justify-between">
                 <span>Discount:</span>
                 <span>
-                  -${(order.originalPrice - order.totalPrice).toFixed(2)}
+                  -${(order.originalPrice.toFixed(2) - order.totalPrice.toFixed(2)).toFixed(2)}
                 </span>
               </div>
             </div>

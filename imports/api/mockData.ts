@@ -2,8 +2,11 @@ import { MenuItemsCollection } from "./menuItems/MenuItemsCollection";
 import { StockItemsCollection } from "./stockItems/StockItemsCollection";
 import { SuppliersCollection } from "./suppliers/SuppliersCollection";
 import { faker } from "@faker-js/faker";
-import { TransactionsCollection } from "./transactions/TransactionsCollection";
-import { OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
+import { PurchaseOrdersCollection } from "./purchaseOrders/PurchaseOrdersCollection";
+import { OrderMenuItem, OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
+import { TablesCollection } from "./tables/TablesCollection";
+//import {TransactionsCollection } from "./"
+import { Mongo } from "meteor/mongo";
 
 export const possibleImages = [
   "/menu_items/cappuccino.png",
@@ -21,29 +24,42 @@ export const mockDataGenerator = async ({
   supplierCount,
   menuItemCount,
   stockItemCount,
-  transactionCount,
   orderCount,
+  purchaseOrderCount,
+  tableCount,
 }: {
   supplierCount?: number;
   menuItemCount?: number;
   stockItemCount?: number;
-  transactionCount?: number;
   orderCount?: number;
+  purchaseOrderCount?: number;
+  tableCount?: number;
 }) => {
   supplierCount = supplierCount || 10;
   menuItemCount = menuItemCount || 20;
   stockItemCount = stockItemCount || 50;
-  transactionCount = transactionCount || 5;
   orderCount = orderCount || 5;
+  purchaseOrderCount = purchaseOrderCount || 10;
+  tableCount = tableCount || 20;
 
-  if (await SuppliersCollection.countDocuments() > 0) await SuppliersCollection.dropCollectionAsync();
-  if (await MenuItemsCollection.countDocuments() > 0) await MenuItemsCollection.dropCollectionAsync();
-  if (await StockItemsCollection.countDocuments() > 0) await StockItemsCollection.dropCollectionAsync();
-  if (await TransactionsCollection.countDocuments() > 0) await TransactionsCollection.dropCollectionAsync();
-  if (await OrdersCollection.countDocuments() > 0) await OrdersCollection.dropCollectionAsync();
+  if (await SuppliersCollection.countDocuments() > 0) {
+    await SuppliersCollection.dropCollectionAsync();
+  }
+  if (await MenuItemsCollection.countDocuments() > 0) {
+    await MenuItemsCollection.dropCollectionAsync();
+  }
+  if (await StockItemsCollection.countDocuments() > 0) {
+    await StockItemsCollection.dropCollectionAsync();
+  }
+  if (await TablesCollection.countDocuments() > 0) {
+    await TablesCollection.dropCollectionAsync();
+  }
+  if (await OrdersCollection.countDocuments() > 0) {
+    await OrdersCollection.dropCollectionAsync();
+  }
 
-  if ((await SuppliersCollection.countDocuments()) == 0)
-    for (let i = 0; i < supplierCount; ++i)
+  if ((await SuppliersCollection.countDocuments()) === 0) {
+    for (let i = 0; i < supplierCount; ++i) {
       await SuppliersCollection.insertAsync({
         name: faker.company.name(),
         description: faker.lorem.paragraph(),
@@ -56,9 +72,11 @@ export const mockDataGenerator = async ({
           faker.commerce.product
         ),
       });
+    }
+  }
 
-  if ((await MenuItemsCollection.countDocuments()) == 0)
-    for (let i = 0; i < menuItemCount; ++i)
+  if ((await MenuItemsCollection.countDocuments()) === 0) {
+    for (let i = 0; i < menuItemCount; ++i) {
       await MenuItemsCollection.insertAsync({
         name: faker.food.dish(),
         ingredients: Array.from(
@@ -69,13 +87,14 @@ export const mockDataGenerator = async ({
         quantity: faker.number.int({ min: 1, max: 100 }),
         price: faker.number.float({ min: 1, max: 100 }),
         category: [faker.datatype.boolean() ? "Food" : "Drink"],
-        image:
-          possibleImages[
-            faker.number.int({ min: 0, max: possibleImages.length - 1 })
-          ],
+        image: possibleImages[
+          faker.number.int({ min: 0, max: possibleImages.length - 1 })
+        ],
       });
+    }
+  }
 
-  if ((await StockItemsCollection.countDocuments()) == 0)
+  if ((await StockItemsCollection.countDocuments()) === 0) {
     for (let i = 0; i < stockItemCount; ++i) {
       const randomSupplier = (
         await SuppliersCollection.rawCollection()
@@ -100,30 +119,153 @@ export const mockDataGenerator = async ({
         supplier: randomSupplierId,
       });
     }
-  
-  if ((await TransactionsCollection.countDocuments()) == 0) {
   }
 
-    if ((await OrdersCollection.countDocuments()) == 0) {
-      const usedTableNumbers = new Set<number>();
-      for (let i = 0; i < orderCount; ++i) {
-        let tableNo;
-        // Ensure unique table numbers
-        do {
-          tableNo = i+1;
-        } while (usedTableNumbers.has(tableNo));
-        usedTableNumbers.add(tableNo);
-        
-        await OrdersCollection.insertAsync({
-          orderNo: faker.number.int({ min: 1000, max: 9999 }),
-          tableNo,
-          menuItems: [],
-          totalPrice: 0,
-          paid: false,
-          orderStatus: faker.helpers.arrayElement(Object.values(OrderStatus)) as OrderStatus,
-          createdAt: faker.date.recent({ days: 7 }),
-          seats: faker.number.int({ min: 2, max: 8 }),
-        });
-      }
+  if ((await PurchaseOrdersCollection.countDocuments()) === 0) {
+    for (let i = 0; i < purchaseOrderCount; ++i) {
+      const randomSupplier = (
+        await SuppliersCollection.rawCollection()
+          .aggregate([{ $sample: { size: 1 } }, { $project: { _id: 1 } }])
+          .toArray()
+      )[0];
+
+      const randomSupplierId = faker.datatype.boolean(0.75)
+        ? randomSupplier
+          ? randomSupplier._id
+            ? randomSupplier._id
+            : null
+          : null
+        : null;
+
+      await PurchaseOrdersCollection.insertAsync({
+        supplier: randomSupplierId,
+        number: faker.number.int({ min: 1, max: 15 }),
+        stockItems: [],
+        totalCost: faker.number.int({ min: 1, max: 300 }),
+        date: new Date(),
+      });
     }
+  }
+
+  if ((await OrdersCollection.countDocuments()) === 0) {
+    const usedTableNumbers = new Set<number>();
+    for (let i = 0; i < orderCount; ++i) {
+      let tableNo;
+      // Ensure unique table numbers
+      do {
+        tableNo = i + 1;
+      } while (usedTableNumbers.has(tableNo));
+      usedTableNumbers.add(tableNo);
+
+      await OrdersCollection.insertAsync({
+        orderNo: faker.number.int({ min: 1000, max: 9999 }),
+        tableNo,
+        menuItems: [
+          {
+            name: "Cappuccino",
+            quantity: 1,
+            ingredients: ["espresso", "steamed milk", "milk foam"],
+            available: true,
+            price: 5,
+            category: ["Drink"],
+            image: "/menu_items/cappuccino.png",
+          },
+          {
+            name: "Croissant",
+            quantity: 1,
+            ingredients: ["butter", "flour", "yeast"],
+            available: true,
+            price: 8,
+            category: ["Food", "Breakfast"],
+            image: "/menu_items/croissant.png",
+          },
+        ],
+        totalPrice: 13,
+        paid: faker.datatype.boolean(),
+        orderStatus: faker.helpers.arrayElement(
+          Object.values(OrderStatus)
+        ) as OrderStatus,
+        createdAt: faker.date.recent({ days: 7 }),
+      });
+    }
+  }
+
+  // Create tables first with no order assigned
+  if ((await TablesCollection.countDocuments()) === 0) {
+    for (let i = 1; i < tableCount + 1; ++i) {
+      let capacity = faker.number.int({ min: 1, max: 20 });
+      let noOccupants = faker.number.int({ min: 0, max: capacity }); // number of occupants can be 0 to max capacity of table
+      let isOccupied = noOccupants > 0 ? true : false; // if table has occupants, set isOccupied to true, otherwise false
+
+      await TablesCollection.insertAsync({
+        tableNo: i,
+        orderID: null,
+        capacity: capacity,
+        isOccupied: isOccupied,
+        noOccupants: noOccupants,
+      });
+    }
+  }
+
+  // Create orders and assign to tableNos
+  if ((await OrdersCollection.countDocuments()) === 0) {
+    // Fetch all existing table numbers
+    const allTables = await TablesCollection.find({}, { fields: { tableNo: 1 } }).fetch();
+    const availableTableNos = allTables.map((t) => t.tableNo);
+
+    // Shuffle table numbers and get up to orderCount amount
+    const shuffledTableNos = faker.helpers.shuffle(availableTableNos).slice(0, orderCount);
+
+    // Create orders using these table numbers
+    for (let i = 0; i < shuffledTableNos.length; ++i) {
+      const tableNo = shuffledTableNos[i];
+
+      const rawMenuItems = await MenuItemsCollection.rawCollection()
+        .aggregate([{ $sample: { size: faker.number.int({ min: 0, max: 3 }) } }])
+        .toArray();
+
+      const orderMenuItems: OrderMenuItem[] = rawMenuItems.map((item: any) => ({
+        _id: new Mongo.ObjectID(),
+        name: item.name,
+        quantity: faker.number.int({ min: 1, max: 3 }),
+        ingredients: item.ingredients ?? [],
+        available: item.available ?? true,
+        price: item.price ?? 0,
+        category: item.category ?? [],
+        image: item.image ?? "",
+      }));
+
+      // Set orderStatus Pending if no items, otherwise 50% chance Preparing, 30% Ready and 20% Pending
+      let orderStatus: OrderStatus;
+      if (orderMenuItems.length === 0) {
+        orderStatus = OrderStatus.Pending;
+      } else {
+        orderStatus = faker.datatype.boolean(0.5)
+          ? OrderStatus.Preparing
+          : faker.datatype.boolean(0.3)
+          ? OrderStatus.Ready
+          : OrderStatus.Pending;
+      }
+
+      // Insert order and get its ID
+      const orderID = await OrdersCollection.insertAsync({
+        orderNo: faker.number.int({ min: 1000, max: 9999 }),
+        tableNo: tableNo,
+        menuItems: orderMenuItems,
+        totalPrice: orderMenuItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        ),
+        paid: false,
+        orderStatus,
+        createdAt: faker.date.recent({ days: 7 }),
+      });
+
+      // Update the table to reference this order ID
+      await TablesCollection.updateAsync(
+        { tableNo },
+        { $set: { orderID: String(orderID) } }
+      );
+    }
+  }
 };
