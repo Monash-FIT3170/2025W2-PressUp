@@ -24,7 +24,7 @@ export const Button = React.forwardRef<HTMLButtonElement, Props>(
         ref={ref}
         {...rest}
         className={clsx(
-          "text-nowrap shadow-lg/20 hover:shadow-md ease-in-out transition-all duration-300 rounded-xl cursor-pointer inline-flex m-4 p-2 grow-0 text-sm font-medium items-center justify-center",
+          "text-nowrap shadow-lg/20 hover:shadow-md ease-in-out transition-all duration-300 rounded-xl cursor-pointer inline-flex p-2 grow-0 text-sm font-medium items-center justify-center",
           variantColours[variant],
           width === "full" ? "w-full" : "w-fit",
         )}

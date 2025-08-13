@@ -9,7 +9,7 @@ const variantColours: Record<InputVaraint, string> = {
   navy: "bg-press-up-navy border border-press-up-light-purple text-white",
 };
 
-interface Props
+interface InputProps
   extends Pick<
     React.InputHTMLAttributes<HTMLInputElement>,
     "value" | "type" | "onChange" | "placeholder" | "autoComplete" | "required"
@@ -17,7 +17,7 @@ interface Props
   variant?: InputVaraint;
 }
 
-export const Input = React.forwardRef<HTMLInputElement, Props>(
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ variant = "default", ...rest }, ref) => {
     return (
       <input
@@ -33,3 +33,17 @@ export const Input = React.forwardRef<HTMLInputElement, Props>(
 );
 
 Input.displayName = "Input";
+
+interface LabelProps {
+  children: React.ReactNode;
+}
+
+export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
+  ({ children }) => {
+    return (
+      <label className="text-sm mb-2 font-medium text-red-900 dark:text-white">
+        {children}
+      </label>
+    );
+  },
+);
