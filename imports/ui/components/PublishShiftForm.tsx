@@ -6,9 +6,11 @@ import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { Select } from "./interaction/Select";
 
-interface PublishShiftFormProps {}
+interface PublishShiftFormProps {
+  onSuccess: () => void;
+}
 
-export const PublishShiftForm = ({}: PublishShiftFormProps) => {
+export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
   const [startTime, setStartTime] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
   const [userId, setUserId] = useState("");
@@ -21,9 +23,23 @@ export const PublishShiftForm = ({}: PublishShiftFormProps) => {
   const onSubmit: FormEventHandler = (e) => {
     e.preventDefault();
 
-    console.log(startTime);
-    console.log(endTime);
-    console.log(userId);
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    Meteor.call(
+      "shifts.new",
+      { userId, start, end },
+      (error: Meteor.Error | undefined, result: string | undefined) => {
+        if (error) {
+          console.error("Error creating shift:", error.reason || error.message);
+          if (error.reason) alert(error.reason);
+          else alert("An unexpected error occurred.");
+          return;
+        }
+        console.log("Shift created with ID:", result);
+        onSuccess();
+      },
+    );
   };
 
   return (
