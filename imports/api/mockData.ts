@@ -20,6 +20,135 @@ export const possibleImages = [
   "/menu_items/muffin.png",
 ];
 
+export const fixedMenuItems = [
+  {
+    name: "Espresso",
+    ingredients: ["espresso"],
+    available: false,
+    quantity: 40,
+    price: 4.0,
+    category: ["Drink"],
+    image: "/menu_items/espresso.png",
+  },
+  {
+    name: "Ham & Cheese Toastie",
+    ingredients: ["bread", "ham", "cheese", "butter"],
+    available: true,
+    quantity: 20,
+    price: 6.0,
+    category: ["Food"],
+    image: "/menu_items/ham_cheese_toastie.png",
+  },
+  {
+    name: "Banana Bread",
+    ingredients: ["banana", "flour", "sugar", "butter", "egg"],
+    available: false,
+    quantity: 25,
+    price: 4.0,
+    category: ["Food", "Snack"],
+    image: "/menu_items/banana_bread.png",
+  },
+  {
+    name: "Hot Chocolate",
+    ingredients: ["cocoa", "milk", "sugar", "whipped cream"],
+    available: true,
+    quantity: 30,
+    price: 5.0,
+    category: ["Drink"],
+    image: "/menu_items/hot_chocolate.png",
+  },
+  {
+    name: "Chai Latte",
+    ingredients: ["chai", "milk", "spices"],
+    available: false,
+    quantity: 30,
+    price: 5.0,
+    category: ["Drink"],
+    image: "/menu_items/chai_latte.png",
+  },
+  {
+    name: "Cappuccino",
+    ingredients: ["espresso", "steamed milk", "milk foam"],
+    available: true,
+    quantity: 50,
+    price: 5.0,
+    category: ["Drink"],
+    image: "/menu_items/cappuccino.png",
+  },
+  {
+    name: "Cookie",
+    ingredients: ["flour", "sugar", "chocolate chips", "butter"],
+    available: true,
+    quantity: 40,
+    price: 3.0,
+    category: ["Food"],
+    image: "/menu_items/cookie.png",
+  },
+  {
+    name: "Croissant",
+    ingredients: ["flour", "butter", "yeast", "milk"],
+    available: false,
+    quantity: 30,
+    price: 4.5,
+    category: ["Food"],
+    image: "/menu_items/croissant.png",
+  },
+  {
+    name: "Flat White",
+    ingredients: ["espresso", "steamed milk"],
+    available: true,
+    quantity: 35,
+    price: 5.0,
+    category: ["Drink"],
+    image: "/menu_items/flat white.png",
+  },
+  {
+    name: "Iced Latte",
+    ingredients: ["espresso", "milk", "ice"],
+    available: true,
+    quantity: 25,
+    price: 5.5,
+    category: ["Drink"],
+    image: "/menu_items/iced latte.png",
+  },
+  {
+    name: "Latte",
+    ingredients: ["espresso", "steamed milk", "milk foam"],
+    available: true,
+    quantity: 45,
+    price: 5.0,
+    category: ["Drink"],
+    image: "/menu_items/latte.png",
+  },
+  {
+    name: "Macchiato",
+    ingredients: ["espresso", "milk foam"],
+    available: true,
+    quantity: 20,
+    price: 4.0,
+    category: ["Drink"],
+    image: "/menu_items/macchiato.png",
+  },
+  {
+    name: "Mocha",
+    ingredients: ["espresso", "chocolate", "steamed milk", "milk foam"],
+    available: true,
+    quantity: 30,
+    price: 5.5,
+    category: ["Drink"],
+    image: "/menu_items/mocha.png",
+  },
+  {
+    name: "Muffin",
+    ingredients: ["flour", "sugar", "blueberries", "butter"],
+    available: true,
+    quantity: 30,
+    price: 3.5,
+    category: ["Food"],
+    image: "/menu_items/muffin.png",
+  },
+];
+
 export const mockDataGenerator = async ({
   supplierCount,
   menuItemCount,
@@ -42,21 +171,21 @@ export const mockDataGenerator = async ({
   purchaseOrderCount = purchaseOrderCount || 10;
   tableCount = tableCount || 20;
 
-  if (await SuppliersCollection.countDocuments() > 0) {
-    await SuppliersCollection.dropCollectionAsync();
-  }
-  if (await MenuItemsCollection.countDocuments() > 0) {
-    await MenuItemsCollection.dropCollectionAsync();
-  }
-  if (await StockItemsCollection.countDocuments() > 0) {
-    await StockItemsCollection.dropCollectionAsync();
-  }
-  if (await TablesCollection.countDocuments() > 0) {
-    await TablesCollection.dropCollectionAsync();
-  }
-  if (await OrdersCollection.countDocuments() > 0) {
-    await OrdersCollection.dropCollectionAsync();
-  }
+  // if (await SuppliersCollection.countDocuments() > 0) {
+  //   await SuppliersCollection.dropCollectionAsync();
+  // }
+  // if (await MenuItemsCollection.countDocuments() > 0) {
+  //   await MenuItemsCollection.dropCollectionAsync();
+  // }
+  // if (await StockItemsCollection.countDocuments() > 0) {
+  //   await StockItemsCollection.dropCollectionAsync();
+  // }
+  // if (await TablesCollection.countDocuments() > 0) {
+  //   await TablesCollection.dropCollectionAsync();
+  // }
+  // if (await OrdersCollection.countDocuments() > 0) {
+  //   await OrdersCollection.dropCollectionAsync();
+  // }
 
   if ((await SuppliersCollection.countDocuments()) === 0) {
     for (let i = 0; i < supplierCount; ++i) {
@@ -76,26 +205,17 @@ export const mockDataGenerator = async ({
   }
 
   if ((await MenuItemsCollection.countDocuments()) === 0) {
-    for (let i = 0; i < menuItemCount; ++i) {
-      await MenuItemsCollection.insertAsync({
-        name: faker.food.dish(),
-        ingredients: Array.from(
-          { length: faker.number.int({ min: 1, max: 5 }) },
-          faker.food.ingredient
-        ),
-        available: faker.datatype.boolean(),
-        quantity: faker.number.int({ min: 1, max: 100 }),
-        price: faker.number.float({ min: 1, max: 100 }),
-        category: [faker.datatype.boolean() ? "Food" : "Drink"],
-        image: possibleImages[
-          faker.number.int({ min: 0, max: possibleImages.length - 1 })
-        ],
-      });
+    for (const item of fixedMenuItems) {
+      await MenuItemsCollection.insertAsync(item);
     }
   }
 
   if ((await StockItemsCollection.countDocuments()) === 0) {
-    for (let i = 0; i < stockItemCount; ++i) {
+    // Gather all unique ingredients from fixedMenuItems
+    const allIngredients = Array.from(
+      new Set(fixedMenuItems.flatMap(item => item.ingredients))
+    );
+    for (const ingredient of allIngredients) {
       const randomSupplier = (
         await SuppliersCollection.rawCollection()
           .aggregate([{ $sample: { size: 1 } }, { $project: { _id: 1 } }])
@@ -103,18 +223,14 @@ export const mockDataGenerator = async ({
       )[0];
 
       const randomSupplierId = faker.datatype.boolean(0.75)
-        ? randomSupplier
+        ? randomSupplier && randomSupplier._id
           ? randomSupplier._id
-            ? randomSupplier._id
-            : null
           : null
         : null;
 
       await StockItemsCollection.insertAsync({
-        name: faker.commerce.product(),
-        quantity: faker.datatype.boolean({ probability: 0.8 })
-          ? faker.number.int({ min: 1, max: 300 })
-          : 0,
+        name: ingredient,
+        quantity: faker.number.int({ min: 0, max: 50 }),
         location: faker.location.secondaryAddress(),
         supplier: randomSupplierId,
       });
@@ -143,49 +259,6 @@ export const mockDataGenerator = async ({
         stockItems: [],
         totalCost: faker.number.int({ min: 1, max: 300 }),
         date: new Date(),
-      });
-    }
-  }
-
-  if ((await OrdersCollection.countDocuments()) === 0) {
-    const usedTableNumbers = new Set<number>();
-    for (let i = 0; i < orderCount; ++i) {
-      let tableNo;
-      // Ensure unique table numbers
-      do {
-        tableNo = i + 1;
-      } while (usedTableNumbers.has(tableNo));
-      usedTableNumbers.add(tableNo);
-
-      await OrdersCollection.insertAsync({
-        orderNo: faker.number.int({ min: 1000, max: 9999 }),
-        tableNo,
-        menuItems: [
-          {
-            name: "Cappuccino",
-            quantity: 1,
-            ingredients: ["espresso", "steamed milk", "milk foam"],
-            available: true,
-            price: 5,
-            category: ["Drink"],
-            image: "/menu_items/cappuccino.png",
-          },
-          {
-            name: "Croissant",
-            quantity: 1,
-            ingredients: ["butter", "flour", "yeast"],
-            available: true,
-            price: 8,
-            category: ["Food", "Breakfast"],
-            image: "/menu_items/croissant.png",
-          },
-        ],
-        totalPrice: 13,
-        paid: faker.datatype.boolean(),
-        orderStatus: faker.helpers.arrayElement(
-          Object.values(OrderStatus)
-        ) as OrderStatus,
-        createdAt: faker.date.recent({ days: 7 }),
       });
     }
   }
