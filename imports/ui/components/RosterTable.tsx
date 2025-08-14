@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 
-// Assign a color to each staff member for color coding
-const staffColors: Record<string, string> = {
-  Alice: "#f87171",   // Red
-  Bob: "#60a5fa",     // Blue
-  Charlie: "#34d399", // Green
-  Dana: "#fbbf24",    // Yellow
+// Assign a color to each role for color coding
+const roleColors: Record<string, string> = {
+  "Wait Staff": "#8b5cf6", // Purple
+  Chef: "#10b981",          // Emerald
+  Supervisor: "#f59e0b",    // Amber
 };
 
 // Helper to get the most recent Monday from a date
@@ -94,40 +93,7 @@ const daysOfWeek = [
 
 const allRoles = Array.from(new Set(staffShifts.map((s) => s.role)));
 
-// Tooltip component
-const Tooltip: React.FC<{ text: string; children: React.ReactNode }> = ({ text, children }) => {
-  const [visible, setVisible] = useState(false);
-  return (
-    <span
-      style={{ position: "relative", display: "inline-block" }}
-      onMouseEnter={() => setVisible(true)}
-      onMouseLeave={() => setVisible(false)}
-    >
-      {children}
-      {visible && (
-        <span
-          style={{
-            position: "absolute",
-            zIndex: 10,
-            left: "50%",
-            top: "-2.2em",
-            transform: "translateX(-50%)",
-            background: "#222",
-            color: "#fff",
-            padding: "0.25em 0.7em",
-            borderRadius: "0.3em",
-            fontSize: "0.85em",
-            whiteSpace: "nowrap",
-            pointerEvents: "none",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-          }}
-        >
-          {text}
-        </span>
-      )}
-    </span>
-  );
-};
+// (Tooltip removed; not used in the simplified roster view)
 
 export const RosterTable: React.FC = () => {
   // Start with the most recent Monday as the base week
@@ -148,37 +114,15 @@ export const RosterTable: React.FC = () => {
     return d;
   });
 
-  // Helper to get staff working at a given day/time slot (30-min increments)
-  const getStaffForCell = (day: number, hour: number, minute: number) => {
-    const cellDateStr = weekDates[day].toISOString().slice(0, 10); // 'YYYY-MM-DD'
-    return staffShifts
-      .filter((staff) => roleFilter.includes(staff.role))
-      .map((staff) => {
-        const shift = staff.shifts.find((shift) => {
-          if (shift.date !== cellDateStr) return false;
-          const shiftStart = shift.startHour * 60 + shift.startMinute;
-          const shiftEnd = shift.endHour * 60 + shift.endMinute;
-          const cellTime = hour * 60 + minute;
-          return cellTime >= shiftStart && cellTime < shiftEnd;
-        });
-        if (shift) {
-          return {
-            name: staff.name,
-            role: staff.role,
-            shift,
-          };
-        }
-        return null;
-      })
-      .filter(Boolean) as { name: string; role: string; shift: { date: string; startHour: number; startMinute: number; endHour: number; endMinute: number } }[];
-  };
+  const filteredStaff = staffShifts.filter((s) => roleFilter.includes(s.role));
 
-  // Render table rows for each 30-min increment
-  const timeSlots = Array.from({ length: 24 * 2 }).map((_, i) => {
-    const hour = Math.floor(i / 2);
-    const minute = i % 2 === 0 ? 0 : 30;
-    return { hour, minute };
-  });
+  const getShiftForStaffAndDay = (
+    staff: { shifts: { date: string; startHour: number; startMinute: number; endHour: number; endMinute: number }[]; role: string },
+    dayIndex: number
+  ) => {
+    const cellDateStr = weekDates[dayIndex].toISOString().slice(0, 10);
+    return staff.shifts.find((shift) => shift.date === cellDateStr) || null;
+  };
 
   // Handle role filter change
   const handleRoleChange = (role: string) => {
@@ -257,7 +201,7 @@ export const RosterTable: React.FC = () => {
       <table className="min-w-full border border-gray-300">
         <thead>
           <tr>
-            <th className="border border-gray-300 px-2 py-1 bg-gray-100">Time</th>
+            <th className="border border-gray-300 px-2 py-1 bg-gray-100 text-left">Employee</th>
             {daysOfWeek.map((day, i) => (
               <th key={day} className="border border-gray-300 px-2 py-1 bg-gray-100">
                 {day}
@@ -269,61 +213,34 @@ export const RosterTable: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {timeSlots.map(({ hour, minute }, idx) => (
-            <tr
-              key={idx}
-              style={{
-                borderTop:
-                  minute === 0
-                    ? "2px solid #d1d5db" // bold for hour
-                    : "1px dashed #e5e7eb", // faint for 30-min
-              }}
-            >
-              <td
-                className={
-                  minute === 0
-                    ? "border border-gray-300 px-2 py-1 font-mono bg-gray-50"
-                    : "border border-gray-200 px-2 py-1 font-mono bg-gray-50 text-gray-400"
-                }
-              >
-                {formatTime(hour, minute)}
+          {filteredStaff.map((staff) => (
+            <tr key={staff.name}>
+              <td className="border border-gray-300 px-2 py-1 font-medium text-left">
+                {staff.name}
               </td>
-              {Array.from({ length: 7 }).map((_, day) => {
-                const staffInCell = getStaffForCell(day, hour, minute);
+              {Array.from({ length: 7 }).map((_, dayIndex) => {
+                const shift = getShiftForStaffAndDay(staff, dayIndex);
                 return (
-                  <td
-                    key={day}
-                    className={
-                      minute === 0
-                        ? "border border-gray-300 px-2 py-1"
-                        : "border border-gray-200 px-2 py-1 text-gray-400"
-                    }
-                  >
-                    {staffInCell.length > 0 && (
-                      <div className="flex flex-col gap-1">
-                        {staffInCell.map(({ name, role, shift }) => (
-                          <Tooltip
-                            key={name}
-                            text={`${role} | ${formatTime(shift.startHour, shift.startMinute)} - ${formatTime(shift.endHour, shift.endMinute)}`}
-                          >
-                            <span
-                              style={{
-                                backgroundColor: staffColors[name] || "#e5e7eb", // fallback gray
-                                color: "#fff",
-                                borderRadius: "0.25rem",
-                                padding: "0.1rem 0.4rem",
-                                fontWeight: 500,
-                                fontSize: "0.95em",
-                                display: "inline-block",
-                                cursor: "pointer",
-                              }}
-                            >
-                              {name}
-                            </span>
-                          </Tooltip>
-                        ))}
+                  <td key={dayIndex} className="border border-gray-300 px-2 py-1 align-top">
+                    {shift ? (
+                      <div
+                        style={{
+                          backgroundColor: roleColors[staff.role] || "#6b7280", // fallback gray
+                          color: "#fff",
+                          borderRadius: "0.375rem",
+                          padding: "0.25rem 0.5rem",
+                          display: "inline-flex",
+                          flexDirection: "column",
+                          alignItems: "flex-start",
+                          gap: "2px",
+                        }}
+                      >
+                        <span className="font-mono text-sm" style={{ color: "#fff" }}>
+                          {formatTime(shift.startHour, shift.startMinute)} - {formatTime(shift.endHour, shift.endMinute)}
+                        </span>
+                        <span className="text-xs" style={{ color: "rgba(255,255,255,0.9)" }}>{staff.role}</span>
                       </div>
-                    )}
+                    ) : null}
                   </td>
                 );
               })}
