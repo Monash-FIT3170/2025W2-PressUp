@@ -1,7 +1,12 @@
 import { Meteor } from "meteor/meteor";
 import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  Button, Select, MenuItem, FormControl, InputLabel,
+  Checkbox, List, ListItem, ListItemIcon, ListItemText,
+  Chip, Stack, Typography
+} from "@mui/material";
 import type { UiOrder } from "./KitchenMgmtTypes";
 
 type OrderCardProps = {
@@ -23,21 +28,43 @@ export const OrderCard = ({order}: OrderCardProps) => {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState(order.status);
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  type UiMenuItem = UiOrder["menuItems"][number];
+  const [items, setItems] = useState<UiMenuItem[]>(
+    order.menuItems.map((mi) => ({
+      ...mi,
+      served: mi.served ?? false,
+    }))
+  );
+
+  const toggleServed = (index: number) => {
+    setItems((prev) =>
+      prev.map((it, i) => (i === index ? { ...it, served: !it.served } : it))
+    );
+  };
+
+  const setAll = (val: boolean) =>
+    setItems((prev) => prev.map((it) => ({ ...it, served: val })));
+
+  const handleStatusChange = (next: string) => {
+    if (next === "served" && items.some((it) => !it.served)) {
+      alert("you must check all items as served before marking as served");
+      return;
+    }
+    setStatus(next as UiOrder["status"]);
+  };
 
   const handleSave = () => {
     Meteor.call(
       "orders.updateOrder",
-      order._id,                          // id of the order to update
-      { orderStatus: status },            // field to update
+      order._id,
+      { orderStatus: status },
       (err: Meteor.Error | undefined) => {
         if (err) {
           console.error(err);
           alert(`fail to update: ${err.reason || err.message}`);
           return;
         }
-        setOpen(false);                   // Close on success
+        setOpen(false);
       }
     );
   };
@@ -50,23 +77,29 @@ export const OrderCard = ({order}: OrderCardProps) => {
         className="rounded-lg bg-white p-4 shadow-sm hover:shadow-md border-press-up-purple border-3"
         style={style}
       >
-        {/* drag handleer */}
+        {/* drag handler */}
         <div
           {...listeners}
           {...attributes}
           className="cursor-grab w-5 h-5 bg-gray-300 mb-2 rounded"
           title="Drag to move"
-        ></div>
+        />
 
         {/* click space */}
-        <div className="cursor-pointer" onClick={handleOpen}>
-          <h3 className="font-medium text-press-up-purple text-xl">Order #{order.orderNo}</h3>
-          <p className="font-bold text-lg text-press-up-purple">Table {order.tableNo}</p>
+        <div className="cursor-pointer" onClick={() => setOpen(true)}>
+          <h3 className="font-medium text-press-up-purple text-xl">
+            Order #{order.orderNo}
+          </h3>
+          <p className="font-bold text-lg text-press-up-purple">
+            Table {order.tableNo}
+          </p>
           <p className="text-sm text-press-up-purple">{order.createdAt}</p>
+
+          {/* ✅ 여기서 item은 객체이므로 item.name으로 표시 */}
           <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
             {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
               order.menuItems.map((item, index) => (
-                <li key={index}>{item}</li>
+                <li key={index}>{item.name}</li>
               ))
             ) : (
               <li className="italic text-sm text-press-up-purple">No items</li>
@@ -76,22 +109,61 @@ export const OrderCard = ({order}: OrderCardProps) => {
       </div>
 
       {/* Dialog */}
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Order Details</DialogTitle>
         <DialogContent dividers>
-          <p><strong>Order No:</strong> {order.orderNo}</p>
-          <p><strong>Table No:</strong> {order.tableNo}</p>
-          <p><strong>Created At:</strong> {order.createdAt}</p>
-          <p><strong>Menu Items:</strong></p>
-          <ul>
-            {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
-              order.menuItems.map((item, index) => (
-                <li key={index}>{item}</li>
+          <p>
+            <strong>Order No:</strong> {order.orderNo}
+          </p>
+          <p>
+            <strong>Table No:</strong> {order.tableNo}
+          </p>
+          <p>
+            <strong>Created At:</strong> {order.createdAt}
+          </p>
+
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ mt: 1, mb: 1 }}
+          >
+            <Typography fontWeight={700}>Menu Items:</Typography>
+            <Stack direction="row" spacing={1}>
+              <Button size="small" onClick={() => setAll(true)}>
+                Check all
+              </Button>
+              <Button size="small" onClick={() => setAll(false)}>
+                Uncheck all
+              </Button>
+            </Stack>
+          </Stack>
+
+          <List dense>
+            {items.length > 0 ? (
+              items.map((it, idx) => (
+                <ListItem
+                  key={`${it.name}-${idx}`}
+                  secondaryAction={<Chip label={`x${it.quantity}`} />}
+                  disableGutters
+                >
+                  <ListItemIcon>
+                    <Checkbox
+                      edge="start"
+                      checked={!!it.served}
+                      onChange={() => toggleServed(idx)}
+                      tabIndex={-1}
+                    />
+                  </ListItemIcon>
+                  <ListItemText primary={it.name} />
+                </ListItem>
               ))
             ) : (
-              <li>No items</li>
+              <Typography variant="body2" fontStyle="italic">
+                No items
+              </Typography>
             )}
-          </ul>
+          </List>
 
           {/* Status Dropdown */}
           <FormControl fullWidth sx={{ mt: 2 }}>
@@ -99,18 +171,22 @@ export const OrderCard = ({order}: OrderCardProps) => {
             <Select
               value={status}
               label="Status"
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(e) => handleStatusChange(String(e.target.value))}
             >
               <MenuItem value="pending">Pending</MenuItem>
               <MenuItem value="preparing">Preparing</MenuItem>
               <MenuItem value="ready">Ready</MenuItem>
-              <MenuItem value="served">Served</MenuItem>
+              <MenuItem value="served" disabled={items.some((it) => !it.served)}>
+                Served {items.some((it) => !it.served) ? "(check all first)" : ""}
+              </MenuItem>
             </Select>
           </FormControl>
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={handleClose} color="secondary">Cancel</Button>
+          <Button onClick={() => setOpen(false)} color="secondary">
+            Cancel
+          </Button>
           <Button onClick={handleSave} variant="contained" color="primary">
             Save
           </Button>
