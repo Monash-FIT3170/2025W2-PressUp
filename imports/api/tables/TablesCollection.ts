@@ -3,7 +3,7 @@ import { DBEntry } from "../database";
 
 export interface Tables extends DBEntry {
   tableNo: number;
-  orderNo: number | null;
+  orderID: string | null; // OrderID stored as string rather than Mongo.ObjectID
   capacity: number;
   isOccupied: boolean;
   noOccupants: number;

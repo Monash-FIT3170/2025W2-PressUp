@@ -1,16 +1,23 @@
 import { MenuItemsCollection, Order, OrdersCollection } from "/imports/api";
+import { TablesCollection } from "/imports/api";
 import { PosItemCard } from "../../components/PosItemCard";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { PosSideMenu } from "../../components/PosSideMenu";
 import { Meteor } from 'meteor/meteor';
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { OrderStatus } from "/imports/api/orders/OrdersCollection";
 
 export const MainDisplay = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategories, setSelectedCategories] = useState([]);
-    const [selectedTable, setSelectedTable] = useState(1);
+    const [selectedTable, setSelectedTable] = useState(null);
+    
     const isLoadingPosItems = useSubscribe("menuItems");
     const isLoadingOrders = useSubscribe("orders");
+    const isLoadingTables = useSubscribe("tables");
+    
+    const tables = useTracker(() => TablesCollection.find().fetch());
+    const orders = useTracker(() => OrdersCollection.find().fetch());
     const posItems = useTracker(() => MenuItemsCollection.find().fetch());
     // Fetch the current order for the selected table
     const order = useTracker(() => OrdersCollection.findOne({ tableNo: selectedTable }), [selectedTable]);
@@ -24,6 +31,19 @@ export const MainDisplay = () => {
       return matchesName && matchesCategory && isAvailable;
     });
     
+    useEffect(() => {
+      if (selectedTable !== null) return; // Only set on initial load
+
+      if (orders.length > 0) {
+        // Find the unpaid order with the lowest table number
+        const unpaidOrders = orders.filter(ord => !ord.paid);
+        if (unpaidOrders.length > 0) {
+          const lowestUnpaidTableNo = Math.min(...unpaidOrders.map(o => o.tableNo));
+          setSelectedTable(lowestUnpaidTableNo);
+          return;
+        }
+      }
+    }, [tables, orders, selectedTable]);
 
     // Update order status
     const updateOrderInDb = (updatedFields) => {
@@ -56,6 +76,7 @@ export const MainDisplay = () => {
         discountPercent: order.discountPercent || 0,
         discountAmount: order.discountAmount || 0,
         originalPrice: parseFloat(newTotal.toFixed(2)),
+        orderStatus: OrderStatus.Pending,
       });
     };
 
@@ -133,6 +154,7 @@ export const MainDisplay = () => {
         discountPercent: order.discountPercent || 0,
         discountAmount: order.discountAmount || 0,
         originalPrice: parseFloat(newTotal.toFixed(2)),
+        orderStatus: OrderStatus.Pending,
       });
     };
 
