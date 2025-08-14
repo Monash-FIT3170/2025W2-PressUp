@@ -93,8 +93,6 @@ const daysOfWeek = [
 
 const allRoles = Array.from(new Set(staffShifts.map((s) => s.role)));
 
-// (Tooltip removed; not used in the simplified roster view)
-
 export const RosterTable: React.FC = () => {
   // Start with the most recent Monday as the base week
   const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, -1 = prev, +1 = next
