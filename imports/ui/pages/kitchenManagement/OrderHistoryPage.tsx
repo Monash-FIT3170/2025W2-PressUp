@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { usePageTitle } from "../../hooks/PageTitleContext";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { OrdersCollection, Order as DBOrder } from "../../../api/orders/OrdersCollection";
@@ -17,6 +18,10 @@ type RowOrder = {
 };
 
 export const OrderHistoryPage = () => {
+    const [_, setPageTitle] = usePageTitle();
+    useEffect(() => {
+      setPageTitle("Kitchen Management - Order History");
+    }, [setPageTitle]);
   const orders: RowOrder[] = useTracker(() => {
     const sub = Meteor.subscribe("orders");
     if (!sub.ready()) return [];
@@ -108,19 +113,36 @@ export const OrderHistoryPage = () => {
                 </TableCell>
                 <TableCell align="right">
                   <Stack direction="row" spacing={1} justifyContent="flex-end">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => reopen(row._id, "ready")}
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                        borderColor: "#8E44AD",
+                        color: "#8E44AD",
+                        "&:hover": {
+                        borderColor: "#732d91",
+                        backgroundColor: "rgba(142,68,173,0.08)"
+                        }
+                    }}
+                    onClick={() => reopen(row._id, "ready")}
                     >
-                      Reopen: Ready
+                    Reopen: Ready
                     </Button>
+
                     <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => reopen(row._id, "preparing")}
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                        borderColor: "#8E44AD",
+                        color: "#8E44AD",
+                        "&:hover": {
+                        borderColor: "#732d91",
+                        backgroundColor: "rgba(142,68,173,0.08)"
+                        }
+                    }}
+                    onClick={() => reopen(row._id, "preparing")}
                     >
-                      Reopen: Preparing
+                    Reopen: Preparing
                     </Button>
                   </Stack>
                 </TableCell>

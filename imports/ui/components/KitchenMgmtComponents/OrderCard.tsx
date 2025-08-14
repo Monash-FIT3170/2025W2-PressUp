@@ -115,7 +115,7 @@ export const OrderCard = ({order}: OrderCardProps) => {
       <div
         ref={setNodeRef}
         className="rounded-lg bg-white p-4 shadow-sm hover:shadow-md border-press-up-purple border-3"
-        style={style}
+        style={{ ...style, border: "3px solid #8E44AD" }}
       >
         {/* drag handler */}
         <div
@@ -169,12 +169,37 @@ export const OrderCard = ({order}: OrderCardProps) => {
           >
             <Typography fontWeight={700}>Menu Items:</Typography>
             <Stack direction="row" spacing={1}>
-              <Button size="small" onClick={() => setAll(true)}>
-                Check all
-              </Button>
-              <Button size="small" onClick={() => setAll(false)}>
-                Uncheck all
-              </Button>
+            <Button
+              size="small"
+              onClick={() => setAll(true)}
+              sx={{
+                borderColor: "#8E44AD",
+                color: "#8E44AD",
+                border: "1px solid",
+                "&:hover": {
+                  borderColor: "#732d91",
+                  backgroundColor: "rgba(142,68,173,0.08)"
+                }
+              }}
+            >
+              Check all
+            </Button>
+
+            <Button
+              size="small"
+              onClick={() => setAll(false)}
+              sx={{
+                borderColor: "#8E44AD",
+                color: "#8E44AD",
+                border: "1px solid",
+                "&:hover": {
+                  borderColor: "#732d91",
+                  backgroundColor: "rgba(142,68,173,0.08)"
+                }
+              }}
+            >
+              Uncheck all
+            </Button>
             </Stack>
           </Stack>
 
@@ -224,10 +249,29 @@ export const OrderCard = ({order}: OrderCardProps) => {
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={() => setOpen(false)} color="secondary">
+          <Button
+            onClick={() => setOpen(false)}
+            sx={{
+              borderColor: "#8E44AD",
+              color: "#8E44AD",
+              "&:hover": {
+                borderColor: "#732d91",
+                backgroundColor: "rgba(142,68,173,0.08)"
+              }
+            }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSave} variant="contained" color="primary">
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            sx={{
+              backgroundColor: "#8E44AD",
+              "&:hover": {
+                backgroundColor: "#732d91"
+              }
+            }}
+          >
             Save
           </Button>
         </DialogActions>
