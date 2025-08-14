@@ -38,22 +38,24 @@ export const KitchenManagement = () => {
   }, []);
 
 
-    const handleDragEnd = (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over) return;
-    
-      const orderId = active.id as string; 
-      const newStatus = over.id as ColumnType["id"];
-    
-      const newDbStatus = newStatus;
-    
-      const order = OrdersCollection.findOne({ _id: orderId });
-      if (!order) return;
-    
-      Meteor.call("orders.updateOrder", order._id, {
-        orderStatus: newDbStatus
-      });
-    };
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over) return;
+  
+    const orderId = String(active.id);                 
+    const newStatus = over.id as ColumnType["id"];     
+  
+    Meteor.call(
+      "orders.updateOrder",
+      orderId,
+      { orderStatus: newStatus },
+      (err: Meteor.Error | undefined) => {
+        if (err) {
+          console.error(err);
+          alert(`fail to update: ${err.reason || err.message}`);
+        }
+      }
+    );
+  };
     
 
  

@@ -1,3 +1,4 @@
+import { Meteor } from "meteor/meteor";
 import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
@@ -24,6 +25,22 @@ export const OrderCard = ({order}: OrderCardProps) => {
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+
+  const handleSave = () => {
+    Meteor.call(
+      "orders.updateOrder",
+      order._id,                          // id of the order to update
+      { orderStatus: status },            // field to update
+      (err: Meteor.Error | undefined) => {
+        if (err) {
+          console.error(err);
+          alert(`fail to update: ${err.reason || err.message}`);
+          return;
+        }
+        setOpen(false);                   // Close on success
+      }
+    );
+  };
 
   return (
     <>
@@ -94,7 +111,7 @@ export const OrderCard = ({order}: OrderCardProps) => {
 
         <DialogActions>
           <Button onClick={handleClose} color="secondary">Cancel</Button>
-          <Button onClick={() => { console.log("Selected Status:", status); handleClose(); }} variant="contained" color="primary">
+          <Button onClick={handleSave} variant="contained" color="primary">
             Save
           </Button>
         </DialogActions>
