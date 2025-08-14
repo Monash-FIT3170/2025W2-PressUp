@@ -9,9 +9,27 @@ import {
 } from "@mui/material";
 import type { UiOrder } from "./KitchenMgmtTypes";
 
+type UiMenuItem = UiOrder["menuItems"][number];
+
 type OrderCardProps = {
   order: UiOrder;
 };
+
+function mergeItemsWithPrev(
+  prev: UiMenuItem[],
+  fromDb: UiMenuItem[]
+): UiMenuItem[] {
+  return fromDb.map((dbIt, i) => {
+    const prevServed =
+      prev[i]?.served ?? 
+      dbIt.served ??     
+      false;             
+    return {
+      ...dbIt,
+      served: prevServed,
+    };
+  });
+}
 
 
 export const OrderCard = ({order}: OrderCardProps) => {
@@ -39,9 +57,12 @@ export const OrderCard = ({order}: OrderCardProps) => {
   const allServed = items.length > 0 && items.every(it => !!it.served);
 
   useEffect(() => {
-    setItems(order.menuItems.map(mi => ({ ...mi, served: mi.served ?? false })));
-    setStatus(order.status);
-  }, [order._id, order.status, order.menuItems]);
+    setItems(prev => mergeItemsWithPrev(
+      prev,
+      order.menuItems.map(mi => ({ ...mi, served: mi.served ?? false }))
+    ));
+  }, [order._id, order.menuItems]);
+
 
   const toggleServed = (index: number) => {
     setItems(prev => {
@@ -68,14 +89,24 @@ export const OrderCard = ({order}: OrderCardProps) => {
   };
 
   const handleSave = () => {
-    Meteor.call("orders.updateOrder", order._id, { orderStatus: status }, (err?: Meteor.Error) => {
-      if (err) {
-        console.error(err);
-        alert(`fail to update: ${err.reason || err.message}`);
-        return;
+    const mergedMenuItems = order.menuItems.map((mi, idx) => ({
+      ...mi,
+      served: items[idx]?.served ?? mi.served ?? false,
+    }));
+  
+    Meteor.call(
+      "orders.updateOrder",
+      order._id,
+      { orderStatus: status, menuItems: mergedMenuItems },
+      (err?: Meteor.Error) => {
+        if (err) {
+          console.error(err);
+          alert(`fail to update: ${err.reason || err.message}`);
+          return;
+        }
+        setOpen(false);
       }
-      setOpen(false);
-    });
+    );
   };
 
   return (
@@ -104,7 +135,6 @@ export const OrderCard = ({order}: OrderCardProps) => {
           </p>
           <p className="text-sm text-press-up-purple">{order.createdAt}</p>
 
-          {/* ✅ 여기서 item은 객체이므로 item.name으로 표시 */}
           <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
             {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
               order.menuItems.map((item, index) => (
