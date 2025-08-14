@@ -1,5 +1,5 @@
 import { Meteor } from "meteor/meteor";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
@@ -36,17 +36,31 @@ export const OrderCard = ({order}: OrderCardProps) => {
     }))
   );
 
+  const allServed = items.length > 0 && items.every(it => !!it.served);
+
+  useEffect(() => {
+    setItems(order.menuItems.map(mi => ({ ...mi, served: mi.served ?? false })));
+    setStatus(order.status);
+  }, [order._id, order.status, order.menuItems]);
+
   const toggleServed = (index: number) => {
-    setItems((prev) =>
-      prev.map((it, i) => (i === index ? { ...it, served: !it.served } : it))
-    );
+    setItems(prev => {
+      const next = prev.map((it, i) => i === index ? { ...it, served: !it.served } : it);
+      Meteor.call("orders.setMenuItemServed", order._id, index, !prev[index].served);
+      return next;
+    });
   };
 
-  const setAll = (val: boolean) =>
-    setItems((prev) => prev.map((it) => ({ ...it, served: val })));
+  const setAll = (val: boolean) => {
+    setItems(prev => {
+      const next = prev.map(it => ({ ...it, served: val }));
+      Meteor.call("orders.setAllMenuItemsServed", order._id, val);
+      return next;
+    });
+  };
 
   const handleStatusChange = (next: string) => {
-    if (next === "served" && items.some((it) => !it.served)) {
+    if (next === "served" && !(status === "ready" && allServed)) {
       alert("you must check all items as served before marking as served");
       return;
     }
@@ -54,19 +68,14 @@ export const OrderCard = ({order}: OrderCardProps) => {
   };
 
   const handleSave = () => {
-    Meteor.call(
-      "orders.updateOrder",
-      order._id,
-      { orderStatus: status },
-      (err: Meteor.Error | undefined) => {
-        if (err) {
-          console.error(err);
-          alert(`fail to update: ${err.reason || err.message}`);
-          return;
-        }
-        setOpen(false);
+    Meteor.call("orders.updateOrder", order._id, { orderStatus: status }, (err?: Meteor.Error) => {
+      if (err) {
+        console.error(err);
+        alert(`fail to update: ${err.reason || err.message}`);
+        return;
       }
-    );
+      setOpen(false);
+    });
   };
 
   return (
@@ -167,20 +176,21 @@ export const OrderCard = ({order}: OrderCardProps) => {
 
           {/* Status Dropdown */}
           <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={status}
-              label="Status"
-              onChange={(e) => handleStatusChange(String(e.target.value))}
-            >
-              <MenuItem value="pending">Pending</MenuItem>
-              <MenuItem value="preparing">Preparing</MenuItem>
-              <MenuItem value="ready">Ready</MenuItem>
-              <MenuItem value="served" disabled={items.some((it) => !it.served)}>
-                Served {items.some((it) => !it.served) ? "(check all first)" : ""}
-              </MenuItem>
-            </Select>
-          </FormControl>
+          <InputLabel>Status</InputLabel>
+          <Select
+            value={status}
+            label="Status"
+            onChange={(e) => handleStatusChange(String(e.target.value))}
+          >
+            <MenuItem value="pending">Pending</MenuItem>
+            <MenuItem value="preparing">Preparing</MenuItem>
+            <MenuItem value="ready">Ready</MenuItem>
+
+            <MenuItem value="served" disabled={!(status === "ready" && allServed)}>
+              Served {!(status === "ready" && allServed) ? "(Ready + all checked)" : ""}
+            </MenuItem>
+          </Select>
+        </FormControl>
         </DialogContent>
 
         <DialogActions>

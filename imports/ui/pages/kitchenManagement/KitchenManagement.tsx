@@ -33,10 +33,10 @@ export const KitchenManagement = () => {
       tableNo: doc.tableNo,
       createdAt: new Date(doc.createdAt).toLocaleTimeString().toUpperCase(),
       status: doc.orderStatus as OrderStatus, 
-      menuItems: (doc.menuItems ?? []).map((it: any) => ({
+      menuItems: (doc.menuItems ?? []).map((it) => ({
         name: it.name,
         quantity: typeof it.quantity === "number" ? it.quantity : 1,
-        served: typeof it.served === "boolean" ? it.served : false,
+        served: it.served === true,  
       })),
     }));
   }, []);
