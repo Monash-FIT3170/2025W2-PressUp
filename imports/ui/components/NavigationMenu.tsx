@@ -10,7 +10,18 @@ import {
 } from "./symbols/navigation/Inventory";
 import { MonitorIcon } from "./symbols/navigation/POS";
 import { CoffeeIcon } from "./symbols/navigation/Coffee";
-import { UserIcon } from "./symbols/navigation/UserIcon";
+import { Clock3, Clock3Icon, ClockIcon, TimerIcon } from "lucide-react";
+
+// Create empty icons, NEED TO FIND ICON
+const FinanceIcon = ({ fill }: { fill: string }) => (
+  <div style={{ width: '24px', height: '24px' }}></div>
+);
+const ProfitLossIcon = ({ fill }: { fill: string }) => (
+  <div style={{ width: '24px', height: '24px' }}></div>
+);
+const TaxIcon = ({ fill }: { fill: string }) => (
+  <div style={{ width: '24px', height: '24px' }}></div>
+);
 
 interface NavigationMenuProps {
   show: boolean;
@@ -25,6 +36,27 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
       } overflow-hidden`}
     >
       <div className="flex flex-col p-6 text-lg">
+        <NavigationEntry
+        icon={<FinanceIcon fill="var(--color-press-up-grey)" />}
+        name="Finance"
+        path="/finance"
+        selectionType={NavigationEntrySelection.HIGHLIGHT}
+      >
+        <NavigationEntry
+          icon={<ProfitLossIcon fill="var(--color-press-up-grey)" />}
+          name="P/L Reporting"
+          path="/finance/profit-loss"
+          selectionType={NavigationEntrySelection.ARROW}
+        />
+
+        <NavigationEntry
+          icon={<TaxIcon fill="var(--color-press-up-grey)" />}
+          name="Tax Management"
+          path="/finance/tax"
+          selectionType={NavigationEntrySelection.ARROW}
+        />
+        </NavigationEntry>
+
         <NavigationEntry
           icon={<PencilIcon fill="var(--color-press-up-grey)" />}
           name="Inventory Management"
@@ -51,19 +83,25 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           name="POS System"
           path="/pos/display"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
-        ></NavigationEntry>
+        />
         <NavigationEntry
           icon={<CoffeeIcon fill="var(--color-press-up-grey)" />}
           name="Menu Management"
           path="/menuManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
-        ></NavigationEntry>
+        />
+        <NavigationEntry
+          icon={<Clock3Icon />}
+          name="Kitchen Management"
+          path="/kitchenManagement"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        />
         <NavigationEntry
           icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
           name="Accounts"
           path="/accounts"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
-        ></NavigationEntry>
+        />
       </div>
     </div>
   );

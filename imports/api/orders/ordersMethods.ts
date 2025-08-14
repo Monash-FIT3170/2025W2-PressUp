@@ -4,7 +4,7 @@ import { Mongo } from "meteor/mongo";
 import { requireLoginMethod } from "../accounts/wrappers";
 
 Meteor.methods({
-  "orders.updateOrder": requireLoginMethod(async function (orderId: Mongo.ObjectID, update: Partial<any>) {
+  "orders.updateOrder": requireLoginMethod(async function (orderId: string, update: Partial<any>) {
     if (!orderId || !update) throw new Meteor.Error("invalid-arguments", "Order ID and update are required");
     await OrdersCollection.updateAsync(orderId, { $set: update });
   }),
@@ -12,5 +12,9 @@ Meteor.methods({
   "orders.addOrder": requireLoginMethod(async function (order: any) {
     if (!order) throw new Meteor.Error("invalid-arguments", "Order data is required");
     return await OrdersCollection.insertAsync(order);
+  }),
+
+  'orders.getAll': requireLoginMethod(async function () {
+    return OrdersCollection.find().fetch();
   }),
 });
