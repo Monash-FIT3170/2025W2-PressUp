@@ -33,7 +33,7 @@ export type UserRole = PressUpRole;
 export interface CreateUserData {
   firstName: string;
   lastName: string;
-  email: string;
+  username: string;
   password: string;
   role: PressUpRole;
 }

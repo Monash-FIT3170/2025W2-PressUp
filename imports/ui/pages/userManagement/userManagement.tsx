@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 //import { UserTable } from "/imports/ui/components/UserTable";
-import { ExtendedUser, CreateUserData } from "/imports/api/accounts/userTypes";
+import { ExtendedUser, CreateUserData } from "../../../api/accounts/userTypes";
 import { PressUpRole } from "/imports/api/accounts/roles";
 import { Roles } from "meteor/alanning:roles";
 import { usePageTitle } from "../../hooks/PageTitleContext";
@@ -134,11 +134,11 @@ export const UserManagementPage = () => {
     if (users.length === 0) return;
 
     const csvContent = [
-      ["Name", "Email", "Role", "Status", "Created At"].join(","),
+      ["Name", "Username", "Role", "Status", "Created At"].join(","),
       ...users.map((user) =>
         [
           `"${user.profile?.firstName || ""} ${user.profile?.lastName || ""}"`,
-          `"${user.emails?.[0]?.address || ""}"`,
+          `"${user.username || ""}"`,
           `"${user.roles?.[0] || "No Role"}"`,
           `"${user.status?.online ? "Online" : "Offline"}"`,
           `"${
@@ -369,7 +369,7 @@ const AddUserModal = ({
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    email: "",
+    username: "",
     password: "",
     role: PressUpRole.CASUAL as PressUpRole,
   });
@@ -407,11 +407,11 @@ const AddUserModal = ({
             required
           />
           <input
-            type="email"
-            placeholder="Email"
-            value={formData.email}
+            type="username"
+            placeholder="Username"
+            value={formData.username}
             onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
+              setFormData({ ...formData, username: e.target.value })
             }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             required

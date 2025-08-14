@@ -10,7 +10,7 @@ export const RosterPage = () => {
   return (
     <div className="flex flex-1 flex-col">
       <Button onClick={() => setShiftModalOpen(true)}>Publish Shift</Button>
-      <Modal open={shiftModalOpen} onClose={() => {}}>
+      <Modal open={shiftModalOpen} onClose={() => setShiftModalOpen(false)}>
         <PublishShiftForm />
       </Modal>
       <RosterTable />

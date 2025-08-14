@@ -3,7 +3,7 @@ import { Accounts } from "meteor/accounts-base";
 import { Roles } from "meteor/alanning:roles";
 import { check, Match } from "meteor/check";
 import { requireLoginMethod } from "./wrappers";
-import { CreateUserData, UpdateUserProfileData } from "imports/api/accounts/userTypes";
+import { CreateUserData, UpdateUserProfileData } from "/imports/api/accounts/userTypes";
 import { PressUpRole } from "./roles";
 
 Meteor.methods({
@@ -11,7 +11,7 @@ Meteor.methods({
     check(userData, {
       firstName: String,
       lastName: String,
-      email: String,
+      username: String,
       password: String,
       role: String
     });
@@ -26,13 +26,13 @@ Meteor.methods({
       throw new Meteor.Error("invalid-role", "Invalid role specified");
     }
 
-    if (await Meteor.users.findOneAsync({ "emails.address": userData.email })) {
-      throw new Meteor.Error("email-exists", "A user with this email already exists");
+    if (await Meteor.users.findOneAsync({ username: userData.username })) {
+      throw new Meteor.Error("username-exists", "A user with this username already exists");
     }
 
     try {
       const userId = await Accounts.createUserAsync({
-        email: userData.email,
+        username: userData.username,
         password: userData.password,
         profile: {
           firstName: userData.firstName,
@@ -42,7 +42,7 @@ Meteor.methods({
 
       await Roles.addUsersToRolesAsync(userId, [userData.role]);
 
-      console.log(`Created user '${userData.email}' with role '${userData.role}'`);
+      console.log(`Created user '${userData.username}' with role '${userData.role}'`);
       return userId;
     } catch (error) {
       const errorMessage = (error instanceof Error) ? error.message : String(error);
@@ -140,7 +140,7 @@ Meteor.methods({
 
       await Roles.addUsersToRolesAsync(userId, [newRole]);
 
-      console.log(`Updated user '${userToUpdate.emails?.[0]?.address}' role to '${newRole}'`);
+      console.log(`Updated user '${userToUpdate.username}' role to '${newRole}'`);
       return true;
     } catch (error) {
       const errorMessage = (error instanceof Error) ? error.message : String(error);
