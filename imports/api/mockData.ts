@@ -135,21 +135,21 @@ export const mockDataGenerator = async ({
   purchaseOrderCount = purchaseOrderCount || 10;
   tableCount = tableCount || 20;
 
-  // if (await SuppliersCollection.countDocuments() > 0) {
-  //   await SuppliersCollection.dropCollectionAsync();
-  // }
-  // if (await MenuItemsCollection.countDocuments() > 0) {
-  //   await MenuItemsCollection.dropCollectionAsync();
-  // }
-  // if (await StockItemsCollection.countDocuments() > 0) {
-  //   await StockItemsCollection.dropCollectionAsync();
-  // }
-  // if (await TablesCollection.countDocuments() > 0) {
-  //   await TablesCollection.dropCollectionAsync();
-  // }
-  // if (await OrdersCollection.countDocuments() > 0) {
-  //   await OrdersCollection.dropCollectionAsync();
-  // }
+  if (await SuppliersCollection.countDocuments() > 0) {
+    await SuppliersCollection.dropCollectionAsync();
+  }
+  if (await MenuItemsCollection.countDocuments() > 0) {
+    await MenuItemsCollection.dropCollectionAsync();
+  }
+  if (await StockItemsCollection.countDocuments() > 0) {
+    await StockItemsCollection.dropCollectionAsync();
+  }
+  if (await TablesCollection.countDocuments() > 0) {
+    await TablesCollection.dropCollectionAsync();
+  }
+  if (await OrdersCollection.countDocuments() > 0) {
+    await OrdersCollection.dropCollectionAsync();
+  }
 
   if ((await SuppliersCollection.countDocuments()) === 0) {
     for (let i = 0; i < supplierCount; ++i) {
