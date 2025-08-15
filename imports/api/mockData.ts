@@ -5,7 +5,6 @@ import { faker } from "@faker-js/faker";
 import { PurchaseOrdersCollection } from "./purchaseOrders/PurchaseOrdersCollection";
 import { OrderMenuItem, OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
 import { TablesCollection } from "./tables/TablesCollection";
-//import {TransactionsCollection } from "./"
 import { Mongo } from "meteor/mongo";
 
 export const possibleImages = [
@@ -18,53 +17,18 @@ export const possibleImages = [
   "/menu_items/macchiato.png",
   "/menu_items/mocha.png",
   "/menu_items/muffin.png",
+  "menu_items/beef burger.png",
 ];
 
 export const fixedMenuItems = [
   {
-    name: "Espresso",
-    ingredients: ["espresso"],
-    available: false,
-    quantity: 40,
-    price: 4.0,
-    category: ["Drink"],
-    image: "/menu_items/espresso.png",
-  },
-  {
-    name: "Ham & Cheese Toastie",
-    ingredients: ["bread", "ham", "cheese", "butter"],
+    name: "Beef Burger",
+    ingredients: ["bun", "lettuce", "cheese", "tomato", "beef patty", "onion"],
     available: true,
     quantity: 20,
-    price: 6.0,
+    price: 9.0,
     category: ["Food"],
-    image: "/menu_items/ham_cheese_toastie.png",
-  },
-  {
-    name: "Banana Bread",
-    ingredients: ["banana", "flour", "sugar", "butter", "egg"],
-    available: false,
-    quantity: 25,
-    price: 4.0,
-    category: ["Food", "Snack"],
-    image: "/menu_items/banana_bread.png",
-  },
-  {
-    name: "Hot Chocolate",
-    ingredients: ["cocoa", "milk", "sugar", "whipped cream"],
-    available: true,
-    quantity: 30,
-    price: 5.0,
-    category: ["Drink"],
-    image: "/menu_items/hot_chocolate.png",
-  },
-  {
-    name: "Chai Latte",
-    ingredients: ["chai", "milk", "spices"],
-    available: false,
-    quantity: 30,
-    price: 5.0,
-    category: ["Drink"],
-    image: "/menu_items/chai_latte.png",
+    image: "/menu_items/beef burger.png",
   },
   {
     name: "Cappuccino",
@@ -123,7 +87,7 @@ export const fixedMenuItems = [
   {
     name: "Macchiato",
     ingredients: ["espresso", "milk foam"],
-    available: true,
+    available: false,
     quantity: 20,
     price: 4.0,
     category: ["Drink"],
