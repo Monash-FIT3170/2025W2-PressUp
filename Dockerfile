@@ -6,6 +6,9 @@ WORKDIR /app
 
 RUN curl https://install.meteor.com/ | sh
 
+# Ensure Meteor is in PATH
+ENV PATH="/root/.meteor:${PATH}"
+
 COPY . .
 RUN meteor npm install && \
     meteor build --directory /build --server-only && \
