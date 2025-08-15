@@ -13,25 +13,31 @@ export const Accounts = () => {
     setPageTitle("User Management");
   }, [setPageTitle]);
 
-  const [userRoles, setUserRoles] = useState<Record<string, string[]>>({});
-
   useSubscribe("users.all");
   const users = useTracker(() => {
     return Meteor.users.find({}, { sort: { username: 1 } }).fetch();
   });
 
-  useEffect(() => {
-    const fetchRoles = async () => {
-      const rolesMap: Record<string, string[]> = {};
-      for (const user of users) {
-        const roles = await Roles.getRolesForUserAsync(user._id);
-        rolesMap[user._id] = roles;
-      }
-      setUserRoles(rolesMap);
-    };
+  const rolesLoading = useSubscribe("roleAssignments.all")();
+  const userRoles = useTracker(() => {
+    const map: Record<string, string[]> = {};
 
-    fetchRoles();
-  }, [users]);
+    Meteor.roleAssignment.find().forEach((a) => {
+      const userId = a.user?._id;
+      const roleId = a.role?._id;
+
+      if (!userId || !roleId) return;
+
+      if (!map[userId]) {
+        map[userId] = [];
+      }
+      if (!map[userId].includes(roleId)) {
+        map[userId].push(roleId);
+      }
+    });
+
+    return map;
+  }, [rolesLoading]);
 
   const [editUser, setEditUser] = useState<Meteor.User | null>(null);
   const [open, setOpen] = useState(false);
@@ -43,7 +49,9 @@ export const Accounts = () => {
   const handleEdit = (user: Meteor.User) => {
     setEditUser(user);
     const userRoles = Roles.getRolesForUser(user._id);
-    console.log(`Editing user: ${user.username}, Roles: ${userRoles.join(", ")}`);
+    console.log(
+      `Editing user: ${user.username}, Roles: ${userRoles.join(", ")}`,
+    );
     setEditRole(userRoles[0] || "");
     setOpen(true);
   };

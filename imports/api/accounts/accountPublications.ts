@@ -5,3 +5,7 @@ Meteor.publish("users.all", function () {
   // return Meteor.users.find({}, { fields: { username: 1, profile: 1, roles: 1 } });
   return Meteor.users.find({}, { fields: { username: 1, roles: 1 } });
 });
+
+Meteor.publish("roleAssignments.all", function () {
+  return Meteor.roleAssignment.find({}, { fields: { user: 1, role: 1 } });
+});
