@@ -17,7 +17,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - MONGO_URL=mongodb://mongo:27017/pressup
+      - MONGO_URL=mongodb+srv://${MONGO_USER}:${MONGO_PASS}@${MONGO_CLUSTER}/${MONGO_DB}?retryWrites=true&w=majority&tls=true
       - ROOT_URL=http://localhost:3000
       - PORT=3000
     depends_on:
