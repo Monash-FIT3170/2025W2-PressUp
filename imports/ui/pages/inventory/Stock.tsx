@@ -14,8 +14,23 @@ import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
 import { ConfirmModal } from "../../components/ConfirmModal";
+import { Roles } from "meteor/alanning:roles";
+import { PressUpRole } from "/imports/api/accounts/roles";
 
 export const StockPage = () => {
+  const userId = useTracker(() => Meteor.userId());
+  const hasAccess = useTracker(
+    () => userId && Roles.userIsInRole(userId, [PressUpRole.ADMIN, PressUpRole.MANAGER])
+  );
+
+  if (!hasAccess) {
+    return (
+      <div className="p-8 text-center text-red-900 font-bold">
+        Access denied. You do not have permission to view this page.
+      </div>
+    );
+  }
+
   const [_, setPageTitle] = usePageTitle();
   useEffect(() => {
     setPageTitle("Inventory Management - Stock");
@@ -34,7 +49,7 @@ export const StockPage = () => {
   const stockItems: StockItemWithSupplier[] = useTracker(() => {
     const stockItems = StockItemsCollection.find(
       {},
-      { sort: { name: 1 } },
+      { sort: { name: 1 } }
     ).fetch();
     const result = [];
     for (let stockItem of stockItems) {

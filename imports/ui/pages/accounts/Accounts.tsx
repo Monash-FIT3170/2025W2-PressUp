@@ -4,13 +4,8 @@ import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { Modal } from "../../components/Modal";
 import { ConfirmModal } from "../../components/ConfirmModal";
-
-interface User {
-  _id: string;
-  username: string;
-  profile?: { name?: string };
-  roles?: string[];
-}
+import { Roles } from "meteor/alanning:roles";
+import { PressUpRole } from "/imports/api/accounts/roles";
 
 export const Accounts = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -18,25 +13,55 @@ export const Accounts = () => {
     setPageTitle("User Management");
   }, [setPageTitle]);
 
+  const [userRoles, setUserRoles] = useState<Record<string, string[]>>({});
+
   useSubscribe("users.all");
-  const users: User[] = useTracker(() => {
+  const users = useTracker(() => {
     return Meteor.users.find({}, { sort: { username: 1 } }).fetch();
   });
 
-  const [editUser, setEditUser] = useState<User | null>(null);
+  useEffect(() => {
+    const fetchRoles = async () => {
+      const rolesMap: Record<string, string[]> = {};
+      for (const user of users) {
+        const roles = await Roles.getRolesForUserAsync(user._id);
+        rolesMap[user._id] = roles;
+      }
+      setUserRoles(rolesMap);
+    };
+
+    fetchRoles();
+  }, [users]);
+
+  const [editUser, setEditUser] = useState<Meteor.User | null>(null);
   const [open, setOpen] = useState(false);
   const [formResetKey, setFormResetKey] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirm, setConfirm] = useState<"cancel" | null>(null);
+  const [editRole, setEditRole] = useState<string>("");
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: Meteor.User) => {
     setEditUser(user);
+    const userRoles = Roles.getRolesForUser(user._id);
+    console.log(`Editing user: ${user.username}, Roles: ${userRoles.join(", ")}`);
+    setEditRole(userRoles[0] || "");
     setOpen(true);
   };
 
   const handleModalClose = () => {
     setOpen(false);
     setFormResetKey((prev) => prev + 1);
+  };
+
+  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setEditRole(e.target.value);
+  };
+
+  const handleRoleSave = async () => {
+    if (editUser && editRole) {
+      await Meteor.callAsync("accounts.setRole", editUser._id, editRole);
+      handleSuccess();
+    }
   };
 
   const handleSuccess = () => handleModalClose();
@@ -64,7 +89,7 @@ export const Accounts = () => {
           <div id="grid-container" className="overflow-auto flex-1">
             <div className="grid gap-y-2 text-nowrap text-center grid-cols-[minmax(0,2fr)_1fr_min-content] text-red-900">
               <div className="bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple rounded-l-lg sticky top-0 z-1 text-left">
-                Name
+                Username
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
               <div className="bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple sticky top-0 z-1">
@@ -74,14 +99,15 @@ export const Accounts = () => {
               <div className="bg-press-up-light-purple py-1 px-4 border-y-3 border-press-up-light-purple rounded-r-lg sticky top-0 z-1">
                 Actions
               </div>
-              {users.map((user, i) => (
+              {users.map((user) => (
                 <React.Fragment key={user._id}>
                   <div className="text-left truncate relative py-1 px-2">
-                    {user.profile?.name || user.username}
+                    {user.username}
                     <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
                   </div>
                   <div className="truncate relative py-1 px-2">
-                    {user.roles && user.roles.length > 0 ? user.roles.join(", ") : "None"}
+                    {/* {Roles.getRolesForUser(user._id).join(", ") || "None"} */}
+                    {userRoles[user._id]?.join(", ") || "Loading..."}
                     <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
                   </div>
                   <div className="relative truncate py-1 px-2 flex gap-2 justify-center items-center">
@@ -105,8 +131,46 @@ export const Accounts = () => {
           setShowConfirmation(true);
         }}
       >
-        {/* <EditUserForm key={formResetKey} user={editUser} onSuccess={handleSuccess} /> */}
-        <div className="p-4">Edit User Form goes here</div>
+        {editUser && (
+          <div className="p-4 flex flex-col gap-4">
+            <div>
+              <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
+                Name
+              </label>
+              <div>{editUser.username}</div>
+            </div>
+            <div>
+              <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
+                Role
+              </label>
+              <select
+                value={editRole}
+                onChange={handleRoleChange}
+                className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg block w-full p-2.5"
+              >
+                {Object.values(PressUpRole).map((role) => (
+                  <option value={role} key={role}>
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={handleRoleSave}
+                className="bg-press-up-positive-button text-white py-1 px-3 rounded-lg text-sm font-medium"
+              >
+                Save
+              </button>
+              <button
+                onClick={handleModalClose}
+                className="bg-gray-300 text-red-900 py-1 px-3 rounded-lg text-sm font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
       <ConfirmModal
         open={showConfirmation}
