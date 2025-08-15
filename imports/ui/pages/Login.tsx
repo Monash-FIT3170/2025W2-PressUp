@@ -1,7 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router";
-import { LoginInput } from "../components/interaction/LoginInput";
+import { Input } from "../components/interaction/Input";
 import { BigLogo } from "../components/symbols/BigLogo";
 import { Button } from "../components/interaction/Button";
 
@@ -49,8 +49,9 @@ export const LoginPage = () => {
             </div>
           </div>
 
-          <LoginInput
+          <Input
             type="text"
+            variant="navy"
             value={username}
             onChange={onChangeUsername}
             placeholder="Username"
@@ -58,8 +59,9 @@ export const LoginPage = () => {
             required
           />
 
-          <LoginInput
+          <Input
             type="password"
+            variant="navy"
             value={password}
             onChange={onChangePassword}
             placeholder="Password"
@@ -73,8 +75,8 @@ export const LoginPage = () => {
             </div>
           )}
 
-          <div className="w-1/2">
-            <Button type="submit">Log In</Button>
+          <div className="w-1/2 p-2">
+            <Button type="submit" width="full">Log In</Button>
           </div>
         </div>
       </form>

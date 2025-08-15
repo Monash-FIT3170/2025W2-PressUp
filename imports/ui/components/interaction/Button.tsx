@@ -1,18 +1,33 @@
+import clsx from "clsx";
 import React from "react";
 
-type Props = Pick<
-  React.ButtonHTMLAttributes<HTMLButtonElement>,
-  "type" | "onClick" | "children"
->;
+type ButtonVariant = "positive" | "negative";
 
-// TODO: For now this is just a positive button, can be abstracted further to support our other button types
+const variantColours: Record<ButtonVariant, string> = {
+  positive: "bg-press-up-positive-button text-white",
+  negative: "bg-press-up-negative-button text-white",
+};
+
+interface Props
+  extends Pick<
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    "type" | "onClick" | "children"
+  > {
+  variant?: ButtonVariant;
+  width?: "full" | "fit";
+}
+
 export const Button = React.forwardRef<HTMLButtonElement, Props>(
-  (props, ref) => {
+  ({ variant = "positive", width = "fit", ...rest }, ref) => {
     return (
       <button
         ref={ref}
-        {...props}
-        className="bg-press-up-positive-button text-white w-full py-2.5 rounded-lg font-medium text-sm transition-all hover:opacity-90 hover:shadow-md"
+        {...rest}
+        className={clsx(
+          "text-nowrap shadow-lg/20 hover:shadow-md ease-in-out transition-all duration-300 rounded-xl cursor-pointer inline-flex p-2 grow-0 text-sm font-medium items-center justify-center",
+          variantColours[variant],
+          width === "full" ? "w-full" : "w-fit",
+        )}
       />
     );
   },
