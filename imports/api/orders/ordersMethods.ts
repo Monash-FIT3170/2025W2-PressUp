@@ -1,10 +1,10 @@
 import { Meteor } from "meteor/meteor";
 import { OrdersCollection } from "./OrdersCollection";
-import { Mongo } from "meteor/mongo";
+import { check } from "meteor/check"; 
 import { requireLoginMethod } from "../accounts/wrappers";
 
 Meteor.methods({
-  "orders.updateOrder": requireLoginMethod(async function (orderId: Mongo.ObjectID, update: Partial<any>) {
+  "orders.updateOrder": requireLoginMethod(async function (orderId: string, update: Partial<any>) {
     if (!orderId || !update) throw new Meteor.Error("invalid-arguments", "Order ID and update are required");
     await OrdersCollection.updateAsync(orderId, { $set: update });
   }),
@@ -14,56 +14,25 @@ Meteor.methods({
     return await OrdersCollection.insertAsync(order);
   }),
 
-  "finance.getFinanceData": requireLoginMethod(async function () {
-    // Aggregation pipeline to calculate total revenue
-    const totalRevenueResult = await OrdersCollection.rawCollection().aggregate([
-      { $match: { paid: true } },
-        {
-          $group: {
-            _id: null,
-            totalRevenue: {
-              $sum: { $ifNull: ["$discountedPrice", "$totalPrice"] }
-            }
-            }
-        }
-    ]).toArray();
+  'orders.getAll': requireLoginMethod(async function () {
+    return OrdersCollection.find().fetch();
+  }),
 
-    // Extract the total revenue from the result
-    const totalRevenue = totalRevenueResult.length > 0 ? totalRevenueResult[0].totalRevenue : 0;
+  "orders.setMenuItemServed": requireLoginMethod(function (orderId: string, index: number, served: boolean) {
+    check(orderId, String);
+    check(index, Number);
+    check(served, Boolean);
+    return OrdersCollection.update(orderId, {
+      $set: { [`menuItems.${index}.served`]: served },
+    });
+  }),
 
-    // Mock data
-    const totalExpenses = 1000;
+  "orders.setAllMenuItemsServed": requireLoginMethod(function (orderId: string, served: boolean) {
+    check(orderId, String);
+    check(served, Boolean);
+    return OrdersCollection.update(orderId, {
+      $set: { "menuItems.$[].served": served },
+    });
+  }),
 
-
-    // Return the complete financial data object
-    return {
-      revenue: {
-        title: "Revenue",
-        description: "Total revenue from all paid orders.",
-        items: [
-          { label: "Food", amount: 1000 },
-          { label: "Drinks", amount: 1000}
-        ],
-        total: totalRevenue
-      },
-      expenses: {
-        title: "Expenses",
-        description: "Summary of estimated expenses.",
-        items: [
-          { label: "Food", amount: 1000 },
-          { label: "Drinks", amount: 1000}
-        ],
-        total: totalExpenses
-      },
-      netProfitLoss: {
-        title: "Financial Overview",
-        description: "Summary of key financial metrics.",
-        items: [
-          { label: "Total Revenue", amount: totalRevenue },
-          { label: "Total Expenses", amount: totalExpenses },
-          { label: "Gross Profit", amount: -500}
-        ],
-        }
-    };
-  })
 });

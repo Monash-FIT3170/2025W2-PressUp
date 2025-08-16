@@ -19,8 +19,8 @@ export const FinanceCard = ({
   showCurrency = true,
   className = ''
 }: FinanceCardProps) => {
-  const isPositive = amount > 0;
-  const sign = isPositive ? '+' : '';
+  const isNegative = amount < 0;
+  const sign = isNegative ? '-' : '';
   const isClickable = onClick !== undefined;
   
   const baseClasses = "rounded-lg transition-all duration-200";
@@ -69,9 +69,9 @@ export const FinanceCard = ({
       )}
       
       <div className={`${amountSizes[variant]} font-semibold mb-1 ${
-        isPositive ? 'text-green-700' : 'text-red-700'
+        isNegative ? 'text-red-700' : 'text-green-700'
       }`}>
-        ({sign}) {Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+        {sign}{Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
       </div>
       
       <div className="text-sm text-gray-600 font-medium">

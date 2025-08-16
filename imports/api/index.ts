@@ -10,12 +10,6 @@ export {
   StockItemsCollection,
 } from "./stockItems/StockItemsCollection";
 
-// Transactions
-export {
-  Transaction,
-  TransactionsCollection,
-} from "./transactions/TransactionsCollection";
-
 // Orders
 export { Order, OrdersCollection } from "./orders/OrdersCollection";
 
@@ -25,3 +19,6 @@ export {
   StockItemLine,
   PurchaseOrdersCollection,
 } from "./purchaseOrders/PurchaseOrdersCollection";
+
+// Tables
+export { Tables, TablesCollection } from "./tables/TablesCollection"

@@ -11,6 +11,7 @@ export interface PurchaseOrder extends DBEntry {
   supplier: Mongo.ObjectID;
   number: number;
   stockItems: StockItemLine[];
+  totalCost: number;
   date: Date;
 }
 
