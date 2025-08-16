@@ -42,6 +42,7 @@ const DetailItem = ({ label, amount, percentage }: DetailItemProps) => {
 };
 
 export const ExpensesPage = () => {
+    const [searchItem, setSearchItem] = useState("");
     const [_, setPageTitle] = usePageTitle();
     const [selectedMetric, setSelectedMetric] = useState<"revenue" | "expenses">("revenue");
     const [financialData, setFinancialData] = useState<any | null>(null);
@@ -208,6 +209,11 @@ export const ExpensesPage = () => {
         items: [],
     };
 
+    const filteredItems = (currentData.items || [])
+        .filter(item => item.label.toLowerCase().includes(searchItem.toLowerCase()))
+        .slice()
+        .sort((a,b) => b.amount - a.amount)
+
     return (
         <div className="flex flex-col flex-1 overflow-y-auto max-h-screen">
             <div className="w-full p-6 bg-gray-50 min-h-[100vh]">
@@ -231,6 +237,16 @@ export const ExpensesPage = () => {
                 ))}
             </div>
 
+            <div className="mb-4">
+                <input
+                    type="text"
+                    value={searchItem}
+                    onChange={(e) => setSearchItem(e.target.value)}
+                    placeholder={`Search ${selectedMetric === "expenses" ? "suppliers" : "categories"}...`}
+                    className="w-1/2 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                />
+            </div>
+
             {/* Detail Section */}
             <div className="w-full md:w-1/2 bg-pink-100 rounded-xl shadow-lg p-6">
                 <div className="mb-6">
@@ -241,17 +257,14 @@ export const ExpensesPage = () => {
                 </div>
 
                 <div className="space-y-3 max-h-76 overflow-y-auto pr-2">
-                {(currentData.items || [])
-                .slice()
-                .sort((a,b) => b.amount - a.amount)
-                .map((item: any, index: number) => (
+                {(filteredItems.map((item: any, index: number) => (
                     <DetailItem
                     key={index}
                     label={item.label}
                     amount={item.amount ?? 0}
                     percentage={item.percentage}
                     />
-                ))}
+                )))}
                 </div>
             </div>
             </div>
