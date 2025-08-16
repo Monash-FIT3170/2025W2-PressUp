@@ -18,7 +18,7 @@ export const Column = ({column, orders}: ColumnProps) => {
       <h2 className="mb-4 font-semibold text-press-up-purple text-3xl">{column.title}</h2>
       <div ref={setNodeRef} className="flex flex-1 flex-col gap-4">
         {orders.map(order => {
-          return (<OrderCard key={order.orderNo} order={order} />);
+          return <OrderCard key={order._id} order={order} />
         })}
       </div>
     </div>

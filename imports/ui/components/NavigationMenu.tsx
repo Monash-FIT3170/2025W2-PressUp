@@ -10,7 +10,7 @@ import {
 } from "./symbols/navigation/Inventory";
 import { MonitorIcon } from "./symbols/navigation/POS";
 import { CoffeeIcon } from "./symbols/navigation/Coffee";
-import { Clock3Icon, Users, Calendar } from "lucide-react";
+import { Clock3, Clock3Icon, ClockIcon, TimerIcon, HistoryIcon } from "lucide-react";
 
 // Create empty icons, NEED TO FIND ICON
 const FinanceIcon = ({ fill }: { fill: string }) => (
@@ -91,6 +91,19 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           path="/menuManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         />
+        <NavigationEntry
+          icon={<Clock3Icon />}
+          name="Kitchen Management"
+          path="/kitchenManagement"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        >
+          <NavigationEntry
+            icon={<HistoryIcon />}                  
+            name="Order History"
+            path="/kitchenManagement/history"    
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+        </NavigationEntry>
         <NavigationEntry
           icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
           name="Accounts"

@@ -6,6 +6,7 @@ import { Menu } from "./pages/menuManagement/Menu";
 import { ProfitLossPage } from "./pages/finance/ProfitLossPage";
 import { TaxPage } from "./pages/finance/TaxPage";
 import { KitchenManagement } from "./pages/kitchenManagement/KitchenManagement";
+import { OrderHistoryPage } from "./pages/kitchenManagement/OrderHistoryPage";
 // pos system
 import { MainDisplay } from "./pages/pos/MainDisplay";
 import { PosIndex } from "./pages/pos/Index";
@@ -51,7 +52,10 @@ const router = createBrowserRouter([
       },
       {
         path: "kitchenManagement",
-        Component: KitchenManagement,
+        children: [
+          { index: true, Component: KitchenManagement },    
+          { path: "history", Component: OrderHistoryPage }, 
+        ],
       },
       {
         path: "receipt",
