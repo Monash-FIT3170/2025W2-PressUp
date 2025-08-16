@@ -167,13 +167,13 @@ export const ExpensesPage = () => {
 
             setFinancialData({
                 sales: {
-                    title: "Sales Breakdown by Category",
-                    description: "Revenue generated from processed sales orders",
+                    title: "Sales Breakdown",
+                    description: "Revenue generated from sales orders by category",
                     items: salesItems,
                     total: salesTotal,
                 },
                 expenses: {
-                    title: "Expenses Breakdown by Supplier",
+                    title: "Expenses Breakdown",
                     description: "Expenses generated from supplier orders",
                     items: expenseItems,
                     total: expenses
@@ -232,13 +232,11 @@ export const ExpensesPage = () => {
             </div>
 
             {/* Detail Section */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="w-full md:w-1/2 bg-pink-100 rounded-xl shadow-lg p-6">
                 <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-1">
                     {currentData.title}
-                    {/* {selectedMetric === "revenue" ? "Sales breakdown" : "Expenditure breakdown"} */}
                 </h2>
-                {/* <p className="text-gray-600">{currentData.title} — {currentData.description}</p> */}
                 <p className="text-gray-600">{currentData.description}</p>
                 </div>
 
