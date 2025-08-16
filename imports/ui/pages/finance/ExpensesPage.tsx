@@ -111,16 +111,40 @@ export const ExpensesPage = () => {
             const salesItems = Object.keys(salesByCategory).map(cat => ({
                 label: cat,
                 amount: salesByCategory[cat],
-                percentage: (salesByCategory[cat] / salesTotal) * 100,
+                percentage: ((salesByCategory[cat] / salesTotal) * 100).toFixed(2),
+            }));
+
+            // Calc expenses
+            let expenses = 0;
+            const expensesBySupplier: { [key: string]: number } = {};
+
+            purchaseOrders.forEach(purchase =>{
+                const purchaseAmount = purchase.totalCost;
+                expenses += purchaseAmount;
+
+                const supplier = purchase.supplier?.toString() || "Unknown Supplier";
+                expensesBySupplier[supplier] = (expensesBySupplier[supplier] || 0) + purchaseAmount;
+            })
+
+            const expenseItems = Object.keys(expensesBySupplier).map(supplier => ({
+                label: supplier,
+                amount: expensesBySupplier[supplier],
+                percentage: ((expensesBySupplier[supplier]/ expenses) * 100).toFixed(2),
             }));
 
             setFinancialData({
                 sales: {
-                    title: "Sales Breakdown",
+                    title: "Sales Breakdown by Category",
                     description: "Revenue generated from processed sales orders",
                     items: salesItems,
                     total: salesTotal,
-                }
+                },
+                expenses: {
+                    title: "Expenses Breakdown by Supplier",
+                    description: "Expenses generated from supplier orders",
+                    items: expenseItems,
+                    total: expenses
+                },
             });
         } catch (error) {
             console.error("Error fetching financial data", error)
@@ -130,15 +154,6 @@ export const ExpensesPage = () => {
     useEffect(() => {
         setPageTitle("Finance - Sales & Expense Tracking");
         fetchFinancialData();
-        // const fetchData = async () => {
-        // try {
-        //     const result = await Meteor.callAsync("finance.getFinanceData");
-        //     setFinancialData(result);
-        // } catch (error) {
-        //     console.error("Error fetching finance data", error);
-        // }
-        // };
-        // fetchData();
     }, [setPageTitle]);
 
     if (!financialData) {
@@ -148,15 +163,10 @@ export const ExpensesPage = () => {
         </div>
         );
     }
-
-    // const sumItems = (items: any[] = []) => items.reduce((s, it) => s + (it.amount ?? 0), 0);
-
-    // const revenueTotal = financialData.revenue?.total ?? sumItems(financialData.revenue?.items);
-    // const expensesTotal = financialData.expenses?.total ?? sumItems(financialData.expenses?.items);
-
+    
     const mainMetrics = [
         { key: "sales", title: "Total Sales", amount: financialData.sales.total },
-        // { key: "expenses", title: "Total Expenditure", amount: expensesTotal },
+        { key: "expenses", title: "Total Expenditure", amount: financialData.expenses.total },
     ] as const;
 
     const currentData = financialData[selectedMetric] || {
