@@ -3,6 +3,8 @@ import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { FinanceDateFilter } from "../../components/FinanceDateFilter";
 import { Meteor } from "meteor/meteor";
+import { Order } from "../../api/orders/orders";
+import { PurchaseOrder } from "../../api/purchaseOrders/PurchaseOrdersCollection";
 import {
   format,
   startOfToday,
@@ -83,18 +85,60 @@ export const ExpensesPage = () => {
             return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
         };
 
-    useEffect(() => {
-        setPageTitle("Finance - Expense Tracking");
-
-        const fetchData = async () => {
+    const fetchFinancialData = async () => {
         try {
-            const result = await Meteor.callAsync("finance.getFinanceData");
-            setFinancialData(result);
+            const orders = (await Meteor.callAsync("orders.getAll")) as Order[];
+            const purchaseOrders = (await Meteor.callAsync("purchaseOrders.getAll")) as PuchaseOrder[];
+
+            // Calc sales
+            let salesTotal = 0;
+            const salesByCategory: { [key: string]: number } = {};
+
+            orders.forEach(order => {
+                if (!order.paid) return;
+
+                order.menuItems.forEach(item => {
+                    const itemAmount = item.price * item.quantity;
+                    salesTotal += itemAmount;
+
+                    const categories = item.category?.length ? item.category: ["uncategorized"];
+                    categories.forEach(cat => {
+                        salesByCategory[cat] = (salesByCategory[cat] || 0) + itemAmount;
+                    });
+                });
+            });
+
+            const salesItems = Object.keys(salesByCategory).map(cat => ({
+                label: cat,
+                amount: salesByCategory[cat],
+                percentage: (salesByCategory[cat] / salesTotal) * 100,
+            }));
+
+            setFinancialData({
+                sales: {
+                    title: "Sales Breakdown",
+                    description: "Revenue generated from processed sales orders",
+                    items: salesItems,
+                    total: salesTotal,
+                }
+            });
         } catch (error) {
-            console.error("Error fetching finance data", error);
+            console.error("Error fetching financial data", error)
         }
-        };
-        fetchData();
+    }
+
+    useEffect(() => {
+        setPageTitle("Finance - Sales & Expense Tracking");
+        fetchFinancialData();
+        // const fetchData = async () => {
+        // try {
+        //     const result = await Meteor.callAsync("finance.getFinanceData");
+        //     setFinancialData(result);
+        // } catch (error) {
+        //     console.error("Error fetching finance data", error);
+        // }
+        // };
+        // fetchData();
     }, [setPageTitle]);
 
     if (!financialData) {
@@ -105,14 +149,14 @@ export const ExpensesPage = () => {
         );
     }
 
-    const sumItems = (items: any[] = []) => items.reduce((s, it) => s + (it.amount ?? 0), 0);
+    // const sumItems = (items: any[] = []) => items.reduce((s, it) => s + (it.amount ?? 0), 0);
 
-    const revenueTotal = financialData.revenue?.total ?? sumItems(financialData.revenue?.items);
-    const expensesTotal = financialData.expenses?.total ?? sumItems(financialData.expenses?.items);
+    // const revenueTotal = financialData.revenue?.total ?? sumItems(financialData.revenue?.items);
+    // const expensesTotal = financialData.expenses?.total ?? sumItems(financialData.expenses?.items);
 
     const mainMetrics = [
-        { key: "revenue", title: "Total Sales", amount: revenueTotal },
-        { key: "expenses", title: "Total Expenditure", amount: expensesTotal },
+        { key: "sales", title: "Total Sales", amount: financialData.sales.total },
+        // { key: "expenses", title: "Total Expenditure", amount: expensesTotal },
     ] as const;
 
     const currentData = financialData[selectedMetric] || {
@@ -148,9 +192,11 @@ export const ExpensesPage = () => {
             <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                    {selectedMetric === "revenue" ? "Sales breakdown" : "Expenditure breakdown"}
+                    {currentData.title}
+                    {/* {selectedMetric === "revenue" ? "Sales breakdown" : "Expenditure breakdown"} */}
                 </h2>
-                <p className="text-gray-600">{currentData.title} — {currentData.description}</p>
+                {/* <p className="text-gray-600">{currentData.title} — {currentData.description}</p> */}
+                <p className="text-gray-600">{currentData.description}</p>
                 </div>
 
                 <div className="space-y-3">
