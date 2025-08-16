@@ -55,10 +55,11 @@ export const ExpensesPage = () => {
             | "past30Days"
         >("all");
     
-        const getDateRangeText = (range: typeof dateRange): string => {
+        const getDateRange = (range: typeof dateRange): { start: Date; end: Date } => {
             const today = startOfToday();
             const end = today;
             let start: Date;
+
             switch (range) {
             case "today":
                 start = today;
@@ -80,21 +81,35 @@ export const ExpensesPage = () => {
                 break;
             case "all":
             default:
-                return "All Time";
+                start = new Date(0); // all orders
             }
-            return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
+            return { start, end };
         };
+
+    const getDateRangeText = (range: typeof dateRange): string => {
+        const { start, end } = getDateRange(range);
+        if (range === "all") return "All Time";
+        return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
+    };
 
     const fetchFinancialData = async () => {
         try {
             const orders = (await Meteor.callAsync("orders.getAll")) as Order[];
-            const purchaseOrders = (await Meteor.callAsync("purchaseOrders.getAll")) as PuchaseOrder[];
+            const purchaseOrders = (await Meteor.callAsync('purchaseOrders.getAll')) as PurchaseOrder[];
+
+            const { start, end } = getDateRange(dateRange);
+
+            // filter orders by date
+            const filteredOrders = orders.filter(order => {
+                const orderDate = new Date(order.createdAt);
+                return orderDate >= start && orderDate <= end && order.paid;
+            });
 
             // Calc sales
             let salesTotal = 0;
             const salesByCategory: { [key: string]: number } = {};
 
-            orders.forEach(order => {
+            filteredOrders.forEach(order => {
                 if (!order.paid) return;
 
                 order.menuItems.forEach(item => {
@@ -119,6 +134,7 @@ export const ExpensesPage = () => {
             const expensesBySupplier: { [key: string]: number } = {};
 
             purchaseOrders.forEach(purchase =>{
+            // purchaseOrders.forEach(purchase =>{
                 const purchaseAmount = purchase.totalCost;
                 expenses += purchaseAmount;
 
@@ -154,7 +170,7 @@ export const ExpensesPage = () => {
     useEffect(() => {
         setPageTitle("Finance - Sales & Expense Tracking");
         fetchFinancialData();
-    }, [setPageTitle]);
+    }, [setPageTitle, dateRange]);
 
     if (!financialData) {
         return (
@@ -163,7 +179,7 @@ export const ExpensesPage = () => {
         </div>
         );
     }
-    
+
     const mainMetrics = [
         { key: "sales", title: "Total Sales", amount: financialData.sales.total },
         { key: "expenses", title: "Total Expenditure", amount: financialData.expenses.total },
