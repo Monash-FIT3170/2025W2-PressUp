@@ -12,6 +12,7 @@ import {
   startOfMonth,
   startOfYear,
   subDays,
+  endOfToday, endOfWeek, endOfMonth, endOfYear
 } from "date-fns";
 
 interface DetailItemProps {
@@ -57,31 +58,38 @@ export const ExpensesPage = () => {
     
         const getDateRange = (range: typeof dateRange): { start: Date; end: Date } => {
             const today = startOfToday();
-            const end = today;
             let start: Date;
+            let end: Date;
 
             switch (range) {
             case "today":
                 start = today;
+                end = endOfToday();
                 break;
             case "thisWeek":
                 start = startOfWeek(today, { weekStartsOn: 1 });
+                end = endOfWeek(today, { weekStartsOn: 1 });
                 break;
             case "thisMonth":
                 start = startOfMonth(today);
+                end = endOfMonth(today);
                 break;
             case "thisYear":
                 start = startOfYear(today);
+                end = endOfYear(today);
                 break;
             case "past7Days":
                 start = subDays(today, 6);
+                end = endOfToday();
                 break;
             case "past30Days":
                 start = subDays(today, 29);
+                end = endOfToday();
                 break;
             case "all":
             default:
                 start = new Date(0); // all orders
+                end = new Date();
             }
             return { start, end };
         };
@@ -104,6 +112,16 @@ export const ExpensesPage = () => {
                 const orderDate = new Date(order.createdAt);
                 return orderDate >= start && orderDate <= end && order.paid;
             });
+
+            const filteredPurchaseOrders = purchaseOrders.filter(purchase => {
+                let purchaseDate: Date;
+                if (purchase.date instanceof Date) {
+                    purchaseDate = purchase.date
+                } else {
+                    purchaseDate = new Date(purchase.date)
+                }
+                return purchaseDate >= start && purchaseDate <= end;
+            })
 
             // Calc sales
             let salesTotal = 0;
@@ -133,8 +151,7 @@ export const ExpensesPage = () => {
             let expenses = 0;
             const expensesBySupplier: { [key: string]: number } = {};
 
-            purchaseOrders.forEach(purchase =>{
-            // purchaseOrders.forEach(purchase =>{
+            filteredPurchaseOrders.forEach(purchase =>{
                 const purchaseAmount = purchase.totalCost;
                 expenses += purchaseAmount;
 
