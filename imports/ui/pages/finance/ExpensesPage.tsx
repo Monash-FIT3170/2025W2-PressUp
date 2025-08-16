@@ -241,7 +241,10 @@ export const ExpensesPage = () => {
                 </div>
 
                 <div className="space-y-3 max-h-76 overflow-y-auto pr-2">
-                {(currentData.items || []).map((item: any, index: number) => (
+                {(currentData.items || [])
+                .slice()
+                .sort((a,b) => b.amount - a.amount)
+                .map((item: any, index: number) => (
                     <DetailItem
                     key={index}
                     label={item.label}
