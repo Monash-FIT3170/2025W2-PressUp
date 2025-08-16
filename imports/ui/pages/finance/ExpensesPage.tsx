@@ -240,7 +240,7 @@ export const ExpensesPage = () => {
                 <p className="text-gray-600">{currentData.description}</p>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-76 overflow-y-auto pr-2">
                 {(currentData.items || []).map((item: any, index: number) => (
                     <DetailItem
                     key={index}
