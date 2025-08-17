@@ -5,6 +5,8 @@ import { SuppliersPage } from "./pages/inventory/Suppliers";
 import { Menu } from "./pages/menuManagement/Menu";
 import { ProfitLossPage } from "./pages/finance/ProfitLossPage";
 import { TaxPage } from "./pages/finance/TaxPage";
+import { ExpensesPage } from "./pages/finance/ExpensesPage";
+
 import { KitchenManagement } from "./pages/kitchenManagement/KitchenManagement";
 import { OrderHistoryPage } from "./pages/kitchenManagement/OrderHistoryPage";
 // pos system
@@ -31,6 +33,7 @@ const router = createBrowserRouter([
           { index: true, Component: () => <Navigate replace to={"profit-loss"} /> },
           { path: "profit-loss", Component: ProfitLossPage},
           { path: "tax", Component: TaxPage},
+          { path: "expenses", Component: ExpensesPage},
         ],
       },
       {
