@@ -5,7 +5,10 @@ import { SuppliersPage } from "./pages/inventory/Suppliers";
 import { Menu } from "./pages/menuManagement/Menu";
 import { ProfitLossPage } from "./pages/finance/ProfitLossPage";
 import { TaxPage } from "./pages/finance/TaxPage";
+import { ExpensesPage } from "./pages/finance/ExpensesPage";
+
 import { KitchenManagement } from "./pages/kitchenManagement/KitchenManagement";
+import { OrderHistoryPage } from "./pages/kitchenManagement/OrderHistoryPage";
 // pos system
 import { MainDisplay } from "./pages/pos/MainDisplay";
 import { PosIndex } from "./pages/pos/Index";
@@ -14,6 +17,7 @@ import { ReceiptPage } from "./pages/receipt/Receipt";
 import { LoginPage } from "./pages/Login";
 import { Accounts } from "./pages/accounts/Accounts";
 import { UserManagementPage } from "./pages/userManagement/userManagement";
+import { RosterPage } from "./pages/staff/Roster";
 
 const router = createBrowserRouter([
   {
@@ -30,6 +34,7 @@ const router = createBrowserRouter([
           { index: true, Component: () => <Navigate replace to={"profit-loss"} /> },
           { path: "profit-loss", Component: ProfitLossPage},
           { path: "tax", Component: TaxPage},
+          { path: "expenses", Component: ExpensesPage},
         ],
       },
       {
@@ -51,7 +56,10 @@ const router = createBrowserRouter([
       },
       {
         path: "kitchenManagement",
-        Component: KitchenManagement,
+        children: [
+          { index: true, Component: KitchenManagement },    
+          { path: "history", Component: OrderHistoryPage }, 
+        ],
       },
       {
         path: "receipt",
@@ -61,7 +69,14 @@ const router = createBrowserRouter([
       {
         path: "accounts",
         Component: UserManagementPage
-      }
+      },
+      {
+        path: "staff",
+        children: [
+          { index: true, Component: () => <Navigate replace to={"roster"} /> },
+          { path: "roster", Component: RosterPage },
+        ],
+      },
     ],
   },
 ]);

@@ -9,6 +9,7 @@ export interface OrderMenuItem {
     price: number;
     category?: string[];
     image: string;
+    served?: boolean;
 }
 
 export interface Order extends DBEntry {
