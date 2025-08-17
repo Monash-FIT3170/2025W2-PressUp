@@ -3,6 +3,9 @@ import { mockDataGenerator } from "/imports/api/mockData";
 import { createDefaultUser } from "/imports/api/accounts/defaultUser";
 import "/imports/api/serverImports";
 import { setupRoles } from "/imports/api/accounts/roles";
+import "/imports/api/accounts/UserMethods"; 
+import "/imports/api/accounts/UserTypes";
+import "/imports/api/accounts/UserPublishing";
 
 Meteor.startup(async () => {
   await setupRoles();
@@ -10,6 +13,3 @@ Meteor.startup(async () => {
 
   await mockDataGenerator({});
 });
-
-import "/imports/api/appUsers/AppUsersMethods"; 
-import "/imports/api/appUsers/AppUsersCollection";

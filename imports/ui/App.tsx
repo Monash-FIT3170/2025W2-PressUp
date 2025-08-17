@@ -60,7 +60,7 @@ const router = createBrowserRouter([
       },
       {
         path: "accounts",
-        Component: UserManagementPage ,
+        Component: UserManagementPage
       }
     ],
   },
