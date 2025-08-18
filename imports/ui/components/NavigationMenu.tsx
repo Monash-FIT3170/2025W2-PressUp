@@ -134,12 +134,6 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>
-        <NavigationEntry
-          icon={<Clock3Icon />}
-          name="Kitchen Management"
-          path="/kitchenManagement"
-          selectionType={NavigationEntrySelection.HIGHLIGHT}
-        />
       </div>
     </div>
   );
