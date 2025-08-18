@@ -106,7 +106,7 @@ export const ProfitLossPage = () => {
         return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
     };
 
-    // Helper function to filter data by date range
+    // Filters data by date range
     const getDateRangeFilter = (range: string) => {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -134,9 +134,8 @@ export const ProfitLossPage = () => {
           return () => true;
       }
     };
-    
 
-    // calculates revenue
+    // Calculates revenue
     const processOrderData = (orders: Order[]): { revenue: number; revenueItems: { label: string; amount: number; percentage: number }[] } => {
       const revenueByCat: { [key: string]: number } = {};
 
@@ -170,7 +169,7 @@ export const ProfitLossPage = () => {
       return { revenue: totalRevenue, revenueItems };
     }
 
-    // calculates expenses
+    // Calculates expenses
     const processPurchaseOrderData = (purchaseOrders: PurchaseOrder[]): { expenses: number; expenseItems: { label: string; amount: number; percentage: number }[] } => {
       const expensesBySupplier: { [key: string]: number } = {};
       let totalExpenses = 0;
@@ -244,6 +243,7 @@ export const ProfitLossPage = () => {
             return dateFilter(poDate);
           });
           
+          // Uses filetered data to process
           const processedData = processFinancialData(filteredOrderData, filteredPurchaseOrderData);
           setFinancialData(processedData);
         } catch (error) {
