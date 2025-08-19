@@ -32,8 +32,7 @@ interface NavigationMenuProps {
 }
 
 export const NavigationMenu = ({ show }: NavigationMenuProps) => {
-  // NOTE: The shown width of the menu is related to how much the global header title is indented.
-  // If you want to change the width here you should also make a change there.
+
   return (
     <div
       className={`bg-press-up-purple min-h-full transition-all ease-in-out duration-300 ${
