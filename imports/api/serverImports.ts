@@ -9,6 +9,7 @@ import "./purchaseOrders/purchaseOrdersMethods.ts";
 import "./purchaseOrders/purchaseOrdersPublishing.ts";
 import "./orders/ordersMethods";
 import "./tables/tablesMethods";
-import "./tables/tablesPublishing"
+import "./tables/tablesPublishing";
 import "./accounts/usersPublishing";
 import "./shifts/shiftsMethods.ts";
+import "./shifts/shiftsPublishing.ts";
