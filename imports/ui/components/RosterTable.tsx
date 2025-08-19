@@ -93,7 +93,11 @@ const daysOfWeek = [
 
 const allRoles = Array.from(new Set(staffShifts.map((s) => s.role)));
 
-export const RosterTable: React.FC = () => {
+interface RosterTableProps {
+  PublishShiftButton: React.ReactNode
+}
+
+export const RosterTable = ({PublishShiftButton} : RosterTableProps) => {
   // Start with the most recent Monday as the base week
   const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, -1 = prev, +1 = next
   const [roleFilter, setRoleFilter] = useState<string[]>(allRoles);
@@ -195,13 +199,19 @@ export const RosterTable: React.FC = () => {
             )}
           </div>
         </div>
+        <div className="px-4 ml-auto">{PublishShiftButton}</div>
       </div>
       <table className="min-w-full border border-gray-300">
         <thead>
           <tr>
-            <th className="border border-gray-300 px-2 py-1 bg-gray-100 text-left">Employee</th>
+            <th className="border border-gray-300 px-2 py-1 bg-gray-100 text-left">
+              Employee
+            </th>
             {daysOfWeek.map((day, i) => (
-              <th key={day} className="border border-gray-300 px-2 py-1 bg-gray-100">
+              <th
+                key={day}
+                className="border border-gray-300 px-2 py-1 bg-gray-100"
+              >
                 {day}
                 <div className="text-xs text-gray-500">
                   {formatDate(weekDates[i])}
@@ -219,7 +229,10 @@ export const RosterTable: React.FC = () => {
               {Array.from({ length: 7 }).map((_, dayIndex) => {
                 const shift = getShiftForStaffAndDay(staff, dayIndex);
                 return (
-                  <td key={dayIndex} className="border border-gray-300 px-2 py-1 align-top">
+                  <td
+                    key={dayIndex}
+                    className="border border-gray-300 px-2 py-1 align-top"
+                  >
                     {shift ? (
                       <div
                         style={{
@@ -233,10 +246,19 @@ export const RosterTable: React.FC = () => {
                           gap: "2px",
                         }}
                       >
-                        <span className="font-mono text-sm" style={{ color: "#fff" }}>
-                          {formatTime(shift.startHour, shift.startMinute)} - {formatTime(shift.endHour, shift.endMinute)}
+                        <span
+                          className="font-mono text-sm"
+                          style={{ color: "#fff" }}
+                        >
+                          {formatTime(shift.startHour, shift.startMinute)} -{" "}
+                          {formatTime(shift.endHour, shift.endMinute)}
                         </span>
-                        <span className="text-xs" style={{ color: "rgba(255,255,255,0.9)" }}>{staff.role}</span>
+                        <span
+                          className="text-xs"
+                          style={{ color: "rgba(255,255,255,0.9)" }}
+                        >
+                          {staff.role}
+                        </span>
                       </div>
                     ) : null}
                   </td>
