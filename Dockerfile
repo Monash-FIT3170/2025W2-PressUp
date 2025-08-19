@@ -6,23 +6,29 @@ WORKDIR /app
 
 RUN curl https://install.meteor.com/ | sh
 
+# Ensure Meteor is in PATH
+ENV PATH="/root/.meteor:${PATH}"
+
 COPY . .
-RUN meteor npm install && \
-    meteor build --directory /build --server-only && \
-    cd /build/bundle/programs/server && \
-    npm install
+RUN meteor npm ci || meteor npm install
+RUN meteor build --directory /build --server-only
+RUN cd /build/bundle/programs/server && (npm ci || npm install --production)
 
 # Stage 2: Run Meteor App
-FROM node:18.18-bookworm-slim as server
+FROM node:18.18-bookworm as server
 
-RUN useradd --user-group --create-home --shell /bin/false appuser
 WORKDIR /build
 
 COPY --from=build /build/bundle /build
+COPY private/settings.json /build/settings.json
+COPY scripts/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-USER appuser
-
+ENV NODE_ENV=production
+ENV BIND_IP=0.0.0.0
 ENV PORT=3000
-EXPOSE 3000
+ENV METEOR_SETTINGS_FILE=/build/settings.json
 
-CMD ["node", "main.js"]
+EXPOSE $PORT
+USER node
+ENTRYPOINT ["/entrypoint.sh"]
