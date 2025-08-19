@@ -19,3 +19,6 @@ export {
   StockItemLine,
   PurchaseOrdersCollection,
 } from "./purchaseOrders/PurchaseOrdersCollection";
+
+// Tables
+export { Tables, TablesCollection } from "./tables/TablesCollection"

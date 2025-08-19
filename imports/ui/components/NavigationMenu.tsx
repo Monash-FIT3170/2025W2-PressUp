@@ -10,7 +10,7 @@ import {
 } from "./symbols/navigation/Inventory";
 import { MonitorIcon } from "./symbols/navigation/POS";
 import { CoffeeIcon } from "./symbols/navigation/Coffee";
-import { Clock3, Clock3Icon, ClockIcon, TimerIcon } from "lucide-react";
+import { Calendar, Clock3Icon, HistoryIcon, Users,  } from "lucide-react";
 
 // Create empty icons, NEED TO FIND ICON
 const FinanceIcon = ({ fill }: { fill: string }) => (
@@ -20,6 +20,10 @@ const ProfitLossIcon = ({ fill }: { fill: string }) => (
   <div style={{ width: '24px', height: '24px' }}></div>
 );
 const TaxIcon = ({ fill }: { fill: string }) => (
+  <div style={{ width: '24px', height: '24px' }}></div>
+);
+
+const ExpensesIcon = ({ fill }: { fill: string }) => (
   <div style={{ width: '24px', height: '24px' }}></div>
 );
 
@@ -54,6 +58,13 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           icon={<TaxIcon fill="var(--color-press-up-grey)" />}
           name="Tax Management"
           path="/finance/tax"
+          selectionType={NavigationEntrySelection.ARROW}
+        />
+
+        <NavigationEntry
+          icon={<ExpensesIcon fill="var(--color-press-up-grey)" />}
+          name="Expense Tracking"
+          path="/finance/Expenses"
           selectionType={NavigationEntrySelection.ARROW}
         />
         </NavigationEntry>
@@ -96,13 +107,33 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           name="Kitchen Management"
           path="/kitchenManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
-        />
+        >
+          <NavigationEntry
+            icon={<HistoryIcon />}                  
+            name="Order History"
+            path="/kitchenManagement/history"    
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+        </NavigationEntry>
         <NavigationEntry
           icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
           name="Accounts"
           path="/accounts"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         />
+        <NavigationEntry
+          icon={<Users />}
+          name="Staff Management"
+          path="/staff"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        >
+          <NavigationEntry
+            icon={<Calendar />}
+            name="Roster"
+            path="/staff/roster"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+        </NavigationEntry>
       </div>
     </div>
   );
@@ -164,7 +195,11 @@ const NavigationEntry = ({
       <Link to={path}>
         <div className="flex flex-row text-press-up-grey border-b-[0.15em] border-press-up-grey min-w-full items mb-2">
           <div className="flex-0 content-center min-h-[2.3em]">{icon}</div>
-          {active ? <ActiveContent /> : <div className="px-3 content-center">{name}</div>}
+          {active ? (
+            <ActiveContent />
+          ) : (
+            <div className="px-3 content-center">{name}</div>
+          )}
         </div>
       </Link>
       <div className="grid grid-cols-12 text-[0.8em]">

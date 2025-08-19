@@ -5,8 +5,12 @@ export type UiOrder = {
   orderNo: number;
   status: OrderStatus;
   tableNo: number;
-  menuItems: string[];
   createdAt: string;
+  menuItems: Array<{
+    name: string;
+    quantity: number;
+    served?: boolean; 
+  }>;
 };
 
 export type Column = {
