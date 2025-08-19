@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
+import { FinanceDateFilter } from "../../components/FinanceDateFilter";
+import {
+    format,
+    startOfToday,
+    startOfWeek,
+    startOfMonth,
+    startOfYear,
+    subDays,
+} from "date-fns";
 import { Meteor } from 'meteor/meteor'
 import { Order } from "../../api/orders/orders";
 import { PurchaseOrder } from "../../api/purchaseOrders/PurchaseOrdersCollection";
@@ -58,8 +67,75 @@ export const ProfitLossPage = () => {
     const [_, setPageTitle] = usePageTitle();
     const [selectedMetric, setSelectedMetric] = useState('netProfitLoss');
     const [financialData, setFinancialData] = useState<FinancialData | null>(null);
+    const [dateRange, setDateRange] = React.useState<
+        | "all"
+        | "today"
+        | "thisWeek"
+        | "thisMonth"
+        | "thisYear"
+        | "past7Days"
+        | "past30Days"
+    >("all");
+    const getDateRangeText = (range: typeof dateRange): string => {
+        const today = startOfToday();
+        const end = today; // assume end is always today unless "all"
+        let start: Date;
+        switch (range) {
+            case "today":
+                start = today;
+                break;
+            case "thisWeek":
+                start = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+                break;
+            case "thisMonth":
+                start = startOfMonth(today);
+                break;
+            case "thisYear":
+                start = startOfYear(today);
+                break;
+            case "past7Days":
+                start = subDays(today, 6); // 6 days ago + today = 7
+                break;
+            case "past30Days":
+                start = subDays(today, 29);
+                break;
+            case "all":
+            default:
+                return "All Time";
+        }
+        return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
+    };
 
-    // calculates revenue
+    // Filters data by date range
+    const getDateRangeFilter = (range: string) => {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      switch (range) {
+        case "today":
+          return (date: Date) => date >= today;
+        case "thisWeek":
+          const startOfWeekDate = startOfWeek(today, { weekStartsOn: 1 });
+          return (date: Date) => date >= startOfWeekDate;
+        case "thisMonth":
+          const startOfMonthDate = startOfMonth(today);
+          return (date: Date) => date >= startOfMonthDate;
+        case "thisYear":
+          const startOfYearDate = startOfYear(today);
+          return (date: Date) => date >= startOfYearDate;
+        case "past7Days":
+          const past7Days = subDays(today, 6);
+          return (date: Date) => date >= past7Days;
+        case "past30Days":
+          const past30Days = subDays(today, 29);
+          return (date: Date) => date >= past30Days;
+        case "all":
+        default:
+          return () => true;
+      }
+    };
+
+    // Calculates revenue
     const processOrderData = (orders: Order[]): { revenue: number; revenueItems: { label: string; amount: number; percentage: number }[] } => {
       const revenueByCat: { [key: string]: number } = {};
 
@@ -93,7 +169,7 @@ export const ProfitLossPage = () => {
       return { revenue: totalRevenue, revenueItems };
     }
 
-    // calculates expenses
+    // Calculates expenses
     const processPurchaseOrderData = (purchaseOrders: PurchaseOrder[]): { expenses: number; expenseItems: { label: string; amount: number; percentage: number }[] } => {
       const expensesBySupplier: { [key: string]: number } = {};
       let totalExpenses = 0;
@@ -151,17 +227,31 @@ export const ProfitLossPage = () => {
     
       const fetchOrders = async () => {
         try {
-            const orderData = await Meteor.callAsync('orders.getAll') as Order[];
-            const purchaseOrderData = await Meteor.callAsync('purchaseOrders.getAll') as PurchaseOrder[];
-            
-            const processedData = processFinancialData(orderData, purchaseOrderData);
-            setFinancialData(processedData);
+          const dateFilter = getDateRangeFilter(dateRange);
+
+          const orderData = await Meteor.callAsync('orders.getAll') as Order[];
+          const purchaseOrderData = await Meteor.callAsync('purchaseOrders.getAll') as PurchaseOrder[];
+
+          // Filter the data based on date range
+          const filteredOrderData = orderData.filter(order => {
+            const orderDate = new Date(order.createdAt || order.date);
+            return dateFilter(orderDate);
+          });
+
+          const filteredPurchaseOrderData = purchaseOrderData.filter(po => {
+            const poDate = new Date(po.createdAt || po.date);
+            return dateFilter(poDate);
+          });
+          
+          // Uses filetered data to process
+          const processedData = processFinancialData(filteredOrderData, filteredPurchaseOrderData);
+          setFinancialData(processedData);
         } catch (error) {
-            console.error("Error fetching order data", error);
+          console.error("Error fetching order data", error);
         }
       };
       fetchOrders();
-    }, [setPageTitle]);
+    }, [setPageTitle, dateRange]);
 
     if (!financialData) {
         return <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">Loading...</div>;
@@ -199,6 +289,15 @@ export const ProfitLossPage = () => {
 
     return (
       <div className="w-full p-6 bg-gray-50 min-h-screen">
+        {/* Date Filter and Period Display */}
+        <div className="flex items-baseline gap-4 mb-4">
+          <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
+          <h2 className="ml-4 text-red-900">
+            <span className="font-bold">Viewing Period:</span>{" "}
+            <span className="font-normal">{getDateRangeText(dateRange)}</span>
+          </h2>
+        </div>
+
         {/* Finance Cards (adds one for each metric) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {mainMetrics.map((metric) => (
@@ -210,19 +309,6 @@ export const ProfitLossPage = () => {
             onClick={() => setSelectedMetric(metric.key)}
             />
           ))}
-        
-        {/* Gross Profit Card, might not need*/}
-        {/* <div className="md:col-span-3 flex justify-center">
-            <div className="w-full md:w-1/3">
-            <FinanceCard
-                title="Gross Profit"
-                amount={financialData.netProfitLoss.items.find(i => i.label === 'Gross Profit')?.amount ?? 0}
-                showCurrency={false}
-                isSelected={selectedMetric === 'netProfitLoss'}
-                onClick={() => setSelectedMetric('netProfitLoss')}
-            />
-            </div>
-        </div> */}
         </div>
 
         {/* Detail Section */}
