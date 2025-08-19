@@ -57,13 +57,13 @@ export const RosterTable = ({PublishShiftButton} : RosterTableProps) => {
   const staffShifts = useTracker(() => {
     const staffMap = new Map<
       string,
-      { name: string; role: ""; shifts: Shift[] }
+      { name: string; role: string; shifts: Shift[] }
     >();
 
     Meteor.users.find({}, { fields: { username: 1 } }).forEach((user) => {
       staffMap.set(user._id, {
         name: user.username ?? "Unknown",
-        role: "",
+        role: "Chef", // TODO Dynamically set role here
         shifts: [],
       });
     });
@@ -79,13 +79,14 @@ export const RosterTable = ({PublishShiftButton} : RosterTableProps) => {
   }, [shiftsLoading, usersLoading])
 
   const [allRoles, setAllRoles] = useState<string[]>([])
+  const [roleFilter, setRoleFilter] = useState<string[]>(allRoles);
   useEffect(() => {
-    setAllRoles(Array.from(new Set(staffShifts.map((s) => s.role))))
+    setAllRoles(Array.from(new Set(staffShifts.map((s) => s.role))));
+    setRoleFilter(allRoles);
   }, [staffShifts])
   
   // Start with the most recent Monday as the base week
   const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, -1 = prev, +1 = next
-  const [roleFilter, setRoleFilter] = useState<string[]>(allRoles);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Calculate the start and end dates for the current week
@@ -102,13 +103,19 @@ export const RosterTable = ({PublishShiftButton} : RosterTableProps) => {
   });
 
   const filteredShifts = staffShifts.filter((s) => roleFilter.includes(s.role));
+  console.log(roleFilter)
+  console.log(filteredShifts)
 
   const getShiftForStaffAndDay = (
     staff: { shifts: Shift[]; role: string },
     dayIndex: number
   ) => {
-    const cellDateStr = weekDates[dayIndex];
-    return staff.shifts.find((shift) => shift.date.toDateString() == cellDateStr.toDateString()) || null;
+    const cellDate = weekDates[dayIndex];
+    staff.shifts.forEach((shift) => {
+      console.log(shift.date.toDateString())
+      console.log(cellDate.toDateString())
+    })
+    return staff.shifts.find((shift) => shift.date.toDateString() == cellDate.toDateString()) || null;
   };
 
   // Handle role filter change

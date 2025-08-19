@@ -24,12 +24,18 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
   const onSubmit: FormEventHandler = (e) => {
     e.preventDefault();
 
-    const start = new Date(startTime);
-    const end = new Date(endTime);
+    const shiftDate = new Date(`${date}T00:00:00`);
+    const [startHour, startMinute] = startTime.split(":").map(Number);
+    const [endHour, endMinute] = endTime.split(":").map(Number);
 
     Meteor.call(
       "shifts.new",
-      { userId, start, end },
+      {
+        userId,
+        date: shiftDate,
+        start: { hour: startHour, minute: startMinute },
+        end: { hour: endHour, minute: endMinute },
+      },
       (error: Meteor.Error | undefined, result: string | undefined) => {
         if (error) {
           console.error("Error creating shift:", error.reason || error.message);
@@ -39,6 +45,10 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
         }
         console.log("Shift created with ID:", result);
         onSuccess();
+        setDate("");
+        setStartTime("");
+        setEndTime("");
+        setUserId("");
       },
     );
   };
@@ -60,10 +70,19 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
           </Select>
         </div>
         <div>
+          <Label>Date</Label>
+          <Input
+            value={date}
+            type="date"
+            onChange={(e) => setDate(e.target.value)}
+            required
+          />
+        </div>
+        <div>
           <Label>Start</Label>
           <Input
             value={startTime}
-            type="datetime-local"
+            type="time"
             onChange={(e) => setStartTime(e.target.value)}
             required
           />
@@ -72,7 +91,7 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
           <Label>End</Label>
           <Input
             value={endTime}
-            type="datetime-local"
+            type="time"
             onChange={(e) => setEndTime(e.target.value)}
             required
           />
