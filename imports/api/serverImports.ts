@@ -10,5 +10,5 @@ import "./purchaseOrders/purchaseOrdersPublishing.ts";
 import "./orders/ordersMethods";
 import "./tables/tablesMethods";
 import "./tables/tablesPublishing";
-import "/imports/api/accounts/UserMethods";
-import "/imports/api/accounts/UserPublishing";
+import "./accounts/userMethods";
+import "./accounts/userPublishing";

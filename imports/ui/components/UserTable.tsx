@@ -1,5 +1,5 @@
 import React from "react";
-import { ExtendedUser } from "/imports/api/accounts/UserTypes";
+import { ExtendedUser } from "../../api/accounts/userTypes";
 import { PressUpRole } from "/imports/api/accounts/roles";
 
 interface UserTableProps {
@@ -22,7 +22,9 @@ export const UserTable = ({
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       // Only select users that aren't the current user (they can't delete themselves)
-      const selectableUsers = users.filter(user => user._id !== currentUserId);
+      const selectableUsers = users.filter(
+        (user) => user._id !== currentUserId
+      );
       onSelectionChange(selectableUsers);
     } else {
       onSelectionChange([]);
@@ -33,17 +35,20 @@ export const UserTable = ({
     if (checked) {
       onSelectionChange([...selectedUsers, user]);
     } else {
-      onSelectionChange(selectedUsers.filter(u => u._id !== user._id));
+      onSelectionChange(selectedUsers.filter((u) => u._id !== user._id));
     }
   };
 
   const isSelected = (user: ExtendedUser) => {
-    return selectedUsers.some(u => u._id === user._id);
+    return selectedUsers.some((u) => u._id === user._id);
   };
 
-  const selectableUsers = users.filter(user => user._id !== currentUserId);
-  const isAllSelected = selectableUsers.length > 0 && selectedUsers.length === selectableUsers.length;
-  const isIndeterminate = selectedUsers.length > 0 && selectedUsers.length < selectableUsers.length;
+  const selectableUsers = users.filter((user) => user._id !== currentUserId);
+  const isAllSelected =
+    selectableUsers.length > 0 &&
+    selectedUsers.length === selectableUsers.length;
+  const isIndeterminate =
+    selectedUsers.length > 0 && selectedUsers.length < selectableUsers.length;
 
   const getUserRole = (user: ExtendedUser): string => {
     if (user.roles && user.roles.length > 0) {
@@ -84,12 +89,12 @@ export const UserTable = ({
     <div className="overflow-auto">
       <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
         <thead>
-          <tr style={{ backgroundColor: '#c97f97' }}>
+          <tr style={{ backgroundColor: "#c97f97" }}>
             <th className="text-left p-3 font-medium text-white">
               <input
                 type="checkbox"
                 checked={isAllSelected}
-                ref={input => {
+                ref={(input) => {
                   if (input) input.indeterminate = isIndeterminate;
                 }}
                 onChange={(e) => handleSelectAll(e.target.checked)}
@@ -125,22 +130,32 @@ export const UserTable = ({
                 <div className="flex flex-col">
                   <span className="font-medium">{getUserName(user)}</span>
                   {user._id === currentUserId && (
-                    <span className="text-xs text-blue-600 font-medium">(You)</span>
+                    <span className="text-xs text-blue-600 font-medium">
+                      (You)
+                    </span>
                   )}
                 </div>
               </td>
-              <td className="p-3 text-gray-600 text-sm">{getUserEmail(user)}</td>
+              <td className="p-3 text-gray-600 text-sm">
+                {getUserEmail(user)}
+              </td>
               <td className="p-3">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleDisplayStyle(getUserRole(user))}`}>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleDisplayStyle(
+                    getUserRole(user)
+                  )}`}
+                >
                   {getUserRole(user)}
                 </span>
               </td>
               <td className="p-3">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  user.status?.online 
-                    ? "bg-green-100 text-green-800" 
-                    : "bg-gray-100 text-gray-800"
-                }`}>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    user.status?.online
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
                   {user.status?.online ? "Online" : "Offline"}
                 </span>
               </td>
@@ -149,7 +164,7 @@ export const UserTable = ({
                   <button
                     onClick={() => onEdit(user)}
                     className="text-white px-3 py-1 rounded-full text-sm hover:opacity-80 transition-opacity disabled:opacity-50"
-                    style={{ backgroundColor: '#c97f97' }}
+                    style={{ backgroundColor: "#c97f97" }}
                     disabled={!canModifyUser(user)}
                   >
                     Edit
@@ -168,9 +183,7 @@ export const UserTable = ({
         </tbody>
       </table>
       {users.length === 0 && (
-        <div className="text-center p-8 text-gray-500">
-          No users found
-        </div>
+        <div className="text-center p-8 text-gray-500">No users found</div>
       )}
     </div>
   );

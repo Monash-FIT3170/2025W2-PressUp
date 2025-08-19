@@ -3,7 +3,7 @@ import { Accounts } from "meteor/accounts-base";
 import { Roles } from "meteor/alanning:roles";
 import { check, Match } from "meteor/check";
 import { requireLoginMethod } from "./wrappers";
-import { CreateUserData, UpdateUserProfileData } from "imports/api/accounts/UserTypes";
+import { CreateUserData, UpdateUserProfileData } from "imports/api/accounts/userTypes";
 import { PressUpRole } from "./roles";
 
 Meteor.methods({
