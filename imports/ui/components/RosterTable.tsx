@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import { Meteor } from "meteor/meteor";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import React, { useEffect, useState } from "react";
+import { Shift, ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
 
 // Assign a color to each role for color coding
 const roleColors: Record<string, string> = {
@@ -31,56 +34,6 @@ function formatTime(hour: number, minute: number) {
   return hour.toString().padStart(2, "0") + ":" + minute.toString().padStart(2, "0");
 }
 
-// Dynamically generate mock staff data for the current and next week, with some 30-min start/end times and roles
-const today = new Date();
-const baseMonday = getMonday(today);
-const addDays = (date: Date, days: number) => {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-};
-const toISO = (date: Date) => date.toISOString().slice(0, 10);
-
-const staffShifts = [
-  {
-    name: "Alice",
-    role: "Wait Staff",
-    shifts: [
-      { date: toISO(baseMonday), startHour: 9, startMinute: 0, endHour: 17, endMinute: 0 }, // This Monday
-      { date: toISO(addDays(baseMonday, 2)), startHour: 12, startMinute: 30, endHour: 20, endMinute: 0 }, // This Wednesday 12:30-20:00
-      { date: toISO(addDays(baseMonday, 1)), startHour: 8, startMinute: 0, endHour: 12, endMinute: 30 }, // This Tuesday 08:00-12:30 (overlap with Bob)
-      { date: toISO(addDays(baseMonday, 7)), startHour: 10, startMinute: 0, endHour: 18, endMinute: 0 }, // Next Monday
-    ],
-  },
-  {
-    name: "Bob",
-    role: "Chef",
-    shifts: [
-      { date: toISO(addDays(baseMonday, 1)), startHour: 8, startMinute: 30, endHour: 16, endMinute: 0 }, // This Tuesday 08:30-16:00 (overlap with Alice 08:30-12:30)
-      { date: toISO(addDays(baseMonday, 4)), startHour: 14, startMinute: 0, endHour: 22, endMinute: 30 }, // This Friday 14:00-22:30
-      { date: toISO(addDays(baseMonday, 8)), startHour: 9, startMinute: 0, endHour: 17, endMinute: 0 }, // Next Tuesday
-    ],
-  },
-  {
-    name: "Charlie",
-    role: "Supervisor",
-    shifts: [
-      { date: toISO(addDays(baseMonday, 5)), startHour: 10, startMinute: 0, endHour: 18, endMinute: 0 }, // This Saturday
-      { date: toISO(addDays(baseMonday, 6)), startHour: 7, startMinute: 30, endHour: 15, endMinute: 0 }, // This Sunday 07:30-15:00
-      { date: toISO(addDays(baseMonday, 12)), startHour: 12, startMinute: 0, endHour: 20, endMinute: 0 }, // Next Saturday
-    ],
-  },
-  {
-    name: "Dana",
-    role: "Wait Staff",
-    shifts: [
-      { date: toISO(baseMonday), startHour: 13, startMinute: 0, endHour: 17, endMinute: 30 }, // This Monday 13:00-17:30 (overlap with Alice)
-      { date: toISO(addDays(baseMonday, 2)), startHour: 12, startMinute: 0, endHour: 16, endMinute: 30 }, // This Wednesday 12:00-16:30 (overlap with Alice)
-      { date: toISO(addDays(baseMonday, 9)), startHour: 8, startMinute: 0, endHour: 16, endMinute: 0 }, // Next Wednesday
-    ],
-  },
-];
-
 const daysOfWeek = [
   "Monday",
   "Tuesday",
@@ -91,13 +44,45 @@ const daysOfWeek = [
   "Sunday",
 ];
 
-const allRoles = Array.from(new Set(staffShifts.map((s) => s.role)));
-
 interface RosterTableProps {
   PublishShiftButton: React.ReactNode
 }
 
 export const RosterTable = ({PublishShiftButton} : RosterTableProps) => {
+  const today = new Date();
+  const baseMonday = getMonday(today);
+
+  const shiftsLoading = useSubscribe("shifts.all")();
+  const usersLoading = useSubscribe("users.all")();
+  const staffShifts = useTracker(() => {
+    const staffMap = new Map<
+      string,
+      { name: string; role: ""; shifts: Shift[] }
+    >();
+
+    Meteor.users.find({}, { fields: { username: 1 } }).forEach((user) => {
+      staffMap.set(user._id, {
+        name: user.username ?? "Unknown",
+        role: "",
+        shifts: [],
+      });
+    });
+
+    ShiftsCollection.find({}, { sort: { date: 1 } }).forEach((shift) => {
+      if (!staffMap.has(shift.user)) {
+        staffMap.set(shift.user, { name: "Unknown", role: "", shifts: [] });
+      }
+      staffMap.get(shift.user)!.shifts.push(shift);
+    });
+
+    return Array.from(staffMap.values());
+  }, [shiftsLoading, usersLoading])
+
+  const [allRoles, setAllRoles] = useState<string[]>([])
+  useEffect(() => {
+    setAllRoles(Array.from(new Set(staffShifts.map((s) => s.role))))
+  }, [staffShifts])
+  
   // Start with the most recent Monday as the base week
   const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, -1 = prev, +1 = next
   const [roleFilter, setRoleFilter] = useState<string[]>(allRoles);
@@ -116,14 +101,14 @@ export const RosterTable = ({PublishShiftButton} : RosterTableProps) => {
     return d;
   });
 
-  const filteredStaff = staffShifts.filter((s) => roleFilter.includes(s.role));
+  const filteredShifts = staffShifts.filter((s) => roleFilter.includes(s.role));
 
   const getShiftForStaffAndDay = (
-    staff: { shifts: { date: string; startHour: number; startMinute: number; endHour: number; endMinute: number }[]; role: string },
+    staff: { shifts: Shift[]; role: string },
     dayIndex: number
   ) => {
-    const cellDateStr = weekDates[dayIndex].toISOString().slice(0, 10);
-    return staff.shifts.find((shift) => shift.date === cellDateStr) || null;
+    const cellDateStr = weekDates[dayIndex];
+    return staff.shifts.find((shift) => shift.date.toDateString() == cellDateStr.toDateString()) || null;
   };
 
   // Handle role filter change
@@ -221,7 +206,7 @@ export const RosterTable = ({PublishShiftButton} : RosterTableProps) => {
           </tr>
         </thead>
         <tbody>
-          {filteredStaff.map((staff) => (
+          {filteredShifts.map((staff) => (
             <tr key={staff.name}>
               <td className="border border-gray-300 px-2 py-1 font-medium text-left">
                 {staff.name}
@@ -250,8 +235,8 @@ export const RosterTable = ({PublishShiftButton} : RosterTableProps) => {
                           className="font-mono text-sm"
                           style={{ color: "#fff" }}
                         >
-                          {formatTime(shift.startHour, shift.startMinute)} -{" "}
-                          {formatTime(shift.endHour, shift.endMinute)}
+                          {formatTime(shift.start.hour, shift.start.minute)} -{" "}
+                          {formatTime(shift.end.hour, shift.end.minute)}
                         </span>
                         <span
                           className="text-xs"
