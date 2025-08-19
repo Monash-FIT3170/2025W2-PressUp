@@ -1,23 +1,40 @@
-import { check } from "meteor/check";
+import { check, Match } from "meteor/check";
 import { Meteor } from "meteor/meteor";
 import { requireLoginMethod } from "../accounts/wrappers";
-import { ShiftsCollection } from "./ShiftsCollection";
+import { ShiftsCollection, ShiftTime } from "./ShiftsCollection";
+
+const ShiftTimePattern = Match.Where((v: any) => {
+  const matches =
+    v &&
+    typeof v === "object" &&
+    Number.isInteger(v.hour) &&
+    v.hour >= 0 &&
+    v.hour <= 23 &&
+    Number.isInteger(v.minute) &&
+    v.minute >= 0 &&
+    v.minute <= 59;
+  if (!matches)
+    throw new Meteor.Error("invalid-shift-time", "Invalid hour/minute");
+  return true;
+});
 
 Meteor.methods({
   "shifts.new": requireLoginMethod(async function ({
     userId,
+    date,
     start,
     end,
   }: {
     userId: string;
-    start: Date;
-    end: Date;
+    date: Date;
+    start: ShiftTime;
+    end: ShiftTime;
   }) {
     check(userId, String);
-    check(start, Date);
-    check(end, Date);
+    check(date, Date);
+    check(start, ShiftTimePattern);
+    check(end, ShiftTimePattern);
 
-    // User validation
     const userExists = !!(await Meteor.users.findOneAsync(
       { _id: userId },
       { fields: { _id: 1 } },
@@ -26,20 +43,25 @@ Meteor.methods({
       throw new Meteor.Error("invalid-user", "No user found with the given ID");
     }
 
-    // Date validation
-    if (!(start instanceof Date) || isNaN(start.getTime())) {
-      throw new Meteor.Error("invalid-start-date", "Start date is invalid");
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      throw new Meteor.Error("invalid-date", "Date is invalid");
     }
-    if (!(end instanceof Date) || isNaN(end.getTime())) {
-      throw new Meteor.Error("invalid-end-date", "End date is invalid");
-    }
-    if (end <= start) {
+
+    if (
+      end.hour < start.hour ||
+      (end.hour === start.hour && end.minute <= start.minute)
+    ) {
       throw new Meteor.Error(
-        "invalid-date-range",
-        "End date must be after start date",
+        "invalid-time-range",
+        "End time must be after start time",
       );
     }
 
-    return await ShiftsCollection.insertAsync({ user: userId, start, end });
+    return await ShiftsCollection.insertAsync({
+      user: userId,
+      date,
+      start,
+      end,
+    });
   }),
 });

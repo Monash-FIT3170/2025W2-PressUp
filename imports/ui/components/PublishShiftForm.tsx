@@ -11,6 +11,7 @@ interface PublishShiftFormProps {
 }
 
 export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
+  const [date, setDate] = useState<string>("");
   const [startTime, setStartTime] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
   const [userId, setUserId] = useState("");
