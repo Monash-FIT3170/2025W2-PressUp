@@ -90,7 +90,9 @@ export const TablesPage = () => {
   }, [setPageTitle]);
 
   useSubscribe("tables");
-  const tablesFromDb = useTracker(() => TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch());
+  const tablesFromDb = useTracker(() =>
+    TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch()
+  );
 
   const [levels, setLevels] = useState<{ name: string; sections: string[] }[]>([
     { name: "Ground Floor", sections: ["Section 1"] }
@@ -98,6 +100,11 @@ export const TablesPage = () => {
   const [selectedLevel, setSelectedLevel] = useState("Ground Floor");
   const [selectedSection, setSelectedSection] = useState("Section 1");
   const [grids, setGrids] = useState<Record<string, Record<string, (Table | null)[]>>>({});
+
+  // 👇 Snapshots for discard functionality
+  const [originalLevels, setOriginalLevels] = useState<typeof levels | null>(null);
+  const [originalGrids, setOriginalGrids] = useState<typeof grids | null>(null);
+
   const GRID_ROWS = 3;
   const GRID_COLS = 5;
   const GRID_SIZE = GRID_ROWS * GRID_COLS;
@@ -148,6 +155,7 @@ export const TablesPage = () => {
     return allTables.length + 1;
   };
 
+  // -------- GridCell --------
   const GridCell = ({ table, cellIndex }: { table: Table | null; cellIndex: number }) => {
     const [{ isOver, canDrop }, drop] = useDrop({
       accept: "TABLE",
@@ -208,10 +216,36 @@ export const TablesPage = () => {
     );
   };
 
+  // -------- Edit mode handling --------
+  const enterEditMode = () => {
+    setOriginalLevels(JSON.parse(JSON.stringify(levels)));
+    setOriginalGrids(JSON.parse(JSON.stringify(grids)));
+    setEditMode(true);
+    setHasChanges(false);
+  };
+
   const saveChanges = () => {
     setHasChanges(false);
     setEditMode(false);
+    setOriginalLevels(null);
+    setOriginalGrids(null);
   };
+
+  const discardChanges = () => {
+    if (originalLevels) {
+      setLevels(originalLevels);
+      // Reset selected level and section to valid ones
+      setSelectedLevel(originalLevels[0].name);
+      setSelectedSection(originalLevels[0].sections[0]);
+    }
+    if (originalGrids) {
+      setGrids(originalGrids);
+    }
+    setHasChanges(false);
+    setEditMode(false);
+    setModalType(null);
+  };
+
 
   const exitEditMode = () => {
     if (hasChanges) {
@@ -221,10 +255,9 @@ export const TablesPage = () => {
     }
   };
 
+  // -------- Render --------
   return (
     <DndProvider backend={HTML5Backend}>
-      {/* HEADER BUTTONS */}
-      {/* ... rest of file will continue with the updated button colours */}
       <div className="p-6 overflow-y-auto w-full" style={{ maxHeight: "calc(100vh - 100px)" }}>
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
           <div className="flex items-center gap-2">
@@ -331,7 +364,7 @@ export const TablesPage = () => {
               </div>
             ) : (
               <button
-                onClick={() => setEditMode(true)}
+                onClick={enterEditMode}
                 style={{ backgroundColor: "#1e032e", color: "#fff" }}
                 className="px-4 py-1 rounded hover:bg-[#6f597b]"
               >
@@ -340,6 +373,7 @@ export const TablesPage = () => {
             ))}
         </div>
 
+        {/* Table grid */}
         <div className="grid grid-cols-5 gap-8 p-4 justify-items-center">
           {grids[selectedLevel]?.[selectedSection]?.map((table, idx) => (
             <GridCell key={idx} table={table} cellIndex={idx} />
@@ -347,10 +381,11 @@ export const TablesPage = () => {
         </div>
       </div>
 
-      {/* Modals */}
+      {/* -------- Modals -------- */}
       {modalType && (
         <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
+
             {/* Add Level */}
             {modalType === "addLevel" && (
               <>
@@ -362,20 +397,20 @@ export const TablesPage = () => {
                   placeholder="Level Name"
                 />
                 <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => {
-                    const newLevel = { name: nameInput, sections: ["Section 1"] };
-                    setLevels(prev => [...prev, newLevel]);
-                    setSelectedLevel(nameInput);
-                    setSelectedSection("Section 1");
-                    setModalType(null);
-                    markChanged();
-                  }}
-                  style={{ backgroundColor: "#6f597b", color: "#fff" }}
-                  className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
-                >
-                  Add
-                </button>
+                  <button
+                    onClick={() => {
+                      const newLevel = { name: nameInput, sections: ["Section 1"] };
+                      setLevels(prev => [...prev, newLevel]);
+                      setSelectedLevel(nameInput);
+                      setSelectedSection("Section 1");
+                      setModalType(null);
+                      markChanged();
+                    }}
+                    style={{ backgroundColor: "#6f597b", color: "#fff" }}
+                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
+                  >
+                    Add
+                  </button>
                   <button
                     onClick={() => setModalType(null)}
                     style={{ backgroundColor: "#fff", border: "1px solid #6f597b", color: "#6f597b" }}
@@ -386,6 +421,7 @@ export const TablesPage = () => {
                 </div>
               </>
             )}
+
             {/* Delete Level */}
             {modalType === "deleteLevel" && (
               <>
@@ -503,11 +539,12 @@ export const TablesPage = () => {
                   <button
                     onClick={() => {
                       const updated = [...grids[selectedLevel][selectedSection]];
-                      if (selectedCellIndex !== null)
+                      if (selectedCellIndex !== null) {
                         updated[selectedCellIndex] = {
                           tableNo: getNextTableNumber(),
                           capacity: parseInt(capacityInput, 10)
                         };
+                      }
                       setGrids(prev => ({
                         ...prev,
                         [selectedLevel]: { ...prev[selectedLevel], [selectedSection]: updated }
@@ -536,7 +573,7 @@ export const TablesPage = () => {
             {modalType === "editTable" && editTableData && (
               <>
                 <h2 className="text-lg font-semibold mb-4">
-                  Edit Table {editTableData.tableNo}
+                  Edit Table {editTableData!.tableNo}
                 </h2>
                 <input
                   type="number"
@@ -550,7 +587,7 @@ export const TablesPage = () => {
                   <button
                     onClick={() => {
                       const updated = grids[selectedLevel][selectedSection].map(t =>
-                        t?.tableNo === editTableData.tableNo
+                        t?.tableNo === editTableData!.tableNo
                           ? { ...t, capacity: parseInt(capacityInput, 10) }
                           : t
                       );
@@ -570,7 +607,7 @@ export const TablesPage = () => {
                   <button
                     onClick={() => {
                       const updated = grids[selectedLevel][selectedSection].map(t =>
-                        t?.tableNo === editTableData.tableNo ? null : t
+                        t?.tableNo === editTableData!.tableNo ? null : t
                       );
                       setGrids(prev => ({
                         ...prev,
@@ -612,11 +649,7 @@ export const TablesPage = () => {
                     Save & Exit
                   </button>
                   <button
-                    onClick={() => {
-                      setHasChanges(false);
-                      setEditMode(false);
-                      setModalType(null);
-                    }}
+                    onClick={discardChanges}
                     style={{ backgroundColor: "#c97f97", color: "#fff" }}
                     className="px-4 py-1 rounded hover:brightness-90"
                   >
