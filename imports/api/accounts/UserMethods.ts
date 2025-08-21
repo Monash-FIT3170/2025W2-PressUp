@@ -3,7 +3,7 @@ import { Accounts } from "meteor/accounts-base";
 import { Roles } from "meteor/alanning:roles";
 import { check, Match } from "meteor/check";
 import { requireLoginMethod } from "./wrappers";
-import { CreateUserData, UpdateUserProfileData } from "imports/api/accounts/userTypes";
+import { CreateUserData, UpdateUserProfileData } from "/imports/api/accounts/userTypes";
 import { PressUpRole } from "./roles";
 
 Meteor.methods({
@@ -31,7 +31,7 @@ Meteor.methods({
     }
 
     try {
-      
+
       const userId = await Accounts.createUserAsync({
         email: userData.email,
         password: userData.password,
@@ -44,7 +44,7 @@ Meteor.methods({
       await Roles.addUsersToRolesAsync(userId, [userData.role]);
 
       console.log(`Created user '${userData.email}' with role '${userData.role}'`);
-      
+
       return userId;
     } catch (error) {
       const errorMessage = (error instanceof Error) ? error.message : String(error);
@@ -52,7 +52,7 @@ Meteor.methods({
     }
   }),
 
-  // for delete user button. 
+  // for delete user button.
   "users.delete": requireLoginMethod(async function(userId: string) {
     check(userId, String);
 
@@ -75,7 +75,7 @@ Meteor.methods({
       if (currentRoles.length > 0) {
         await Roles.removeUsersFromRolesAsync(userId, currentRoles);
       }
-      
+
       return await Meteor.users.removeAsync(userId);
     } catch (error) {
       const errorMessage = (error instanceof Error) ? error.message : String(error);
@@ -121,7 +121,7 @@ Meteor.methods({
     if (!await Roles.userIsInRoleAsync(this.userId, [PressUpRole.ADMIN, PressUpRole.MANAGER])) {
       throw new Meteor.Error("unauthorized", "Only admins and managers can update user roles");
     }
-    
+
     // role validation
     if (!Object.values(PressUpRole).includes(newRole)) {
       throw new Meteor.Error("invalid-role", "Invalid role specified");
@@ -145,7 +145,7 @@ Meteor.methods({
       await Roles.addUsersToRolesAsync(userId, [newRole]);
 
       console.log(`Updated user '${userToUpdate.emails?.[0]?.address}' role to '${newRole}'`);
-      
+
       return true;
     } catch (error) {
       const errorMessage = (error instanceof Error) ? error.message : String(error);
