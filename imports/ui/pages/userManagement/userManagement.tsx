@@ -495,7 +495,7 @@ const EditUserModal = ({
         await Accounts.setPasswordAsync(user._id, formData.password);
         console.log("Password updated successfully");
       } catch (err) {
-        console.error("Failed to update password:", err);
+        alert(`Failed to update password: ${err}`);
       }
     }
   };
