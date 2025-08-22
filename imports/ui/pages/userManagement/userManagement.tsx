@@ -3,7 +3,7 @@ import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 //import { UserTable } from "/imports/ui/components/UserTable";
 import { ExtendedUser, CreateUserData } from "../../../api/accounts/userTypes";
-import { PressUpRole } from "/imports/api/accounts/roles";
+import { RoleEnum } from "/imports/api/accounts/roles";
 import { Roles } from "meteor/alanning:roles";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 
@@ -30,8 +30,8 @@ export const UserManagementPage = () => {
 
   const canManageUsers = useTracker(() => {
     return Roles.userIsInRoleAsync(Meteor.userId(), [
-      PressUpRole.ADMIN,
-      PressUpRole.MANAGER,
+      RoleEnum.ADMIN,
+      RoleEnum.MANAGER,
     ]);
   }, []);
 
@@ -371,7 +371,7 @@ const AddUserModal = ({
     lastName: "",
     username: "",
     password: "",
-    role: PressUpRole.CASUAL as PressUpRole,
+    role: RoleEnum.CASUAL as RoleEnum,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -429,13 +429,13 @@ const AddUserModal = ({
           <select
             value={formData.role}
             onChange={(e) =>
-              setFormData({ ...formData, role: e.target.value as PressUpRole })
+              setFormData({ ...formData, role: e.target.value as RoleEnum })
             }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <option value={PressUpRole.CASUAL}>Casual</option>
-            <option value={PressUpRole.MANAGER}>Manager</option>
-            <option value={PressUpRole.ADMIN}>Admin</option>
+            <option value={RoleEnum.CASUAL}>Casual</option>
+            <option value={RoleEnum.MANAGER}>Manager</option>
+            <option value={RoleEnum.ADMIN}>Admin</option>
           </select>
           <div className="flex gap-2 pt-4">
             <button
@@ -472,7 +472,7 @@ const EditUserModal = ({
   const [formData, setFormData] = useState({
     firstName: user.profile?.firstName || "",
     lastName: user.profile?.lastName || "",
-    role: (user.roles?.[0] as PressUpRole) || PressUpRole.CASUAL,
+    role: (user.roles?.[0] as RoleEnum) || RoleEnum.CASUAL,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -516,13 +516,13 @@ const EditUserModal = ({
           <select
             value={formData.role}
             onChange={(e) =>
-              setFormData({ ...formData, role: e.target.value as PressUpRole })
+              setFormData({ ...formData, role: e.target.value as RoleEnum })
             }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <option value={PressUpRole.CASUAL}>Casual</option>
-            <option value={PressUpRole.MANAGER}>Manager</option>
-            <option value={PressUpRole.ADMIN}>Admin</option>
+            <option value={RoleEnum.CASUAL}>Casual</option>
+            <option value={RoleEnum.MANAGER}>Manager</option>
+            <option value={RoleEnum.ADMIN}>Admin</option>
           </select>
           <div className="flex gap-2 pt-4">
             <button

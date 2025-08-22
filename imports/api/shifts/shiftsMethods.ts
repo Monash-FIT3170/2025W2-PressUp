@@ -2,6 +2,8 @@ import { check, Match } from "meteor/check";
 import { Meteor } from "meteor/meteor";
 import { requireLoginMethod } from "../accounts/wrappers";
 import { ShiftsCollection, ShiftTime } from "./ShiftsCollection";
+import { Roles } from "meteor/alanning:roles";
+import { RoleEnum } from "../accounts/roles";
 
 const ShiftTimePattern = Match.Where((v: any) => {
   const matches =
@@ -34,6 +36,15 @@ Meteor.methods({
     check(date, Date);
     check(start, ShiftTimePattern);
     check(end, ShiftTimePattern);
+
+    if (
+      !(await Roles.userIsInRoleAsync(Meteor.userId(), [RoleEnum.MANAGER]))
+    ) {
+      throw new Meteor.Error(
+        "invalid-permissions",
+        "No permissions to publish a shift",
+      );
+    }
 
     const userExists = !!(await Meteor.users.findOneAsync(
       { _id: userId },
