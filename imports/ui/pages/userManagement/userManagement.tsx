@@ -7,6 +7,8 @@ import { PressUpRole } from "/imports/api/accounts/roles";
 import { Roles } from "meteor/alanning:roles";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { EditPassword } from "../../components/EditPassword";
+import { Accounts } from "meteor/accounts-base";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export const UserManagementPage = () => {
   const [selectedUsers, setSelectedUsers] = useState<ExtendedUser[]>([]);
@@ -374,14 +376,14 @@ const AddUserModal = ({
     password: "",
     role: PressUpRole.CASUAL as PressUpRole,
   });
-
+  const [showPassword, setShowPassword] = useState(false);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg w-96 shadow-2xl">
         <h2 className="text-xl font-bold mb-4" style={{ color: "#1e032e" }}>
           Add New User
@@ -395,7 +397,6 @@ const AddUserModal = ({
               setFormData({ ...formData, firstName: e.target.value })
             }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            required
           />
           <input
             type="text"
@@ -405,7 +406,6 @@ const AddUserModal = ({
               setFormData({ ...formData, lastName: e.target.value })
             }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            required
           />
           <input
             type="email"
@@ -416,9 +416,9 @@ const AddUserModal = ({
             }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
-          />
+          /><div className="relative">
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="Password"
             value={formData.password}
             onChange={(e) =>
@@ -426,7 +426,13 @@ const AddUserModal = ({
             }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
-          />
+          />  <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-6 top-6 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </button></div>
           <select
             value={formData.role}
             onChange={(e) =>
@@ -474,6 +480,7 @@ const EditUserModal = ({
     firstName: user.profile?.firstName || "",
     lastName: user.profile?.lastName || "",
     role: (user.roles?.[0] as PressUpRole) || PressUpRole.CASUAL,
+    oldPassword: "",
     password: "",
   });
 
@@ -490,16 +497,31 @@ const EditUserModal = ({
 
     // Only update password if user entered one
     if (formData.password && formData.password.trim() !== "") {
-      Meteor.call(
-        "users.updatePassword", // server method
-        user._id, // userId
-        formData.password, // newPassword
-        (err: Meteor.Error) => {
-          // callback
-          if (err) alert(`Failed to update password: ${err}`);
-          else console.log("Password updated successfully");
-        },
-      );
+      const isSelf = user._id === Meteor.userId();
+
+      if (isSelf) {
+        // User changing their own password
+        Accounts.changePassword(
+          formData.oldPassword,
+          formData.password,
+          (err: ) => {
+            // callback
+            if (err) alert(`Failed to update password: ${err}`);
+            else console.log("Password updated successfully");
+          },
+        );
+      } else {
+        Meteor.call(
+          "users.updatePassword", // server method
+          user._id, // userId
+          formData.password, // newPassword
+          (err: Meteor.Error) => {
+            // callback
+            if (err) alert(`Failed to update password: ${err}`);
+            else console.log("Password updated successfully");
+          },
+        );
+      }
     }
   };
 
@@ -541,7 +563,7 @@ const EditUserModal = ({
             <option value={PressUpRole.MANAGER}>Manager</option>
             <option value={PressUpRole.ADMIN}>Admin</option>
           </select>
-          <EditPassword
+          <EditPassword user={user} oldPassword={formData.oldPassword}
             password={formData.password}
             setPassword={setFormData}
           ></EditPassword>
