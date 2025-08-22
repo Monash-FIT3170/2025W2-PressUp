@@ -57,6 +57,27 @@ Meteor.methods({
       );
     }
 
+    // Check if user already has a shift on this date
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existingShift = await ShiftsCollection.findOneAsync({
+      user: userId,
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
+    });
+
+    if (existingShift) {
+      throw new Meteor.Error(
+        "shift-already-exists",
+        "User already has a shift scheduled for this day",
+      );
+    }
+
     return await ShiftsCollection.insertAsync({
       user: userId,
       date,
