@@ -19,7 +19,7 @@ export const EditPassword: React.FC<EditPasswordProps> = ({
   return (
     <div>
       <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-        User Password
+        Change User Password
       </label>
       <input
         value={password}
@@ -29,7 +29,6 @@ export const EditPassword: React.FC<EditPasswordProps> = ({
         className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
         placeholder="User Password"
         type="password"
-        required
       />
     </div>
   );
