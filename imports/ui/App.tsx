@@ -11,7 +11,7 @@ import { KitchenManagement } from "./pages/kitchenManagement/KitchenManagement";
 import { OrderHistoryPage } from "./pages/kitchenManagement/OrderHistoryPage";
 // pos system
 import { MainDisplay } from "./pages/pos/MainDisplay";
-import { PosIndex } from "./pages/pos/Index";
+import { TablesPage } from "./pages/pos/Tables";
 import { ReceiptIndex } from "./pages/receipt/Index";
 import { ReceiptPage } from "./pages/receipt/Receipt";
 import { LoginPage } from "./pages/Login";
@@ -46,8 +46,11 @@ const router = createBrowserRouter([
       },
       {
         path: "pos",
-        Component: PosIndex,
-        children: [{ path: "display", Component: MainDisplay }],
+        children: [
+          { index: true, Component: () => <Navigate replace to={"orders"} /> },
+          { path: "orders", Component: MainDisplay },
+          { path: "tables", Component: TablesPage }
+        ],
       },
       {
         path: "menuManagement",

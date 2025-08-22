@@ -8,7 +8,11 @@ import {
   StockIcon,
   SupplierIcon,
 } from "./symbols/navigation/Inventory";
-import { MonitorIcon } from "./symbols/navigation/POS";
+import { 
+  MonitorIcon,
+  BookIcon,
+  TableIcon,
+} from "./symbols/navigation/POS";
 import { CoffeeIcon } from "./symbols/navigation/Coffee";
 import { Calendar, Clock3Icon, HistoryIcon, Users,  } from "lucide-react";
 
@@ -92,9 +96,24 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
         <NavigationEntry
           icon={<MonitorIcon fill="var(--color-press-up-grey)" />}
           name="POS System"
-          path="/pos/display"
+          path="/pos"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
-        />
+        >
+          <NavigationEntry
+            icon={<BookIcon fill="var(--color-press-up-grey)" />}
+            name="Orders"
+            path="/pos/orders"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+
+          <NavigationEntry
+            icon={<TableIcon fill="var(--color-press-up-grey)" />}
+            name="Tables"
+            path="/pos/tables"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+        </NavigationEntry>
+
         <NavigationEntry
           icon={<CoffeeIcon fill="var(--color-press-up-grey)" />}
           name="Menu Management"

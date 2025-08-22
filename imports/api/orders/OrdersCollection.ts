@@ -23,6 +23,7 @@ export interface Order extends DBEntry {
     createdAt: Date;
     orderStatus: string;
     paid: boolean;
+    seats?: number;
 }
 
 export enum OrderStatus {
