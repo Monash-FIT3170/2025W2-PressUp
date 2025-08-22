@@ -5,6 +5,11 @@ import { PublishShiftForm } from "../../components/PublishShiftForm";
 import { RosterTable } from "../../components/RosterTable";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { usePageTitle } from "../../hooks/PageTitleContext";
+import { Hide } from "../../components/display/Hide";
+import { Roles } from "meteor/alanning:roles";
+import { Meteor } from "meteor/meteor";
+import { RoleEnum } from "/imports/api/accounts/roles";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 
 export const RosterPage = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -20,6 +25,13 @@ export const RosterPage = () => {
     setShowShiftModalCloseConfirmation(false);
   };
 
+  const rolesLoaded = useSubscribe("users.roles")();
+  const rolesGraphLoaded = useSubscribe("users.rolesGraph")();
+  const canPublishShifts = useTracker(
+    () => Roles.userIsInRole(Meteor.userId(), [RoleEnum.MANAGER]),
+    [rolesLoaded, rolesGraphLoaded],
+  );
+
   return (
     <div className="flex flex-1 flex-col">
       <Modal
@@ -30,7 +42,11 @@ export const RosterPage = () => {
       </Modal>
       <RosterTable
         PublishShiftButton={
-          <Button onClick={() => setShiftModalOpen(true)}>Publish Shift</Button>
+          <Hide hide={!canPublishShifts}>
+            <Button onClick={() => setShiftModalOpen(true)}>
+              Publish Shift
+            </Button>
+          </Hide>
         }
       />
       <ConfirmModal

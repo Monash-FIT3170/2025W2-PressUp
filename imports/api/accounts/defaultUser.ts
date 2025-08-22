@@ -1,7 +1,7 @@
 import { Accounts } from "meteor/accounts-base";
 import { Roles } from "meteor/alanning:roles";
 import { Meteor } from "meteor/meteor";
-import { PressUpRole } from "./roles";
+import { RoleEnum } from "./roles";
 
 export const createDefaultUser = async () => {
   const username =
@@ -18,7 +18,7 @@ export const createDefaultUser = async () => {
       username,
       password,
     });
-    await Roles.addUsersToRolesAsync(userId, PressUpRole.ADMIN);
+    await Roles.addUsersToRolesAsync(userId, RoleEnum.ADMIN);
 
     console.log(`Created default user '${username}'`);
   }

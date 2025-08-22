@@ -4,7 +4,7 @@ import { Roles } from "meteor/alanning:roles";
 import { check, Match } from "meteor/check";
 import { requireLoginMethod } from "./wrappers";
 import { CreateUserData, UpdateUserProfileData } from "/imports/api/accounts/userTypes";
-import { PressUpRole } from "./roles";
+import { RoleEnum } from "./roles";
 
 Meteor.methods({
   "users.create": requireLoginMethod(async function(userData: CreateUserData) {
@@ -17,12 +17,12 @@ Meteor.methods({
     });
 
     // check user level and authorisation
-    if (!await Roles.userIsInRoleAsync(this.userId, [PressUpRole.ADMIN, PressUpRole.MANAGER])) {
+    if (!await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN, RoleEnum.MANAGER])) {
       throw new Meteor.Error("unauthorized", "Only admins and managers can create new users");
     }
 
 
-    if (!Object.values(PressUpRole).includes(userData.role as PressUpRole)) {
+    if (!Object.values(RoleEnum).includes(userData.role as RoleEnum)) {
       throw new Meteor.Error("invalid-role", "Invalid role specified");
     }
 
@@ -54,7 +54,7 @@ Meteor.methods({
     check(userId, String);
 
     // only admins and managers can delete users
-    if (!await Roles.userIsInRoleAsync(this.userId, [PressUpRole.ADMIN, PressUpRole.MANAGER])) {
+    if (!await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN, RoleEnum.MANAGER])) {
       throw new Meteor.Error("unauthorized", "Only admins and managers can delete users");
     }
 
@@ -87,7 +87,7 @@ Meteor.methods({
     });
 
     // check if user is admin or manager
-    if (userId !== this.userId && !await Roles.userIsInRoleAsync(this.userId, [PressUpRole.ADMIN, PressUpRole.MANAGER])) {
+    if (userId !== this.userId && !await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN, RoleEnum.MANAGER])) {
       throw new Meteor.Error("unauthorized", "You can only update your own profile");
     }
 
@@ -109,21 +109,21 @@ Meteor.methods({
     }
   }),
 
-  "users.updateRole": requireLoginMethod(async function(userId: string, newRole: PressUpRole) {
+  "users.updateRole": requireLoginMethod(async function(userId: string, newRole: RoleEnum) {
     check(userId, String);
     check(newRole, String);
 
     // Only admins and managers can update roles
-    if (!await Roles.userIsInRoleAsync(this.userId, [PressUpRole.ADMIN, PressUpRole.MANAGER])) {
+    if (!await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN, RoleEnum.MANAGER])) {
       throw new Meteor.Error("unauthorized", "Only admins and managers can update user roles");
     }
 
     // role validation
-    if (!Object.values(PressUpRole).includes(newRole)) {
+    if (!Object.values(RoleEnum).includes(newRole)) {
       throw new Meteor.Error("invalid-role", "Invalid role specified");
     }
 
-    if (userId === this.userId && !await Roles.userIsInRoleAsync(this.userId, [PressUpRole.ADMIN])) {
+    if (userId === this.userId && !await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN])) {
       throw new Meteor.Error("cannot-change-own-role", "You cannot change your own role");
     }
 
