@@ -23,4 +23,16 @@ Meteor.methods({
     if (!tableID || !occupants) throw new Meteor.Error("invalid-arguments", "Table number and number of occupants are required");
     return await TablesCollection.updateAsync(tableID, { $set: {isOccupied: true, noOccupants: occupants} } );
   }),
+
+  "tables.insert": requireLoginMethod(async function (table: {tableNo: number; capacity: number; isOccupied: boolean; orderID: string | null; noOccupants: number; }) {
+    if (
+      typeof table.tableNo !== "number" ||
+      typeof table.capacity !== "number" ||
+      typeof table.isOccupied !== "boolean" ||
+      typeof table.noOccupants !== "number"
+    ) {
+      throw new Meteor.Error("invalid-arguments", "Invalid table data");
+    }
+    return await TablesCollection.insertAsync(table);
+  }),
 });

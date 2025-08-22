@@ -94,72 +94,59 @@ export const TablesPage = () => {
     TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch()
   );
 
-  const [levels, setLevels] = useState<{ name: string; sections: string[] }[]>([
-    { name: "Ground Floor", sections: ["Section 1"] }
-  ]);
-  const [selectedLevel, setSelectedLevel] = useState("Ground Floor");
-  const [selectedSection, setSelectedSection] = useState("Section 1");
-  const [grids, setGrids] = useState<Record<string, Record<string, (Table | null)[]>>>({});
-
-  // 👇 Snapshots for discard functionality
-  const [originalLevels, setOriginalLevels] = useState<typeof levels | null>(null);
-  const [originalGrids, setOriginalGrids] = useState<typeof grids | null>(null);
-
   const GRID_ROWS = 3;
   const GRID_COLS = 5;
   const GRID_SIZE = GRID_ROWS * GRID_COLS;
+
+  // Single grid state
+  const [grid, setGrid] = useState<(Table | null)[]>(Array(GRID_SIZE).fill(null));
+  const [originalGrid, setOriginalGrid] = useState<(Table | null)[] | null>(null);
 
   const [editMode, setEditMode] = useState(false);
   const userIsAdmin = Meteor.user()?.username === "admin";
   const [hasChanges, setHasChanges] = useState(false);
 
   const [modalType, setModalType] = useState<
-    null | "addLevel" | "addSection" | "addTable" | "editTable" | "deleteSection" | "deleteLevel" | "exitConfirm"
+    null | "addTable" | "editTable" | "exitConfirm"
   >(null);
   const [selectedCellIndex, setSelectedCellIndex] = useState<number | null>(null);
   const [editTableData, setEditTableData] = useState<Table | null>(null);
   const [capacityInput, setCapacityInput] = useState("");
   const [nameInput, setNameInput] = useState("");
 
+  // Prefill grid with tables from DB on initial load
   useEffect(() => {
-    const newGrids = { ...grids };
-    levels.forEach(level => {
-      if (!newGrids[level.name]) newGrids[level.name] = {};
-      level.sections.forEach(section => {
-        if (!newGrids[level.name][section]) {
-          newGrids[level.name][section] = Array(GRID_SIZE).fill(null);
+    // Only run if tablesFromDb has data and grid is empty
+    if (tablesFromDb.length > 0 && grid.every(cell => cell === null)) {
+      const newGrid = Array(GRID_SIZE).fill(null);
+      tablesFromDb.forEach((table, idx) => {
+        if (idx < GRID_SIZE) {
+          newGrid[idx] = table;
         }
       });
-    });
-    setGrids(newGrids);
-  }, [levels]);
+      setGrid(newGrid);
+    }
+  }, [tablesFromDb, grid, GRID_SIZE]);
 
   const markChanged = () => setHasChanges(true);
 
   const moveTable = (fromIdx: number, toIdx: number) => {
-    const updated = [...(grids[selectedLevel][selectedSection] ?? [])];
+    const updated = [...grid];
     updated[toIdx] = updated[fromIdx];
     updated[fromIdx] = null;
-    setGrids(prev => ({
-      ...prev,
-      [selectedLevel]: { ...prev[selectedLevel], [selectedSection]: updated }
-    }));
+    setGrid(updated);
     markChanged();
   };
 
   const getNextTableNumber = () => {
-    const allTables = Object.values(grids)
-      .flatMap(levelSections => Object.values(levelSections))
-      .flat()
-      .filter(t => t !== null) as Table[];
-    return allTables.length + 1;
+    return grid.filter(t => t !== null).length + 1;
   };
 
   // -------- GridCell --------
   const GridCell = ({ table, cellIndex }: { table: Table | null; cellIndex: number }) => {
     const [{ isOver, canDrop }, drop] = useDrop({
       accept: "TABLE",
-      canDrop: () => editMode && grids[selectedLevel][selectedSection][cellIndex] === null,
+      canDrop: () => editMode && grid[cellIndex] === null,
       drop: (item: { index: number }) => {
         if (!editMode) return;
         moveTable(item.index, cellIndex);
@@ -218,8 +205,7 @@ export const TablesPage = () => {
 
   // -------- Edit mode handling --------
   const enterEditMode = () => {
-    setOriginalLevels(JSON.parse(JSON.stringify(levels)));
-    setOriginalGrids(JSON.parse(JSON.stringify(grids)));
+    setOriginalGrid(JSON.parse(JSON.stringify(grid)));
     setEditMode(true);
     setHasChanges(false);
   };
@@ -227,25 +213,17 @@ export const TablesPage = () => {
   const saveChanges = () => {
     setHasChanges(false);
     setEditMode(false);
-    setOriginalLevels(null);
-    setOriginalGrids(null);
+    setOriginalGrid(null);
   };
 
   const discardChanges = () => {
-    if (originalLevels) {
-      setLevels(originalLevels);
-      // Reset selected level and section to valid ones
-      setSelectedLevel(originalLevels[0].name);
-      setSelectedSection(originalLevels[0].sections[0]);
-    }
-    if (originalGrids) {
-      setGrids(originalGrids);
+    if (originalGrid) {
+      setGrid(originalGrid);
     }
     setHasChanges(false);
     setEditMode(false);
     setModalType(null);
   };
-
 
   const exitEditMode = () => {
     if (hasChanges) {
@@ -260,90 +238,6 @@ export const TablesPage = () => {
     <DndProvider backend={HTML5Backend}>
       <div className="p-6 overflow-y-auto w-full" style={{ maxHeight: "calc(100vh - 100px)" }}>
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col">
-              <label className="text-sm font-medium">Choose Level</label>
-              <select
-                value={selectedLevel}
-                onChange={e => {
-                  if (e.target.value === "__add__") {
-                    setNameInput("");
-                    setModalType("addLevel");
-                  } else {
-                    setSelectedLevel(e.target.value);
-                    setSelectedSection(
-                      levels.find(l => l.name === e.target.value)?.sections[0] ?? ""
-                    );
-                  }
-                }}
-                className="border rounded px-2 py-1"
-              >
-                {levels.map(l => (
-                  <option key={l.name} value={l.name}>
-                    {l.name}
-                  </option>
-                ))}
-                {editMode && <option value="__add__">+ Add Level</option>}
-              </select>
-            </div>
-            {editMode && (
-              <button
-                onClick={() => {
-                  setNameInput(selectedLevel);
-                  setModalType("deleteLevel");
-                }}
-                style={{ backgroundColor: "#c97f97", color: "#fff" }}
-                className="px-3 py-1 rounded hover:brightness-90 h-fit self-end"
-              >
-                Delete Level
-              </button>
-            )}
-          </div>
-
-          <div className="flex gap-2 items-center">
-            {levels.find(l => l.name === selectedLevel)?.sections.map(section => (
-              <div key={section} className="flex items-center gap-1">
-                <button
-                  onClick={() => setSelectedSection(section)}
-                  style={
-                    selectedSection === section
-                      ? { backgroundColor: "#1e032e", color: "#fff" }
-                      : { backgroundColor: "#fff", color: "#6f597b", border: "1px solid #6f597b" }
-                  }
-                  className={`px-4 py-1 rounded-full ${
-                    selectedSection !== section ? "hover:bg-[#c4b5cf]" : ""
-                  }`}
-                >
-                  {section}
-                </button>
-                {editMode && (
-                  <button
-                    onClick={() => {
-                      setNameInput(section);
-                      setModalType("deleteSection");
-                    }}
-                    style={{ color: "#c97f97" }}
-                    className="font-bold"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-            ))}
-            {editMode && (
-              <button
-                onClick={() => {
-                  setNameInput("");
-                  setModalType("addSection");
-                }}
-                style={{ backgroundColor: "#fff", border: "1px solid #6f597b", color: "#6f597b" }}
-                className="px-2 py-1 rounded hover:bg-[#c4b5cf]"
-              >
-                + Section
-              </button>
-            )}
-          </div>
-
           {userIsAdmin &&
             (editMode ? (
               <div className="flex gap-2">
@@ -373,9 +267,25 @@ export const TablesPage = () => {
             ))}
         </div>
 
+        {/* Add Table Button */}
+        {editMode && (
+          <div className="mb-4">
+            <button
+              onClick={() => {
+                setSelectedCellIndex(null);
+                setModalType("addTable");
+              }}
+              style={{ backgroundColor: "#6f597b", color: "#fff" }}
+              className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
+            >
+              + Add Table
+            </button>
+          </div>
+        )}
+
         {/* Table grid */}
-        <div className="grid grid-cols-5 gap-8 p-4 justify-items-center">
-          {grids[selectedLevel]?.[selectedSection]?.map((table, idx) => (
+        <div className="grid grid-cols-5 gap-12 p-4 justify-items-center">
+          {grid.map((table, idx) => (
             <GridCell key={idx} table={table} cellIndex={idx} />
           ))}
         </div>
@@ -385,143 +295,6 @@ export const TablesPage = () => {
       {modalType && (
         <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
-
-            {/* Add Level */}
-            {modalType === "addLevel" && (
-              <>
-                <h2 className="text-lg font-semibold mb-4">Add Level</h2>
-                <input
-                  value={nameInput}
-                  onChange={e => setNameInput(e.target.value)}
-                  className="w-full border rounded px-2 py-1 mb-4"
-                  placeholder="Level Name"
-                />
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => {
-                      const newLevel = { name: nameInput, sections: ["Section 1"] };
-                      setLevels(prev => [...prev, newLevel]);
-                      setSelectedLevel(nameInput);
-                      setSelectedSection("Section 1");
-                      setModalType(null);
-                      markChanged();
-                    }}
-                    style={{ backgroundColor: "#6f597b", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
-                  >
-                    Add
-                  </button>
-                  <button
-                    onClick={() => setModalType(null)}
-                    style={{ backgroundColor: "#fff", border: "1px solid #6f597b", color: "#6f597b" }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* Delete Level */}
-            {modalType === "deleteLevel" && (
-              <>
-                <h2 className="text-lg font-semibold mb-4">Delete Level</h2>
-                <p>Are you sure you want to delete level "{nameInput}"?</p>
-                <div className="flex justify-end gap-2 mt-4">
-                  <button
-                    onClick={() => {
-                      setLevels(prev => prev.filter(l => l.name !== nameInput));
-                      setModalType(null);
-                      markChanged();
-                    }}
-                    style={{ backgroundColor: "#c97f97", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:brightness-90"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    onClick={() => setModalType(null)}
-                    style={{ backgroundColor: "#fff", border: "1px solid #6f597b", color: "#6f597b" }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* Add Section */}
-            {modalType === "addSection" && (
-              <>
-                <h2 className="text-lg font-semibold mb-4">Add Section</h2>
-                <input
-                  value={nameInput}
-                  onChange={e => setNameInput(e.target.value)}
-                  className="w-full border rounded px-2 py-1 mb-4"
-                  placeholder="Section Name"
-                />
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => {
-                      setLevels(prev =>
-                        prev.map(l =>
-                          l.name === selectedLevel
-                            ? { ...l, sections: [...l.sections, nameInput] }
-                            : l
-                        )
-                      );
-                      setModalType(null);
-                      markChanged();
-                    }}
-                    style={{ backgroundColor: "#6f597b", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
-                  >
-                    Add
-                  </button>
-                  <button
-                    onClick={() => setModalType(null)}
-                    style={{ backgroundColor: "#fff", border: "1px solid #6f597b", color: "#6f597b" }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* Delete Section */}
-            {modalType === "deleteSection" && (
-              <>
-                <h2 className="text-lg font-semibold mb-4">Delete Section</h2>
-                <p>Are you sure you want to delete section "{nameInput}"?</p>
-                <div className="flex justify-end gap-2 mt-4">
-                  <button
-                    onClick={() => {
-                      setLevels(prev =>
-                        prev.map(l =>
-                          l.name === selectedLevel
-                            ? { ...l, sections: l.sections.filter(s => s !== nameInput) }
-                            : l
-                        )
-                      );
-                      setModalType(null);
-                      markChanged();
-                    }}
-                    style={{ backgroundColor: "#c97f97", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:brightness-90"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    onClick={() => setModalType(null)}
-                    style={{ backgroundColor: "#fff", border: "1px solid #6f597b", color: "#6f597b" }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            )}
 
             {/* Add Table */}
             {modalType === "addTable" && (
@@ -537,21 +310,32 @@ export const TablesPage = () => {
                 />
                 <div className="flex justify-end gap-2">
                   <button
-                    onClick={() => {
-                      const updated = [...grids[selectedLevel][selectedSection]];
-                      if (selectedCellIndex !== null) {
-                        updated[selectedCellIndex] = {
-                          tableNo: getNextTableNumber(),
-                          capacity: parseInt(capacityInput, 10)
-                        };
+                    onClick={async () => {
+                      const updated = [...grid];
+                      // Find the first empty slot if not adding to a specific cell
+                      let idx = selectedCellIndex;
+                      if (idx === null) {
+                        idx = updated.findIndex(cell => cell === null);
                       }
-                      setGrids(prev => ({
-                        ...prev,
-                        [selectedLevel]: { ...prev[selectedLevel], [selectedSection]: updated }
-                      }));
-                      setModalType(null);
-                      setCapacityInput("");
-                      markChanged();
+                      if (idx !== -1 && capacityInput) {
+                        // Find the next table number in sequence
+                        const nextTableNo =
+                          Math.max(0, ...grid.filter(t => t !== null).map(t => t!.tableNo)) + 1;
+                        const newTable = {
+                          tableNo: nextTableNo,
+                          capacity: parseInt(capacityInput, 10),
+                          isOccupied: false,
+                          orderID: null,
+                          noOccupants: 0,
+                        };
+                        updated[idx] = newTable;
+                        setGrid(updated);
+                        setModalType(null);
+                        setCapacityInput("");
+                        markChanged();
+                        // Insert into TablesCollection
+                        await Meteor.callAsync("tables.insert", newTable);
+                      }
                     }}
                     style={{ backgroundColor: "#6f597b", color: "#fff" }}
                     className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
@@ -586,15 +370,12 @@ export const TablesPage = () => {
                 <div className="flex justify-between">
                   <button
                     onClick={() => {
-                      const updated = grids[selectedLevel][selectedSection].map(t =>
+                      const updated = grid.map(t =>
                         t?.tableNo === editTableData!.tableNo
                           ? { ...t, capacity: parseInt(capacityInput, 10) }
                           : t
                       );
-                      setGrids(prev => ({
-                        ...prev,
-                        [selectedLevel]: { ...prev[selectedLevel], [selectedSection]: updated }
-                      }));
+                      setGrid(updated);
                       setModalType(null);
                       setCapacityInput("");
                       markChanged();
@@ -606,13 +387,10 @@ export const TablesPage = () => {
                   </button>
                   <button
                     onClick={() => {
-                      const updated = grids[selectedLevel][selectedSection].map(t =>
+                      const updated = grid.map(t =>
                         t?.tableNo === editTableData!.tableNo ? null : t
                       );
-                      setGrids(prev => ({
-                        ...prev,
-                        [selectedLevel]: { ...prev[selectedLevel], [selectedSection]: updated }
-                      }));
+                      setGrid(updated);
                       setModalType(null);
                       markChanged();
                     }}
