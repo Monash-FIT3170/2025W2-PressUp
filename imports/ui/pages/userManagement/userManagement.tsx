@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 //import { UserTable } from "/imports/ui/components/UserTable";
-import { ExtendedUser, CreateUserData } from "imports/api/accounts/userTypes";
+import { ExtendedUser, CreateUserData } from "/imports/api/accounts/userTypes";
 import { PressUpRole } from "/imports/api/accounts/roles";
 import { Roles } from "meteor/alanning:roles";
 import { usePageTitle } from "../../hooks/PageTitleContext";
