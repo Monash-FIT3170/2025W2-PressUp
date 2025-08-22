@@ -7,7 +7,6 @@ import { PressUpRole } from "/imports/api/accounts/roles";
 import { Roles } from "meteor/alanning:roles";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { EditPassword } from "../../components/EditPassword";
-import { Accounts } from "meteor/accounts-base";
 
 export const UserManagementPage = () => {
   const [selectedUsers, setSelectedUsers] = useState<ExtendedUser[]>([]);
@@ -491,12 +490,16 @@ const EditUserModal = ({
 
     // Only update password if user entered one
     if (formData.password && formData.password.trim() !== "") {
-      try {
-        await Accounts.setPasswordAsync(user._id, formData.password);
-        console.log("Password updated successfully");
-      } catch (err) {
-        alert(`Failed to update password: ${err}`);
-      }
+      Meteor.call(
+        "users.updatePassword", // server method
+        user._id, // userId
+        formData.password, // newPassword
+        (err: Meteor.Error) => {
+          // callback
+          if (err) alert(`Failed to update password: ${err}`);
+          else console.log("Password updated successfully");
+        },
+      );
     }
   };
 
