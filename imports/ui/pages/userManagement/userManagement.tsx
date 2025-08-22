@@ -6,6 +6,8 @@ import { ExtendedUser, CreateUserData } from "/imports/api/accounts/userTypes";
 import { PressUpRole } from "/imports/api/accounts/roles";
 import { Roles } from "meteor/alanning:roles";
 import { usePageTitle } from "../../hooks/PageTitleContext";
+import { EditPassword } from "../../components/EditPassword";
+import { Accounts } from "meteor/accounts-base";
 
 export const UserManagementPage = () => {
   const [selectedUsers, setSelectedUsers] = useState<ExtendedUser[]>([]);
@@ -69,7 +71,7 @@ export const UserManagementPage = () => {
             alert(`Error updating profile: ${error.message}`);
             return;
           }
-        }
+        },
       );
     }
 
@@ -84,7 +86,7 @@ export const UserManagementPage = () => {
             alert(`Error updating role: ${error.message}`);
             return;
           }
-        }
+        },
       );
     }
 
@@ -96,7 +98,7 @@ export const UserManagementPage = () => {
   const handleDeleteUser = (user: ExtendedUser) => {
     if (
       confirm(
-        `Are you sure you want to delete ${user.profile?.firstName} ${user.profile?.lastName}?`
+        `Are you sure you want to delete ${user.profile?.firstName} ${user.profile?.lastName}?`,
       )
     ) {
       Meteor.call("users.delete", user._id, (error: Meteor.Error) => {
@@ -115,7 +117,7 @@ export const UserManagementPage = () => {
 
     if (
       confirm(
-        `Are you sure you want to delete ${selectedUsers.length} selected user(s)?`
+        `Are you sure you want to delete ${selectedUsers.length} selected user(s)?`,
       )
     ) {
       selectedUsers.forEach((user) => {
@@ -146,7 +148,7 @@ export const UserManagementPage = () => {
               ? new Date(user.createdAt).toLocaleDateString()
               : "Unknown"
           }"`,
-        ].join(",")
+        ].join(","),
       ),
     ].join("\n");
 
@@ -157,7 +159,7 @@ export const UserManagementPage = () => {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `users_${new Date().toISOString().split("T")[0]}.csv`
+        `users_${new Date().toISOString().split("T")[0]}.csv`,
       );
       link.style.visibility = "hidden";
       document.body.appendChild(link);
@@ -251,7 +253,7 @@ export const UserManagementPage = () => {
           <div className="bg-white">
             {users.slice(0, showEntries).map((user, index) => {
               const isSelected = selectedUsers.some(
-                (selected) => selected._id === user._id
+                (selected) => selected._id === user._id,
               );
               const isCurrentUser = user._id === currentUserId;
 
@@ -271,7 +273,7 @@ export const UserManagementPage = () => {
                           setSelectedUsers((prev) => [...prev, user]);
                         } else {
                           setSelectedUsers((prev) =>
-                            prev.filter((u) => u._id !== user._id)
+                            prev.filter((u) => u._id !== user._id),
                           );
                         }
                       }}
@@ -473,17 +475,29 @@ const EditUserModal = ({
     firstName: user.profile?.firstName || "",
     lastName: user.profile?.lastName || "",
     role: (user.roles?.[0] as PressUpRole) || PressUpRole.CASUAL,
+    password: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(user._id, {
+    // Update user profile + role
+    await onSubmit(user._id, {
       profile: {
         firstName: formData.firstName,
         lastName: formData.lastName,
       },
       role: formData.role,
     });
+
+    // Only update password if user entered one
+    if (formData.password && formData.password.trim() !== "") {
+      try {
+        await Accounts.setPasswordAsync(user._id, formData.password);
+        console.log("Password updated successfully");
+      } catch (err) {
+        console.error("Failed to update password:", err);
+      }
+    }
   };
 
   return (
@@ -524,6 +538,10 @@ const EditUserModal = ({
             <option value={PressUpRole.MANAGER}>Manager</option>
             <option value={PressUpRole.ADMIN}>Admin</option>
           </select>
+          <EditPassword
+            password={formData.password}
+            setPassword={setFormData}
+          ></EditPassword>
           <div className="flex gap-2 pt-4">
             <button
               type="button"
