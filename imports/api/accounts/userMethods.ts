@@ -146,5 +146,39 @@ Meteor.methods({
       const errorMessage = (error instanceof Error) ? error.message : String(error);
       throw new Meteor.Error("role-update-failed", "Failed to update user role: " + errorMessage);
     }
-  })
+  }),
+  
+  "users.updatePassword": requireLoginMethod(async function(userId: string, newPassword: string) {
+  check(userId, String);
+  check(newPassword, String);
+
+  // Only admins/managers or the user themselves can change the password
+  const isSelf = userId === this.userId;
+  const isAdminOrManager = await Roles.userIsInRoleAsync(this.userId, [PressUpRole.ADMIN, PressUpRole.MANAGER]);
+
+  if (!isSelf && !isAdminOrManager) {
+    throw new Meteor.Error("unauthorized", "You can only change your own password or be an admin/manager");
+  }
+
+  const userToUpdate = await Meteor.users.findOneAsync(userId);
+  if (!userToUpdate) {
+    throw new Meteor.Error("user-not-found", "User not found");
+  }
+
+  if (!newPassword || newPassword.trim() === "") {
+    throw new Meteor.Error("invalid-password", "Password cannot be empty");
+  }
+
+  try {
+    // Server-side only: async password update
+    await Accounts.setPasswordAsync(userId, newPassword);
+
+    console.log(`Password updated for user '${userToUpdate.emails?.[0]?.address || userId}'`);
+    return true;
+  } catch (error) {
+    const errorMessage = (error instanceof Error) ? error.message : String(error);
+    throw new Meteor.Error("password-update-failed", "Failed to update password: " + errorMessage);
+  }
+})
+
 });
