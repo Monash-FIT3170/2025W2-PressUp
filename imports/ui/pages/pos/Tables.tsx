@@ -7,7 +7,9 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 // -------- Seat positioning helper --------
-const getSeatPositions = (seatCount: number): { left: number; top: number }[] => {
+const getSeatPositions = (
+  seatCount: number
+): { left: number; top: number }[] => {
   const positions = [];
   const radius = 85;
   const center = 68;
@@ -38,9 +40,16 @@ interface TableCardProps {
 }
 
 // -------- TableCard --------
-const TableCard = ({ table, cardColour, isDragging, dragRef, onEdit }: TableCardProps) => {
+const TableCard = ({
+  table,
+  cardColour,
+  isDragging,
+  dragRef,
+  onEdit,
+}: TableCardProps) => {
   const seatPositions = getSeatPositions(table?.capacity ?? 0);
-  const occupied = typeof table.noOccupants === "number" ? table.noOccupants : 0;
+  const occupied =
+    typeof table.noOccupants === "number" ? table.noOccupants : 0;
   const capacity = table?.capacity ?? 0;
   let occupiedIndexes: number[] = [];
   if (occupied > 0 && capacity > 0) {
@@ -64,16 +73,22 @@ const TableCard = ({ table, cardColour, isDragging, dragRef, onEdit }: TableCard
           className={`w-7 h-7 rounded-full border border-gray-500 absolute ${
             occupiedIndexes.includes(i) ? "bg-purple-600" : "bg-gray-300"
           }`}
-          style={{ left: pos.left, top: pos.top, transform: "translate(-50%, -50%)" }}
+          style={{
+            left: pos.left,
+            top: pos.top,
+            transform: "translate(-50%, -50%)",
+          }}
         />
       ))}
-      <span className="text-lg font-semibold mb-2 z-10">Table {table?.tableNo ?? ""}</span>
+      <span className="text-lg font-semibold mb-2 z-10">
+        Table {table?.tableNo ?? ""}
+      </span>
       <button
         onClick={onEdit}
         style={{
           backgroundColor: "#ffffff",
           border: "1px solid #6f597b",
-          color: "#6f597b"
+          color: "#6f597b",
         }}
         className="text-xs px-2 py-1 rounded hover:bg-[#c4b5cf]"
       >
@@ -94,30 +109,37 @@ export const TablesPage = () => {
     TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch()
   );
 
-  const GRID_ROWS = 3;
+  const MAX_NO_TABLES = 20;
   const GRID_COLS = 5;
+  const GRID_ROWS = Math.ceil(MAX_NO_TABLES / GRID_COLS);
   const GRID_SIZE = GRID_ROWS * GRID_COLS;
 
   // Single grid state
-  const [grid, setGrid] = useState<(Table | null)[]>(Array(GRID_SIZE).fill(null));
-  const [originalGrid, setOriginalGrid] = useState<(Table | null)[] | null>(null);
+  const [grid, setGrid] = useState<(Table | null)[]>(
+    Array(GRID_SIZE).fill(null)
+  );
+  const [originalGrid, setOriginalGrid] = useState<(Table | null)[] | null>(
+    null
+  );
 
   const [editMode, setEditMode] = useState(false);
   const userIsAdmin = Meteor.user()?.username === "admin";
   const [hasChanges, setHasChanges] = useState(false);
 
   const [modalType, setModalType] = useState<
-    null | "addTable" | "editTable" | "exitConfirm"
+    null | "addTable" | "editTable" | "exitConfirm" | "deleteTable"
   >(null);
-  const [selectedCellIndex, setSelectedCellIndex] = useState<number | null>(null);
+  const [selectedCellIndex, setSelectedCellIndex] = useState<number | null>(
+    null
+  );
   const [editTableData, setEditTableData] = useState<Table | null>(null);
   const [capacityInput, setCapacityInput] = useState("");
-  const [nameInput, setNameInput] = useState("");
+  const [deleteTableInput, setDeleteTableInput] = useState("");
 
   // Prefill grid with tables from DB on initial load
   useEffect(() => {
     // Only run if tablesFromDb has data and grid is empty
-    if (tablesFromDb.length > 0 && grid.every(cell => cell === null)) {
+    if (tablesFromDb.length > 0 && grid.every((cell) => cell === null)) {
       const newGrid = Array(GRID_SIZE).fill(null);
       tablesFromDb.forEach((table, idx) => {
         if (idx < GRID_SIZE) {
@@ -138,12 +160,14 @@ export const TablesPage = () => {
     markChanged();
   };
 
-  const getNextTableNumber = () => {
-    return grid.filter(t => t !== null).length + 1;
-  };
-
   // -------- GridCell --------
-  const GridCell = ({ table, cellIndex }: { table: Table | null; cellIndex: number }) => {
+  const GridCell = ({
+    table,
+    cellIndex,
+  }: {
+    table: Table | null;
+    cellIndex: number;
+  }) => {
     const [{ isOver, canDrop }, drop] = useDrop({
       accept: "TABLE",
       canDrop: () => editMode && grid[cellIndex] === null,
@@ -152,19 +176,19 @@ export const TablesPage = () => {
         moveTable(item.index, cellIndex);
         item.index = cellIndex;
       },
-      collect: monitor => ({
+      collect: (monitor) => ({
         isOver: monitor.isOver(),
-        canDrop: monitor.canDrop()
-      })
+        canDrop: monitor.canDrop(),
+      }),
     });
 
     const [{ isDragging }, drag] = useDrag({
       type: "TABLE",
       item: { index: cellIndex },
       canDrag: !!table && editMode,
-      collect: monitor => ({
-        isDragging: monitor.isDragging()
-      })
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
     });
 
     return (
@@ -236,7 +260,10 @@ export const TablesPage = () => {
   // -------- Render --------
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="p-6 overflow-y-auto w-full" style={{ maxHeight: "calc(100vh - 100px)" }}>
+      <div
+        className="p-6 overflow-y-auto w-full"
+        style={{ maxHeight: "calc(100vh - 100px)" }}
+      >
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
           {userIsAdmin &&
             (editMode ? (
@@ -267,9 +294,9 @@ export const TablesPage = () => {
             ))}
         </div>
 
-        {/* Add Table Button */}
+        {/* Add Table & Delete Table Buttons */}
         {editMode && (
-          <div className="mb-4">
+          <div className="mb-4 flex gap-2">
             <button
               onClick={() => {
                 setSelectedCellIndex(null);
@@ -280,11 +307,21 @@ export const TablesPage = () => {
             >
               + Add Table
             </button>
+            <button
+              onClick={() => {
+                setDeleteTableInput("");
+                setModalType("deleteTable");
+              }}
+              style={{ backgroundColor: "#c97f97", color: "#fff" }}
+              className="px-4 py-1 rounded hover:brightness-90"
+            >
+              - Delete Table
+            </button>
           </div>
         )}
 
         {/* Table grid */}
-        <div className="grid grid-cols-5 gap-12 p-4 justify-items-center">
+        <div className="grid grid-cols-5 gap-16 p-4 justify-items-center">
           {grid.map((table, idx) => (
             <GridCell key={idx} table={table} cellIndex={idx} />
           ))}
@@ -295,7 +332,6 @@ export const TablesPage = () => {
       {modalType && (
         <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
-
             {/* Add Table */}
             {modalType === "addTable" && (
               <>
@@ -303,7 +339,7 @@ export const TablesPage = () => {
                 <input
                   type="number"
                   value={capacityInput}
-                  onChange={e => setCapacityInput(e.target.value)}
+                  onChange={(e) => setCapacityInput(e.target.value)}
                   className="w-full border rounded px-2 py-1 mb-4"
                   placeholder="Number of seats"
                   min={1}
@@ -311,16 +347,30 @@ export const TablesPage = () => {
                 <div className="flex justify-end gap-2">
                   <button
                     onClick={async () => {
+                      if (
+                        !capacityInput ||
+                        isNaN(Number(capacityInput)) ||
+                        Number(capacityInput) < 1
+                      ) {
+                        alert(
+                          "Please enter a valid number of seats (must be at least 1)."
+                        );
+                        return;
+                      }
                       const updated = [...grid];
                       // Find the first empty slot if not adding to a specific cell
                       let idx = selectedCellIndex;
                       if (idx === null) {
-                        idx = updated.findIndex(cell => cell === null);
+                        idx = updated.findIndex((cell) => cell === null);
                       }
-                      if (idx !== -1 && capacityInput) {
-                        // Find the next table number in sequence
+                      if (idx !== -1) {
                         const nextTableNo =
-                          Math.max(0, ...grid.filter(t => t !== null).map(t => t!.tableNo)) + 1;
+                          Math.max(
+                            0,
+                            ...grid
+                              .filter((t) => t !== null)
+                              .map((t) => t!.tableNo)
+                          ) + 1;
                         const newTable = {
                           tableNo: nextTableNo,
                           capacity: parseInt(capacityInput, 10),
@@ -334,7 +384,7 @@ export const TablesPage = () => {
                         setCapacityInput("");
                         markChanged();
                         // Insert into TablesCollection
-                        await Meteor.callAsync("tables.insert", newTable);
+                        await Meteor.callAsync("tables.addTable", newTable);
                       }
                     }}
                     style={{ backgroundColor: "#6f597b", color: "#fff" }}
@@ -344,7 +394,11 @@ export const TablesPage = () => {
                   </button>
                   <button
                     onClick={() => setModalType(null)}
-                    style={{ backgroundColor: "#fff", border: "1px solid #6f597b", color: "#6f597b" }}
+                    style={{
+                      backgroundColor: "#fff",
+                      border: "1px solid #6f597b",
+                      color: "#6f597b",
+                    }}
                     className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
                   >
                     Cancel
@@ -362,15 +416,25 @@ export const TablesPage = () => {
                 <input
                   type="number"
                   value={capacityInput}
-                  onChange={e => setCapacityInput(e.target.value)}
+                  onChange={(e) => setCapacityInput(e.target.value)}
                   className="w-full border rounded px-2 py-1 mb-4"
                   placeholder="Number of seats"
                   min={1}
                 />
                 <div className="flex justify-between">
                   <button
-                    onClick={() => {
-                      const updated = grid.map(t =>
+                    onClick={async () => {
+                      if (
+                        !capacityInput ||
+                        isNaN(Number(capacityInput)) ||
+                        Number(capacityInput) < 1
+                      ) {
+                        alert(
+                          "Please enter a valid number of seats (must be at least 1)."
+                        );
+                        return;
+                      }
+                      const updated = grid.map((t) =>
                         t?.tableNo === editTableData!.tableNo
                           ? { ...t, capacity: parseInt(capacityInput, 10) }
                           : t
@@ -379,6 +443,17 @@ export const TablesPage = () => {
                       setModalType(null);
                       setCapacityInput("");
                       markChanged();
+                      // Update in DB
+                      const dbTable = tablesFromDb.find(
+                        (t) => t.tableNo === editTableData!.tableNo
+                      );
+                      if (dbTable && dbTable._id) {
+                        await Meteor.callAsync(
+                          "tables.changeCapacity",
+                          dbTable._id,
+                          parseInt(capacityInput, 10)
+                        );
+                      }
                     }}
                     style={{ backgroundColor: "#1e032e", color: "#fff" }}
                     className="px-4 py-1 rounded hover:bg-[#6f597b]"
@@ -386,13 +461,64 @@ export const TablesPage = () => {
                     Save
                   </button>
                   <button
-                    onClick={() => {
-                      const updated = grid.map(t =>
-                        t?.tableNo === editTableData!.tableNo ? null : t
+                    onClick={() => setModalType(null)}
+                    style={{
+                      backgroundColor: "#fff",
+                      border: "1px solid #6f597b",
+                      color: "#6f597b",
+                    }}
+                    className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Delete Table Modal */}
+            {modalType === "deleteTable" && (
+              <>
+                <h2 className="text-lg font-semibold mb-4">Delete Table</h2>
+                <input
+                  type="number"
+                  value={deleteTableInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^\d*$/.test(val)) setDeleteTableInput(val);
+                  }}
+                  className="w-full border rounded px-2 py-1 mb-4"
+                  placeholder="Enter table number to delete"
+                  min={1}
+                  inputMode="numeric"
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={async () => {
+                      const tableNo = Number(deleteTableInput);
+                      if (!deleteTableInput || isNaN(tableNo) || tableNo < 1) {
+                        alert("Please enter a valid table number.");
+                        return;
+                      }
+                      const idx = grid.findIndex(
+                        (t) => t && t.tableNo === tableNo
                       );
+                      if (idx === -1) {
+                        alert("Table not found.");
+                        return;
+                      }
+                      const updated = [...grid];
+                      updated[idx] = null;
                       setGrid(updated);
                       setModalType(null);
+                      setDeleteTableInput("");
                       markChanged();
+                      // Remove from DB
+                      const dbTable = tablesFromDb.find(
+                        (t) => t.tableNo === tableNo
+                      );
+                      if (dbTable && dbTable._id) {
+                        await Meteor.callAsync("tables.removeTable", dbTable._id);
+                      }
                     }}
                     style={{ backgroundColor: "#c97f97", color: "#fff" }}
                     className="px-4 py-1 rounded hover:brightness-90"
@@ -401,7 +527,11 @@ export const TablesPage = () => {
                   </button>
                   <button
                     onClick={() => setModalType(null)}
-                    style={{ backgroundColor: "#fff", border: "1px solid #6f597b", color: "#6f597b" }}
+                    style={{
+                      backgroundColor: "#fff",
+                      border: "1px solid #6f597b",
+                      color: "#6f597b",
+                    }}
                     className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
                   >
                     Cancel
@@ -414,7 +544,10 @@ export const TablesPage = () => {
             {modalType === "exitConfirm" && (
               <>
                 <h2 className="text-lg font-semibold mb-4">Unsaved Changes</h2>
-                <p>You have unsaved changes. Would you like to save before exiting?</p>
+                <p>
+                  You have unsaved changes. Would you like to save before
+                  exiting?
+                </p>
                 <div className="flex justify-end gap-2 mt-4">
                   <button
                     onClick={() => {
@@ -435,7 +568,11 @@ export const TablesPage = () => {
                   </button>
                   <button
                     onClick={() => setModalType(null)}
-                    style={{ backgroundColor: "#fff", border: "1px solid #6f597b", color: "#6f597b" }}
+                    style={{
+                      backgroundColor: "#fff",
+                      border: "1px solid #6f597b",
+                      color: "#6f597b",
+                    }}
                     className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
                   >
                     Cancel

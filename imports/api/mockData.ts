@@ -133,7 +133,7 @@ export const mockDataGenerator = async ({
   stockItemCount = stockItemCount || 50;
   orderCount = orderCount || 5;
   purchaseOrderCount = purchaseOrderCount || 10;
-  tableCount = tableCount || 20;
+  tableCount = tableCount || 10;
 
   if (await SuppliersCollection.countDocuments() > 0) {
     await SuppliersCollection.dropCollectionAsync();
@@ -231,8 +231,10 @@ export const mockDataGenerator = async ({
   if ((await TablesCollection.countDocuments()) === 0) {
     for (let i = 1; i < tableCount + 1; ++i) {
       let capacity = faker.number.int({ min: 1, max: 10 });
-      let noOccupants = faker.number.int({ min: 0, max: capacity }); // number of occupants can be 0 to max capacity of table
-      let isOccupied = noOccupants > 0 ? true : false; // if table has occupants, set isOccupied to true, otherwise false
+      // Set 70% occupied, and 30% not occupied
+      let isOccupied = faker.datatype.boolean(0.7) ? true : false;
+      // If occupied, set number of occupants from 1 to max capacity of table, otherwise, zero occupants
+      let noOccupants = isOccupied ? faker.number.int({ min: 1, max: capacity }) : 0;
 
       await TablesCollection.insertAsync({
         tableNo: i,

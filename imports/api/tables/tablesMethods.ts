@@ -24,7 +24,7 @@ Meteor.methods({
     return await TablesCollection.updateAsync(tableID, { $set: {isOccupied: true, noOccupants: occupants} } );
   }),
 
-  "tables.insert": requireLoginMethod(async function (table: {tableNo: number; capacity: number; isOccupied: boolean; orderID: string | null; noOccupants: number; }) {
+  "tables.addTable": requireLoginMethod(async function (table: {tableNo: number; capacity: number; isOccupied: boolean; orderID: string | null; noOccupants: number; }) {
     if (
       typeof table.tableNo !== "number" ||
       typeof table.capacity !== "number" ||
@@ -35,4 +35,10 @@ Meteor.methods({
     }
     return await TablesCollection.insertAsync(table);
   }),
+
+  "tables.removeTable": requireLoginMethod(async function (tableID: Mongo.ObjectID) {
+    if (!tableID) throw new Meteor.Error("invalid-arguments", "Table ID is required");
+    return await TablesCollection.removeAsync(tableID);
+  }),
+
 });
