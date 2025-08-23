@@ -25,7 +25,7 @@ const sizeMap = {
     },
   };
 
-export const Toggle: React.FC<ToggleProps> = ({ label = '', initial = false, onToggle, size = 'md' }) => {
+export const Toggle: React.FC<ToggleProps> = ({ initial = false, onToggle, size = 'md' }) => {
   const [enabled, setEnabled] = useState<boolean>(initial);
   const currentSize = sizeMap[size];
 

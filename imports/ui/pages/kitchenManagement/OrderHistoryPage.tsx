@@ -27,11 +27,11 @@ export const OrderHistoryPage = () => {
     if (!sub.ready()) return [];
     const docs = OrdersCollection.find({}, { sort: { createdAt: -1 } }).fetch();
     return docs.map((doc: DBOrder) => ({
-      _id: doc._id as string,
+      _id: doc._id,
       orderNo: doc.orderNo,
       tableNo: doc.tableNo,
       createdAt: new Date(doc.createdAt).toLocaleString(),
-      status: doc.orderStatus as RowOrder["status"],
+      status: doc.orderStatus,
       items: (doc.menuItems ?? []).map(mi => `${mi.name} x${mi.quantity ?? 1}`).join(", ")
     }));
   }, []);
@@ -72,7 +72,7 @@ export const OrderHistoryPage = () => {
           <Select
             value={statusFilter}
             label="Filter"
-            onChange={(e) => setStatusFilter(e.target.value as any)}
+            onChange={(e) => setStatusFilter(e.target.value)}
           >
             <MenuItem value="served">Served only</MenuItem>
             <MenuItem value="all">All statuses</MenuItem>

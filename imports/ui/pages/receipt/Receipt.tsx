@@ -1,7 +1,7 @@
 import React from "react";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { useNavigate, useLocation} from "react-router";
-import { OrdersCollection, OrderStatus } from "/imports/api/orders/OrdersCollection";
+import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
 
 export const ReceiptPage = () => {
 
@@ -15,15 +15,12 @@ export const ReceiptPage = () => {
     navigate(-1);
   };
   
-  const isLoadingOrders = useSubscribe("orders")
+  useSubscribe("orders")
   // Retrieve order based on order number in URL from PaymentModal
   const parsedOrderNumber = Number(orderNumber);
   const order = useTracker(() => {
-    return OrdersCollection.findOne({ orderNo: parsedOrderNumber });
+    return OrdersCollection.find({ orderNo: parsedOrderNumber }).fetch()[0];
   }, [orderNumber]);
-  
-  // Defining menuItems
-  const menuItems = order ? order.menuItems : [];
 
   if (!order) {
     return (
@@ -81,7 +78,7 @@ export const ReceiptPage = () => {
 
           {/* Horizontal divider */}
           <hr className="my-2" />
-          {(order.totalPrice < order.originalPrice) && (
+          {(order.originalPrice && order.totalPrice < order.originalPrice) && (
             <div>
             <div className="flex justify-between">
               <span>Subotal:</span>
@@ -90,7 +87,7 @@ export const ReceiptPage = () => {
               <div className="flex justify-between">
                 <span>Discount:</span>
                 <span>
-                  -${(order.originalPrice.toFixed(2) - order.totalPrice.toFixed(2)).toFixed(2)}
+                  -${(order.originalPrice - order.totalPrice).toFixed(2)}
                 </span>
               </div>
             </div>

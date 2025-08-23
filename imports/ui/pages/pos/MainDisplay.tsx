@@ -1,4 +1,4 @@
-import { MenuItemsCollection, Order, OrdersCollection } from "/imports/api";
+import { MenuItemsCollection, OrdersCollection } from "/imports/api";
 import { TablesCollection } from "/imports/api";
 import { PosItemCard } from "../../components/PosItemCard";
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
@@ -6,7 +6,8 @@ import { PosSideMenu } from "../../components/PosSideMenu";
 import { Meteor } from 'meteor/meteor';
 import { useState, useEffect } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
-import { OrderStatus } from "/imports/api/orders/OrdersCollection";
+import { Order, OrderStatus } from "/imports/api/orders/OrdersCollection";
+import { IdType } from "/imports/api/database";
 
 export const MainDisplay = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -15,18 +16,18 @@ export const MainDisplay = () => {
     }, [setPageTitle]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedTable, setSelectedTable] = useState(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedTable, setSelectedTable] = useState<number | null>(null);
     
-  const isLoadingPosItems = useSubscribe("menuItems");
-  const isLoadingOrders = useSubscribe("orders");
-    const isLoadingTables = useSubscribe("tables");
+  useSubscribe("menuItems");
+  useSubscribe("orders");
+  useSubscribe("tables");
     
-    const tables = useTracker(() => TablesCollection.find().fetch());
-    const orders = useTracker(() => OrdersCollection.find().fetch());
+  const tables = useTracker(() => TablesCollection.find().fetch());
+  const orders = useTracker(() => OrdersCollection.find().fetch());
   const posItems = useTracker(() => MenuItemsCollection.find().fetch());
   // Fetch the current order for the selected table
-  const order = useTracker(() => OrdersCollection.findOne({ tableNo: selectedTable }), [selectedTable]);
+  const order = useTracker(() => selectedTable ? OrdersCollection.find({ tableNo: selectedTable }).fetch()[0] : null, [selectedTable]);
 
     const filteredItems = posItems.filter((item) => {
       const matchesName = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -52,7 +53,7 @@ export const MainDisplay = () => {
     }, [tables, orders, selectedTable]);
 
   // Update order status
-  const updateOrderInDb = (updatedFields) => {
+  const updateOrderInDb = (updatedFields: Order) => {
     if (!order || !order._id) return;
     // Always include discount fields if present
     const discountFields = {
@@ -63,7 +64,7 @@ export const MainDisplay = () => {
     Meteor.call("orders.updateOrder", order._id, { ...discountFields, ...updatedFields });
   };
 
-    const handleIncrease = (itemId) => {
+    const handleIncrease = (itemId: IdType) => {
       if (!order) return;
       const updatedItems = order.menuItems.map((i) =>
         i._id === itemId ? { ...i, quantity: i.quantity + 1 } : i

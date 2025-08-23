@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { FinanceDateFilter } from "../../components/FinanceDateFilter";
-import { Meteor } from "meteor/meteor";
-import { Order } from "../../api/orders/orders";
-import { PurchaseOrder } from "../../api/purchaseOrders/PurchaseOrdersCollection";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
+import { PurchaseOrdersCollection } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
 import {
   format,
   startOfToday,
@@ -44,8 +44,7 @@ const DetailItem = ({ label, amount, percentage }: DetailItemProps) => {
 export const ExpensesPage = () => {
     const [searchItem, setSearchItem] = useState("");
     const [_, setPageTitle] = usePageTitle();
-    const [selectedMetric, setSelectedMetric] = useState<"revenue" | "expenses">("revenue");
-    const [financialData, setFinancialData] = useState<any | null>(null);
+    const [selectedMetric, setSelectedMetric] = useState<"sales" | "expenses">("sales");
 
     const [dateRange, setDateRange] = useState<
             | "all"
@@ -56,6 +55,9 @@ export const ExpensesPage = () => {
             | "past7Days"
             | "past30Days"
         >("all");
+
+    useSubscribe("orders");
+    useSubscribe("purchaseOrders");
     
         const getDateRange = (range: typeof dateRange): { start: Date; end: Date } => {
             const today = startOfToday();
@@ -101,94 +103,89 @@ export const ExpensesPage = () => {
         return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
     };
 
-    const fetchFinancialData = async () => {
-        try {
-            const orders = (await Meteor.callAsync("orders.getAll")) as Order[];
-            const purchaseOrders = (await Meteor.callAsync('purchaseOrders.getAll')) as PurchaseOrder[];
+    const financialData = useTracker(() => {
+        const orders = OrdersCollection.find().fetch();
+        const purchaseOrders = PurchaseOrdersCollection.find().fetch();
 
-            const { start, end } = getDateRange(dateRange);
+        const { start, end } = getDateRange(dateRange);
 
-            // filter orders by date
-            const filteredOrders = orders.filter(order => {
-                const orderDate = new Date(order.createdAt);
-                return orderDate >= start && orderDate <= end && order.paid;
-            });
+        // filter orders by date
+        const filteredOrders = orders.filter((order: any) => {
+            const orderDate = new Date(order.createdAt);
+            return orderDate >= start && orderDate <= end && order.paid;
+        });
 
-            const filteredPurchaseOrders = purchaseOrders.filter(purchase => {
-                let purchaseDate: Date;
-                if (purchase.date instanceof Date) {
-                    purchaseDate = purchase.date
-                } else {
-                    purchaseDate = new Date(purchase.date)
-                }
-                return purchaseDate >= start && purchaseDate <= end;
-            })
+        const filteredPurchaseOrders = purchaseOrders.filter((purchase: any) => {
+            let purchaseDate: Date;
+            if (purchase.date instanceof Date) {
+                purchaseDate = purchase.date
+            } else {
+                purchaseDate = new Date(purchase.date)
+            }
+            return purchaseDate >= start && purchaseDate <= end;
+        })
 
-            // Calc sales
-            let salesTotal = 0;
-            const salesByCategory: { [key: string]: number } = {};
+        // Calc sales
+        let salesTotal = 0;
+        const salesByCategory: { [key: string]: number } = {};
 
-            filteredOrders.forEach(order => {
-                if (!order.paid) return;
+        filteredOrders.forEach((order: any) => {
+            if (!order.paid) return;
 
-                order.menuItems.forEach(item => {
-                    const itemAmount = item.price * item.quantity;
-                    salesTotal += itemAmount;
+            order.menuItems.forEach((item: any) => {
+                const itemAmount = item.price * item.quantity;
+                salesTotal += itemAmount;
 
-                    const categories = item.category?.length ? item.category: ["uncategorized"];
-                    categories.forEach(cat => {
-                        salesByCategory[cat] = (salesByCategory[cat] || 0) + itemAmount;
-                    });
+                const categories = item.category?.length ? item.category: ["uncategorized"];
+                categories.forEach((cat: string) => {
+                    salesByCategory[cat] = (salesByCategory[cat] || 0) + itemAmount;
                 });
             });
+        });
 
-            const salesItems = Object.keys(salesByCategory).map(cat => ({
-                label: cat,
-                amount: salesByCategory[cat],
-                percentage: ((salesByCategory[cat] / salesTotal) * 100).toFixed(2),
-            }));
+        const salesItems = Object.keys(salesByCategory).map(cat => ({
+            label: cat,
+            amount: salesByCategory[cat],
+            percentage: ((salesByCategory[cat] / salesTotal) * 100).toFixed(2),
+        }));
 
-            // Calc expenses
-            let expenses = 0;
-            const expensesBySupplier: { [key: string]: number } = {};
+        // Calc expenses
+        let expenses = 0;
+        const expensesBySupplier: { [key: string]: number } = {};
 
-            filteredPurchaseOrders.forEach(purchase =>{
-                const purchaseAmount = purchase.totalCost;
-                expenses += purchaseAmount;
+        filteredPurchaseOrders.forEach((purchase: any) =>{
+            const purchaseAmount = purchase.totalCost;
+            expenses += purchaseAmount;
 
-                const supplier = purchase.supplier?.toString() || "Unknown Supplier";
-                expensesBySupplier[supplier] = (expensesBySupplier[supplier] || 0) + purchaseAmount;
-            })
+            const supplier = purchase.supplier?.toString() || "Unknown Supplier";
+            expensesBySupplier[supplier] = (expensesBySupplier[supplier] || 0) + purchaseAmount;
+        })
 
-            const expenseItems = Object.keys(expensesBySupplier).map(supplier => ({
-                label: supplier,
-                amount: expensesBySupplier[supplier],
-                percentage: ((expensesBySupplier[supplier]/ expenses) * 100).toFixed(2),
-            }));
+        const expenseItems = Object.keys(expensesBySupplier).map(supplier => ({
+            label: supplier,
+            amount: expensesBySupplier[supplier],
+            percentage: ((expensesBySupplier[supplier]/ expenses) * 100).toFixed(2),
+        }));
 
-            setFinancialData({
-                sales: {
-                    title: "Sales Breakdown",
-                    description: "Revenue generated from sales orders by category",
-                    items: salesItems,
-                    total: salesTotal,
-                },
-                expenses: {
-                    title: "Expenses Breakdown",
-                    description: "Expenses generated from supplier orders",
-                    items: expenseItems,
-                    total: expenses
-                },
-            });
-        } catch (error) {
-            console.error("Error fetching financial data", error)
-        }
-    }
+        return {
+            sales: {
+                title: "Sales Breakdown",
+                description: "Revenue generated from sales orders by category",
+                items: salesItems,
+                total: salesTotal,
+            },
+            expenses: {
+                title: "Expenses Breakdown",
+                description: "Expenses generated from supplier orders",
+                items: expenseItems,
+                total: expenses
+            },
+        };
+    }, [dateRange]);
 
     useEffect(() => {
         setPageTitle("Finance - Sales & Expense Tracking");
-        fetchFinancialData();
-    }, [setPageTitle, dateRange]);
+    }, [setPageTitle]);
 
     if (!financialData) {
         return (

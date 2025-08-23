@@ -11,8 +11,7 @@ import {
     subDays,
 } from "date-fns";
 import { Meteor } from 'meteor/meteor'
-import { Order } from "../../api/orders/orders";
-import { PurchaseOrder } from "../../api/purchaseOrders/PurchaseOrdersCollection";
+import { Order, PurchaseOrder } from "/imports/api";
 
 interface FinancialData {
   revenue: {
@@ -234,12 +233,12 @@ export const ProfitLossPage = () => {
 
           // Filter the data based on date range
           const filteredOrderData = orderData.filter(order => {
-            const orderDate = new Date(order.createdAt || order.date);
+            const orderDate = new Date(order.createdAt);
             return dateFilter(orderDate);
           });
 
           const filteredPurchaseOrderData = purchaseOrderData.filter(po => {
-            const poDate = new Date(po.createdAt || po.date);
+            const poDate = new Date(po.date);
             return dateFilter(poDate);
           });
           
@@ -315,13 +314,13 @@ export const ProfitLossPage = () => {
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {selectedData.title}
+            {selectedData?.title}
             </h2>
-            <p className="text-gray-600">{selectedData.description}</p>
+            <p className="text-gray-600">{selectedData?.description}</p>
           </div>
 
           <div className="space-y-3">
-            {selectedData.items.map((item, index) => (
+            {selectedData?.items.map((item, index) => (
             <DetailItem
                 key={index}
                 label={item.label}

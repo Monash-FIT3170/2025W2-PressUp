@@ -1,15 +1,21 @@
 import React, {useState} from "react";
 
+interface Props {
+  onSearch: (term: string) => void;
+  initialSearchTerm: string;
+}
+
 export const SearchBar = ({
     onSearch,
-    initialSearchTerm = " "
-}) => {
+}: Props) => {
     const [searchTerm, setSearchTerm] = useState("");
 
-    const handleSearchChange = (e) => {
-        const newSearchTerm = e.target.value;
-        setSearchTerm(newSearchTerm);
-        onSearch(newSearchTerm);
+    const handleSearchChange: React.ChangeEventHandler<HTMLInputElement> = (
+      e,
+    ) => {
+      const newSearchTerm = e.target.value;
+      setSearchTerm(newSearchTerm);
+      onSearch(newSearchTerm);
     };
 
     return (

@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { Meteor } from "meteor/meteor";
 import { usePageTitle } from "../../hooks/PageTitleContext";
-// import Sidebar from "../../components/AddItemSidebar";
-import type { UiOrder, Column as ColumnType, OrderStatus }  from "../../components/KitchenMgmtComponents/KitchenMgmtTypes";
+import type { UiOrder, Column as ColumnType }  from "../../components/KitchenMgmtComponents/KitchenMgmtTypes";
 import { Column } from "../../components/KitchenMgmtComponents/OrderStatusColumns";
 import { useTracker } from "meteor/react-meteor-data";
 import { OrdersCollection, Order as DBOrder } from "../../../api/orders/OrdersCollection";
@@ -28,11 +27,11 @@ export const KitchenManagement = () => {
     const docs = OrdersCollection.find().fetch();
   
     return docs.map((doc: DBOrder): UiOrder => ({
-      _id: doc._id as string, 
+      _id: doc._id, 
       orderNo: doc.orderNo,
       tableNo: doc.tableNo,
       createdAt: new Date(doc.createdAt).toLocaleTimeString().toUpperCase(),
-      status: doc.orderStatus as OrderStatus, 
+      status: doc.orderStatus, 
       menuItems: (doc.menuItems ?? []).map((it) => ({
         name: it.name,
         quantity: typeof it.quantity === "number" ? it.quantity : 1,
@@ -46,7 +45,7 @@ export const KitchenManagement = () => {
     if (!over) return;
   
     const orderId = String(active.id);                 
-    const newStatus = over.id as ColumnType["id"];     
+    const newStatus = over.id;     
   
     Meteor.call(
       "orders.updateOrder",

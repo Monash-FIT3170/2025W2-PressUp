@@ -5,7 +5,7 @@ import { SupplierInfo } from "./SupplierInfo";
 import { Modal } from "./Modal";
 import { PurchaseOrderForm } from "./PurchaseOrderForm";
 import { Meteor } from "meteor/meteor";
-import { Mongo } from "meteor/mongo";
+import { IdType } from "/imports/api/database";
 
 interface SupplierTableProps {
   suppliers: Supplier[];
@@ -25,16 +25,14 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
     );
 
   const [isOpen, setIsOpen] = useState(false);
-  const [expandedSupplierId, setExpandedSupplierId] = useState<string | null>(null);
-  const [purchaseOrderId, setPurchaseOrderId] = useState<Mongo.ObjectID>(
-    new Mongo.ObjectID(),
-  );
+  const [expandedSupplierId, setExpandedSupplierId] = useState<IdType | null>(null);
+  const [purchaseOrderId, setPurchaseOrderId] = useState<IdType | null>(null);
 
   const onCreatePurchaseOrder = (supplier: Supplier) => {
     Meteor.call(
       "purchaseOrders.new",
       { supplierId: supplier._id },
-      (err: Meteor.Error | undefined, result: Mongo.ObjectID) => {
+      (err: Meteor.Error | undefined, result: IdType) => {
         if (err) {
           console.error(err.reason);
         } else {
@@ -141,7 +139,7 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
       </div>
 
       <Modal open={isOpen} onClose={() => setIsOpen(false)}>
-        {isOpen && <PurchaseOrderForm purchaseOrderId={purchaseOrderId} />}
+        {isOpen && <PurchaseOrderForm purchaseOrderId={purchaseOrderId ?? ""} />}
       </Modal>
     </div>
   );

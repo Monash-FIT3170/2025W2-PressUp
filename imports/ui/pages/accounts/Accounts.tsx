@@ -4,13 +4,7 @@ import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { Modal } from "../../components/Modal";
 import { ConfirmModal } from "../../components/ConfirmModal";
-
-interface User {
-  _id: string;
-  username: string;
-  profile?: { name?: string };
-  roles?: string[];
-}
+import { Roles } from "meteor/alanning:roles";
 
 export const Accounts = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -19,17 +13,22 @@ export const Accounts = () => {
   }, [setPageTitle]);
 
   useSubscribe("users.all");
-  const users: User[] = useTracker(() => {
-    return Meteor.users.find({}, { sort: { username: 1 } }).fetch();
+  useSubscribe("users.roles");
+  const users = useTracker(() => {
+    const users = Meteor.users.find({}, { sort: { username: 1 } }).fetch();
+    return users.map((user) => ({
+      ...user,
+      roles: Roles.getRolesForUser(user._id),
+    }));
   });
 
-  const [editUser, setEditUser] = useState<User | null>(null);
+  const [, setEditUser] = useState<Meteor.User | null>(null);
   const [open, setOpen] = useState(false);
-  const [formResetKey, setFormResetKey] = useState(0);
+  const [, setFormResetKey] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirm, setConfirm] = useState<"cancel" | null>(null);
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: Meteor.User) => {
     setEditUser(user);
     setOpen(true);
   };
@@ -38,8 +37,6 @@ export const Accounts = () => {
     setOpen(false);
     setFormResetKey((prev) => prev + 1);
   };
-
-  const handleSuccess = () => handleModalClose();
 
   return (
     <div className="flex flex-1 flex-col">
@@ -74,14 +71,16 @@ export const Accounts = () => {
               <div className="bg-press-up-light-purple py-1 px-4 border-y-3 border-press-up-light-purple rounded-r-lg sticky top-0 z-1">
                 Actions
               </div>
-              {users.map((user, i) => (
+              {users.map((user) => (
                 <React.Fragment key={user._id}>
                   <div className="text-left truncate relative py-1 px-2">
-                    {user.profile?.name || user.username}
+                    {user.profile?.firstName || user.username}
                     <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
                   </div>
                   <div className="truncate relative py-1 px-2">
-                    {user.roles && user.roles.length > 0 ? user.roles.join(", ") : "None"}
+                    {user.roles && user.roles.length > 0
+                      ? user.roles.join(", ")
+                      : "None"}
                     <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
                   </div>
                   <div className="relative truncate py-1 px-2 flex gap-2 justify-center items-center">

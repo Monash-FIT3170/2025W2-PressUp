@@ -26,8 +26,8 @@ export const StockPage = () => {
   >("all");
   const [formResetKey, setFormResetKey] = useState(0);
 
-  const isLoadingStockItems = useSubscribe("stockItems.all") === false;
-  const isLoadingSuppliers = useSubscribe("suppliers") === false;
+  const isLoadingStockItems = useSubscribe("stockItems.all");
+  const isLoadingSuppliers = useSubscribe("suppliers");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirm, setConfirm] = useState<"cancel" | "delete" | null>(null);
 
@@ -82,15 +82,16 @@ export const StockPage = () => {
   };
 
   const handleDelete = () => {
-    Meteor.call(
-      "stockItems.remove",
-      deleteItem._id,
-      (error: Meteor.Error | undefined) => {
-        if (error) {
-          alert("Error deleting item: " + error.reason);
-        }
-      },
-    );
+    if (deleteItem)
+      Meteor.call(
+        "stockItems.remove",
+        deleteItem._id,
+        (error: Meteor.Error | undefined) => {
+          if (error) {
+            alert("Error deleting item: " + error.reason);
+          }
+        },
+      );
   };
 
   return (
@@ -108,7 +109,7 @@ export const StockPage = () => {
         </button>
       </div>
       <div id="stock" className="flex flex-1 flex-col overflow-auto">
-        {isLoadingStockItems || isLoadingSuppliers ? (
+        {isLoadingStockItems() || isLoadingSuppliers() ? (
           <p className="text-gray-400 p-4">Loading inventory...</p>
         ) : (
           <StockTable

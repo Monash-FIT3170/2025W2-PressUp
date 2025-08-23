@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { FinanceDateFilter } from "../../components/FinanceDateFilter";
-import { Meteor } from 'meteor/meteor'
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
+import { PurchaseOrdersCollection } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
 import {
     format,
     startOfToday,
@@ -15,8 +17,6 @@ import {
     endOfMonth,
     endOfYear,
   } from "date-fns";
-import { PurchaseOrder } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
-import { Order } from "/imports/api/orders/OrdersCollection";
 import {
     BarChart,
     Bar,
@@ -28,10 +28,16 @@ import {
     Label,
   } from "recharts";
 
+interface FinancialDataField {
+  title: string;
+  description: string;
+  items: { label: string; amount: number }[];
+  total: number;
+}
+
 export const TaxPage = () => {
     const [_, setPageTitle] = usePageTitle();
     const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
-    const [financialData, setFinancialData] = useState<any | null>(null);
     const [dateRange, setDateRange] = React.useState<
         | "all"
         | "today"
@@ -41,6 +47,9 @@ export const TaxPage = () => {
         | "past7Days"
         | "past30Days"
         >("all");
+
+    useSubscribe("orders");
+    useSubscribe("purchaseOrders");
 
         const getDateRange = (range: typeof dateRange): { start: Date; end: Date } => {
             const today = startOfToday();
@@ -86,126 +95,115 @@ export const TaxPage = () => {
         return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
     };
 
-    const fetchFinancialData = async () => {
-        try {
-            const orders = (await Meteor.callAsync("orders.getAll")) as Order[];
-            const purchaseOrders = (await Meteor.callAsync('purchaseOrders.getAll')) as PurchaseOrder[];
+    const financialData: Record<string, FinancialDataField> = useTracker(() => {
+        const orders = OrdersCollection.find().fetch();
+        const purchaseOrders = PurchaseOrdersCollection.find().fetch();
 
-            const { start, end } = getDateRange(dateRange);
+        const { start, end } = getDateRange(dateRange);
 
-            // filter orders by date
-            const filteredOrders = orders.filter(order => {
-                const orderDate = new Date(order.createdAt);
-                return orderDate >= start && orderDate <= end && order.paid;
-            });
+        // filter orders by date
+        const filteredOrders = orders.filter(order => {
+            const orderDate = new Date(order.createdAt);
+            return orderDate >= start && orderDate <= end && order.paid;
+        });
 
-            const filteredPurchaseOrders = purchaseOrders.filter(purchase => {
-                let purchaseDate: Date;
-                if (purchase.date instanceof Date) {
-                    purchaseDate = purchase.date
-                } else {
-                    purchaseDate = new Date(purchase.date)
-                }
-                return purchaseDate >= start && purchaseDate <= end;
-            })
+        const filteredPurchaseOrders = purchaseOrders.filter(purchase => {
+            let purchaseDate: Date;
+            if (purchase.date instanceof Date) {
+                purchaseDate = purchase.date
+            } else {
+                purchaseDate = new Date(purchase.date)
+            }
+            return purchaseDate >= start && purchaseDate <= end;
+        })
 
-            // date format for graph
-            const formatDateKey = (date: Date, range: typeof dateRange) => {
-                switch (range) {
-                case "thisYear":
-                    return format(date, "MMM"); // just display month label
-                case "all":
-                    return format(date, "dd/MM/yy"); // label format for all
-                case "thisMonth":
-                case "past30Days":
-                case "thisWeek":
-                case "past7Days":
-                case "today":
-                default:
-                    return format(date, "dd/MM"); // daily buckets
-                }
-            };
+        // date format for graph
+        const formatDateKey = (date: Date, range: typeof dateRange) => {
+            switch (range) {
+            case "thisYear":
+                return format(date, "MMM"); // just display month label
+            case "all":
+                return format(date, "dd/MM/yy"); // label format for all
+            case "thisMonth":
+            case "past30Days":
+            case "thisWeek":
+            case "past7Days":
+            case "today":
+            default:
+                return format(date, "dd/MM"); // daily buckets
+            }
+        };
 
-            // GST on sales
-            let GSTTotal = 0;
-            const GSTByDate: { [key: string]: number } = {};
+        // GST on sales
+        let GSTTotal = 0;
+        const GSTByDate: { [key: string]: number } = {};
 
-            filteredOrders.forEach(order => {
-              if (!order.paid) return;
+        filteredOrders.forEach(order => {
+          if (!order.paid) return;
 
-              const orderDate = new Date(order.createdAt);
-              const dateKey = formatDateKey(orderDate, dateRange);
+          const orderDate = new Date(order.createdAt);
+          const dateKey = formatDateKey(orderDate, dateRange);
 
-              order.menuItems.forEach(item => {
-                const itemAmount = item.price * item.quantity;
-                const gst = itemAmount / 11;
+          order.menuItems.forEach(item => {
+            const itemAmount = item.price * item.quantity;
+            const gst = itemAmount / 11;
 
-                GSTTotal += gst;
-                GSTByDate[dateKey] = (GSTByDate[dateKey] || 0) + gst;
-              });
-            });
+            GSTTotal += gst;
+            GSTByDate[dateKey] = (GSTByDate[dateKey] || 0) + gst;
+          });
+        });
 
-            const GSTItems = Object.keys(GSTByDate).map(date => ({
-                label: date,
-                amount: GSTByDate[date],
-              }));
+        const GSTItems = Object.keys(GSTByDate).map(date => ({
+            label: date,
+            amount: GSTByDate[date],
+          }));
 
-            // GST on expenses
-            let GSTexpenses = 0;
-            const expensesByDate: { [key: string]: number } = {};
+        // GST on expenses
+        let GSTexpenses = 0;
+        const expensesByDate: { [key: string]: number } = {};
 
-            filteredPurchaseOrders.forEach(purchase =>{
-                const purchaseAmount = purchase.totalCost;
-                const gst = purchaseAmount / 11;
-                GSTexpenses += gst;
+        filteredPurchaseOrders.forEach(purchase =>{
+            const purchaseAmount = purchase.totalCost;
+            const gst = purchaseAmount / 11;
+            GSTexpenses += gst;
 
-                const purchaseDate = new Date(purchase.date);
-                const dateKey = formatDateKey(purchaseDate, dateRange);
-                expensesByDate[dateKey] = (expensesByDate[dateKey] || 0) + gst;
-            })
+            const purchaseDate = new Date(purchase.date);
+            const dateKey = formatDateKey(purchaseDate, dateRange);
+            expensesByDate[dateKey] = (expensesByDate[dateKey] || 0) + gst;
+        })
 
-            const expenseItems = Object.keys(expensesByDate).map(date => ({
-                label: date,
-                amount: expensesByDate[date],
-            }));
+        const expenseItems = Object.keys(expensesByDate).map(date => ({
+            label: date,
+            amount: expensesByDate[date],
+        }));
 
-            setFinancialData({
-                GSTCollected: {
-                    title: "GST Collected",
-                    description: "Goods and Services Tax collected on orders",
-                    items: GSTItems,
-                    total: GSTTotal,
-                },
-                GSTPaid: {
-                    title: "GST Paid",
-                    description: "Goods and Services Tax paid on stock orders",
-                    items: expenseItems,
-                    total: GSTexpenses
-                },
-                incomeTax: {
-                    title: "Income Tax",
-                    description: "Estimated income Tax",
-                    items: expenseItems,
-                    total: GSTexpenses
-                },
-            });
-        } catch (error) {
-            console.error("Error fetching financial data", error)
-        }
-    }
+        return {
+            GSTCollected: {
+                title: "GST Collected",
+                description: "Goods and Services Tax collected on orders",
+                items: GSTItems,
+                total: GSTTotal,
+            },
+            GSTPaid: {
+                title: "GST Paid",
+                description: "Goods and Services Tax paid on stock orders",
+                items: expenseItems,
+                total: GSTexpenses
+            },
+            incomeTax: {
+                title: "Income Tax",
+                description: "Estimated income Tax",
+                items: expenseItems,
+                total: GSTexpenses
+            },
+        };
+    }, [dateRange]);
 
     useEffect(() => {
         setPageTitle("Finance - Tax Management");
-        fetchFinancialData();
-    }, [setPageTitle, dateRange]);
+    }, [setPageTitle]);
 
-    if (!financialData) {
-        return (
-        <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-            Loading...
-        </div>
-        );
-    }
+
 
     const mainMetrics = [
         { key: "GSTCollected", title: "Total GST Collected", amount: financialData.GSTCollected.total },
@@ -213,36 +211,34 @@ export const TaxPage = () => {
         { key: "incomeTax", title: "Estimated Income Tax", amount: financialData.incomeTax.total }, //TODO
     ] as const;
 
-    const currentData = selectedMetric && financialData[selectedMetric]
+    const currentData = selectedMetric && selectedMetric in financialData
         ? financialData[selectedMetric]
         : null;
 
-    const combinedItems = financialData
-        ? (() => {
-            const collectedMap = Object.fromEntries(
-              financialData.GSTCollected.items.map((i) => [i.label, i.amount])
-            );
-            const paidMap = Object.fromEntries(
-              financialData.GSTPaid.items.map((i) => [i.label, i.amount])
-            );
+    const combinedItems = (() => {
+        const collectedMap = Object.fromEntries(
+          financialData.GSTCollected.items.map((i) => [i.label, i.amount])
+        );
+        const paidMap = Object.fromEntries(
+          financialData.GSTPaid.items.map((i) => [i.label, i.amount])
+        );
 
-            const allLabels = Array.from(
-              new Set([
-                ...financialData.GSTCollected.items.map((i) => i.label),
-                ...financialData.GSTPaid.items.map((i) => i.label),
-              ])
-            );
+        const allLabels = Array.from(
+          new Set([
+            ...financialData.GSTCollected.items.map((i) => i.label),
+            ...financialData.GSTPaid.items.map((i) => i.label),
+          ])
+        );
 
-            return allLabels.map((label) => ({
-              label,
-              collected: collectedMap[label] || 0,
-              paid: paidMap[label] || 0,
-            }));
-          })()
-    : [];
+        return allLabels.map((label) => ({
+          label,
+          collected: collectedMap[label] || 0,
+          paid: paidMap[label] || 0,
+        }));
+      })();
 
-    let chartTitle = selectedMetric ? currentData.title : "GST Collected vs GST Paid";
-    let chartDescription = selectedMetric ? currentData.description : "Comparison of GST collected on sales and GST paid on expenses";
+    let chartTitle = selectedMetric ? currentData?.title : "GST Collected vs GST Paid";
+    let chartDescription = selectedMetric ? currentData?.description : "Comparison of GST collected on sales and GST paid on expenses";
 
     return (
         <div className="flex flex-col flex-1 overflow-y-auto max-h-screen pb-10">

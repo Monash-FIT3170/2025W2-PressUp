@@ -1,5 +1,4 @@
 import { Meteor } from "meteor/meteor";
-import { Mongo } from "meteor/mongo";
 import { useTracker } from "meteor/react-meteor-data";
 import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
@@ -12,9 +11,10 @@ import {
   Supplier,
   SuppliersCollection,
 } from "/imports/api";
+import { IdType } from "/imports/api/database";
 
 interface PurchaseOrderFormProps {
-  purchaseOrderId: Mongo.ObjectID;
+  purchaseOrderId: IdType;
 }
 
 interface PurchaseOrderWithSupplier extends Omit<PurchaseOrder, "supplier"> {
@@ -38,9 +38,7 @@ export const PurchaseOrderForm = ({
       return null;
 
     const purchaseOrderQueryResult = PurchaseOrdersCollection.find(
-      {
-        _id: purchaseOrderId,
-      },
+      purchaseOrderId,
       { limit: 1 },
     ).fetch()[0];
 
@@ -50,9 +48,7 @@ export const PurchaseOrderForm = ({
     }
 
     const supplierQueryResult = SuppliersCollection.find(
-      {
-        _id: purchaseOrderQueryResult?.supplier,
-      },
+      purchaseOrderQueryResult?.supplier,
       { limit: 1 },
     ).fetch()[0];
 

@@ -20,8 +20,7 @@ export const SuppliersPage = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirm, setConfirm] = useState<"cancel" | "delete" | null>(null);
 
-  const isLoadingSuppliers = useSubscribe("suppliers") === false;
-
+  const isLoadingSuppliers = useSubscribe("suppliers");
   const suppliers: Supplier[] = useTracker(() => {
     return SuppliersCollection.find({}, { sort: { name: 1 } }).fetch();
   });
@@ -62,7 +61,7 @@ export const SuppliersPage = () => {
         id="supplier-container"
         className="flex flex-1 flex-col overflow-auto"
       >
-        {isLoadingSuppliers ? (
+        {isLoadingSuppliers() ? (
           <p className="text-gray-400 p-4">Loading suppliers...</p>
         ) : (
           <SupplierTable suppliers={filteredSuppliers} />

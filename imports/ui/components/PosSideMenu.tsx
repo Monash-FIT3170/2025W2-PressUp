@@ -1,28 +1,24 @@
 import React , { useState, useEffect } from "react";
 import { MenuItem } from "/imports/api";
 import { PaymentModal } from "./PaymentModal";
-import { Mongo } from "meteor/mongo";
-import { useTracker } from "meteor/react-meteor-data";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Order, OrdersCollection } from "/imports/api";
-
-// Patch: allow originalPrice to be present on order (for discount logic)
-type OrderWithOriginal = Order & { originalPrice?: number };
+import { IdType } from "/imports/api/database";
 
 interface PosSideMenuProps {
   tableNo: number;
   items: MenuItem[];
   total: number;
   orderId?: string;
-  onIncrease: (itemId: Mongo.ObjectID) => void;
-  onDecrease: (itemId: Mongo.ObjectID) => void;
-  onDelete: (itemId: Mongo.ObjectID) => void;
+  onIncrease: (itemId: IdType) => void;
+  onDecrease: (itemId: IdType) => void;
+  onDelete: (itemId: IdType) => void;
   onUpdateOrder?: (fields: any) => void;
   selectedTable: number;
   setSelectedTable: (tableNo: number) => void;
 }
 
 export const PosSideMenu = ({
-  tableNo,
   items,
   total,
   orderId,
@@ -34,8 +30,9 @@ export const PosSideMenu = ({
   setSelectedTable,
 }: PosSideMenuProps) => {
   // Fetch the current order for this table
-  const order: OrderWithOriginal | undefined = useTracker(
-    () => OrdersCollection.findOne({ tableNo: selectedTable }),
+  useSubscribe("orders");
+  const order = useTracker(
+    () => OrdersCollection.find({ tableNo: selectedTable }).fetch()[0],
     [selectedTable]
   );
 
@@ -167,7 +164,7 @@ export const PosSideMenu = ({
     }
   };
 
-  const handleDelete = (itemId: Mongo.ObjectID) => {
+  const handleDelete = (itemId: IdType) => {
     onDelete(itemId);
   };
 

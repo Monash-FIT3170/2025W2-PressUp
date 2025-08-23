@@ -10,13 +10,13 @@ export const AllergenFilter = ({
     items,
     onAllergenSelect,
     selectedAllergen,
-}: AllergenFilterProps) {
+}: AllergenFilterProps) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Compute list of unique allergens found in items
   const allAllergens = useMemo(() => {
-    const allergenSet = new Set();
+    const allergenSet = new Set<string>();
 
     items.forEach(item => {
       if (Array.isArray(item.allergens)) {
