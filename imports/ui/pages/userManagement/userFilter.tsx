@@ -1,12 +1,14 @@
 import React from "react";
 
+type FilterKey = "all" | "managers" | "casual" | "active" | "inactive";
+
 interface UserFilterProps {
-  filter: "all" | "managers" | "casual" | "active" | "inactive";
-  onFilterChange: (filter: "all" | "managers" | "casual" | "active" | "inactive") => void;
+  filter: FilterKey;
+  onFilterChange: (filter: FilterKey) => void;
 }
 
 export const UserFilter = ({ filter, onFilterChange }: UserFilterProps) => {
-  const filterOptions = [
+  const filterOptions: { value: FilterKey; label: string }[] = [
     { value: "all", label: "All Users" },
     { value: "managers", label: "Managers" },
     { value: "casual", label: "Casual Staff" },
@@ -19,14 +21,14 @@ export const UserFilter = ({ filter, onFilterChange }: UserFilterProps) => {
       {filterOptions.map((option) => (
         <button
           key={option.value}
-          onClick={() => onFilterChange(option.value as any)}
+          onClick={() => onFilterChange(option.value)}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
             filter === option.value
               ? "text-white shadow-lg"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
           style={{
-            backgroundColor: filter === option.value ? '#6f597b' : undefined,
+            backgroundColor: filter === option.value ? "#6f597b" : undefined,
           }}
         >
           {option.label}

@@ -8,7 +8,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 
 // -------- Seat positioning helper --------
 const getSeatPositions = (
-  seatCount: number
+  seatCount: number,
 ): { left: number; top: number }[] => {
   const positions = [];
   const radius = 85;
@@ -51,7 +51,7 @@ const TableCard = ({
   const occupied =
     typeof table.noOccupants === "number" ? table.noOccupants : 0;
   const capacity = table?.capacity ?? 0;
-  let occupiedIndexes: number[] = [];
+  const occupiedIndexes: number[] = [];
   if (occupied > 0 && capacity > 0) {
     const gap = capacity / occupied;
     for (let j = 0; j < occupied; j++) {
@@ -106,7 +106,7 @@ export const TablesPage = () => {
 
   useSubscribe("tables");
   const tablesFromDb = useTracker(() =>
-    TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch()
+    TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch(),
   );
 
   const MAX_NO_TABLES = 20;
@@ -116,10 +116,10 @@ export const TablesPage = () => {
 
   // Single grid state
   const [grid, setGrid] = useState<(Table | null)[]>(
-    Array(GRID_SIZE).fill(null)
+    Array(GRID_SIZE).fill(null),
   );
   const [originalGrid, setOriginalGrid] = useState<(Table | null)[] | null>(
-    null
+    null,
   );
 
   const [editMode, setEditMode] = useState(false);
@@ -130,7 +130,7 @@ export const TablesPage = () => {
     null | "addTable" | "editTable" | "exitConfirm" | "deleteTable"
   >(null);
   const [selectedCellIndex, setSelectedCellIndex] = useState<number | null>(
-    null
+    null,
   );
   const [editTableData, setEditTableData] = useState<Table | null>(null);
   const [capacityInput, setCapacityInput] = useState("");
@@ -353,7 +353,7 @@ export const TablesPage = () => {
                         Number(capacityInput) < 1
                       ) {
                         alert(
-                          "Please enter a valid number of seats (must be at least 1)."
+                          "Please enter a valid number of seats (must be at least 1).",
                         );
                         return;
                       }
@@ -369,7 +369,7 @@ export const TablesPage = () => {
                             0,
                             ...grid
                               .filter((t) => t !== null)
-                              .map((t) => t!.tableNo)
+                              .map((t) => t!.tableNo),
                           ) + 1;
                         const newTable = {
                           tableNo: nextTableNo,
@@ -430,14 +430,14 @@ export const TablesPage = () => {
                         Number(capacityInput) < 1
                       ) {
                         alert(
-                          "Please enter a valid number of seats (must be at least 1)."
+                          "Please enter a valid number of seats (must be at least 1).",
                         );
                         return;
                       }
                       const updated = grid.map((t) =>
                         t?.tableNo === editTableData!.tableNo
                           ? { ...t, capacity: parseInt(capacityInput, 10) }
-                          : t
+                          : t,
                       );
                       setGrid(updated);
                       setModalType(null);
@@ -445,13 +445,13 @@ export const TablesPage = () => {
                       markChanged();
                       // Update in DB
                       const dbTable = tablesFromDb.find(
-                        (t) => t.tableNo === editTableData!.tableNo
+                        (t) => t.tableNo === editTableData!.tableNo,
                       );
                       if (dbTable && dbTable._id) {
                         await Meteor.callAsync(
                           "tables.changeCapacity",
                           dbTable._id,
-                          parseInt(capacityInput, 10)
+                          parseInt(capacityInput, 10),
                         );
                       }
                     }}
@@ -500,7 +500,7 @@ export const TablesPage = () => {
                         return;
                       }
                       const idx = grid.findIndex(
-                        (t) => t && t.tableNo === tableNo
+                        (t) => t && t.tableNo === tableNo,
                       );
                       if (idx === -1) {
                         alert("Table not found.");
@@ -514,10 +514,13 @@ export const TablesPage = () => {
                       markChanged();
                       // Remove from DB
                       const dbTable = tablesFromDb.find(
-                        (t) => t.tableNo === tableNo
+                        (t) => t.tableNo === tableNo,
                       );
                       if (dbTable && dbTable._id) {
-                        await Meteor.callAsync("tables.removeTable", dbTable._id);
+                        await Meteor.callAsync(
+                          "tables.removeTable",
+                          dbTable._id,
+                        );
                       }
                     }}
                     style={{ backgroundColor: "#c97f97", color: "#fff" }}

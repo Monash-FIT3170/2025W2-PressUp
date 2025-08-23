@@ -71,8 +71,8 @@ export const PurchaseOrderForm = ({
     ).fetch();
 
     // Convert to a mapping of IDs to StockItems
-    let result: { [index: string]: StockItem } = {};
-    for (let stockItem of stockItemsQueryResult) {
+    const result: { [index: string]: StockItem } = {};
+    for (const stockItem of stockItemsQueryResult) {
       result[String(stockItem._id)] = stockItem;
     }
     return result;
@@ -164,11 +164,11 @@ export const PurchaseOrderForm = ({
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({ contentRef: printRef });
   const gst = 10;
-  let subtotal = stockItems
-              .map((s) => s.quantity * s.cost)
-              .reduce((a, v) => a + v, 0)
-  let taxAmount = subtotal*gst/100
-  let totalAmount = (subtotal + taxAmount)
+  const subtotal = stockItems
+    .map((s) => s.quantity * s.cost)
+    .reduce((a, v) => a + v, 0);
+  const taxAmount = (subtotal * gst) / 100;
+  const totalAmount = subtotal + taxAmount;
 
   return (
     <div className="flex flex-col space-y-5 p-2 dark:text-white" ref={printRef}>
@@ -252,7 +252,11 @@ export const PurchaseOrderForm = ({
             </option>
             {availableStockItems
               ? Object.values(availableStockItems).map((item, i) => (
-                  <option className="text-black" value={String(item._id)} key={i}>
+                  <option
+                    className="text-black"
+                    value={String(item._id)}
+                    key={i}
+                  >
                     {item.name}
                   </option>
                 ))
@@ -361,14 +365,10 @@ export const PurchaseOrderForm = ({
           <div className="font-bold text-lg mt-2">Total:</div>
         </div>
         <div className="col-span-2 flex flex-col">
-          <div>
-            ${subtotal.toFixed(2)}
-          </div>
+          <div>${subtotal.toFixed(2)}</div>
           <div>{gst}%</div>
           <div>${taxAmount.toFixed(2)}</div>
-          <div className="text-lg mt-2">
-            ${totalAmount.toFixed(2)}
-          </div>
+          <div className="text-lg mt-2">${totalAmount.toFixed(2)}</div>
         </div>
         <div className="col-span-1"></div>
       </div>

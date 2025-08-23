@@ -3,7 +3,7 @@ import { IdType } from "/imports/api/database";
 export type OrderStatus = "pending" | "preparing" | "ready" | "served";
 
 export type UiOrder = {
-  _id: IdType; 
+  _id: IdType;
   orderNo: number;
   status: OrderStatus;
   tableNo: number;
@@ -11,7 +11,7 @@ export type UiOrder = {
   menuItems: Array<{
     name: string;
     quantity: number;
-    served?: boolean; 
+    served?: boolean;
   }>;
 };
 

@@ -2,7 +2,9 @@ import React from "react";
 
 interface StockFilterProps {
   filter: "all" | "inStock" | "lowInStock" | "outOfStock";
-  onFilterChange: (filter: "all" | "inStock" | "lowInStock" | "outOfStock") => void;
+  onFilterChange: (
+    filter: "all" | "inStock" | "lowInStock" | "outOfStock",
+  ) => void;
 }
 
 export const StockFilter = ({ filter, onFilterChange }: StockFilterProps) => {
@@ -19,7 +21,11 @@ export const StockFilter = ({ filter, onFilterChange }: StockFilterProps) => {
       <select
         id="stock-filter"
         value={filter}
-        onChange={(e) => onFilterChange(e.target.value as "all" | "inStock" | "lowInStock" | "outOfStock")}
+        onChange={(e) =>
+          onFilterChange(
+            e.target.value as "all" | "inStock" | "lowInStock" | "outOfStock",
+          )
+        }
         className="border border-red-900 rounded-xl px-3 py-1 text-red-900 bg-white"
       >
         <option value="all">All</option>

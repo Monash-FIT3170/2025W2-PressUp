@@ -9,4 +9,6 @@ export interface Tables extends DBEntry {
   noOccupants: number;
 }
 
-export const TablesCollection = new Mongo.Collection<OmitDB<Tables>, Tables>("tables");
+export const TablesCollection = new Mongo.Collection<OmitDB<Tables>, Tables>(
+  "tables",
+);

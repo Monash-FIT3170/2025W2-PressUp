@@ -6,8 +6,8 @@ import { Shift, ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
 // Assign a color to each role for color coding
 const roleColors: Record<string, string> = {
   "Wait Staff": "#8b5cf6", // Purple
-  Chef: "#10b981",          // Emerald
-  Supervisor: "#f59e0b",    // Amber
+  Chef: "#10b981", // Emerald
+  Supervisor: "#f59e0b", // Amber
 };
 
 // Helper to get the most recent Monday from a date
@@ -31,7 +31,9 @@ function formatDate(date: Date) {
 
 // Helper to format time as '08:00' or '08:30'
 function formatTime(hour: number, minute: number) {
-  return hour.toString().padStart(2, "0") + ":" + minute.toString().padStart(2, "0");
+  return (
+    hour.toString().padStart(2, "0") + ":" + minute.toString().padStart(2, "0")
+  );
 }
 
 const daysOfWeek = [
@@ -45,10 +47,10 @@ const daysOfWeek = [
 ];
 
 interface RosterTableProps {
-  PublishShiftButton: React.ReactNode
+  PublishShiftButton: React.ReactNode;
 }
 
-export const RosterTable = ({PublishShiftButton} : RosterTableProps) => {
+export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
   const today = new Date();
   const baseMonday = getMonday(today);
 
@@ -76,15 +78,15 @@ export const RosterTable = ({PublishShiftButton} : RosterTableProps) => {
     });
 
     return Array.from(staffMap.values());
-  }, [shiftsLoading, usersLoading])
+  }, [shiftsLoading, usersLoading]);
 
-  const [allRoles, setAllRoles] = useState<string[]>([])
+  const [allRoles, setAllRoles] = useState<string[]>([]);
   const [roleFilter, setRoleFilter] = useState<string[]>(allRoles);
   useEffect(() => {
     setAllRoles(Array.from(new Set(staffShifts.map((s) => s.role))));
     setRoleFilter(allRoles);
-  }, [staffShifts])
-  
+  }, [staffShifts, setRoleFilter]);
+
   // Start with the most recent Monday as the base week
   const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, -1 = prev, +1 = next
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -103,27 +105,29 @@ export const RosterTable = ({PublishShiftButton} : RosterTableProps) => {
   });
 
   const filteredShifts = staffShifts.filter((s) => roleFilter.includes(s.role));
-  console.log(roleFilter)
-  console.log(filteredShifts)
+  console.log(roleFilter);
+  console.log(filteredShifts);
 
   const getShiftForStaffAndDay = (
     staff: { shifts: Shift[]; role: string },
-    dayIndex: number
+    dayIndex: number,
   ) => {
     const cellDate = weekDates[dayIndex];
     staff.shifts.forEach((shift) => {
-      console.log(shift.date.toDateString())
-      console.log(cellDate.toDateString())
-    })
-    return staff.shifts.find((shift) => shift.date.toDateString() == cellDate.toDateString()) || null;
+      console.log(shift.date.toDateString());
+      console.log(cellDate.toDateString());
+    });
+    return (
+      staff.shifts.find(
+        (shift) => shift.date.toDateString() == cellDate.toDateString(),
+      ) || null
+    );
   };
 
   // Handle role filter change
   const handleRoleChange = (role: string) => {
     setRoleFilter((prev) =>
-      prev.includes(role)
-        ? prev.filter((r) => r !== role)
-        : [...prev, role]
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
     );
   };
 

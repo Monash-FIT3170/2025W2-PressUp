@@ -5,7 +5,9 @@ import { requireLoginMethod } from "../accounts/wrappers";
 import { OmitDB } from "../database";
 
 Meteor.methods({
-  "suppliers.insert": requireLoginMethod(async function (supplier: OmitDB<Supplier>) {
+  "suppliers.insert": requireLoginMethod(async function (
+    supplier: OmitDB<Supplier>,
+  ) {
     check(supplier.name, String);
     //check(supplier.description, String);
     //check(supplier.pastOrderQty, Number);
@@ -14,7 +16,6 @@ Meteor.methods({
     check(supplier.website, String);
     check(supplier.address, String);
     check(supplier.goods, Array);
-
 
     return await SuppliersCollection.insertAsync(supplier);
   }),

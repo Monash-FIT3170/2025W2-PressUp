@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
-// import { UserTable } from "/imports/ui/components/UserTable";
 // import { Roles } from "meteor/alanning:roles";
 import { RoleEnum } from "/imports/api/accounts/roles";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
@@ -22,7 +21,10 @@ export const UserManagementPage = () => {
     const users = Meteor.users.find({}, { sort: { createdAt: -1 } }).fetch();
 
     return {
-      users: users.map(user => ({...user, roles: Roles.getRolesForUser(user._id)})),
+      users: users.map((user) => ({
+        ...user,
+        roles: Roles.getRolesForUser(user._id),
+      })),
       currentUser: Meteor.user(),
       currentUserId: Meteor.userId() || undefined,
       isLoading: !usersHandle.ready() || !rolesHandle.ready(),
@@ -58,7 +60,10 @@ export const UserManagementPage = () => {
     setShowEditUserModal(true);
   };
 
-  const handleUpdateUser = (userId: string, updates: any) => {
+  const handleUpdateUser = (
+    userId: string,
+    updates: Partial<Meteor.User & { role: string }>,
+  ) => {
     // Update profile
     if (updates.profile) {
       Meteor.call(
@@ -359,7 +364,7 @@ const AddUserModal = ({
     lastName: "",
     username: "",
     password: "",
-    role: RoleEnum.CASUAL as RoleEnum,
+    role: RoleEnum.CASUAL as string,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -416,9 +421,7 @@ const AddUserModal = ({
           />
           <select
             value={formData.role}
-            onChange={(e) =>
-              setFormData({ ...formData, role: e.target.value as RoleEnum })
-            }
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
             <option value={RoleEnum.CASUAL}>Casual</option>
@@ -455,14 +458,17 @@ const EditUserModal = ({
 }: {
   user: Meteor.User;
   onClose: () => void;
-  onSubmit: (userId: string, updates: any) => void;
+  onSubmit: (
+    userId: string,
+    updates: Partial<Meteor.User & { role: string }>,
+  ) => void;
 }) => {
-  useSubscribe("user.roles")
+  useSubscribe("user.roles");
 
   const [formData, setFormData] = useState({
     firstName: user.profile?.firstName || "",
     lastName: user.profile?.lastName || "",
-    role: (Roles.getRolesForUser(user._id)[0]) || RoleEnum.CASUAL,
+    role: Roles.getRolesForUser(user._id)[0] || RoleEnum.CASUAL,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -505,9 +511,7 @@ const EditUserModal = ({
           />
           <select
             value={formData.role}
-            onChange={(e) =>
-              setFormData({ ...formData, role: e.target.value as RoleEnum })
-            }
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
             <option value={RoleEnum.CASUAL}>Casual</option>

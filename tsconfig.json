@@ -36,10 +36,22 @@
     "resolveJsonModule": true,
     "types": ["node", "mocha"],
     "esModuleInterop": true,
-    "preserveSymlinks": true
+    "preserveSymlinks": true,
+    "skipLibCheck": true,
+    "typeRoots": ["node_modules/@types"]
   },
+  "include": [
+    "client/**/*",
+    "server/**/*",
+    "imports/**/*",
+    "tests/**/*",
+    "types/**/*"
+  ],
   "exclude": [
-    "./.meteor/**",
-    "./packages/**"
+    ".meteor/**",
+    "node_modules/**",
+    "dist/**",
+    "build/**",
+    "packages/**"
   ]
 }

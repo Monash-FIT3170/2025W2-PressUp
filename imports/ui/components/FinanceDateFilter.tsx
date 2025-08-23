@@ -17,11 +17,14 @@ interface FinanceDateFilterProps {
       | "thisMonth"
       | "thisYear"
       | "past7Days"
-      | "past30Days"
+      | "past30Days",
   ) => void;
 }
 
-export const FinanceDateFilter = ({ range, onRangeChange }: FinanceDateFilterProps) => {
+export const FinanceDateFilter = ({
+  range,
+  onRangeChange,
+}: FinanceDateFilterProps) => {
   return (
     <div className="mb-4 flex">
       <img
@@ -44,7 +47,7 @@ export const FinanceDateFilter = ({ range, onRangeChange }: FinanceDateFilterPro
               | "thisMonth"
               | "thisYear"
               | "past7Days"
-              | "past30Days"
+              | "past30Days",
           )
         }
         className="border border-red-900 rounded-xl px-3 py-1 text-red-900 bg-white"
