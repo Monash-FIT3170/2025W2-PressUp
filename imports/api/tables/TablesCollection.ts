@@ -1,12 +1,12 @@
 import { Mongo } from "meteor/mongo";
-import { DBEntry } from "../database";
+import { DBEntry, IdType, OmitDB } from "../database";
 
 export interface Tables extends DBEntry {
   tableNo: number;
-  orderID: string | null; // OrderID stored as string rather than Mongo.ObjectID
+  orderID: IdType | null;
   capacity: number;
   isOccupied: boolean;
   noOccupants: number;
 }
 
-export const TablesCollection = new Mongo.Collection<Tables>("tables");
+export const TablesCollection = new Mongo.Collection<OmitDB<Tables>, Tables>("tables");

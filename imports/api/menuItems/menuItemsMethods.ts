@@ -2,9 +2,10 @@ import { Meteor } from "meteor/meteor";
 import { check, Match } from "meteor/check";
 import { MenuItem, MenuItemsCollection } from "./MenuItemsCollection";
 import { requireLoginMethod } from "../accounts/wrappers";
+import { IdType, OmitDB } from "../database";
 
 Meteor.methods({
-  'menuItems.insert': requireLoginMethod(async function (item: Omit<MenuItem, '_id'>) {
+  'menuItems.insert': requireLoginMethod(async function (item: OmitDB<MenuItem>) {
     // Validate the item data
     check(item, {
       name: String,
@@ -60,7 +61,7 @@ Meteor.methods({
     return result;
   }),
 
-  'menuItems.update': requireLoginMethod(async function (itemName: string, updatedFields: Partial<Omit<MenuItem, '_id'>>) {
+  'menuItems.update': requireLoginMethod(async function (itemName: string, updatedFields: Partial<OmitDB<MenuItem>>) {
     check(itemName, String);
     check(updatedFields, Object);
     
@@ -99,7 +100,7 @@ Meteor.methods({
     return MenuItemsCollection.find().fetch();
   }),
 
-  'menuItems.updateQuantity': requireLoginMethod(async function (itemId: string, change: number) {
+  'menuItems.updateQuantity': requireLoginMethod(async function (itemId: IdType, change: number) {
     check(itemId, String);
     check(change, Number);
     
