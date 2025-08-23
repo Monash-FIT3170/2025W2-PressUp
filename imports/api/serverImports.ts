@@ -4,7 +4,7 @@ import "./stockItems/stockItemsMethods";
 import "./stockItems/stockItemsPublishing";
 import "./suppliers/suppliersPublishing";
 import "./orders/ordersPublishing";
-import "./suppliers/SupplierMethods";
+import "./suppliers/supplierMethods";
 import "./purchaseOrders/purchaseOrdersMethods.ts";
 import "./purchaseOrders/purchaseOrdersPublishing.ts";
 import "./orders/ordersMethods";

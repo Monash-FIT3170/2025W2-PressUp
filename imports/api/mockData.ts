@@ -249,7 +249,7 @@ export const mockDataGenerator = async ({
   // Create orders and assign to tableNos
   if ((await OrdersCollection.countDocuments()) === 0) {
     // Fetch all existing table numbers
-    const allTables = await TablesCollection.find({}, { fields: { tableNo: 1 } }).fetch();
+    const allTables = await TablesCollection.find({}, { fields: { tableNo: 1 } }).fetchAsync();
     const availableTableNos = allTables.map((t) => t.tableNo);
 
     // Shuffle table numbers and get up to orderCount amount

@@ -5,6 +5,7 @@ import { check, Match } from "meteor/check";
 import { requireLoginMethod } from "./wrappers";
 import { CreateUserData, UpdateUserProfileData } from "/imports/api/accounts/userTypes";
 import { RoleEnum } from "./roles";
+import { IdType } from "../database";
 
 Meteor.methods({
   "users.create": requireLoginMethod(async function(userData: CreateUserData) {
@@ -50,7 +51,7 @@ Meteor.methods({
     }
   }),
 
-  "users.delete": requireLoginMethod(async function(userId: string) {
+  "users.delete": requireLoginMethod(async function(userId: IdType) {
     check(userId, String);
 
     // only admins and managers can delete users
@@ -79,7 +80,7 @@ Meteor.methods({
     }
   }),
 
-  "users.updateProfile": requireLoginMethod(async function(userId: string, profileData: UpdateUserProfileData) {
+  "users.updateProfile": requireLoginMethod(async function(userId: IdType, profileData: UpdateUserProfileData) {
     check(userId, String);
     check(profileData, {
       firstName: Match.Optional(String),

@@ -1,5 +1,5 @@
 import { Mongo } from "meteor/mongo";
-import { DBEntry } from "../database";
+import { DBEntry, OmitDB } from "../database";
 
 export interface OrderMenuItem {
     name: string;
@@ -33,4 +33,4 @@ export enum OrderStatus {
     Served = "served"
 }
 
-export const OrdersCollection = new Mongo.Collection<Order>("orders");
+export const OrdersCollection = new Mongo.Collection<OmitDB<Order>, Order>("orders");

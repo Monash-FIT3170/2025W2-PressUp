@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
-//import { UserTable } from "/imports/ui/components/UserTable";
+// import { UserTable } from "/imports/ui/components/UserTable";
 import { ExtendedUser, CreateUserData } from "../../../api/accounts/userTypes";
 import { RoleEnum } from "/imports/api/accounts/roles";
-import { Roles } from "meteor/alanning:roles";
+// import { Roles } from "meteor/alanning:roles";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 
 export const UserManagementPage = () => {
@@ -14,7 +14,7 @@ export const UserManagementPage = () => {
   const [editingUser, setEditingUser] = useState<ExtendedUser | null>(null);
   const [showEntries, setShowEntries] = useState(10);
 
-  const { users, currentUser, isLoading, currentUserId } = useTracker(() => {
+  const { users, currentUserId } = useTracker(() => {
     const usersHandle = Meteor.subscribe("users.all");
     const rolesHandle = Meteor.subscribe("users.roles");
 
@@ -28,12 +28,12 @@ export const UserManagementPage = () => {
     };
   }, []);
 
-  const canManageUsers = useTracker(() => {
+  /* const canManageUsers = useTracker(() => {
     return Roles.userIsInRoleAsync(Meteor.userId(), [
       RoleEnum.ADMIN,
       RoleEnum.MANAGER,
     ]);
-  }, []);
+  }, []); */
 
   const handleAddUser = (userData: CreateUserData) => {
     Meteor.call("users.create", userData, (error: Meteor.Error) => {
@@ -69,7 +69,7 @@ export const UserManagementPage = () => {
             alert(`Error updating profile: ${error.message}`);
             return;
           }
-        }
+        },
       );
     }
 
@@ -84,7 +84,7 @@ export const UserManagementPage = () => {
             alert(`Error updating role: ${error.message}`);
             return;
           }
-        }
+        },
       );
     }
 
@@ -96,7 +96,7 @@ export const UserManagementPage = () => {
   const handleDeleteUser = (user: ExtendedUser) => {
     if (
       confirm(
-        `Are you sure you want to delete ${user.profile?.firstName} ${user.profile?.lastName}?`
+        `Are you sure you want to delete ${user.profile?.firstName} ${user.profile?.lastName}?`,
       )
     ) {
       Meteor.call("users.delete", user._id, (error: Meteor.Error) => {
@@ -115,7 +115,7 @@ export const UserManagementPage = () => {
 
     if (
       confirm(
-        `Are you sure you want to delete ${selectedUsers.length} selected user(s)?`
+        `Are you sure you want to delete ${selectedUsers.length} selected user(s)?`,
       )
     ) {
       selectedUsers.forEach((user) => {
@@ -146,7 +146,7 @@ export const UserManagementPage = () => {
               ? new Date(user.createdAt).toLocaleDateString()
               : "Unknown"
           }"`,
-        ].join(",")
+        ].join(","),
       ),
     ].join("\n");
 
@@ -157,7 +157,7 @@ export const UserManagementPage = () => {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `users_${new Date().toISOString().split("T")[0]}.csv`
+        `users_${new Date().toISOString().split("T")[0]}.csv`,
       );
       link.style.visibility = "hidden";
       document.body.appendChild(link);
@@ -251,7 +251,7 @@ export const UserManagementPage = () => {
           <div className="bg-white">
             {users.slice(0, showEntries).map((user, index) => {
               const isSelected = selectedUsers.some(
-                (selected) => selected._id === user._id
+                (selected) => selected._id === user._id,
               );
               const isCurrentUser = user._id === currentUserId;
 
@@ -271,7 +271,7 @@ export const UserManagementPage = () => {
                           setSelectedUsers((prev) => [...prev, user]);
                         } else {
                           setSelectedUsers((prev) =>
-                            prev.filter((u) => u._id !== user._id)
+                            prev.filter((u) => u._id !== user._id),
                           );
                         }
                       }}
