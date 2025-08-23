@@ -1,28 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
-import { useTracker } from "meteor/react-meteor-data";
 // import { UserTable } from "/imports/ui/components/UserTable";
-import { ExtendedUser, CreateUserData } from "../../../api/accounts/userTypes";
-import { RoleEnum } from "/imports/api/accounts/roles";
 // import { Roles } from "meteor/alanning:roles";
+import { RoleEnum } from "/imports/api/accounts/roles";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { CreateUserData } from "../../../api/accounts/userTypes";
 import { usePageTitle } from "../../hooks/PageTitleContext";
+import { Roles } from "meteor/alanning:roles";
 
 export const UserManagementPage = () => {
-  const [selectedUsers, setSelectedUsers] = useState<ExtendedUser[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<Meteor.User[]>([]);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
-  const [editingUser, setEditingUser] = useState<ExtendedUser | null>(null);
+  const [editingUser, setEditingUser] = useState<Meteor.User | null>(null);
   const [showEntries, setShowEntries] = useState(10);
 
   const { users, currentUserId } = useTracker(() => {
     const usersHandle = Meteor.subscribe("users.all");
     const rolesHandle = Meteor.subscribe("users.roles");
 
+    const users = Meteor.users.find({}, { sort: { createdAt: -1 } }).fetch();
+
     return {
-      users: Meteor.users
-        .find({}, { sort: { createdAt: -1 } })
-        .fetch() as ExtendedUser[],
-      currentUser: Meteor.user() as ExtendedUser,
+      users: users.map(user => ({...user, roles: Roles.getRolesForUser(user._id)})),
+      currentUser: Meteor.user(),
       currentUserId: Meteor.userId() || undefined,
       isLoading: !usersHandle.ready() || !rolesHandle.ready(),
     };
@@ -52,7 +53,7 @@ export const UserManagementPage = () => {
     setPageTitle("User Management");
   }, [setPageTitle]);
 
-  const handleEditUser = (user: ExtendedUser) => {
+  const handleEditUser = (user: Meteor.User) => {
     setEditingUser(user);
     setShowEditUserModal(true);
   };
@@ -93,7 +94,7 @@ export const UserManagementPage = () => {
     alert("User updated successfully!");
   };
 
-  const handleDeleteUser = (user: ExtendedUser) => {
+  const handleDeleteUser = (user: Meteor.User) => {
     if (
       confirm(
         `Are you sure you want to delete ${user.profile?.firstName} ${user.profile?.lastName}?`,
@@ -134,13 +135,12 @@ export const UserManagementPage = () => {
     if (users.length === 0) return;
 
     const csvContent = [
-      ["Name", "Username", "Role", "Status", "Created At"].join(","),
+      ["Name", "Username", "Role", "Created At"].join(","),
       ...users.map((user) =>
         [
           `"${user.profile?.firstName || ""} ${user.profile?.lastName || ""}"`,
           `"${user.username || ""}"`,
           `"${user.roles?.[0] || "No Role"}"`,
-          `"${user.status?.online ? "Online" : "Offline"}"`,
           `"${
             user.createdAt
               ? new Date(user.createdAt).toLocaleDateString()
@@ -294,18 +294,6 @@ export const UserManagementPage = () => {
                     ) : (
                       "No Role"
                     )}
-                  </div>
-
-                  <div>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.status?.online
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {user.status?.online ? "Yes" : "No"}
-                    </span>
                   </div>
 
                   <div className="flex gap-2">
@@ -465,14 +453,16 @@ const EditUserModal = ({
   onClose,
   onSubmit,
 }: {
-  user: ExtendedUser;
+  user: Meteor.User;
   onClose: () => void;
   onSubmit: (userId: string, updates: any) => void;
 }) => {
+  useSubscribe("user.roles")
+
   const [formData, setFormData] = useState({
     firstName: user.profile?.firstName || "",
     lastName: user.profile?.lastName || "",
-    role: (user.roles?.[0] as RoleEnum) || RoleEnum.CASUAL,
+    role: (Roles.getRolesForUser(user._id)[0]) || RoleEnum.CASUAL,
   });
 
   const handleSubmit = (e: React.FormEvent) => {

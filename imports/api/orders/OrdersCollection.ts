@@ -17,11 +17,12 @@ export interface Order extends DBEntry {
     tableNo: number;
     menuItems: OrderMenuItem[];
     totalPrice: number;
+    originalPrice?: number;
     discountedPrice?: number;
     discountPercent?: number;
     discountAmount?: number;
     createdAt: Date;
-    orderStatus: string;
+    orderStatus: OrderStatus;
     paid: boolean;
     seats?: number;
 }

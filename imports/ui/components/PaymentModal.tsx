@@ -9,7 +9,7 @@ interface PaymentModalProps {
   order: Order;
 }
 
-export const PaymentModal = ({ tableNo, order }: PaymentModalProps) => {
+export const PaymentModal = ({ order }: PaymentModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
@@ -17,16 +17,16 @@ export const PaymentModal = ({ tableNo, order }: PaymentModalProps) => {
   const navigate = useNavigate();
 
   // Update order status
-  const updateOrderStatus = async () => {
+  const updateOrderStatus = () => {
     if (!order || !order._id) {return;}
     const fields = {
       orderStatus: OrderStatus.Served,
       paid: true,
     };
-    await Meteor.call("orders.updateOrder", order._id, { ...fields });
+    Meteor.call("orders.updateOrder", order._id, { ...fields });
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     updateOrderStatus();
     closeModal();
     navigate(`/receipt?orderNo=${order.orderNo}`);

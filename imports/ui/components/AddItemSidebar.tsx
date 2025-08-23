@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Meteor } from 'meteor/meteor';
-import { MenuItem } from './MenuItemsCollection'; // Adjust import path as needed
-
 
 // Import possible images from mockData
 const possibleImages = [
@@ -43,14 +41,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess 
     setIsSubmitting(true);
 
     try {
-      const menuItem: Omit<MenuItem, '_id'> = {
-        ...formData,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
       await new Promise<void>((resolve, reject) => {
-        Meteor.call('menuItems.insert', menuItem, (error: any) => {
+        Meteor.call('menuItems.insert', formData, (error: any) => {
           if (error) {
             reject(error);
           } else {
@@ -217,7 +209,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess 
                 value={newIngredient}
                 onChange={(e) => setNewIngredient(e.target.value)}
                 className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addIngredient())}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addIngredient())}
               />
               <button
                 type="button"

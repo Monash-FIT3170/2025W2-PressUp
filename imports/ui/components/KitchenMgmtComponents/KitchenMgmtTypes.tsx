@@ -1,7 +1,9 @@
+import { IdType } from "/imports/api/database";
+
 export type OrderStatus = "pending" | "preparing" | "ready" | "served";
 
 export type UiOrder = {
-  _id: string; 
+  _id: IdType; 
   orderNo: number;
   status: OrderStatus;
   tableNo: number;

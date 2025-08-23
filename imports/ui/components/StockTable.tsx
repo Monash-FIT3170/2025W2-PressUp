@@ -110,13 +110,13 @@ export const StockTable = ({ stockItems, onEdit, onDelete }: StockTableProps) =>
               </div>
               <div className="relative truncate py-1 px-2 flex gap-2 justify-center items-center">
                 <button
-                  onClick={() => onEdit(item)} 
+                  onClick={() => onEdit({...item, supplier: item.supplier?._id ?? null})} 
                   className="bg-press-up-positive-button text-white py-1 px-3 rounded-lg text-sm font-medium transition-all hover:bg-press-up-blue focus:outline-none focus:ring-2 focus:ring-rose-600 focus:ring-offset-1"
                 >
                   Edit
                 </button>
                 <button
-                  onClick={() => onDelete(item)}
+                  onClick={() => onDelete({...item, supplier: item.supplier?._id ?? null})}
                   className="bg-press-up-purple text-white py-1 px-3 rounded-lg text-sm font-medium transition-all hover:bg-press-up-blue focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-1"
                 >
                   Delete

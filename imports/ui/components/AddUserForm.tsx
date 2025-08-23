@@ -1,11 +1,11 @@
 import { Meteor } from "meteor/meteor";
 import React, { useState, useEffect } from "react";
-import { AppUser } from "/imports/api";
+import { ExtendedUser } from "/imports/api/accounts/userTypes";
 
 interface AddUserFormProps {
   onSuccess: () => void;
   onCancel: () => void;
-  user?: AppUser | null;
+  user?: ExtendedUser | null;
 }
 
 export const AddUserForm = ({ onSuccess, onCancel, user }: AddUserFormProps) => {
@@ -19,8 +19,8 @@ export const AddUserForm = ({ onSuccess, onCancel, user }: AddUserFormProps) => 
 
   useEffect(() => {
     if (user) {
-      setFirstName(user.firstName || "");
-      setLastName(user.lastName || "");
+      setFirstName(user?.firstName || "");
+      setLastName(user?.lastName || "");
       setGroup(user.group || "Casual");
       setActive(user.active ?? true);
       setUsername(user.username || "");

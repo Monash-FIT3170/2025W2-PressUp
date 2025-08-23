@@ -1,14 +1,19 @@
- import React, { useState } from "react";
+import React, { useState } from "react";
+
+interface Props {
+  onCategorySelect: (category: string) => void;
+  initialCategory: string;
+}
 
 export const CategoryFilter = ({
   onCategorySelect,
   initialCategory = 'All'
-}) => {
+}: Props) => {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [isOpen, setIsOpen] = useState(false);
   const categories = ['All', 'Food', 'Drink'];
 
-  const handleCategoryChange = (category) => {
+  const handleCategoryChange = (category: string) => {
     const newCategory = category === "None" ? "" : category;
     setSelectedCategory(newCategory);
     onCategorySelect(newCategory);

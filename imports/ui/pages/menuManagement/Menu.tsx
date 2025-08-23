@@ -19,8 +19,8 @@ export const Menu = () => {
   }, [setPageTitle]);
 
   // Subscribe to menu items
-  const isLoadingPosItems = useSubscribe("menuItems");
-  const posItems:MenuItem[] = useTracker(() => MenuItemsCollection.find().fetch());
+  useSubscribe("menuItems");
+  const posItems = useTracker(() => MenuItemsCollection.find().fetch());
 
   // Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -30,7 +30,7 @@ export const Menu = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Category filter state
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   // Allergen filter state
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
@@ -46,7 +46,7 @@ export const Menu = () => {
     setSelectedItem(null);
   };
 
-  const toggleCategory = (category) => {
+  const toggleCategory = (category: string) => {
       if (selectedCategories.includes(category)) {
         setSelectedCategories(selectedCategories.filter((c) => c !== category));
       } else {
@@ -80,7 +80,7 @@ export const Menu = () => {
 
       return (
         Array.isArray(item.allergens) &&
-        selectedAllergens.every(allergen => item.allergens.includes(allergen))
+        selectedAllergens.every(allergen => item.allergens?.includes(allergen))
       );
     });
 
