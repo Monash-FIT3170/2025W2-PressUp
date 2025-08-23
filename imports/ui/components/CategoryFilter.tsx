@@ -7,11 +7,11 @@ interface Props {
 
 export const CategoryFilter = ({
   onCategorySelect,
-  initialCategory = 'All'
+  initialCategory = "All",
 }: Props) => {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [isOpen, setIsOpen] = useState(false);
-  const categories = ['All', 'Food', 'Drink'];
+  const categories = ["All", "Food", "Drink"];
 
   const handleCategoryChange = (category: string) => {
     const newCategory = category === "None" ? "" : category;
@@ -36,13 +36,14 @@ export const CategoryFilter = ({
             {categories.map((option, index) => (
               <button
                 key={index}
-                onClick={() => handleCategoryChange(option) }
+                onClick={() => handleCategoryChange(option)}
                 className={`w-full text-left py-2.5 px-4 transition-all ${
-                  selectedCategory === option ? 'opacity-100' : 'opacity-90'
+                  selectedCategory === option ? "opacity-100" : "opacity-90"
                 }`}
                 style={{
-                  backgroundColor: selectedCategory === option ? '#f7aed9' : 'white',
-                  color: '#a43375'
+                  backgroundColor:
+                    selectedCategory === option ? "#f7aed9" : "white",
+                  color: "#a43375",
                 }}
               >
                 {option}

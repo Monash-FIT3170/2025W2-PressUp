@@ -37,7 +37,7 @@ export const StockPage = () => {
       { sort: { name: 1 } },
     ).fetch();
     const result = [];
-    for (let stockItem of stockItems) {
+    for (const stockItem of stockItems) {
       let supplier: Supplier | null = null;
       if (stockItem.supplier != null) {
         supplier = SuppliersCollection.find({

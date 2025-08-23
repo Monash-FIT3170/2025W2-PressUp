@@ -8,7 +8,11 @@ import { requireLoginMethod } from "../accounts/wrappers";
 import { IdType } from "../database";
 
 Meteor.methods({
-  "purchaseOrders.new": requireLoginMethod(async function ({ supplierId }: { supplierId: IdType }) {
+  "purchaseOrders.new": requireLoginMethod(async function ({
+    supplierId,
+  }: {
+    supplierId: IdType;
+  }) {
     const number = await PurchaseOrdersCollection.countDocuments();
     return await PurchaseOrdersCollection.insertAsync({
       supplier: supplierId,
@@ -34,10 +38,12 @@ Meteor.methods({
       return sum + itemTotal;
     }, 0);
 
-    await PurchaseOrdersCollection.updateAsync(id, { $set: { stockItems, totalCost } });
+    await PurchaseOrdersCollection.updateAsync(id, {
+      $set: { stockItems, totalCost },
+    });
   }),
 
-  'purchaseOrders.getAll': requireLoginMethod(async function () {
-      return PurchaseOrdersCollection.find().fetch();
-    }),
+  "purchaseOrders.getAll": requireLoginMethod(async function () {
+    return PurchaseOrdersCollection.find().fetch();
+  }),
 });

@@ -14,4 +14,6 @@ export interface Shift extends DBEntry {
   end: ShiftTime;
 }
 
-export const ShiftsCollection = new Mongo.Collection<OmitDB<Shift>, Shift>("shifts");
+export const ShiftsCollection = new Mongo.Collection<OmitDB<Shift>, Shift>(
+  "shifts",
+);

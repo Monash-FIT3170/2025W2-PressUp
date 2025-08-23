@@ -30,10 +30,13 @@ const router = createBrowserRouter([
       {
         path: "finance",
         children: [
-          { index: true, Component: () => <Navigate replace to={"profit-loss"} /> },
-          { path: "profit-loss", Component: ProfitLossPage},
-          { path: "tax", Component: TaxPage},
-          { path: "expenses", Component: ExpensesPage},
+          {
+            index: true,
+            Component: () => <Navigate replace to={"profit-loss"} />,
+          },
+          { path: "profit-loss", Component: ProfitLossPage },
+          { path: "tax", Component: TaxPage },
+          { path: "expenses", Component: ExpensesPage },
         ],
       },
       {
@@ -49,7 +52,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, Component: () => <Navigate replace to={"orders"} /> },
           { path: "orders", Component: MainDisplay },
-          { path: "tables", Component: TablesPage }
+          { path: "tables", Component: TablesPage },
         ],
       },
       {
@@ -59,8 +62,8 @@ const router = createBrowserRouter([
       {
         path: "kitchenManagement",
         children: [
-          { index: true, Component: KitchenManagement },    
-          { path: "history", Component: OrderHistoryPage }, 
+          { index: true, Component: KitchenManagement },
+          { path: "history", Component: OrderHistoryPage },
         ],
       },
       {
@@ -70,7 +73,7 @@ const router = createBrowserRouter([
       },
       {
         path: "accounts",
-        Component: UserManagementPage
+        Component: UserManagementPage,
       },
       {
         path: "staff",

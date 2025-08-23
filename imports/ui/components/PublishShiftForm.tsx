@@ -64,8 +64,10 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
             onChange={(e) => setUserId(e.target.value)}
             required
           >
-            {users.map((user) => (
-              <option value={user._id}>{user.username}</option>
+            {users.map((user, i) => (
+              <option value={user._id} key={i}>
+                {user.username}
+              </option>
             ))}
           </Select>
         </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface ConfirmModalProps {
   open: boolean;
@@ -57,4 +57,3 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     </div>
   );
 };
-

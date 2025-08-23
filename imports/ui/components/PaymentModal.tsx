@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from 'react-router';
+import { useNavigate } from "react-router";
 import { Meteor } from "meteor/meteor";
 import { Order } from "/imports/api";
 import { OrderStatus } from "/imports/api/orders/OrdersCollection";
@@ -18,7 +18,9 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
 
   // Update order status
   const updateOrderStatus = () => {
-    if (!order || !order._id) {return;}
+    if (!order || !order._id) {
+      return;
+    }
     const fields = {
       orderStatus: OrderStatus.Served,
       paid: true,
@@ -67,11 +69,11 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
               Cancel
             </button>
             {/* Link to receipt page */}
-              <button
-                onClick={handleConfirm}
-                className="px-4 py-2 bg-press-up-purple text-white font-semibold rounded-lg"
-              >
-                Confirm
+            <button
+              onClick={handleConfirm}
+              className="px-4 py-2 bg-press-up-purple text-white font-semibold rounded-lg"
+            >
+              Confirm
             </button>
           </div>
         </div>

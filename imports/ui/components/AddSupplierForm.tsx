@@ -2,22 +2,21 @@ import { FormEvent, useState, KeyboardEvent } from "react";
 import { Meteor } from "meteor/meteor";
 import { X } from "lucide-react";
 
-
 export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [supplierName, setSupplierName] = useState("");
   const [email, setEmail] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
   const [website, setWebsite] = useState<string>("");
   const [address, setAddress] = useState<string>("");
-  const [goods, setGoods] =  useState<string[]>([]);
-    const [inputValue, setInputValue] = useState('');
+  const [goods, setGoods] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState("");
 
-  // Function to add a new good, when pressing enter, add the good. 
+  // Function to add a new good, when pressing enter, add the good.
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && inputValue.trim() !== '') {
+    if (e.key === "Enter" && inputValue.trim() !== "") {
       e.preventDefault();
       setGoods([...goods, inputValue.trim()]);
-      setInputValue('');
+      setInputValue("");
     }
   };
 
@@ -28,11 +27,9 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
   // Function to validate email
   const validateEmail = (email: string) => {
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return emailRegex.test(email);
-};
-
-
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -46,7 +43,7 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
       !validateEmail(email) ||
       !phone ||
       !website ||
-      !address 
+      !address
     ) {
       alert("Please fill in all fields correctly.");
       return;
@@ -60,7 +57,7 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
         phone: phone,
         website: website,
         address: address,
-        goods: goods
+        goods: goods,
       },
       (error: Meteor.Error | undefined) => {
         if (error) {
@@ -150,38 +147,37 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
             />
           </div>
           <div>
-          <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-            Supplier Goods
-        </label>
-        
-        <div className="flex flex-wrap gap-2 mb-2">
-            {goods.map((good, index) => (
-            <span 
-                key={index} 
-                className="bg-red-400 text-white px-3 py-1 rounded-md flex items-center"
-            >
-                {good}
-                <button 
-                onClick={() => removeGood(index)} 
-                className="ml-2 focus:outline-none"
-                aria-label={`Remove ${good}`}
+            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
+              Supplier Goods
+            </label>
+
+            <div className="flex flex-wrap gap-2 mb-2">
+              {goods.map((good, index) => (
+                <span
+                  key={index}
+                  className="bg-red-400 text-white px-3 py-1 rounded-md flex items-center"
                 >
-                <X size={16} />
-                </button>
-            </span>
-            ))}
-        </div>
-        
-        <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type and press Enter to add"
-            className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-            
-        />
-        </div>
-        
+                  {good}
+                  <button
+                    onClick={() => removeGood(index)}
+                    className="ml-2 focus:outline-none"
+                    aria-label={`Remove ${good}`}
+                  >
+                    <X size={16} />
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            <input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type and press Enter to add"
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+            />
+          </div>
+
           <div className="grid grid-cols-1 p-4">
             <button
               type="submit"

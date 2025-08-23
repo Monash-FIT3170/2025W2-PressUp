@@ -31,7 +31,7 @@ export const AddItemForm = ({ onSuccess, item }: Props) => {
     setQuantity(item ? String(item.quantity) : "");
     setLocation(item?.location ?? "");
 
-    let supplierId = item?.supplier ?? "";
+    const supplierId = item?.supplier ?? "";
     setSupplier(supplierId || null);
     setSelectedValue(supplierId);
   }, [item]);
