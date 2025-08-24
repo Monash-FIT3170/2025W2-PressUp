@@ -6,7 +6,12 @@ import { PosSideMenu } from "../../components/PosSideMenu";
 import { Meteor } from "meteor/meteor";
 import { useState, useEffect } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
-import { Order, OrderStatus } from "/imports/api/orders/OrdersCollection";
+import {
+  Order,
+  OrderStatus,
+  OrderMenuItem,
+} from "/imports/api/orders/OrdersCollection";
+import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { IdType } from "/imports/api/database";
 
 export const MainDisplay = () => {
@@ -63,14 +68,14 @@ export const MainDisplay = () => {
     }
   }, [tables, orders, selectedTable]);
 
-  // Update order status
-  const updateOrderInDb = (updatedFields: Order) => {
+  // Update order status (accept partial updates)
+  const updateOrderInDb = (updatedFields: Partial<Order>) => {
     if (!order || !order._id) return;
     // Always include discount fields if present
     const discountFields = {
-      discountPercent: order.discountPercent || 0,
-      discountAmount: order.discountAmount || 0,
-      originalPrice: order.originalPrice || order.totalPrice || 0,
+      discountPercent: order.discountPercent ?? 0,
+      discountAmount: order.discountAmount ?? 0,
+      originalPrice: order.originalPrice ?? order.totalPrice ?? 0,
     };
     Meteor.call("orders.updateOrder", order._id, {
       ...discountFields,
@@ -80,7 +85,7 @@ export const MainDisplay = () => {
 
   const handleIncrease = (itemId: IdType) => {
     if (!order) return;
-    const updatedItems = order.menuItems.map((i) =>
+    const updatedItems = (order.menuItems as OrderMenuItem[]).map((i) =>
       i._id === itemId ? { ...i, quantity: i.quantity + 1 } : i,
     );
     const newTotal = updatedItems.reduce(
@@ -88,14 +93,13 @@ export const MainDisplay = () => {
       0,
     );
     // Recalculate discounted total if discount is present
+    const dp = order.discountPercent ?? 0;
+    const da = order.discountAmount ?? 0;
     let discountedTotal = newTotal;
-    if ((order.discountPercent || 0) > 0) {
-      discountedTotal =
-        newTotal -
-        newTotal * (order.discountPercent / 100) -
-        (order.discountAmount || 0);
-    } else if ((order.discountAmount || 0) > 0) {
-      discountedTotal = newTotal - order.discountAmount;
+    if (dp > 0) {
+      discountedTotal = newTotal - newTotal * (dp / 100) - da;
+    } else if (da > 0) {
+      discountedTotal = newTotal - da;
     }
     updateOrderInDb({
       menuItems: updatedItems,
@@ -107,23 +111,22 @@ export const MainDisplay = () => {
     });
   };
 
-  const handleDecrease = (itemId) => {
+  const handleDecrease = (itemId: IdType) => {
     if (!order) return;
-    const updatedItems = order.menuItems
+    const updatedItems = (order.menuItems as OrderMenuItem[])
       .map((i) => (i._id === itemId ? { ...i, quantity: i.quantity - 1 } : i))
       .filter((i) => i.quantity > 0);
     const newTotal = updatedItems.reduce(
       (sum, i) => sum + i.quantity * i.price,
       0,
     );
+    const dp = order.discountPercent ?? 0;
+    const da = order.discountAmount ?? 0;
     let discountedTotal = newTotal;
-    if ((order.discountPercent || 0) > 0) {
-      discountedTotal =
-        newTotal -
-        newTotal * (order.discountPercent / 100) -
-        (order.discountAmount || 0);
-    } else if ((order.discountAmount || 0) > 0) {
-      discountedTotal = newTotal - order.discountAmount;
+    if (dp > 0) {
+      discountedTotal = newTotal - newTotal * (dp / 100) - da;
+    } else if (da > 0) {
+      discountedTotal = newTotal - da;
     }
     updateOrderInDb({
       menuItems: updatedItems,
@@ -134,21 +137,22 @@ export const MainDisplay = () => {
     });
   };
 
-  const handleDelete = (itemId) => {
+  const handleDelete = (itemId: IdType) => {
     if (!order) return;
-    const updatedItems = order.menuItems.filter((i) => i._id !== itemId);
+    const updatedItems = (order.menuItems as OrderMenuItem[]).filter(
+      (i) => i._id !== itemId,
+    );
     const newTotal = updatedItems.reduce(
       (sum, i) => sum + i.quantity * i.price,
       0,
     );
+    const dp = order.discountPercent ?? 0;
+    const da = order.discountAmount ?? 0;
     let discountedTotal = newTotal;
-    if ((order.discountPercent || 0) > 0) {
-      discountedTotal =
-        newTotal -
-        newTotal * (order.discountPercent / 100) -
-        (order.discountAmount || 0);
-    } else if ((order.discountAmount || 0) > 0) {
-      discountedTotal = newTotal - order.discountAmount;
+    if (dp > 0) {
+      discountedTotal = newTotal - newTotal * (dp / 100) - da;
+    } else if (da > 0) {
+      discountedTotal = newTotal - da;
     }
     updateOrderInDb({
       menuItems: updatedItems,
@@ -159,7 +163,7 @@ export const MainDisplay = () => {
     });
   };
 
-  const toggleCategory = (category) => {
+  const toggleCategory = (category: string) => {
     if (selectedCategories.includes(category)) {
       setSelectedCategories(selectedCategories.filter((c) => c !== category));
     } else {
@@ -167,35 +171,47 @@ export const MainDisplay = () => {
     }
   };
 
-  const handleItemClick = (item) => {
+  const handleItemClick = (item: MenuItem) => {
     if (!order) return;
-    const existing = order.menuItems.find((i) => i._id === item._id);
+    const existing = (order.menuItems as OrderMenuItem[]).find(
+      (i) => i._id === item._id,
+    );
     let updatedItems;
     if (existing) {
-      updatedItems = order.menuItems.map((i) =>
+      updatedItems = (order.menuItems as OrderMenuItem[]).map((i) =>
         i._id === item._id ? { ...i, quantity: i.quantity + 1 } : i,
       );
     } else {
-      updatedItems = [...order.menuItems, { ...item, quantity: 1 }];
+      // convert MenuItem -> OrderMenuItem shape (keep _id, name, price, ingredients, available, category, image)
+      const newOrderItem: OrderMenuItem = {
+        _id: item._id,
+        name: item.name,
+        quantity: 1,
+        ingredients: item.ingredients || [],
+        available: item.available,
+        price: item.price,
+        category: item.category,
+        image: item.image,
+      };
+      updatedItems = [...(order.menuItems as OrderMenuItem[]), newOrderItem];
     }
     const newTotal = updatedItems.reduce(
       (sum, i) => sum + i.quantity * i.price,
       0,
     );
+    const dp2 = order.discountPercent ?? 0;
+    const da2 = order.discountAmount ?? 0;
     let discountedTotal = newTotal;
-    if ((order.discountPercent || 0) > 0) {
-      discountedTotal =
-        newTotal -
-        newTotal * (order.discountPercent / 100) -
-        (order.discountAmount || 0);
-    } else if ((order.discountAmount || 0) > 0) {
-      discountedTotal = newTotal - order.discountAmount;
+    if (dp2 > 0) {
+      discountedTotal = newTotal - newTotal * (dp2 / 100) - da2;
+    } else if (da2 > 0) {
+      discountedTotal = newTotal - da2;
     }
     updateOrderInDb({
       menuItems: updatedItems,
       totalPrice: parseFloat(discountedTotal.toFixed(2)),
-      discountPercent: order.discountPercent || 0,
-      discountAmount: order.discountAmount || 0,
+      discountPercent: order.discountPercent ?? 0,
+      discountAmount: order.discountAmount ?? 0,
       originalPrice: parseFloat(newTotal.toFixed(2)),
       orderStatus: OrderStatus.Pending,
     });

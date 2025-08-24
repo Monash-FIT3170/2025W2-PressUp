@@ -85,7 +85,7 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
   useEffect(() => {
     setAllRoles(Array.from(new Set(staffShifts.map((s) => s.role))));
     setRoleFilter(allRoles);
-  }, [staffShifts, setRoleFilter]);
+  }, [staffShifts, allRoles]);
 
   // Start with the most recent Monday as the base week
   const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, -1 = prev, +1 = next

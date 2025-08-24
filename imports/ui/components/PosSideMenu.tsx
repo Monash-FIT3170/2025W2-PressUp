@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { MenuItem } from "/imports/api";
+import { OrderMenuItem } from "/imports/api/orders/OrdersCollection";
 import { PaymentModal } from "./PaymentModal";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Order, OrdersCollection } from "/imports/api";
 import { IdType } from "/imports/api/database";
 
 interface PosSideMenuProps {
-  tableNo: number;
-  items: MenuItem[];
+  tableNo: number | null;
+  items: (MenuItem | OrderMenuItem)[];
   total: number;
   orderId?: string;
   onIncrease: (itemId: IdType) => void;
   onDecrease: (itemId: IdType) => void;
   onDelete: (itemId: IdType) => void;
   onUpdateOrder?: (fields: Partial<Order>) => void;
-  selectedTable: number;
+  selectedTable: number | null;
   setSelectedTable: (tableNo: number) => void;
 }
 
@@ -32,7 +33,10 @@ export const PosSideMenu = ({
   // Fetch the current order for this table
   useSubscribe("orders");
   const order = useTracker(
-    () => OrdersCollection.find({ tableNo: selectedTable }).fetch()[0],
+    () =>
+      selectedTable != null
+        ? OrdersCollection.find({ tableNo: selectedTable }).fetch()[0]
+        : undefined,
     [selectedTable],
   );
 
@@ -210,7 +214,7 @@ export const PosSideMenu = ({
       {/* Header */}
       <div className="flex flex-col bg-press-up-purple text-white px-4 py-2 rounded-t-md">
         {/* Toggle buttons */}
-        <div className="flex justify-center gap-2 mb-2">
+        <div className="flex justify-center gap-2 mb-2 relative">
           <button
             onClick={() => setOrderType("dine-in")}
             className={`px-3 py-1 rounded-full font-semibold ${
@@ -261,51 +265,63 @@ export const PosSideMenu = ({
       </div>
       {/* Items */}
       <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
-        {items.map((item) => (
-          <div
-            key={String(item._id)}
-            className="bg-white rounded-md p-3 shadow-sm space-y-2"
-          >
-            {/* Item name */}
-            <div className="text-sm font-semibold text-gray-800">
-              {item.name}
-            </div>
+        {items.map((item, idx) => {
+          // Type guard to detect _id
+          function hasIdProp(x: unknown): x is { _id: IdType } {
+            return (
+              typeof x === "object" &&
+              x !== null &&
+              "_id" in (x as object) &&
+              (x as Record<string, unknown>)["_id"] != null
+            );
+          }
 
-            {/* Controls and price */}
-            <div className="flex items-center justify-between">
-              {/* Quantity controls */}
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => onDecrease(item._id)}
-                  className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
-                >
-                  –
-                </button>
-                <span>{item.quantity}</span>
-                <button
-                  onClick={() => onIncrease(item._id)}
-                  className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
-                >
-                  ＋
-                </button>
-                <button
-                  onClick={() => handleDelete(item._id)}
-                  className="text-red-500 hover:text-red-700 text-lg font-bold"
-                  title="Remove item"
-                >
-                  🗑
-                </button>
+          const itemId = hasIdProp(item) ? item._id : undefined;
+          const qty = item.quantity ?? 1;
+          const price = item.price;
+          const key = itemId ?? `${item.name}-${idx}`;
+
+          return (
+            <div
+              key={String(key)}
+              className="bg-white rounded-md p-3 shadow-sm space-y-2"
+            >
+              <div className="text-sm font-semibold text-gray-800">
+                {item.name}
               </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => itemId && onDecrease(itemId)}
+                    className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
+                    title="Decrease Item"
+                  >
+                    –
+                  </button>
+                  <span className="px-2">{qty}</span>
+                  <button
+                    onClick={() => itemId && onIncrease(itemId)}
+                    className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
+                    title="Increase Item"
+                  >
+                    ＋
+                  </button>
 
-              {/* Price */}
-              <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => itemId && handleDelete(itemId)}
+                    className="text-red-500 hover:text-red-700 text-lg font-bold"
+                    title="Remove Item"
+                  >
+                    🗑
+                  </button>
+                </div>
                 <div className="text-sm font-semibold text-gray-800">
-                  ${(item.price * item.quantity).toFixed(2)}
+                  ${(price * qty).toFixed(2)}
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Footer */}
@@ -541,7 +557,9 @@ export const PosSideMenu = ({
         )}
 
         {/* Pay button */}
-        {order && <PaymentModal tableNo={selectedTable} order={order} />}
+        {order && selectedTable != null && (
+          <PaymentModal tableNo={selectedTable} order={order} />
+        )}
       </div>
     </div>
   );
