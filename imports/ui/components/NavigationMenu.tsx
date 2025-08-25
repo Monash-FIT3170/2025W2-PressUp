@@ -8,27 +8,23 @@ import {
   StockIcon,
   SupplierIcon,
 } from "./symbols/navigation/Inventory";
-import { 
-  MonitorIcon,
-  BookIcon,
-  TableIcon,
-} from "./symbols/navigation/POS";
+import { MonitorIcon, BookIcon, TableIcon } from "./symbols/navigation/POS";
 import { CoffeeIcon } from "./symbols/navigation/Coffee";
-import { Calendar, Clock3Icon, HistoryIcon, Users,  } from "lucide-react";
+import { Calendar, Clock3Icon, HistoryIcon, Users } from "lucide-react";
 
 // Create empty icons, NEED TO FIND ICON
 const FinanceIcon = ({ fill }: { fill: string }) => (
-  <div style={{ width: '24px', height: '24px' }}></div>
+  <div style={{ width: "24px", height: "24px" }}></div>
 );
 const ProfitLossIcon = ({ fill }: { fill: string }) => (
-  <div style={{ width: '24px', height: '24px' }}></div>
+  <div style={{ width: "24px", height: "24px" }}></div>
 );
 const TaxIcon = ({ fill }: { fill: string }) => (
-  <div style={{ width: '24px', height: '24px' }}></div>
+  <div style={{ width: "24px", height: "24px" }}></div>
 );
 
 const ExpensesIcon = ({ fill }: { fill: string }) => (
-  <div style={{ width: '24px', height: '24px' }}></div>
+  <div style={{ width: "24px", height: "24px" }}></div>
 );
 
 interface NavigationMenuProps {
@@ -36,40 +32,39 @@ interface NavigationMenuProps {
 }
 
 export const NavigationMenu = ({ show }: NavigationMenuProps) => {
-
   return (
     <div
       className={`bg-press-up-purple min-h-full transition-all ease-in-out duration-300 ${
         show ? "w-[20vw]" : "w-0"
-      } overflow-hidden`}
+      } overflow-hidden flex flex-col h-screen`}
     >
-      <div className="flex flex-col p-6 text-lg">
+      <div className="flex-1 overflow-y-auto p-6 text-lg">
         <NavigationEntry
-        icon={<FinanceIcon fill="var(--color-press-up-grey)" />}
-        name="Finance"
-        path="/finance"
-        selectionType={NavigationEntrySelection.HIGHLIGHT}
-      >
-        <NavigationEntry
-          icon={<ProfitLossIcon fill="var(--color-press-up-grey)" />}
-          name="P/L Reporting"
-          path="/finance/profit-loss"
-          selectionType={NavigationEntrySelection.ARROW}
-        />
+          icon={<FinanceIcon fill="var(--color-press-up-grey)" />}
+          name="Finance"
+          path="/finance"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        >
+          <NavigationEntry
+            icon={<ProfitLossIcon fill="var(--color-press-up-grey)" />}
+            name="P/L Reporting"
+            path="/finance/profit-loss"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
 
-        <NavigationEntry
-          icon={<TaxIcon fill="var(--color-press-up-grey)" />}
-          name="Tax Management"
-          path="/finance/tax"
-          selectionType={NavigationEntrySelection.ARROW}
-        />
+          <NavigationEntry
+            icon={<TaxIcon fill="var(--color-press-up-grey)" />}
+            name="Tax Management"
+            path="/finance/tax"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
 
-        <NavigationEntry
-          icon={<ExpensesIcon fill="var(--color-press-up-grey)" />}
-          name="Expense Tracking"
-          path="/finance/Expenses"
-          selectionType={NavigationEntrySelection.ARROW}
-        />
+          <NavigationEntry
+            icon={<ExpensesIcon fill="var(--color-press-up-grey)" />}
+            name="Expense Tracking"
+            path="/finance/Expenses"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
         </NavigationEntry>
 
         <NavigationEntry
@@ -127,9 +122,9 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         >
           <NavigationEntry
-            icon={<HistoryIcon />}                  
+            icon={<HistoryIcon />}
             name="Order History"
-            path="/kitchenManagement/history"    
+            path="/kitchenManagement/history"
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>
