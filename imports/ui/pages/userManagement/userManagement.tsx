@@ -9,6 +9,7 @@ import { usePageTitle } from "../../hooks/PageTitleContext";
 import { EditPassword } from "../../components/EditPassword";
 import { Accounts } from "meteor/accounts-base";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { Input } from "../../components/interaction/Input";
 
 export const UserManagementPage = () => {
   const [selectedUsers, setSelectedUsers] = useState<ExtendedUser[]>([]);
@@ -230,7 +231,7 @@ export const UserManagementPage = () => {
             style={{ backgroundColor: "#6f597b" }}
           >
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 type="checkbox"
                 onChange={(e) => {
                   if (e.target.checked) {
@@ -239,7 +240,6 @@ export const UserManagementPage = () => {
                     setSelectedUsers([]);
                   }
                 }}
-                className="rounded"
               />
               <span>First Name</span>
             </div>
@@ -266,9 +266,9 @@ export const UserManagementPage = () => {
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <input
+                    <Input
+                      // checked={isSelected}
                       type="checkbox"
-                      checked={isSelected}
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelectedUsers((prev) => [...prev, user]);
@@ -278,7 +278,6 @@ export const UserManagementPage = () => {
                           );
                         }
                       }}
-                      className="rounded"
                     />
                     <span className="font-medium text-gray-800">
                       {user.profile?.firstName || "Unknown"}
@@ -389,43 +388,39 @@ const AddUserModal = ({
           Add New User
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
+          <Input
             type="text"
             placeholder="First Name"
             value={formData.firstName}
             onChange={(e) =>
               setFormData({ ...formData, firstName: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
-          <input
+          <Input
             type="text"
             placeholder="Last Name"
             value={formData.lastName}
             onChange={(e) =>
               setFormData({ ...formData, lastName: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
-          <input
+          <Input
             type="email"
             placeholder="Email"
             value={formData.email}
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />
           <div className="relative">
-            <input
+            <Input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={formData.password}
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
               }
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               required
             />{" "}
             <button
@@ -535,24 +530,22 @@ const EditUserModal = ({
           Edit User
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
+          <Input
             type="text"
             placeholder="First Name"
             value={formData.firstName}
             onChange={(e) =>
               setFormData({ ...formData, firstName: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />
-          <input
+          <Input
             type="text"
             placeholder="Last Name"
             value={formData.lastName}
             onChange={(e) =>
               setFormData({ ...formData, lastName: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />
           <select
