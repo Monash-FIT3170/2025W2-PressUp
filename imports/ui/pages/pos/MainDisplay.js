@@ -5,22 +5,28 @@ import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 import { PosSideMenu } from "../../components/PosSideMenu";
 import { Meteor } from 'meteor/meteor';
 import { useState, useEffect } from "react";
+import { usePageTitle } from "../../hooks/PageTitleContext";
 import { OrderStatus } from "/imports/api/orders/OrdersCollection";
 
 export const MainDisplay = () => {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedCategories, setSelectedCategories] = useState([]);
-    const [selectedTable, setSelectedTable] = useState(null);
+  const [_, setPageTitle] = usePageTitle();
+    useEffect(() => {
+      setPageTitle("POS System - Orders");
+    }, [setPageTitle]);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedTable, setSelectedTable] = useState(null);
     
-    const isLoadingPosItems = useSubscribe("menuItems");
-    const isLoadingOrders = useSubscribe("orders");
+  const isLoadingPosItems = useSubscribe("menuItems");
+  const isLoadingOrders = useSubscribe("orders");
     const isLoadingTables = useSubscribe("tables");
     
     const tables = useTracker(() => TablesCollection.find().fetch());
     const orders = useTracker(() => OrdersCollection.find().fetch());
-    const posItems = useTracker(() => MenuItemsCollection.find().fetch());
-    // Fetch the current order for the selected table
-    const order = useTracker(() => OrdersCollection.findOne({ tableNo: selectedTable }), [selectedTable]);
+  const posItems = useTracker(() => MenuItemsCollection.find().fetch());
+  // Fetch the current order for the selected table
+  const order = useTracker(() => OrdersCollection.findOne({ tableNo: selectedTable }), [selectedTable]);
 
     const filteredItems = posItems.filter((item) => {
       const matchesName = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -45,17 +51,17 @@ export const MainDisplay = () => {
       }
     }, [tables, orders, selectedTable]);
 
-    // Update order status
-    const updateOrderInDb = (updatedFields) => {
-      if (!order || !order._id) return;
-      // Always include discount fields if present
-      const discountFields = {
-        discountPercent: order.discountPercent || 0,
-        discountAmount: order.discountAmount || 0,
-        originalPrice: order.originalPrice || order.totalPrice || 0,
-      };
-      Meteor.call("orders.updateOrder", order._id, { ...discountFields, ...updatedFields });
+  // Update order status
+  const updateOrderInDb = (updatedFields) => {
+    if (!order || !order._id) return;
+    // Always include discount fields if present
+    const discountFields = {
+      discountPercent: order.discountPercent || 0,
+      discountAmount: order.discountAmount || 0,
+      originalPrice: order.originalPrice || order.totalPrice || 0,
     };
+    Meteor.call("orders.updateOrder", order._id, { ...discountFields, ...updatedFields });
+  };
 
     const handleIncrease = (itemId) => {
       if (!order) return;
@@ -80,55 +86,55 @@ export const MainDisplay = () => {
       });
     };
 
-    const handleDecrease = (itemId) => {
-      if (!order) return;
-      const updatedItems = order.menuItems
-        .map((i) =>
-          i._id === itemId ? { ...i, quantity: i.quantity - 1 } : i
-        )
-        .filter((i) => i.quantity > 0);
-      const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
-      let discountedTotal = newTotal;
-      if ((order.discountPercent || 0) > 0) {
-        discountedTotal = newTotal - (newTotal * (order.discountPercent / 100)) - (order.discountAmount || 0);
-      } else if ((order.discountAmount || 0) > 0) {
-        discountedTotal = newTotal - order.discountAmount;
-      }
-      updateOrderInDb({
-        menuItems: updatedItems,
-        totalPrice: parseFloat(discountedTotal.toFixed(2)),
-        discountPercent: order.discountPercent || 0,
-        discountAmount: order.discountAmount || 0,
-        originalPrice: parseFloat(newTotal.toFixed(2)),
-      });
-    };
+  const handleDecrease = (itemId) => {
+    if (!order) return;
+    const updatedItems = order.menuItems
+      .map((i) =>
+        i._id === itemId ? { ...i, quantity: i.quantity - 1 } : i
+      )
+      .filter((i) => i.quantity > 0);
+    const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
+    let discountedTotal = newTotal;
+    if ((order.discountPercent || 0) > 0) {
+      discountedTotal = newTotal - (newTotal * (order.discountPercent / 100)) - (order.discountAmount || 0);
+    } else if ((order.discountAmount || 0) > 0) {
+      discountedTotal = newTotal - order.discountAmount;
+    }
+    updateOrderInDb({
+      menuItems: updatedItems,
+      totalPrice: parseFloat(discountedTotal.toFixed(2)),
+      discountPercent: order.discountPercent || 0,
+      discountAmount: order.discountAmount || 0,
+      originalPrice: parseFloat(newTotal.toFixed(2)),
+    });
+  };
 
-    const handleDelete = (itemId) => {
-      if (!order) return;
-      const updatedItems = order.menuItems.filter(i => i._id !== itemId);
-      const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
-      let discountedTotal = newTotal;
-      if ((order.discountPercent || 0) > 0) {
-        discountedTotal = newTotal - (newTotal * (order.discountPercent / 100)) - (order.discountAmount || 0);
-      } else if ((order.discountAmount || 0) > 0) {
-        discountedTotal = newTotal - order.discountAmount;
-      }
-      updateOrderInDb({
-        menuItems: updatedItems,
-        totalPrice: parseFloat(discountedTotal.toFixed(2)),
-        discountPercent: order.discountPercent || 0,
-        discountAmount: order.discountAmount || 0,
-        originalPrice: parseFloat(newTotal.toFixed(2)),
-      });
-    };
+  const handleDelete = (itemId) => {
+    if (!order) return;
+    const updatedItems = order.menuItems.filter(i => i._id !== itemId);
+    const newTotal = updatedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
+    let discountedTotal = newTotal;
+    if ((order.discountPercent || 0) > 0) {
+      discountedTotal = newTotal - (newTotal * (order.discountPercent / 100)) - (order.discountAmount || 0);
+    } else if ((order.discountAmount || 0) > 0) {
+      discountedTotal = newTotal - order.discountAmount;
+    }
+    updateOrderInDb({
+      menuItems: updatedItems,
+      totalPrice: parseFloat(discountedTotal.toFixed(2)),
+      discountPercent: order.discountPercent || 0,
+      discountAmount: order.discountAmount || 0,
+      originalPrice: parseFloat(newTotal.toFixed(2)),
+    });
+  };
 
-    const toggleCategory = (category) => {
-      if (selectedCategories.includes(category)) {
-        setSelectedCategories(selectedCategories.filter((c) => c !== category));
-      } else {
-        setSelectedCategories([...selectedCategories, category]);
-      }
-    };
+  const toggleCategory = (category) => {
+    if (selectedCategories.includes(category)) {
+      setSelectedCategories(selectedCategories.filter((c) => c !== category));
+    } else {
+      setSelectedCategories([...selectedCategories, category]);
+    }
+  };
 
     const handleItemClick = (item) => {
       if (!order) return;
