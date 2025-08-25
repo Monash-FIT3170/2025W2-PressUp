@@ -39,9 +39,12 @@ interface LabelProps {
 }
 
 export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
-  ({ children }) => {
+  ({ children }, ref) => {
     return (
-      <label className="text-sm mb-2 font-medium text-red-900 dark:text-white">
+      <label
+        className="text-sm mb-2 font-medium text-red-900 dark:text-white"
+        ref={ref}
+      >
         {children}
       </label>
     );
