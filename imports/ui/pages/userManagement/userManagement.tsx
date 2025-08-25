@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 //import { UserTable } from "/imports/ui/components/UserTable";
-import { ExtendedUser, CreateUserData } from "../../../api/accounts/userTypes";
-import { RoleEnum } from "/imports/api/accounts/roles";
+import { ExtendedUser, CreateUserData } from "/imports/api/accounts/userTypes";
+import { PressUpRole } from "/imports/api/accounts/roles";
 import { Roles } from "meteor/alanning:roles";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { EditPassword } from "../../components/EditPassword";
@@ -34,8 +34,8 @@ export const UserManagementPage = () => {
 
   const canManageUsers = useTracker(() => {
     return Roles.userIsInRoleAsync(Meteor.userId(), [
-      RoleEnum.ADMIN,
-      RoleEnum.MANAGER,
+      PressUpRole.ADMIN,
+      PressUpRole.MANAGER,
     ]);
   }, []);
 
@@ -138,11 +138,11 @@ export const UserManagementPage = () => {
     if (users.length === 0) return;
 
     const csvContent = [
-      ["Name", "Username", "Role", "Status", "Created At"].join(","),
+      ["Name", "Email", "Role", "Status", "Created At"].join(","),
       ...users.map((user) =>
         [
           `"${user.profile?.firstName || ""} ${user.profile?.lastName || ""}"`,
-          `"${user.username || ""}"`,
+          `"${user.emails?.[0]?.address || ""}"`,
           `"${user.roles?.[0] || "No Role"}"`,
           `"${user.status?.online ? "Online" : "Offline"}"`,
           `"${
@@ -371,9 +371,9 @@ const AddUserModal = ({
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    username: "",
+    email: "",
     password: "",
-    role: RoleEnum.CASUAL as RoleEnum,
+    role: PressUpRole.CASUAL as PressUpRole,
   });
   const [showPassword, setShowPassword] = useState(false);
   const handleSubmit = (e: React.FormEvent) => {
@@ -409,7 +409,7 @@ const AddUserModal = ({
             placeholder="Email"
             value={formData.email}
             onChange={(e) =>
-              setFormData({ ...formData, username: e.target.value })
+              setFormData({ ...formData, email: e.target.value })
             }
             required
           />
@@ -434,13 +434,13 @@ const AddUserModal = ({
           <select
             value={formData.role}
             onChange={(e) =>
-              setFormData({ ...formData, role: e.target.value as RoleEnum })
+              setFormData({ ...formData, role: e.target.value as PressUpRole })
             }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <option value={RoleEnum.CASUAL}>Casual</option>
-            <option value={RoleEnum.MANAGER}>Manager</option>
-            <option value={RoleEnum.ADMIN}>Admin</option>
+            <option value={PressUpRole.CASUAL}>Casual</option>
+            <option value={PressUpRole.MANAGER}>Manager</option>
+            <option value={PressUpRole.ADMIN}>Admin</option>
           </select>
           <div className="flex gap-2 pt-4">
             <button
@@ -551,13 +551,13 @@ const EditUserModal = ({
           <select
             value={formData.role}
             onChange={(e) =>
-              setFormData({ ...formData, role: e.target.value as RoleEnum })
+              setFormData({ ...formData, role: e.target.value as PressUpRole })
             }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <option value={RoleEnum.CASUAL}>Casual</option>
-            <option value={RoleEnum.MANAGER}>Manager</option>
-            <option value={RoleEnum.ADMIN}>Admin</option>
+            <option value={PressUpRole.CASUAL}>Casual</option>
+            <option value={PressUpRole.MANAGER}>Manager</option>
+            <option value={PressUpRole.ADMIN}>Admin</option>
           </select>
           <EditPassword
             user={user}

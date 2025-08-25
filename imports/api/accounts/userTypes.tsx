@@ -1,5 +1,5 @@
 import { Meteor } from "meteor/meteor";
-import { RoleEnum } from "./roles";
+import { PressUpRole } from "./roles";
 
 declare module "meteor/meteor" {
   namespace Meteor {
@@ -26,16 +26,16 @@ export interface ExtendedUser extends Meteor.User {
   };
 }
 
-export const UserRoles = RoleEnum;
-export type UserRole = RoleEnum;
+export const UserRoles = PressUpRole;
+export type UserRole = PressUpRole;
 
 // New users
 export interface CreateUserData {
   firstName: string;
   lastName: string;
-  username: string;
+  email: string;
   password: string;
-  role: RoleEnum;
+  role: PressUpRole;
 }
 
 // Update users
