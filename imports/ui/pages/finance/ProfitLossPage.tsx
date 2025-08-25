@@ -10,25 +10,30 @@ import {
   startOfYear,
   subDays,
 } from "date-fns";
-import { Meteor } from "meteor/meteor";
-import { Order, PurchaseOrder } from "/imports/api";
+import { Meteor } from 'meteor/meteor'
+import { Order } from "../../api/orders/orders";
+import { PurchaseOrder } from "../../api/purchaseOrders/PurchaseOrdersCollection";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    CartesianGrid,
+    Label,
+  } from "recharts";
 
 interface FinancialData {
   revenue: {
-    title: string;
-    description: string;
     items: { label: string; amount: number; percentage: number }[];
     total: number;
   };
   expenses: {
-    title: string;
-    description: string;
     items: { label: string; amount: number; percentage: number }[];
     total: number;
   };
   netProfitLoss: {
-    title: string;
-    description: string;
     items: { label: string; amount: number; percentage?: number }[];
   };
 }
@@ -215,20 +220,14 @@ export const ProfitLossPage = () => {
 
       return {
         revenue: {
-          title: "Revenue Breakdown",
-          description: "Detailed breakdown of revenue by category.",
           items: revenueItems,
           total: totalRevenue,
         },
         expenses: {
-          title: "Expenses Breakdown",
-          description: "Detailed breakdown of expenses from purchase orders.",
           items: expenseItems,
           total: totalExpenses,
         },
         netProfitLoss: {
-          title: "Net Profit/Loss",
-          description: "Summary of financial performance.",
           items: [
             { label: "Total Revenue", amount: totalRevenue },
             { label: "Total Expenses", amount: -totalExpenses },
@@ -237,7 +236,6 @@ export const ProfitLossPage = () => {
         },
       };
     },
-    [],
   );
 
   useEffect(() => {
@@ -277,46 +275,44 @@ export const ProfitLossPage = () => {
   }, [setPageTitle, dateRange, processFinancialData]);
 
   if (!financialData) {
-    return (
-      <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        Loading...
-      </div>
-    );
+      return <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   const mainMetrics = [
-    {
-      key: "revenue",
-      title: "Total Revenue",
-      description: financialData.revenue.description,
+    { 
+      key: 'revenue', 
+      title: "Revenue Breakdown",
+      description: "Detailed breakdown of revenue by category.",
+      chartDescription: 'Chart of revenue by category',
       amount: financialData.revenue.total,
-      items: financialData.revenue.items,
+      items: financialData.revenue.items
     },
-    {
-      key: "expenses",
-      title: "Total Expenses",
-      description: financialData.expenses.description,
+    { 
+      key: 'expenses', 
+      title: "Expenses Breakdown",
+      description: "Detailed breakdown of expenses from purchase orders.",
+      chartDescription: 'Chart of expenses from purchase orders',
       amount: financialData.expenses.total,
-      items: financialData.expenses.items,
+      items: financialData.expenses.items
     },
-    {
-      key: "netProfitLoss",
+    { 
+      key: 'netProfitLoss', 
       title: "Net Profit/Loss",
-      description: financialData.netProfitLoss.description,
-      amount:
-        financialData.netProfitLoss.items.find(
-          (i) => i.label === "Net Profit/Loss",
-        )?.amount ?? 0,
-      items: financialData.netProfitLoss.items,
+      description: "Summary of financial performance.",
+      chartDescription: 'Chart summary of financial performance',
+      amount: financialData.netProfitLoss.items.find(i => i.label === 'Net Profit/Loss')?.amount ?? 0,
+      items: financialData.netProfitLoss.items
     },
   ];
 
   const selectedData = mainMetrics.find((m) => m.key === selectedMetric);
 
+  let chartTitle = selectedData.title;
+  let chartDescription = selectedData.chartDescription;
+
   if (!selectedMetric) {
-    return (
-      <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        Data not found.
+    return (<div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+      Data not found.
       </div>
     );
   }
@@ -344,6 +340,35 @@ export const ProfitLossPage = () => {
           />
         ))}
       </div>
+        
+        {/* Graph */}
+        <div className="bg-white md:w-3/5 rounded-xl shadow-lg p-6">
+          <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">{chartTitle}</h2>
+              <p className="text-gray-600">{chartDescription}</p>
+          </div>
+          <div className="space-y-3">
+          <div className="h-80 w-full">
+          <ResponsiveContainer>
+          <BarChart data={selectedData.items}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="label">
+              <Label value="Date" offset={-5} position="insideBottom" />
+              </XAxis>
+              <YAxis>
+              <Label
+                  value="$"
+                  angle={-90}
+                  position="insideLeft"
+                  style={{ textAnchor: "middle" }}
+              />
+              </YAxis>
+              <Tooltip/>
+          </BarChart>
+          </ResponsiveContainer>
+          </div>
+          </div>
+        </div>
 
       {/* Detail Section */}
       <div className="bg-white rounded-xl shadow-lg p-6">
@@ -362,7 +387,7 @@ export const ProfitLossPage = () => {
               amount={item.amount}
               percentage={item.percentage}
             />
-          ))}
+           ))}
         </div>
       </div>
     </div>
