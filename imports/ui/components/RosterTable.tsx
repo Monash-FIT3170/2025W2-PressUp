@@ -1,6 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Shift, ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
 
 // Assign a color to each role for color coding
@@ -81,42 +81,54 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
   }, [shiftsLoading, usersLoading]);
 
   const [allRoles, setAllRoles] = useState<string[]>([]);
-  const [roleFilter, setRoleFilter] = useState<string[]>(allRoles);
+  const [roleFilter, setRoleFilter] = useState<string[]>([]);
+
   useEffect(() => {
-    setAllRoles(Array.from(new Set(staffShifts.map((s) => s.role))));
-    setRoleFilter(allRoles);
-  }, [staffShifts, allRoles]);
+    const newRoles = Array.from(new Set(staffShifts.map((s) => s.role)));
+    setAllRoles(newRoles);
+  }, [staffShifts]);
+
+  useEffect(() => {
+    if (allRoles.length > 0 && roleFilter.length === 0) {
+      setRoleFilter(allRoles);
+    }
+  }, [allRoles, roleFilter.length]);
 
   // Start with the most recent Monday as the base week
   const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, -1 = prev, +1 = next
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Calculate the start and end dates for the current week
-  const weekStart = new Date(baseMonday);
-  weekStart.setDate(weekStart.getDate() + weekOffset * 7);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
+  const weekStart = useMemo(() => {
+    const start = new Date(baseMonday);
+    start.setDate(start.getDate() + weekOffset * 7);
+    return start;
+  }, [baseMonday, weekOffset]);
+
+  const weekEnd = useMemo(() => {
+    const end = new Date(weekStart);
+    end.setDate(weekStart.getDate() + 6);
+    return end;
+  }, [weekStart]);
 
   // Get the date for each day in the week (Monday-Sunday)
-  const weekDates = Array.from({ length: 7 }).map((_, i) => {
-    const d = new Date(weekStart);
-    d.setDate(weekStart.getDate() + i);
-    return d;
-  });
+  const weekDates = useMemo(() => {
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      return d;
+    });
+  }, [weekStart]);
 
-  const filteredShifts = staffShifts.filter((s) => roleFilter.includes(s.role));
-  console.log(roleFilter);
-  console.log(filteredShifts);
+  const filteredShifts = useMemo(() => {
+    return staffShifts.filter((s) => roleFilter.includes(s.role));
+  }, [staffShifts, roleFilter]);
 
   const getShiftForStaffAndDay = (
     staff: { shifts: Shift[]; role: string },
     dayIndex: number,
   ) => {
     const cellDate = weekDates[dayIndex];
-    staff.shifts.forEach((shift) => {
-      console.log(shift.date.toDateString());
-      console.log(cellDate.toDateString());
-    });
     return (
       staff.shifts.find(
         (shift) => shift.date.toDateString() == cellDate.toDateString(),
