@@ -13,7 +13,7 @@ export const AddUserForm = ({ onSuccess, onCancel, user }: AddUserFormProps) => 
   const [lastName, setLastName] = useState("");
   const [group, setGroup] = useState<"Manager" | "Casual">("Casual");
   const [active, setActive] = useState(true);
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +23,7 @@ export const AddUserForm = ({ onSuccess, onCancel, user }: AddUserFormProps) => 
       setLastName(user.lastName || "");
       setGroup(user.group || "Casual");
       setActive(user.active ?? true);
-      setUsername(user.username || "");
+      setEmail(user.email || "");
       setPassword(""); 
     }
   }, [user]);
@@ -32,7 +32,7 @@ export const AddUserForm = ({ onSuccess, onCancel, user }: AddUserFormProps) => 
     e.preventDefault();
     setLoading(true);
 
-    if (!firstName.trim() || !lastName.trim() || !username.trim()) {
+    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
       alert("Please fill in all required fields");
       setLoading(false);
       return;
@@ -49,7 +49,7 @@ export const AddUserForm = ({ onSuccess, onCancel, user }: AddUserFormProps) => 
       lastName: lastName.trim(),
       group,
       active,
-      username: username.trim(),
+      email: email.trim(),
       ...(password && { password }),
     };
 
@@ -103,14 +103,14 @@ export const AddUserForm = ({ onSuccess, onCancel, user }: AddUserFormProps) => 
         </div>
 
         <div>
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-            Username *
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            Email *
           </label>
           <input
-            type="username"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />

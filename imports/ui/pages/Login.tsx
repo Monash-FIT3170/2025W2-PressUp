@@ -75,10 +75,8 @@ export const LoginPage = () => {
             </div>
           )}
 
-          <div className="w-1/2">
-            <Button type="submit" width="full">
-              Log In
-            </Button>
+          <div className="w-1/2 p-2">
+            <Button type="submit" width="full">Log In</Button>
           </div>
         </div>
       </form>

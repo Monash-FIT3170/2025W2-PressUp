@@ -2,10 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 //import { UserTable } from "/imports/ui/components/UserTable";
-import { ExtendedUser, CreateUserData } from "../../../api/accounts/userTypes";
-import { RoleEnum } from "/imports/api/accounts/roles";
+import { ExtendedUser, CreateUserData } from "/imports/api/accounts/userTypes";
+import { PressUpRole } from "/imports/api/accounts/roles";
 import { Roles } from "meteor/alanning:roles";
 import { usePageTitle } from "../../hooks/PageTitleContext";
+import { EditPassword } from "../../components/EditPassword";
+import { Accounts } from "meteor/accounts-base";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { Input } from "../../components/interaction/Input";
 
 export const UserManagementPage = () => {
   const [selectedUsers, setSelectedUsers] = useState<ExtendedUser[]>([]);
@@ -30,8 +34,8 @@ export const UserManagementPage = () => {
 
   const canManageUsers = useTracker(() => {
     return Roles.userIsInRoleAsync(Meteor.userId(), [
-      RoleEnum.ADMIN,
-      RoleEnum.MANAGER,
+      PressUpRole.ADMIN,
+      PressUpRole.MANAGER,
     ]);
   }, []);
 
@@ -69,7 +73,7 @@ export const UserManagementPage = () => {
             alert(`Error updating profile: ${error.message}`);
             return;
           }
-        }
+        },
       );
     }
 
@@ -84,7 +88,7 @@ export const UserManagementPage = () => {
             alert(`Error updating role: ${error.message}`);
             return;
           }
-        }
+        },
       );
     }
 
@@ -96,7 +100,7 @@ export const UserManagementPage = () => {
   const handleDeleteUser = (user: ExtendedUser) => {
     if (
       confirm(
-        `Are you sure you want to delete ${user.profile?.firstName} ${user.profile?.lastName}?`
+        `Are you sure you want to delete ${user.profile?.firstName} ${user.profile?.lastName}?`,
       )
     ) {
       Meteor.call("users.delete", user._id, (error: Meteor.Error) => {
@@ -115,7 +119,7 @@ export const UserManagementPage = () => {
 
     if (
       confirm(
-        `Are you sure you want to delete ${selectedUsers.length} selected user(s)?`
+        `Are you sure you want to delete ${selectedUsers.length} selected user(s)?`,
       )
     ) {
       selectedUsers.forEach((user) => {
@@ -134,11 +138,11 @@ export const UserManagementPage = () => {
     if (users.length === 0) return;
 
     const csvContent = [
-      ["Name", "Username", "Role", "Status", "Created At"].join(","),
+      ["Name", "Email", "Role", "Status", "Created At"].join(","),
       ...users.map((user) =>
         [
           `"${user.profile?.firstName || ""} ${user.profile?.lastName || ""}"`,
-          `"${user.username || ""}"`,
+          `"${user.emails?.[0]?.address || ""}"`,
           `"${user.roles?.[0] || "No Role"}"`,
           `"${user.status?.online ? "Online" : "Offline"}"`,
           `"${
@@ -146,7 +150,7 @@ export const UserManagementPage = () => {
               ? new Date(user.createdAt).toLocaleDateString()
               : "Unknown"
           }"`,
-        ].join(",")
+        ].join(","),
       ),
     ].join("\n");
 
@@ -157,7 +161,7 @@ export const UserManagementPage = () => {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `users_${new Date().toISOString().split("T")[0]}.csv`
+        `users_${new Date().toISOString().split("T")[0]}.csv`,
       );
       link.style.visibility = "hidden";
       document.body.appendChild(link);
@@ -227,7 +231,7 @@ export const UserManagementPage = () => {
             style={{ backgroundColor: "#6f597b" }}
           >
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 type="checkbox"
                 onChange={(e) => {
                   if (e.target.checked) {
@@ -236,7 +240,6 @@ export const UserManagementPage = () => {
                     setSelectedUsers([]);
                   }
                 }}
-                className="rounded"
               />
               <span>First Name</span>
             </div>
@@ -251,7 +254,7 @@ export const UserManagementPage = () => {
           <div className="bg-white">
             {users.slice(0, showEntries).map((user, index) => {
               const isSelected = selectedUsers.some(
-                (selected) => selected._id === user._id
+                (selected) => selected._id === user._id,
               );
               const isCurrentUser = user._id === currentUserId;
 
@@ -263,19 +266,18 @@ export const UserManagementPage = () => {
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <input
+                    <Input
+                      // checked={isSelected}
                       type="checkbox"
-                      checked={isSelected}
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelectedUsers((prev) => [...prev, user]);
                         } else {
                           setSelectedUsers((prev) =>
-                            prev.filter((u) => u._id !== user._id)
+                            prev.filter((u) => u._id !== user._id),
                           );
                         }
                       }}
-                      className="rounded"
                     />
                     <span className="font-medium text-gray-800">
                       {user.profile?.firstName || "Unknown"}
@@ -369,73 +371,76 @@ const AddUserModal = ({
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    username: "",
+    email: "",
     password: "",
-    role: RoleEnum.CASUAL as RoleEnum,
+    role: PressUpRole.CASUAL as PressUpRole,
   });
-
+  const [showPassword, setShowPassword] = useState(false);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg w-96 shadow-2xl">
         <h2 className="text-xl font-bold mb-4" style={{ color: "#1e032e" }}>
           Add New User
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
+          <Input
             type="text"
             placeholder="First Name"
             value={formData.firstName}
             onChange={(e) =>
               setFormData({ ...formData, firstName: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            required
           />
-          <input
+          <Input
             type="text"
             placeholder="Last Name"
             value={formData.lastName}
             onChange={(e) =>
               setFormData({ ...formData, lastName: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            required
           />
-          <input
-            type="username"
-            placeholder="Username"
-            value={formData.username}
+          <Input
+            type="email"
+            placeholder="Email"
+            value={formData.email}
             onChange={(e) =>
-              setFormData({ ...formData, username: e.target.value })
+              setFormData({ ...formData, email: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            required
-          />
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              required
+            />{" "}
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-6 top-6 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
           <select
             value={formData.role}
             onChange={(e) =>
-              setFormData({ ...formData, role: e.target.value as RoleEnum })
+              setFormData({ ...formData, role: e.target.value as PressUpRole })
             }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <option value={RoleEnum.CASUAL}>Casual</option>
-            <option value={RoleEnum.MANAGER}>Manager</option>
-            <option value={RoleEnum.ADMIN}>Admin</option>
+            <option value={PressUpRole.CASUAL}>Casual</option>
+            <option value={PressUpRole.MANAGER}>Manager</option>
+            <option value={PressUpRole.ADMIN}>Admin</option>
           </select>
           <div className="flex gap-2 pt-4">
             <button
@@ -472,58 +477,94 @@ const EditUserModal = ({
   const [formData, setFormData] = useState({
     firstName: user.profile?.firstName || "",
     lastName: user.profile?.lastName || "",
-    role: (user.roles?.[0] as RoleEnum) || RoleEnum.CASUAL,
+    role: (user.roles?.[0] as PressUpRole) || PressUpRole.CASUAL,
+    oldPassword: "",
+    password: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(user._id, {
+    // Update user profile + role
+    await onSubmit(user._id, {
       profile: {
         firstName: formData.firstName,
         lastName: formData.lastName,
       },
       role: formData.role,
     });
+
+    // Only update password if user entered one
+    if (formData.password && formData.password.trim() !== "") {
+      const isSelf = user._id === Meteor.userId();
+
+      if (isSelf) {
+        // User changing their own password
+        Accounts.changePassword(
+          formData.oldPassword,
+          formData.password,
+          (err) => {
+            // callback
+            if (err) alert(`Failed to update password: ${err}`);
+            else console.log("Password updated successfully");
+          },
+        );
+      } else {
+        Meteor.call(
+          "users.updatePassword", // server method
+          user._id, // userId
+          formData.password, // newPassword
+          (err: Meteor.Error) => {
+            // callback
+            if (err) alert(`Failed to update password: ${err}`);
+            else console.log("Password updated successfully");
+          },
+        );
+      }
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg w-96 shadow-2xl">
         <h2 className="text-xl font-bold mb-4" style={{ color: "#1e032e" }}>
           Edit User
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
+          <Input
             type="text"
             placeholder="First Name"
             value={formData.firstName}
             onChange={(e) =>
               setFormData({ ...formData, firstName: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />
-          <input
+          <Input
             type="text"
             placeholder="Last Name"
             value={formData.lastName}
             onChange={(e) =>
               setFormData({ ...formData, lastName: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />
           <select
             value={formData.role}
             onChange={(e) =>
-              setFormData({ ...formData, role: e.target.value as RoleEnum })
+              setFormData({ ...formData, role: e.target.value as PressUpRole })
             }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <option value={RoleEnum.CASUAL}>Casual</option>
-            <option value={RoleEnum.MANAGER}>Manager</option>
-            <option value={RoleEnum.ADMIN}>Admin</option>
+            <option value={PressUpRole.CASUAL}>Casual</option>
+            <option value={PressUpRole.MANAGER}>Manager</option>
+            <option value={PressUpRole.ADMIN}>Admin</option>
           </select>
+          <EditPassword
+            user={user}
+            oldPassword={formData.oldPassword}
+            password={formData.password}
+            setPassword={setFormData}
+          ></EditPassword>
           <div className="flex gap-2 pt-4">
             <button
               type="button"
