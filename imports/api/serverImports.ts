@@ -10,3 +10,11 @@ import "./purchaseOrders/purchaseOrdersPublishing.ts";
 import "./orders/ordersMethods";
 import "./tables/tablesMethods";
 import "./tables/tablesPublishing";
+import "./accounts/userMethods";
+import "./accounts/userPublishing";
+import "./accounts/roles";
+import "/imports/api/shifts/ShiftsPublishing";
+import "/imports/api/shifts/ShiftsMethods";
+
+
+
