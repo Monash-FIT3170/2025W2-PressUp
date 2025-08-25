@@ -4,6 +4,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { ExtendedUser } from "/imports/api/accounts/userTypes";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
+import { Input } from "./interaction/Input";
 
 type UserState = {
   firstName: string;
@@ -39,12 +40,11 @@ export const EditPassword: React.FC<EditPasswordProps> = ({
       </label>
       {isSelf && (
         <div className="my-4 relative">
-          <input
+          <Input
             value={oldPassword}
             onChange={(e) =>
               setPassword((prev) => ({ ...prev, oldPassword: e.target.value }))
             }
-            className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
             placeholder="Old Password"
             type={showOldPassword ? "text" : "password"}
           />
@@ -58,12 +58,11 @@ export const EditPassword: React.FC<EditPasswordProps> = ({
         </div>
       )}
       <div className="relative">
-        <input
+        <Input
           value={password}
           onChange={(e) =>
             setPassword((prev) => ({ ...prev, password: e.target.value }))
           }
-          className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
           placeholder="User Password"
           type={showPassword ? "text" : "password"}
         />
