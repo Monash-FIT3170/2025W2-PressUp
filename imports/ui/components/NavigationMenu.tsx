@@ -22,7 +22,6 @@ const ProfitLossIcon = ({ fill }: { fill: string }) => (
 const TaxIcon = ({ fill }: { fill: string }) => (
   <div style={{ width: "24px", height: "24px" }}></div>
 );
-
 const ExpensesIcon = ({ fill }: { fill: string }) => (
   <div style={{ width: "24px", height: "24px" }}></div>
 );
