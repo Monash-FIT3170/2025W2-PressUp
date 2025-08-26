@@ -10,15 +10,9 @@ import {
 } from "./symbols/navigation/Inventory";
 import { MonitorIcon, BookIcon, TableIcon } from "./symbols/navigation/POS";
 import { CoffeeIcon } from "./symbols/navigation/Coffee";
-import { Calendar, Clock3Icon, HistoryIcon, Users } from "lucide-react";
+import { Calendar, Clipboard, Clock3Icon, DollarSign, HistoryIcon, Users } from "lucide-react";
 
 // Create empty icons, NEED TO FIND ICON
-const FinanceIcon = ({ fill: _fill }: { fill: string }) => (
-  <div style={{ width: "24px", height: "24px" }}></div>
-);
-const ProfitLossIcon = ({ fill: _fill }: { fill: string }) => (
-  <div style={{ width: "24px", height: "24px" }}></div>
-);
 const TaxIcon = ({ fill: _fill }: { fill: string }) => (
   <div style={{ width: "24px", height: "24px" }}></div>
 );
@@ -39,13 +33,13 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
     >
       <div className="flex flex-col p-6 text-lg">
         <NavigationEntry
-          icon={<FinanceIcon fill="var(--color-press-up-grey)" />}
+          icon={<DollarSign />}
           name="Finance"
           path="/finance"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         >
           <NavigationEntry
-            icon={<ProfitLossIcon fill="var(--color-press-up-grey)" />}
+            icon={<Clipboard />}
             name="P/L Reporting"
             path="/finance/profit-loss"
             selectionType={NavigationEntrySelection.ARROW}
