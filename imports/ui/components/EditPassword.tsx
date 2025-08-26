@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { PressUpRole } from "/imports/api/accounts/roles";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { ExtendedUser } from "/imports/api/accounts/userTypes";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { Input } from "./interaction/Input";
@@ -9,13 +7,13 @@ import { Input } from "./interaction/Input";
 type UserState = {
   firstName: string;
   lastName: string;
-  role: PressUpRole;
+  role: string;
   oldPassword: string;
   password: string;
 };
 
 type EditPasswordProps = {
-  user: ExtendedUser;
+  user: Meteor.User;
   oldPassword: string;
   password: string;
   setPassword: React.Dispatch<React.SetStateAction<UserState>>;

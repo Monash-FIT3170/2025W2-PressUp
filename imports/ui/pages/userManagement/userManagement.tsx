@@ -258,9 +258,6 @@ export const UserManagementPage = () => {
           {/* Table Body */}
           <div className="bg-white">
             {users.slice(0, showEntries).map((user, index) => {
-              const isSelected = selectedUsers.some(
-                (selected) => selected._id === user._id,
-              );
               const isCurrentUser = user._id === currentUserId;
 
               return (

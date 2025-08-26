@@ -3,7 +3,6 @@ import { Roles } from "meteor/alanning:roles";
 import { Meteor } from "meteor/meteor";
 import { RoleEnum } from "./roles";
 
-
 export const createDefaultUser = async () => {
   const username =
     process.env.DEFAULT_USERNAME ||
@@ -27,7 +26,7 @@ export const createDefaultUser = async () => {
   }
 
   // Ensure role is set
-  if (!(await Roles.userIsInRoleAsync(user._id, RoleEnum.ADMIN))) {
+  if (user && !(await Roles.userIsInRoleAsync(user._id, RoleEnum.ADMIN))) {
     await Roles.addUsersToRolesAsync(user._id, RoleEnum.ADMIN);
     console.log(`Assigned '${username}' as ADMIN`);
   }
