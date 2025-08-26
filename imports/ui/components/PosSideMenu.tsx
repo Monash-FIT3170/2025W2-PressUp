@@ -1,28 +1,25 @@
-import React , { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { MenuItem } from "/imports/api";
+import { OrderMenuItem } from "/imports/api/orders/OrdersCollection";
 import { PaymentModal } from "./PaymentModal";
-import { Mongo } from "meteor/mongo";
-import { useTracker } from "meteor/react-meteor-data";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Order, OrdersCollection } from "/imports/api";
-
-// Patch: allow originalPrice to be present on order (for discount logic)
-type OrderWithOriginal = Order & { originalPrice?: number };
+import { IdType } from "/imports/api/database";
 
 interface PosSideMenuProps {
-  tableNo: number;
-  items: MenuItem[];
+  tableNo: number | null;
+  items: (MenuItem | OrderMenuItem)[];
   total: number;
   orderId?: string;
-  onIncrease: (itemId: Mongo.ObjectID) => void;
-  onDecrease: (itemId: Mongo.ObjectID) => void;
-  onDelete: (itemId: Mongo.ObjectID) => void;
-  onUpdateOrder?: (fields: any) => void;
-  selectedTable: number;
+  onIncrease: (itemId: IdType) => void;
+  onDecrease: (itemId: IdType) => void;
+  onDelete: (itemId: IdType) => void;
+  onUpdateOrder?: (fields: Partial<Order>) => void;
+  selectedTable: number | null;
   setSelectedTable: (tableNo: number) => void;
 }
 
 export const PosSideMenu = ({
-  tableNo,
   items,
   total,
   orderId,
@@ -34,23 +31,32 @@ export const PosSideMenu = ({
   setSelectedTable,
 }: PosSideMenuProps) => {
   // Fetch the current order for this table
-  const order: OrderWithOriginal | undefined = useTracker(
-    () => OrdersCollection.findOne({ tableNo: selectedTable }),
-    [selectedTable]
+  useSubscribe("orders");
+  const order = useTracker(
+    () =>
+      selectedTable != null
+        ? OrdersCollection.find({ tableNo: selectedTable }).fetch()[0]
+        : undefined,
+    [selectedTable],
   );
 
   // New state for order type (dine-in/takeaway)
   const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
 
   // Discount states
-  const [discountPercent, setDiscountPercent] = useState(order?.discountPercent || 0);
-  const [discountAmount, setDiscountAmount] = useState(order?.discountAmount || 0);
+  const [discountPercent, setDiscountPercent] = useState(
+    order?.discountPercent || 0,
+  );
+  const [discountAmount, setDiscountAmount] = useState(
+    order?.discountAmount || 0,
+  );
   const [openDiscountPopup, setOpenDiscountPopup] = useState(false);
-  const [discountPercent2, setDiscountPercent2] = useState(''); // For the discount % input field
-  const [discountAmount2, setDiscountAmount2] = useState('') // For the discount $ input field
+  const [discountPercent2, setDiscountPercent2] = useState(""); // For the discount % input field
+  const [discountAmount2, setDiscountAmount2] = useState(""); // For the discount $ input field
   const [savedAmount, setSavedAmount] = useState(0);
-  const [discountPopupScreen, setDiscountPopupScreen] =
-    useState<"menu" | "percentage" | "flat">("menu");
+  const [discountPopupScreen, setDiscountPopupScreen] = useState<
+    "menu" | "percentage" | "flat"
+  >("menu");
   const [finalTotal, setFinalTotal] = useState(total);
 
   // Store original price in state, and always use it for discount calculations
@@ -63,15 +69,24 @@ export const PosSideMenu = ({
 
   useEffect(() => {
     // When the order or total changes, update the original price ONLY if this order has no discount
-    if ((order?.discountPercent ?? 0) === 0 && (order?.discountAmount ?? 0) === 0) {
+    if (
+      (order?.discountPercent ?? 0) === 0 &&
+      (order?.discountAmount ?? 0) === 0
+    ) {
       setOriginalPrice(total);
     } else if (order?.originalPrice) {
       setOriginalPrice(order.originalPrice);
     }
-  }, [total, order?._id, order?.originalPrice, order?.discountPercent, order?.discountAmount]);
+  }, [
+    total,
+    order?._id,
+    order?.originalPrice,
+    order?.discountPercent,
+    order?.discountAmount,
+  ]);
 
   useEffect(() => {
-    // Always calculate discounts from originalPrice 
+    // Always calculate discounts from originalPrice
     const paymentTotal =
       originalPrice - originalPrice * (discountPercent / 100) - discountAmount;
     const final = paymentTotal < 0 ? 0 : paymentTotal;
@@ -82,7 +97,8 @@ export const PosSideMenu = ({
 
   // Discount handlers
   const applyPercentDiscount = (percentage: number | string) => {
-    const percent = typeof percentage === "string" ? parseInt(percentage, 10) : percentage;
+    const percent =
+      typeof percentage === "string" ? parseInt(percentage, 10) : percentage;
     if (isNaN(percent) || percent < 1 || percent > 100) return;
     setDiscountPercent(percent);
     setOpenDiscountPopup(false);
@@ -116,7 +132,9 @@ export const PosSideMenu = ({
   };
 
   // Allow 1-100% for discount percentage
-  const handleDiscountPercent2Change = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDiscountPercent2Change = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const discountVal = parseInt(e.target.value, 10);
     if (!isNaN(discountVal) && discountVal >= 1 && discountVal <= 100) {
       setDiscountPercent2(discountVal.toString());
@@ -126,10 +144,13 @@ export const PosSideMenu = ({
   };
 
   // Allow $0.01-max for discount amount
-  const handleDiscountAmount2Change = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDiscountAmount2Change = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const discountVal = e.target.value;
     const num = parseFloat(discountVal);
-    const isValid = !isNaN(num) && num > 0 && /^\d+(\.\d{1,2})?$/.test(discountVal);
+    const isValid =
+      !isNaN(num) && num > 0 && /^\d+(\.\d{1,2})?$/.test(discountVal);
     if (isValid) {
       setDiscountAmount2(discountVal);
     } else {
@@ -157,7 +178,8 @@ export const PosSideMenu = ({
     setDiscountAmount2("");
     setOpenDiscountPopup(false);
     if (onUpdateOrder && orderId) {
-      const discountedTotal = originalPrice - originalPrice * (discountPercent / 100);
+      const discountedTotal =
+        originalPrice - originalPrice * (discountPercent / 100);
       onUpdateOrder({
         discountPercent,
         discountAmount: 0,
@@ -167,15 +189,18 @@ export const PosSideMenu = ({
     }
   };
 
-  const handleDelete = (itemId: Mongo.ObjectID) => {
+  const handleDelete = (itemId: IdType) => {
     onDelete(itemId);
   };
 
   // Fetch unpaid orders for dropdown
   const orders: Order[] = useTracker(
     () =>
-      OrdersCollection.find({ paid: { $ne: true } }, { sort: { tableNo: 1 } }).fetch(),
-    []
+      OrdersCollection.find(
+        { paid: { $ne: true } },
+        { sort: { tableNo: 1 } },
+      ).fetch(),
+    [],
   );
 
   // Table change handler
@@ -189,7 +214,7 @@ export const PosSideMenu = ({
       {/* Header */}
       <div className="flex flex-col bg-press-up-purple text-white px-4 py-2 rounded-t-md">
         {/* Toggle buttons */}
-        <div className="flex justify-center gap-2 mb-2">
+        <div className="flex justify-center gap-2 mb-2 relative">
           <button
             onClick={() => setOrderType("dine-in")}
             className={`px-3 py-1 rounded-full font-semibold ${
@@ -240,52 +265,63 @@ export const PosSideMenu = ({
       </div>
       {/* Items */}
       <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
-        {items.map((item) => (
-          <div
-            key={String(item._id)}
-            className="bg-white rounded-md p-3 shadow-sm space-y-2"
-          >
-            {/* Item name */}
-            <div className="text-sm font-semibold text-gray-800">
-              {item.name}
-            </div>
+        {items.map((item, idx) => {
+          // Type guard to detect _id
+          function hasIdProp(x: unknown): x is { _id: IdType } {
+            return (
+              typeof x === "object" &&
+              x !== null &&
+              "_id" in (x as object) &&
+              (x as Record<string, unknown>)["_id"] != null
+            );
+          }
 
-            {/* Controls and price */}
-            <div className="flex items-center justify-between">
-              {/* Quantity controls */}
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => onDecrease(item._id)}
-                  className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
-                >
-                  –
-                </button>
-                <span>{item.quantity}</span>
-                <button
-                  onClick={() => onIncrease(item._id)}
-                  className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
-                >
-                  ＋
-                </button>
-                <button
-                  onClick={() => handleDelete(item._id)}
-                  className="text-red-500 hover:text-red-700 text-lg font-bold"
-                  title="Remove item"
-                >
-                  🗑
-                </button>
+          const itemId = hasIdProp(item) ? item._id : undefined;
+          const qty = item.quantity ?? 1;
+          const price = item.price;
+          const key = itemId ?? `${item.name}-${idx}`;
 
+          return (
+            <div
+              key={String(key)}
+              className="bg-white rounded-md p-3 shadow-sm space-y-2"
+            >
+              <div className="text-sm font-semibold text-gray-800">
+                {item.name}
               </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => itemId && onDecrease(itemId)}
+                    className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
+                    title="Decrease Item"
+                  >
+                    –
+                  </button>
+                  <span className="px-2">{qty}</span>
+                  <button
+                    onClick={() => itemId && onIncrease(itemId)}
+                    className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
+                    title="Increase Item"
+                  >
+                    ＋
+                  </button>
 
-              {/* Price */}
-              <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => itemId && handleDelete(itemId)}
+                    className="text-red-500 hover:text-red-700 text-lg font-bold"
+                    title="Remove Item"
+                  >
+                    🗑
+                  </button>
+                </div>
                 <div className="text-sm font-semibold text-gray-800">
-                  ${(item.price * item.quantity).toFixed(2)}
+                  ${(price * qty).toFixed(2)}
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Footer */}
@@ -299,17 +335,23 @@ export const PosSideMenu = ({
         {/* Displaying discount infomation*/}
         {discountPercent !== 0 && (
           <div className="flex justify-between items-center mb-2 bg-blue-200 text-black text-sm rounded-lg p-1">
-            <span className="text-sm font-bold">Percent Discount: {discountPercent}%</span>
+            <span className="text-sm font-bold">
+              Percent Discount: {discountPercent}%
+            </span>
           </div>
         )}
         {discountAmount !== 0 && (
           <div className="flex justify-between items-center mb-2 bg-purple-200 text-black text-sm rounded-lg p-1">
-            <span className="text-sm font-bold">Flat Discount: ${discountAmount}</span>
+            <span className="text-sm font-bold">
+              Flat Discount: ${discountAmount}
+            </span>
           </div>
         )}
         {savedAmount !== 0 && (
           <div className="flex justify-between items-center mb-2 bg-yellow-200 text-black text-sm rounded-lg p-1">
-            <span className="text-sm font-bold">Cost Saved: - ${savedAmount.toFixed(2)}</span>
+            <span className="text-sm font-bold">
+              Cost Saved: - ${savedAmount.toFixed(2)}
+            </span>
           </div>
         )}
 
@@ -334,7 +376,9 @@ export const PosSideMenu = ({
             />
             <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-press-up-purple rounded-2xl z-50 shadow-2xl">
               <div className="flex flex-row justify-between mx-5 my-5">
-                <h1 className="font-bold text-2xl text-gray-800">Apply Discount</h1>
+                <h1 className="font-bold text-2xl text-gray-800">
+                  Apply Discount
+                </h1>
                 <button
                   className="bg-red-700 rounded-2xl w-8"
                   onClick={() => {
@@ -513,7 +557,9 @@ export const PosSideMenu = ({
         )}
 
         {/* Pay button */}
-        {order && <PaymentModal tableNo={selectedTable} order={order} />}
+        {order && selectedTable != null && (
+          <PaymentModal tableNo={selectedTable} order={order} />
+        )}
       </div>
     </div>
   );

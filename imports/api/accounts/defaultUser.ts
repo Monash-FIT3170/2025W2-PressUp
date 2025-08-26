@@ -1,7 +1,7 @@
 import { Accounts } from "meteor/accounts-base";
 import { Roles } from "meteor/alanning:roles";
 import { Meteor } from "meteor/meteor";
-import { PressUpRole } from "./roles";
+import { RoleEnum } from "./roles";
 
 
 export const createDefaultUser = async () => {
@@ -27,8 +27,8 @@ export const createDefaultUser = async () => {
   }
 
   // Ensure role is set
-  if (!(await Roles.userIsInRoleAsync(user._id, PressUpRole.ADMIN))) {
-    await Roles.addUsersToRolesAsync(user._id, PressUpRole.ADMIN);
+  if (!(await Roles.userIsInRoleAsync(user._id, RoleEnum.ADMIN))) {
+    await Roles.addUsersToRolesAsync(user._id, RoleEnum.ADMIN);
     console.log(`Assigned '${username}' as ADMIN`);
   }
 };

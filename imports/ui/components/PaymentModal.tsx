@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from 'react-router';
+import { useNavigate } from "react-router";
 import { Meteor } from "meteor/meteor";
 import { Order } from "/imports/api";
 import { OrderStatus } from "/imports/api/orders/OrdersCollection";
@@ -9,7 +9,7 @@ interface PaymentModalProps {
   order: Order;
 }
 
-export const PaymentModal = ({ tableNo, order }: PaymentModalProps) => {
+export const PaymentModal = ({ order }: PaymentModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
@@ -17,16 +17,18 @@ export const PaymentModal = ({ tableNo, order }: PaymentModalProps) => {
   const navigate = useNavigate();
 
   // Update order status
-  const updateOrderStatus = async () => {
-    if (!order || !order._id) {return;}
+  const updateOrderStatus = () => {
+    if (!order || !order._id) {
+      return;
+    }
     const fields = {
       orderStatus: OrderStatus.Served,
       paid: true,
     };
-    await Meteor.call("orders.updateOrder", order._id, { ...fields });
+    Meteor.call("orders.updateOrder", order._id, { ...fields });
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     updateOrderStatus();
     closeModal();
     navigate(`/receipt?orderNo=${order.orderNo}`);
@@ -67,11 +69,11 @@ export const PaymentModal = ({ tableNo, order }: PaymentModalProps) => {
               Cancel
             </button>
             {/* Link to receipt page */}
-              <button
-                onClick={handleConfirm}
-                className="px-4 py-2 bg-press-up-purple text-white font-semibold rounded-lg"
-              >
-                Confirm
+            <button
+              onClick={handleConfirm}
+              className="px-4 py-2 bg-press-up-purple text-white font-semibold rounded-lg"
+            >
+              Confirm
             </button>
           </div>
         </div>

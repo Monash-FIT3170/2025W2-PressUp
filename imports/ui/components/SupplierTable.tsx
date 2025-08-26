@@ -5,16 +5,23 @@ import { SupplierInfo } from "./SupplierInfo";
 import { Modal } from "./Modal";
 import { PurchaseOrderForm } from "./PurchaseOrderForm";
 import { Meteor } from "meteor/meteor";
-import { Mongo } from "meteor/mongo";
+import { IdType } from "/imports/api/database";
 
 interface SupplierTableProps {
   suppliers: Supplier[];
 }
 
 export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [expandedSupplierId, setExpandedSupplierId] = useState<IdType | null>(
+    null,
+  );
+  const [purchaseOrderId, setPurchaseOrderId] = useState<IdType | null>(null);
 
   const toggleExpanded = (supplierId: string) => {
-    setExpandedSupplierId(expandedSupplierId === supplierId ? null : supplierId);
+    setExpandedSupplierId(
+      expandedSupplierId === supplierId ? null : supplierId,
+    );
   };
 
   if (suppliers.length === 0)
@@ -24,17 +31,11 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
       </h2>
     );
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [expandedSupplierId, setExpandedSupplierId] = useState<string | null>(null);
-  const [purchaseOrderId, setPurchaseOrderId] = useState<Mongo.ObjectID>(
-    new Mongo.ObjectID(),
-  );
-
   const onCreatePurchaseOrder = (supplier: Supplier) => {
     Meteor.call(
       "purchaseOrders.new",
       { supplierId: supplier._id },
-      (err: Meteor.Error | undefined, result: Mongo.ObjectID) => {
+      (err: Meteor.Error | undefined, result: IdType) => {
         if (err) {
           console.error(err.reason);
         } else {
@@ -75,7 +76,7 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
                 <span className="truncate max-w-full px-1">
                   {supplier.name}
                 </span>
-                <span 
+                <span
                   className="flex-shrink-0 ml-auto cursor-pointer"
                   onClick={() => toggleExpanded(supplierId)}
                 >
@@ -93,7 +94,6 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
                       {supplier.email}
                     </a>
                     <div>{supplier.phone}</div>
-
                   </div>
                   <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
                 </div>
@@ -101,14 +101,18 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
               <div className="col-span-3 flex flex-wrap relative py-1 px-2">
-                {supplier.goods && supplier.goods.map((good, goodIndex) => (
-                  <span key={goodIndex} className="bg-press-up-purple border-press-up-light-purple text-white rounded-sm text-xs m-1 w-max h-max px-2 py-1 inline-flex items-center">
-                    {good}
-                    <span className="pl-2 ml-auto cursor-pointer">
-                      <Cross height="8px" width="8px" viewBox="0 0 14 14" />
+                {supplier.goods &&
+                  supplier.goods.map((good, goodIndex) => (
+                    <span
+                      key={goodIndex}
+                      className="bg-press-up-purple border-press-up-light-purple text-white rounded-sm text-xs m-1 w-max h-max px-2 py-1 inline-flex items-center"
+                    >
+                      {good}
+                      <span className="pl-2 ml-auto cursor-pointer">
+                        <Cross height="8px" width="8px" viewBox="0 0 14 14" />
+                      </span>
                     </span>
-                  </span>
-                ))}
+                  ))}
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
               <div className="col-span-2 relative py-1 px-2 flex items-center justify-center">
@@ -117,31 +121,34 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
               </div>
               <div className="col-span-2 truncate py-1 px-2 flex items-center justify-center">
                 <button
-                    className="bg-press-up-positive-button rounded-4xl text-white px-4 p-2 cursor-pointer"
-                    onClick={() => onCreatePurchaseOrder(supplier)}
-                  >
-                    Create PO
-                  </button>
+                  className="bg-press-up-positive-button rounded-4xl text-white px-4 p-2 cursor-pointer"
+                  onClick={() => onCreatePurchaseOrder(supplier)}
+                >
+                  Create PO
+                </button>
               </div>
-              
+
               {/* Expandable Supplier Info */}
               {expandedSupplierId === supplier._id?.toString() && (
                 <div className="col-span-15">
                   <SupplierInfo
                     supplier={supplier}
                     isExpanded={true}
-                    onToggle={() => toggleExpanded(supplier._id?.toString() || '')}
+                    onToggle={() =>
+                      toggleExpanded(supplier._id?.toString() || "")
+                    }
                   />
                 </div>
               )}
             </React.Fragment>
           );
         })}
-
       </div>
 
       <Modal open={isOpen} onClose={() => setIsOpen(false)}>
-        {isOpen && <PurchaseOrderForm purchaseOrderId={purchaseOrderId} />}
+        {isOpen && (
+          <PurchaseOrderForm purchaseOrderId={purchaseOrderId ?? ""} />
+        )}
       </Modal>
     </div>
   );

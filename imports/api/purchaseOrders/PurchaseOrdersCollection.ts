@@ -1,20 +1,21 @@
 import { Mongo } from "meteor/mongo";
-import { DBEntry } from "../database";
+import { DBEntry, IdType, OmitDB } from "../database";
 
 export interface StockItemLine {
-  stockItem: Mongo.ObjectID;
+  stockItem: IdType;
   quantity: number;
   cost: number;
 }
 
 export interface PurchaseOrder extends DBEntry {
-  supplier: Mongo.ObjectID;
+  supplier: IdType;
   number: number;
   stockItems: StockItemLine[];
   totalCost: number;
   date: Date;
 }
 
-export const PurchaseOrdersCollection = new Mongo.Collection<PurchaseOrder>(
-  "purchaseOrders",
-);
+export const PurchaseOrdersCollection = new Mongo.Collection<
+  OmitDB<PurchaseOrder>,
+  PurchaseOrder
+>("purchaseOrders");

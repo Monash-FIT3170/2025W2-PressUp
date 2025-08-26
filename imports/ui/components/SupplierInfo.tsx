@@ -16,9 +16,8 @@ interface SupplierInfoProps {
 }
 
 export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
-  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc'>('date-desc');
-  
-  
+  const [sortBy, setSortBy] = useState<"date-desc" | "date-asc">("date-desc");
+
   if (!supplier) return null;
   if (!supplier.name) return null;
   if (!supplier.email) return null;
@@ -27,7 +26,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
   if (!supplier.address) supplier.address = "";
   if (!supplier.website) supplier.website = "";
 
-  // Note: Mock data for orders for Sprint 3 UI ONLY. 
+  // Note: Mock data for orders for Sprint 3 UI ONLY.
   // In sem 2, connect Data from Database, OrdersCollection..
   const orderHistory: Order[] = [
     {
@@ -35,28 +34,28 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
       date: "06/04/2025",
       goods: "Coffee Beans- 1KG",
       quantity: 20,
-      totalCost: 300.00
+      totalCost: 300.0,
     },
     {
       no: 134,
       date: "06/03/2025",
       goods: "Coffee Beans- 1KG",
       quantity: 20,
-      totalCost: 300.00
+      totalCost: 300.0,
     },
     {
       no: 133,
       date: "06/02/2025",
       goods: "Coffee Beans- 1KG",
       quantity: 20,
-      totalCost: 300.00
-    }
+      totalCost: 300.0,
+    },
   ];
 
   const sortedOrders = [...orderHistory].sort((a, b) => {
     const dateA = new Date(a.date).getTime();
     const dateB = new Date(b.date).getTime();
-    return sortBy === 'date-desc' ? dateB - dateA : dateA - dateB;
+    return sortBy === "date-desc" ? dateB - dateA : dateA - dateB;
   });
 
   if (!isExpanded) return null;
@@ -78,7 +77,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
           <div className="space-y-2">
             <div>
               <span className="font-medium text-gray-600">Email:</span>
-              <a 
+              <a
                 href={`mailto:${supplier.email}`}
                 className="ml-2 text-blue-600 hover:underline"
               >
@@ -93,7 +92,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
               {supplier.website && (
                 <div className="mb-2">
                   <span className="font-medium text-gray-600">Website:</span>
-                  <a 
+                  <a
                     href={supplier.website}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -106,9 +105,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
               {supplier.address && (
                 <div>
                   <span className="font-medium text-gray-600">Address:</span>
-                  <div className="ml-2 text-gray-800">
-                    {supplier.address}
-                  </div>
+                  <div className="ml-2 text-gray-800">{supplier.address}</div>
                 </div>
               )}
             </div>
@@ -121,12 +118,13 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
             Supplier Goods
           </h3>
           <ul className="space-y-1">
-            {supplier.goods && supplier.goods.map((good, index) => (
-              <li key={index} className="flex items-center">
-                <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>
-                <span className="text-gray-800">{good}</span>
-              </li>
-            ))}
+            {supplier.goods &&
+              supplier.goods.map((good, index) => (
+                <li key={index} className="flex items-center">
+                  <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>
+                  <span className="text-gray-800">{good}</span>
+                </li>
+              ))}
           </ul>
         </div>
 
@@ -140,7 +138,9 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
               <span className="text-sm text-gray-600">Sort By:</span>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'date-desc' | 'date-asc')}
+                onChange={(e) =>
+                  setSortBy(e.target.value as "date-desc" | "date-asc")
+                }
                 className="text-sm text-blue-600 bg-transparent border-none cursor-pointer"
               >
                 <option value="date-desc">Date (Descending)</option>
@@ -148,16 +148,39 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
               </select>
             </div>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="text-left p-2 font-medium text-white rounded-l" style={{backgroundColor: '#6f597b'}}>No.</th>
-                  <th className="text-left p-2 font-medium text-white" style={{backgroundColor: '#6f597b'}}>Date</th>
-                  <th className="text-left p-2 font-medium text-white" style={{backgroundColor: '#6f597b'}}>Goods</th>
-                  <th className="text-left p-2 font-medium text-white" style={{backgroundColor: '#6f597b'}}>Quantity</th>
-                  <th className="text-left p-2 font-medium text-white rounded-r" style={{backgroundColor: '#6f597b'}}>
+                  <th
+                    className="text-left p-2 font-medium text-white rounded-l"
+                    style={{ backgroundColor: "#6f597b" }}
+                  >
+                    No.
+                  </th>
+                  <th
+                    className="text-left p-2 font-medium text-white"
+                    style={{ backgroundColor: "#6f597b" }}
+                  >
+                    Date
+                  </th>
+                  <th
+                    className="text-left p-2 font-medium text-white"
+                    style={{ backgroundColor: "#6f597b" }}
+                  >
+                    Goods
+                  </th>
+                  <th
+                    className="text-left p-2 font-medium text-white"
+                    style={{ backgroundColor: "#6f597b" }}
+                  >
+                    Quantity
+                  </th>
+                  <th
+                    className="text-left p-2 font-medium text-white rounded-r"
+                    style={{ backgroundColor: "#6f597b" }}
+                  >
                     Total Cost <span className="text-xs">(Inc GST)</span>
                   </th>
                   <th className="text-left p-2 font-medium text-gray-600"></th>
@@ -170,13 +193,16 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                     <td className="p-2 text-gray-800">{order.date}</td>
                     <td className="p-2 text-gray-800">{order.goods}</td>
                     <td className="p-2 text-gray-800">{order.quantity}</td>
-                    <td className="p-2 text-gray-800">${order.totalCost.toFixed(2)}</td>
+                    <td className="p-2 text-gray-800">
+                      ${order.totalCost.toFixed(2)}
+                    </td>
                     <td className="p-2">
-                      <button 
+                      <button
                         className="text-white text-xs px-3 py-1 rounded transition-colors"
-                        style={{ 
-                          backgroundColor: '#6f597b'
-                        }}>
+                        style={{
+                          backgroundColor: "#6f597b",
+                        }}
+                      >
                         Repurchase
                       </button>
                     </td>

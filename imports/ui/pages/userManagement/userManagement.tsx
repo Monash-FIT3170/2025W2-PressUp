@@ -1,43 +1,46 @@
 import React, { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
-import { useTracker } from "meteor/react-meteor-data";
-//import { UserTable } from "/imports/ui/components/UserTable";
-import { ExtendedUser, CreateUserData } from "/imports/api/accounts/userTypes";
-import { PressUpRole } from "/imports/api/accounts/roles";
-import { Roles } from "meteor/alanning:roles";
+// import { Roles } from "meteor/alanning:roles";
+import { RoleEnum } from "/imports/api/accounts/roles";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { CreateUserData } from "../../../api/accounts/userTypes";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { EditPassword } from "../../components/EditPassword";
 import { Accounts } from "meteor/accounts-base";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Input } from "../../components/interaction/Input";
+import { Roles } from "meteor/alanning:roles";
 
 export const UserManagementPage = () => {
-  const [selectedUsers, setSelectedUsers] = useState<ExtendedUser[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<Meteor.User[]>([]);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
-  const [editingUser, setEditingUser] = useState<ExtendedUser | null>(null);
+  const [editingUser, setEditingUser] = useState<Meteor.User | null>(null);
   const [showEntries, setShowEntries] = useState(10);
 
-  const { users, currentUser, isLoading, currentUserId } = useTracker(() => {
+  const { users, currentUserId } = useTracker(() => {
     const usersHandle = Meteor.subscribe("users.all");
     const rolesHandle = Meteor.subscribe("users.roles");
 
+    const users = Meteor.users.find({}, { sort: { createdAt: -1 } }).fetch();
+
     return {
-      users: Meteor.users
-        .find({}, { sort: { createdAt: -1 } })
-        .fetch() as ExtendedUser[],
-      currentUser: Meteor.user() as ExtendedUser,
+      users: users.map((user) => ({
+        ...user,
+        roles: Roles.getRolesForUser(user._id),
+      })),
+      currentUser: Meteor.user(),
       currentUserId: Meteor.userId() || undefined,
       isLoading: !usersHandle.ready() || !rolesHandle.ready(),
     };
   }, []);
 
-  const canManageUsers = useTracker(() => {
+  /* const canManageUsers = useTracker(() => {
     return Roles.userIsInRoleAsync(Meteor.userId(), [
-      PressUpRole.ADMIN,
-      PressUpRole.MANAGER,
+      RoleEnum.ADMIN,
+      RoleEnum.MANAGER,
     ]);
-  }, []);
+  }, []); */
 
   const handleAddUser = (userData: CreateUserData) => {
     Meteor.call("users.create", userData, (error: Meteor.Error) => {
@@ -56,12 +59,15 @@ export const UserManagementPage = () => {
     setPageTitle("User Management");
   }, [setPageTitle]);
 
-  const handleEditUser = (user: ExtendedUser) => {
+  const handleEditUser = (user: Meteor.User) => {
     setEditingUser(user);
     setShowEditUserModal(true);
   };
 
-  const handleUpdateUser = (userId: string, updates: any) => {
+  const handleUpdateUser = (
+    userId: string,
+    updates: Partial<Meteor.User & { role: string }>,
+  ) => {
     // Update profile
     if (updates.profile) {
       Meteor.call(
@@ -97,7 +103,7 @@ export const UserManagementPage = () => {
     alert("User updated successfully!");
   };
 
-  const handleDeleteUser = (user: ExtendedUser) => {
+  const handleDeleteUser = (user: Meteor.User) => {
     if (
       confirm(
         `Are you sure you want to delete ${user.profile?.firstName} ${user.profile?.lastName}?`,
@@ -138,13 +144,12 @@ export const UserManagementPage = () => {
     if (users.length === 0) return;
 
     const csvContent = [
-      ["Name", "Email", "Role", "Status", "Created At"].join(","),
+      ["Name", "Username", "Role", "Created At"].join(","),
       ...users.map((user) =>
         [
           `"${user.profile?.firstName || ""} ${user.profile?.lastName || ""}"`,
-          `"${user.emails?.[0]?.address || ""}"`,
+          `"${user.username || ""}"`,
           `"${user.roles?.[0] || "No Role"}"`,
-          `"${user.status?.online ? "Online" : "Offline"}"`,
           `"${
             user.createdAt
               ? new Date(user.createdAt).toLocaleDateString()
@@ -298,18 +303,6 @@ export const UserManagementPage = () => {
                     )}
                   </div>
 
-                  <div>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.status?.online
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {user.status?.online ? "Yes" : "No"}
-                    </span>
-                  </div>
-
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEditUser(user)}
@@ -371,9 +364,9 @@ const AddUserModal = ({
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    email: "",
+    username: "",
     password: "",
-    role: PressUpRole.CASUAL as PressUpRole,
+    role: RoleEnum.CASUAL as string,
   });
   const [showPassword, setShowPassword] = useState(false);
   const handleSubmit = (e: React.FormEvent) => {
@@ -405,11 +398,11 @@ const AddUserModal = ({
             }
           />
           <Input
-            type="email"
-            placeholder="Email"
-            value={formData.email}
+            type="username"
+            placeholder="Username"
+            value={formData.username}
             onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
+              setFormData({ ...formData, username: e.target.value })
             }
             required
           />
@@ -433,14 +426,12 @@ const AddUserModal = ({
           </div>
           <select
             value={formData.role}
-            onChange={(e) =>
-              setFormData({ ...formData, role: e.target.value as PressUpRole })
-            }
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <option value={PressUpRole.CASUAL}>Casual</option>
-            <option value={PressUpRole.MANAGER}>Manager</option>
-            <option value={PressUpRole.ADMIN}>Admin</option>
+            <option value={RoleEnum.CASUAL}>Casual</option>
+            <option value={RoleEnum.MANAGER}>Manager</option>
+            <option value={RoleEnum.ADMIN}>Admin</option>
           </select>
           <div className="flex gap-2 pt-4">
             <button
@@ -470,14 +461,19 @@ const EditUserModal = ({
   onClose,
   onSubmit,
 }: {
-  user: ExtendedUser;
+  user: Meteor.User;
   onClose: () => void;
-  onSubmit: (userId: string, updates: any) => void;
+  onSubmit: (
+    userId: string,
+    updates: Partial<Meteor.User & { role: string }>,
+  ) => void;
 }) => {
+  useSubscribe("user.roles");
+
   const [formData, setFormData] = useState({
     firstName: user.profile?.firstName || "",
     lastName: user.profile?.lastName || "",
-    role: (user.roles?.[0] as PressUpRole) || PressUpRole.CASUAL,
+    role: Roles.getRolesForUser(user._id)[0] || RoleEnum.CASUAL,
     oldPassword: "",
     password: "",
   });
@@ -550,14 +546,12 @@ const EditUserModal = ({
           />
           <select
             value={formData.role}
-            onChange={(e) =>
-              setFormData({ ...formData, role: e.target.value as PressUpRole })
-            }
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <option value={PressUpRole.CASUAL}>Casual</option>
-            <option value={PressUpRole.MANAGER}>Manager</option>
-            <option value={PressUpRole.ADMIN}>Admin</option>
+            <option value={RoleEnum.CASUAL}>Casual</option>
+            <option value={RoleEnum.MANAGER}>Manager</option>
+            <option value={RoleEnum.ADMIN}>Admin</option>
           </select>
           <EditPassword
             user={user}

@@ -13,17 +13,16 @@ import { CoffeeIcon } from "./symbols/navigation/Coffee";
 import { Calendar, Clock3Icon, HistoryIcon, Users } from "lucide-react";
 
 // Create empty icons, NEED TO FIND ICON
-const FinanceIcon = ({ fill }: { fill: string }) => (
+const FinanceIcon = ({ fill: _fill }: { fill: string }) => (
   <div style={{ width: "24px", height: "24px" }}></div>
 );
-const ProfitLossIcon = ({ fill }: { fill: string }) => (
+const ProfitLossIcon = ({ fill: _fill }: { fill: string }) => (
   <div style={{ width: "24px", height: "24px" }}></div>
 );
-const TaxIcon = ({ fill }: { fill: string }) => (
+const TaxIcon = ({ fill: _fill }: { fill: string }) => (
   <div style={{ width: "24px", height: "24px" }}></div>
 );
-
-const ExpensesIcon = ({ fill }: { fill: string }) => (
+const ExpensesIcon = ({ fill: _fill }: { fill: string }) => (
   <div style={{ width: "24px", height: "24px" }}></div>
 );
 
@@ -177,7 +176,7 @@ const NavigationEntry = ({
 
   useEffect(() => {
     setActive(location.pathname.startsWith(path));
-  }, [location]);
+  }, [location, path]);
 
   const ActiveContent = () => {
     switch (selectionType) {

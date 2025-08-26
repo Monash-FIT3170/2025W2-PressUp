@@ -3,9 +3,12 @@ import { StockItemsCollection } from "./stockItems/StockItemsCollection";
 import { SuppliersCollection } from "./suppliers/SuppliersCollection";
 import { faker } from "@faker-js/faker";
 import { PurchaseOrdersCollection } from "./purchaseOrders/PurchaseOrdersCollection";
-import { OrderMenuItem, OrdersCollection, OrderStatus } from "./orders/OrdersCollection";
+import {
+  OrderMenuItem,
+  OrdersCollection,
+  OrderStatus,
+} from "./orders/OrdersCollection";
 import { TablesCollection } from "./tables/TablesCollection";
-import { Mongo } from "meteor/mongo";
 
 export const possibleImages = [
   "/menu_items/cappuccino.png",
@@ -115,8 +118,6 @@ export const fixedMenuItems = [
 
 export const mockDataGenerator = async ({
   supplierCount,
-  menuItemCount,
-  stockItemCount,
   orderCount,
   purchaseOrderCount,
   tableCount,
@@ -129,25 +130,25 @@ export const mockDataGenerator = async ({
   tableCount?: number;
 }) => {
   supplierCount = supplierCount || 10;
-  menuItemCount = menuItemCount || 20;
-  stockItemCount = stockItemCount || 50;
+  // menuItemCount = menuItemCount || 20;
+  // stockItemCount = stockItemCount || 50;
   orderCount = orderCount || 5;
   purchaseOrderCount = purchaseOrderCount || 10;
   tableCount = tableCount || 10;
 
-  if (await SuppliersCollection.countDocuments() > 0) {
+  if ((await SuppliersCollection.countDocuments()) > 0) {
     await SuppliersCollection.dropCollectionAsync();
   }
-  if (await MenuItemsCollection.countDocuments() > 0) {
+  if ((await MenuItemsCollection.countDocuments()) > 0) {
     await MenuItemsCollection.dropCollectionAsync();
   }
-  if (await StockItemsCollection.countDocuments() > 0) {
+  if ((await StockItemsCollection.countDocuments()) > 0) {
     await StockItemsCollection.dropCollectionAsync();
   }
-  if (await TablesCollection.countDocuments() > 0) {
+  if ((await TablesCollection.countDocuments()) > 0) {
     await TablesCollection.dropCollectionAsync();
   }
-  if (await OrdersCollection.countDocuments() > 0) {
+  if ((await OrdersCollection.countDocuments()) > 0) {
     await OrdersCollection.dropCollectionAsync();
   }
 
@@ -162,7 +163,7 @@ export const mockDataGenerator = async ({
         address: faker.location.streetAddress(),
         goods: Array.from(
           { length: faker.number.int({ min: 1, max: 5 }) },
-          faker.commerce.product
+          faker.commerce.product,
         ),
       });
     }
@@ -177,7 +178,7 @@ export const mockDataGenerator = async ({
   if ((await StockItemsCollection.countDocuments()) === 0) {
     // Gather all unique ingredients from fixedMenuItems
     const allIngredients = Array.from(
-      new Set(fixedMenuItems.flatMap(item => item.ingredients))
+      new Set(fixedMenuItems.flatMap((item) => item.ingredients)),
     );
     for (const ingredient of allIngredients) {
       const randomSupplier = (
@@ -230,11 +231,13 @@ export const mockDataGenerator = async ({
   // Create tables first with no order assigned
   if ((await TablesCollection.countDocuments()) === 0) {
     for (let i = 1; i < tableCount + 1; ++i) {
-      let capacity = faker.number.int({ min: 1, max: 10 });
+      const capacity = faker.number.int({ min: 1, max: 10 });
       // Set 70% occupied, and 30% not occupied
-      let isOccupied = faker.datatype.boolean(0.7) ? true : false;
+      const isOccupied = faker.datatype.boolean(0.7) ? true : false;
       // If occupied, set number of occupants from 1 to max capacity of table, otherwise, zero occupants
-      let noOccupants = isOccupied ? faker.number.int({ min: 1, max: capacity }) : 0;
+      const noOccupants = isOccupied
+        ? faker.number.int({ min: 1, max: capacity })
+        : 0;
 
       await TablesCollection.insertAsync({
         tableNo: i,
@@ -249,22 +252,29 @@ export const mockDataGenerator = async ({
   // Create orders and assign to tableNos
   if ((await OrdersCollection.countDocuments()) === 0) {
     // Fetch all existing table numbers
-    const allTables = await TablesCollection.find({}, { fields: { tableNo: 1 } }).fetch();
+    const allTables = await TablesCollection.find(
+      {},
+      { fields: { tableNo: 1 } },
+    ).fetchAsync();
     const availableTableNos = allTables.map((t) => t.tableNo);
 
     // Shuffle table numbers and get up to orderCount amount
-    const shuffledTableNos = faker.helpers.shuffle(availableTableNos).slice(0, orderCount);
+    const shuffledTableNos = faker.helpers
+      .shuffle(availableTableNos)
+      .slice(0, orderCount);
 
     // Create orders using these table numbers
     for (let i = 0; i < shuffledTableNos.length; ++i) {
       const tableNo = shuffledTableNos[i];
 
       const rawMenuItems = await MenuItemsCollection.rawCollection()
-        .aggregate([{ $sample: { size: faker.number.int({ min: 0, max: 3 }) } }])
+        .aggregate([
+          { $sample: { size: faker.number.int({ min: 0, max: 3 }) } },
+        ])
         .toArray();
 
-      const orderMenuItems: OrderMenuItem[] = rawMenuItems.map((item: any) => ({
-        _id: new Mongo.ObjectID(),
+      const orderMenuItems: OrderMenuItem[] = rawMenuItems.map((item) => ({
+        _id: faker.string.alpha(10),
         name: item.name,
         quantity: faker.number.int({ min: 1, max: 3 }),
         ingredients: item.ingredients ?? [],
@@ -282,8 +292,8 @@ export const mockDataGenerator = async ({
         orderStatus = faker.datatype.boolean(0.5)
           ? OrderStatus.Preparing
           : faker.datatype.boolean(0.3)
-          ? OrderStatus.Ready
-          : OrderStatus.Pending;
+            ? OrderStatus.Ready
+            : OrderStatus.Pending;
       }
 
       // Insert order and get its ID
@@ -293,7 +303,7 @@ export const mockDataGenerator = async ({
         menuItems: orderMenuItems,
         totalPrice: orderMenuItems.reduce(
           (sum, item) => sum + item.price * item.quantity,
-          0
+          0,
         ),
         paid: false,
         orderStatus,
@@ -303,7 +313,7 @@ export const mockDataGenerator = async ({
       // Update the table to reference this order ID
       await TablesCollection.updateAsync(
         { tableNo },
-        { $set: { orderID: String(orderID) } }
+        { $set: { orderID: String(orderID) } },
       );
     }
   }
