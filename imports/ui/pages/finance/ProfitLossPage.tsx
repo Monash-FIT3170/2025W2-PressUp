@@ -23,16 +23,6 @@ import {
     CartesianGrid,
     Label,
   } from "recharts";
-import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    Tooltip,
-    ResponsiveContainer,
-    CartesianGrid,
-    Label,
-  } from "recharts";
 
 interface FinancialData {
   revenue: {
@@ -246,6 +236,7 @@ export const ProfitLossPage = () => {
         },
       };
     },
+    [processOrderData, processPurchaseOrderData]
   );
 
   useEffect(() => {
@@ -291,7 +282,7 @@ export const ProfitLossPage = () => {
   const mainMetrics = [
     { 
       key: 'revenue', 
-      title: "Revenue Breakdown",
+      title: "Revenue",
       description: "Detailed breakdown of revenue by category.",
       chartDescription: 'Chart of revenue by category',
       amount: financialData.revenue.total,
@@ -299,7 +290,7 @@ export const ProfitLossPage = () => {
     },
     { 
       key: 'expenses', 
-      title: "Expenses Breakdown",
+      title: "Expenses",
       description: "Detailed breakdown of expenses from purchase orders.",
       chartDescription: 'Chart of expenses from purchase orders',
       amount: financialData.expenses.total,
