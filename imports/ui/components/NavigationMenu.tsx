@@ -10,15 +10,7 @@ import {
 } from "./symbols/navigation/Inventory";
 import { MonitorIcon, BookIcon, TableIcon } from "./symbols/navigation/POS";
 import { CoffeeIcon } from "./symbols/navigation/Coffee";
-import { Calendar, Clipboard, Clock3Icon, DollarSign, HistoryIcon, Users } from "lucide-react";
-
-// Create empty icons, NEED TO FIND ICON
-const TaxIcon = ({ fill: _fill }: { fill: string }) => (
-  <div style={{ width: "24px", height: "24px" }}></div>
-);
-const ExpensesIcon = ({ fill: _fill }: { fill: string }) => (
-  <div style={{ width: "24px", height: "24px" }}></div>
-);
+import { Calendar, Clipboard, Clock3Icon, DollarSign, Folder, HistoryIcon, PenTool, Users } from "lucide-react";
 
 interface NavigationMenuProps {
   show: boolean;
@@ -46,14 +38,14 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           />
 
           <NavigationEntry
-            icon={<TaxIcon fill="var(--color-press-up-grey)" />}
+            icon={<PenTool/>}
             name="Tax Management"
             path="/finance/tax"
             selectionType={NavigationEntrySelection.ARROW}
           />
 
           <NavigationEntry
-            icon={<ExpensesIcon fill="var(--color-press-up-grey)" />}
+            icon={<Folder/>}
             name="Expense Tracking"
             path="/finance/Expenses"
             selectionType={NavigationEntrySelection.ARROW}
