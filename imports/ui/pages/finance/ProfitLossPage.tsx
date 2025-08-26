@@ -308,7 +308,7 @@ export const ProfitLossPage = () => {
 
   const selectedData = mainMetrics.find((m) => m.key === selectedMetric);
 
-  let chartTitle = selectedData.title;
+  let chartTitle = selectedData.title + " Chart";
   let chartDescription = selectedData.chartDescription;
 
   if (!selectedMetric) {
@@ -341,54 +341,56 @@ export const ProfitLossPage = () => {
           />
         ))}
       </div>
-        
-      {/* Graph */}
-      <div className="bg-white md:w-3/5 rounded-xl shadow-lg p-6">
-        <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">{chartTitle}</h2>
-            <p className="text-gray-600">{chartDescription}</p>
-        </div>
-        <div className="space-y-3">
-        <div className="h-80 w-full">
-        <ResponsiveContainer>
-        <BarChart data={selectedData.items}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="label">
-            <Label value="Date" offset={-5} position="insideBottom" />
-            </XAxis>
-            <YAxis>
-            <Label
-                value="$"
-                angle={-90}
-                position="insideLeft"
-                style={{ textAnchor: "middle" }}
-            />
-            </YAxis>
-            <Tooltip/>
-        </BarChart>
-        </ResponsiveContainer>
-        </div>
-        </div>
-      </div>
 
-      {/* Detail Section */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {selectedData?.title}
-          </h2>
-          <p className="text-gray-600">{selectedData?.description}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">  
+        {/* Graph */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">{chartTitle}</h2>
+              <p className="text-gray-600">{chartDescription}</p>
+          </div>
+          <div className="space-y-3">
+          <div className="h-80 w-full">
+          <ResponsiveContainer>
+          <BarChart data={selectedData.items} key={selectedMetric}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="label">
+              {/* <Label value="Date" offset={-5} position="insideBottom" /> */}
+              </XAxis>
+              <YAxis>
+              <Label
+                  value="$"
+                  angle={-90}
+                  position="insideLeft"
+                  style={{ textAnchor: "middle" }}
+              />
+              </YAxis>
+              <Tooltip/>
+          </BarChart>
+          </ResponsiveContainer>
+          </div>
+          </div>
         </div>
 
-        <div className="space-y-3">
-          {selectedData?.items.map((item, index) => (
-            <DetailItem
-              key={index}
-              label={item.label}
-              amount={item.amount}
-              percentage={item.percentage}
-            />
-           ))}
+        {/* Detail Section */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {selectedData?.title + " Breakdown"}
+            </h2>
+            <p className="text-gray-600">{selectedData?.description}</p>
+          </div>
+
+          <div className="space-y-3">
+            {selectedData?.items.map((item, index) => (
+              <DetailItem
+                key={index}
+                label={item.label}
+                amount={item.amount}
+                percentage={item.percentage}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
