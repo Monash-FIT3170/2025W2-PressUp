@@ -5,6 +5,10 @@ import { RoleEnum } from "/imports/api/accounts/roles";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { CreateUserData } from "../../../api/accounts/userTypes";
 import { usePageTitle } from "../../hooks/PageTitleContext";
+import { EditPassword } from "../../components/EditPassword";
+import { Accounts } from "meteor/accounts-base";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { Input } from "../../components/interaction/Input";
 import { Roles } from "meteor/alanning:roles";
 
 export const UserManagementPage = () => {
@@ -232,7 +236,7 @@ export const UserManagementPage = () => {
             style={{ backgroundColor: "#6f597b" }}
           >
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 type="checkbox"
                 onChange={(e) => {
                   if (e.target.checked) {
@@ -241,7 +245,6 @@ export const UserManagementPage = () => {
                     setSelectedUsers([]);
                   }
                 }}
-                className="rounded"
               />
               <span>First Name</span>
             </div>
@@ -255,9 +258,6 @@ export const UserManagementPage = () => {
           {/* Table Body */}
           <div className="bg-white">
             {users.slice(0, showEntries).map((user, index) => {
-              const isSelected = selectedUsers.some(
-                (selected) => selected._id === user._id,
-              );
               const isCurrentUser = user._id === currentUserId;
 
               return (
@@ -268,9 +268,9 @@ export const UserManagementPage = () => {
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <input
+                    <Input
+                      // checked={isSelected}
                       type="checkbox"
-                      checked={isSelected}
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelectedUsers((prev) => [...prev, user]);
@@ -280,7 +280,6 @@ export const UserManagementPage = () => {
                           );
                         }
                       }}
-                      className="rounded"
                     />
                     <span className="font-medium text-gray-800">
                       {user.profile?.firstName || "Unknown"}
@@ -366,59 +365,62 @@ const AddUserModal = ({
     password: "",
     role: RoleEnum.CASUAL as string,
   });
-
+  const [showPassword, setShowPassword] = useState(false);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg w-96 shadow-2xl">
         <h2 className="text-xl font-bold mb-4" style={{ color: "#1e032e" }}>
           Add New User
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
+          <Input
             type="text"
             placeholder="First Name"
             value={formData.firstName}
             onChange={(e) =>
               setFormData({ ...formData, firstName: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            required
           />
-          <input
+          <Input
             type="text"
             placeholder="Last Name"
             value={formData.lastName}
             onChange={(e) =>
               setFormData({ ...formData, lastName: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            required
           />
-          <input
+          <Input
             type="username"
             placeholder="Username"
             value={formData.username}
             onChange={(e) =>
               setFormData({ ...formData, username: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            required
-          />
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              required
+            />{" "}
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-6 top-6 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
           <select
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
@@ -469,44 +471,74 @@ const EditUserModal = ({
     firstName: user.profile?.firstName || "",
     lastName: user.profile?.lastName || "",
     role: Roles.getRolesForUser(user._id)[0] || RoleEnum.CASUAL,
+    oldPassword: "",
+    password: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(user._id, {
+    // Update user profile + role
+    await onSubmit(user._id, {
       profile: {
         firstName: formData.firstName,
         lastName: formData.lastName,
       },
       role: formData.role,
     });
+
+    // Only update password if user entered one
+    if (formData.password && formData.password.trim() !== "") {
+      const isSelf = user._id === Meteor.userId();
+
+      if (isSelf) {
+        // User changing their own password
+        Accounts.changePassword(
+          formData.oldPassword,
+          formData.password,
+          (err) => {
+            // callback
+            if (err) alert(`Failed to update password: ${err}`);
+            else console.log("Password updated successfully");
+          },
+        );
+      } else {
+        Meteor.call(
+          "users.updatePassword", // server method
+          user._id, // userId
+          formData.password, // newPassword
+          (err: Meteor.Error) => {
+            // callback
+            if (err) alert(`Failed to update password: ${err}`);
+            else console.log("Password updated successfully");
+          },
+        );
+      }
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg w-96 shadow-2xl">
         <h2 className="text-xl font-bold mb-4" style={{ color: "#1e032e" }}>
           Edit User
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
+          <Input
             type="text"
             placeholder="First Name"
             value={formData.firstName}
             onChange={(e) =>
               setFormData({ ...formData, firstName: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />
-          <input
+          <Input
             type="text"
             placeholder="Last Name"
             value={formData.lastName}
             onChange={(e) =>
               setFormData({ ...formData, lastName: e.target.value })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />
           <select
@@ -518,6 +550,12 @@ const EditUserModal = ({
             <option value={RoleEnum.MANAGER}>Manager</option>
             <option value={RoleEnum.ADMIN}>Admin</option>
           </select>
+          <EditPassword
+            user={user}
+            oldPassword={formData.oldPassword}
+            password={formData.password}
+            setPassword={setFormData}
+          ></EditPassword>
           <div className="flex gap-2 pt-4">
             <button
               type="button"
