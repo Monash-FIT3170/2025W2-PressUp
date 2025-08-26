@@ -10,7 +10,16 @@ import {
 } from "./symbols/navigation/Inventory";
 import { MonitorIcon, BookIcon, TableIcon } from "./symbols/navigation/POS";
 import { CoffeeIcon } from "./symbols/navigation/Coffee";
-import { Calendar, Clipboard, Clock3Icon, DollarSign, Folder, HistoryIcon, PenTool, Users } from "lucide-react";
+import {
+  Calendar,
+  Clipboard,
+  Clock3Icon,
+  DollarSign,
+  Folder,
+  HistoryIcon,
+  PenTool,
+  Users,
+} from "lucide-react";
 
 interface NavigationMenuProps {
   show: boolean;
@@ -38,14 +47,14 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           />
 
           <NavigationEntry
-            icon={<PenTool/>}
+            icon={<PenTool />}
             name="Tax Management"
             path="/finance/tax"
             selectionType={NavigationEntrySelection.ARROW}
           />
 
           <NavigationEntry
-            icon={<Folder/>}
+            icon={<Folder />}
             name="Expense Tracking"
             path="/finance/Expenses"
             selectionType={NavigationEntrySelection.ARROW}
