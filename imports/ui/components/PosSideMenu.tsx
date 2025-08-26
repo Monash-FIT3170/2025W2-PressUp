@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { MenuItem } from "/imports/api";
+import { MenuItem, Tables } from "/imports/api";
 import { OrderMenuItem } from "/imports/api/orders/OrdersCollection";
 import { PaymentModal } from "./PaymentModal";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-import { Order, OrdersCollection } from "/imports/api";
+import { Order, OrdersCollection, TablesCollection } from "/imports/api";
 import { IdType } from "/imports/api/database";
 
 interface PosSideMenuProps {
@@ -32,6 +32,7 @@ export const PosSideMenu = ({
 }: PosSideMenuProps) => {
   // Fetch the current order for this table
   useSubscribe("orders");
+  useSubscribe("tables");
   const order = useTracker(
     () =>
       selectedTable != null
@@ -202,6 +203,11 @@ export const PosSideMenu = ({
       ).fetch(),
     [],
   );
+
+  const tables: Tables[] = useTracker(
+  () => TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch(),
+  [],
+);
 
   // Table change handler
   const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
