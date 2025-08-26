@@ -23,6 +23,16 @@ import {
     CartesianGrid,
     Label,
   } from "recharts";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    CartesianGrid,
+    Label,
+  } from "recharts";
 
 interface FinancialData {
   revenue: {
@@ -341,34 +351,34 @@ export const ProfitLossPage = () => {
         ))}
       </div>
         
-        {/* Graph */}
-        <div className="bg-white md:w-3/5 rounded-xl shadow-lg p-6">
-          <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">{chartTitle}</h2>
-              <p className="text-gray-600">{chartDescription}</p>
-          </div>
-          <div className="space-y-3">
-          <div className="h-80 w-full">
-          <ResponsiveContainer>
-          <BarChart data={selectedData.items}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="label">
-              <Label value="Date" offset={-5} position="insideBottom" />
-              </XAxis>
-              <YAxis>
-              <Label
-                  value="$"
-                  angle={-90}
-                  position="insideLeft"
-                  style={{ textAnchor: "middle" }}
-              />
-              </YAxis>
-              <Tooltip/>
-          </BarChart>
-          </ResponsiveContainer>
-          </div>
-          </div>
+      {/* Graph */}
+      <div className="bg-white md:w-3/5 rounded-xl shadow-lg p-6">
+        <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">{chartTitle}</h2>
+            <p className="text-gray-600">{chartDescription}</p>
         </div>
+        <div className="space-y-3">
+        <div className="h-80 w-full">
+        <ResponsiveContainer>
+        <BarChart data={selectedData.items}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="label">
+            <Label value="Date" offset={-5} position="insideBottom" />
+            </XAxis>
+            <YAxis>
+            <Label
+                value="$"
+                angle={-90}
+                position="insideLeft"
+                style={{ textAnchor: "middle" }}
+            />
+            </YAxis>
+            <Tooltip/>
+        </BarChart>
+        </ResponsiveContainer>
+        </div>
+        </div>
+      </div>
 
       {/* Detail Section */}
       <div className="bg-white rounded-xl shadow-lg p-6">
