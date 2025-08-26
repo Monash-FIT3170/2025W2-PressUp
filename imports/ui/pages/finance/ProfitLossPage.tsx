@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { FinanceDateFilter } from "../../components/FinanceDateFilter";
@@ -44,7 +44,7 @@ interface DetailItemProps {
   percentage?: number;
 }
 
-const DetailItem = ({ label, amount, percentage }: DetailItemProps) => {
+const DetailItem = React.memo(({ label, amount, percentage }: DetailItemProps) => {
   const isPositive = amount > 0;
   const sign = amount < 0 ? "-" : "";
 
@@ -68,7 +68,7 @@ const DetailItem = ({ label, amount, percentage }: DetailItemProps) => {
       </div>
     </div>
   );
-};
+});
 
 export const ProfitLossPage = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -140,7 +140,7 @@ export const ProfitLossPage = () => {
   };
 
   // Calculates revenue
-  const processOrderData = (
+  const processOrderData = useCallback((
     orders: Order[],
   ): {
     revenue: number;
@@ -179,10 +179,10 @@ export const ProfitLossPage = () => {
     }));
 
     return { revenue: totalRevenue, revenueItems };
-  };
+  });
 
   // Calculates expenses
-  const processPurchaseOrderData = (
+  const processPurchaseOrderData = useCallback((
     purchaseOrders: PurchaseOrder[],
   ): {
     expenses: number;
@@ -208,7 +208,7 @@ export const ProfitLossPage = () => {
     }));
 
     return { expenses: totalExpenses, expenseItems };
-  };
+  });
 
   const processFinancialData = useCallback(
     (orders: Order[], purchaseOrders: PurchaseOrder[]): FinancialData => {
@@ -240,7 +240,7 @@ export const ProfitLossPage = () => {
   );
 
   useEffect(() => {
-    setPageTitle("Finance - Profit Loss Page");
+    setPageTitle("Finance - Profit Loss");
 
     const fetchOrders = async () => {
       try {
@@ -275,47 +275,58 @@ export const ProfitLossPage = () => {
     fetchOrders();
   }, [setPageTitle, dateRange, processFinancialData]);
 
-  if (!financialData) {
-      return <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">Loading...</div>;
-  }
+  const mainMetrics = useMemo(() => {
+    if (!financialData) return []; 
+  
+    return [
+      { 
+        key: 'revenue', 
+        title: "Revenue",
+        description: "Detailed breakdown of revenue by category.",
+        chartDescription: 'Chart of revenue by category',
+        amount: financialData.revenue.total,
+        items: financialData.revenue.items
+      },
+      { 
+        key: 'expenses', 
+        title: "Expenses",
+        description: "Detailed breakdown of expenses from purchase orders.",
+        chartDescription: 'Chart of expenses from purchase orders',
+        amount: financialData.expenses.total,
+        items: financialData.expenses.items
+      },
+      { 
+        key: 'netProfitLoss', 
+        title: "Net Profit/Loss",
+        description: "Summary of financial performance.",
+        chartDescription: 'Chart summary of financial performance',
+        amount: financialData.netProfitLoss.items.find(i => i.label === 'Net Profit/Loss')?.amount ?? 0,
+        items: financialData.netProfitLoss.items
+      },
+    ];
+  }, [financialData]);
 
-  const mainMetrics = [
-    { 
-      key: 'revenue', 
-      title: "Revenue",
-      description: "Detailed breakdown of revenue by category.",
-      chartDescription: 'Chart of revenue by category',
-      amount: financialData.revenue.total,
-      items: financialData.revenue.items
-    },
-    { 
-      key: 'expenses', 
-      title: "Expenses",
-      description: "Detailed breakdown of expenses from purchase orders.",
-      chartDescription: 'Chart of expenses from purchase orders',
-      amount: financialData.expenses.total,
-      items: financialData.expenses.items
-    },
-    { 
-      key: 'netProfitLoss', 
-      title: "Net Profit/Loss",
-      description: "Summary of financial performance.",
-      chartDescription: 'Chart summary of financial performance',
-      amount: financialData.netProfitLoss.items.find(i => i.label === 'Net Profit/Loss')?.amount ?? 0,
-      items: financialData.netProfitLoss.items
-    },
-  ];
+  const selectedData = useMemo(() => 
+    mainMetrics.find((m) => m.key === selectedMetric),
+    [mainMetrics, selectedMetric]
+  );
 
-  const selectedData = mainMetrics.find((m) => m.key === selectedMetric);
-
-  let chartTitle = selectedData.title + " Chart";
-  let chartDescription = selectedData.chartDescription;
+  let chartTitle = selectedData?.title + " Chart";
+  let chartDescription = selectedData?.chartDescription;
+  const chartData = useMemo(
+    () => [...(selectedData?.items ?? [])], 
+    [selectedData]
+  );
 
   if (!selectedMetric) {
     return (<div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
       Data not found.
       </div>
     );
+  }
+
+  if (!financialData) {
+      return <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   return (
@@ -346,27 +357,47 @@ export const ProfitLossPage = () => {
         {/* Graph */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">{chartTitle}</h2>
-              <p className="text-gray-600">{chartDescription}</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                {chartTitle}
+              </h2>
+              <p className="text-gray-600">
+                {chartDescription}
+              </p>
           </div>
           <div className="space-y-3">
           <div className="h-80 w-full">
           <ResponsiveContainer>
-          <BarChart data={selectedData.items} key={selectedMetric}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="label">
-              {/* <Label value="Date" offset={-5} position="insideBottom" /> */}
-              </XAxis>
-              <YAxis>
-              <Label
-                  value="$"
-                  angle={-90}
-                  position="insideLeft"
-                  style={{ textAnchor: "middle" }}
-              />
-              </YAxis>
-              <Tooltip/>
-          </BarChart>
+            <BarChart 
+              data={chartData}
+              layout="vertical"
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <YAxis 
+                dataKey="label"
+                type="category"
+                width={150} 
+                >
+                  {/* <Label value="Date" offset={-5} position="insideBottom" /> */}
+                </YAxis>
+                <XAxis
+                type="number"
+                >
+                  <Label
+                      value = "Amount ($)"
+                      position = "insideBottom"
+                      offset = {-5}
+                      style = {{ textAnchor: "middle" }}
+                  />
+                </XAxis>
+                <Tooltip/>
+
+                <Bar 
+                  dataKey = "amount" 
+                  fill = "#6f597b"
+                  name = "Amount" 
+                  isAnimationActive = {false}
+                />
+            </BarChart>
           </ResponsiveContainer>
           </div>
           </div>
