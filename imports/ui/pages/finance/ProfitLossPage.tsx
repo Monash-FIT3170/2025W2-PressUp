@@ -10,19 +10,19 @@ import {
   startOfYear,
   subDays,
 } from "date-fns";
-import { Meteor } from 'meteor/meteor'
-import { Order } from "../../api/orders/orders";
-import { PurchaseOrder } from "../../api/purchaseOrders/PurchaseOrdersCollection";
+import { Meteor } from "meteor/meteor";
+import { Order, OrderMenuItem } from "/imports/api/orders/OrdersCollection";
+import { PurchaseOrder } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
 import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    Tooltip,
-    ResponsiveContainer,
-    CartesianGrid,
-    Label,
-  } from "recharts";
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Label,
+} from "recharts";
 
 interface FinancialData {
   revenue: {
@@ -44,31 +44,36 @@ interface DetailItemProps {
   percentage?: number;
 }
 
-const DetailItem = React.memo(({ label, amount, percentage }: DetailItemProps) => {
-  const isPositive = amount > 0;
-  const sign = amount < 0 ? "-" : "";
+export const DetailItem = React.memo(
+  ({ label, amount, percentage }: DetailItemProps) => {
+    const isPositive = amount > 0;
+    const sign = amount < 0 ? "-" : "";
 
-  return (
-    <div className="flex justify-between items-center py-3 px-4 bg-white rounded-lg shadow-sm border border-gray-100">
-      <div className="flex-1">
-        <span className="font-medium text-gray-800">{label}</span>
-        {percentage && (
-          <span className="ml-2 text-sm text-gray-500">
-            ({percentage.toFixed(2)}% of total)
-          </span>
-        )}
+    return (
+      <div className="flex justify-between items-center py-3 px-4 bg-white rounded-lg shadow-sm border border-gray-100">
+        <div className="flex-1">
+          <span className="font-medium text-gray-800">{label}</span>
+          {percentage && (
+            <span className="ml-2 text-sm text-gray-500">
+              ({percentage.toFixed(2)}% of total)
+            </span>
+          )}
+        </div>
+        <div
+          className={`font-semibold text-lg ${
+            isPositive ? "text-green-700" : "text-red-700"
+          }`}
+        >
+          ${sign}
+          {Math.abs(amount).toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+          })}
+        </div>
       </div>
-      <div
-        className={`font-semibold text-lg ${
-          isPositive ? "text-green-700" : "text-red-700"
-        }`}
-      >
-        ${sign}
-        {Math.abs(amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-      </div>
-    </div>
-  );
-});
+    );
+  },
+);
+DetailItem.displayName = "DetailItem";
 
 export const ProfitLossPage = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -140,75 +145,82 @@ export const ProfitLossPage = () => {
   };
 
   // Calculates revenue
-  const processOrderData = useCallback((
-    orders: Order[],
-  ): {
-    revenue: number;
-    revenueItems: { label: string; amount: number; percentage: number }[];
-  } => {
-    const revenueByCat: { [key: string]: number } = {};
+  const processOrderData = useCallback(
+    (
+      orders: Order[],
+    ): {
+      revenue: number;
+      revenueItems: { label: string; amount: number; percentage: number }[];
+    } => {
+      const revenueByCat: { [key: string]: number } = {};
 
-    let totalRevenue = 0;
+      let totalRevenue = 0;
 
-    orders.forEach((order) => {
-      if (!order.paid) return;
+      orders.forEach((order) => {
+        if (!order.paid) return;
 
-      let orderRevenue = 0;
+        let orderRevenue = 0;
 
-      order.menuItems.forEach((menuItem) => {
-        const itemRevenue = menuItem.price * menuItem.quantity;
+        order.menuItems.forEach((menuItem: OrderMenuItem) => {
+          const itemRevenue = menuItem.price * menuItem.quantity;
 
-        orderRevenue += itemRevenue; // prevents double counting
+          orderRevenue += itemRevenue; // prevents double counting
 
-        const categories =
-          menuItem.category && menuItem.category.length > 0
-            ? menuItem.category
-            : ["uncategorized"];
+          const categories =
+            menuItem.category && menuItem.category.length > 0
+              ? menuItem.category
+              : ["uncategorized"];
 
-        categories.forEach((category) => {
-          revenueByCat[category] = (revenueByCat[category] || 0) + itemRevenue;
+          categories.forEach((category: string) => {
+            revenueByCat[category] =
+              (revenueByCat[category] || 0) + itemRevenue;
+          });
         });
+        totalRevenue += orderRevenue;
       });
-      totalRevenue += orderRevenue;
-    });
 
-    const revenueItems = Object.keys(revenueByCat).map((category) => ({
-      label: category,
-      amount: revenueByCat[category],
-      percentage: (revenueByCat[category] / totalRevenue) * 100,
-    }));
+      const revenueItems = Object.keys(revenueByCat).map((category) => ({
+        label: category,
+        amount: revenueByCat[category],
+        percentage: (revenueByCat[category] / totalRevenue) * 100,
+      }));
 
-    return { revenue: totalRevenue, revenueItems };
-  });
+      return { revenue: totalRevenue, revenueItems };
+    },
+    [],
+  );
 
   // Calculates expenses
-  const processPurchaseOrderData = useCallback((
-    purchaseOrders: PurchaseOrder[],
-  ): {
-    expenses: number;
-    expenseItems: { label: string; amount: number; percentage: number }[];
-  } => {
-    const expensesBySupplier: { [key: string]: number } = {};
-    let totalExpenses = 0;
+  const processPurchaseOrderData = useCallback(
+    (
+      purchaseOrders: PurchaseOrder[],
+    ): {
+      expenses: number;
+      expenseItems: { label: string; amount: number; percentage: number }[];
+    } => {
+      const expensesBySupplier: { [key: string]: number } = {};
+      let totalExpenses = 0;
 
-    purchaseOrders.forEach((purchaseOrder) => {
-      const orderCost = purchaseOrder.totalCost;
-      totalExpenses += orderCost;
+      purchaseOrders.forEach((purchaseOrder) => {
+        const orderCost = purchaseOrder.totalCost;
+        totalExpenses += orderCost;
 
-      const supplierKey =
-        purchaseOrder.supplier?.toString() || "Unknown Supplier"; // replace toString with .name when ids and names correctly match in database
-      expensesBySupplier[supplierKey] =
-        (expensesBySupplier[supplierKey] || 0) + orderCost;
-    });
+        const supplierKey =
+          purchaseOrder.supplier?.toString() || "Unknown Supplier"; // replace toString with .name when ids and names correctly match in database
+        expensesBySupplier[supplierKey] =
+          (expensesBySupplier[supplierKey] || 0) + orderCost;
+      });
 
-    const expenseItems = Object.keys(expensesBySupplier).map((supplier) => ({
-      label: supplier,
-      amount: expensesBySupplier[supplier],
-      percentage: (expensesBySupplier[supplier] / totalExpenses) * 100,
-    }));
+      const expenseItems = Object.keys(expensesBySupplier).map((supplier) => ({
+        label: supplier,
+        amount: expensesBySupplier[supplier],
+        percentage: (expensesBySupplier[supplier] / totalExpenses) * 100,
+      }));
 
-    return { expenses: totalExpenses, expenseItems };
-  });
+      return { expenses: totalExpenses, expenseItems };
+    },
+    [],
+  );
 
   const processFinancialData = useCallback(
     (orders: Order[], purchaseOrders: PurchaseOrder[]): FinancialData => {
@@ -236,7 +248,7 @@ export const ProfitLossPage = () => {
         },
       };
     },
-    [processOrderData, processPurchaseOrderData]
+    [processOrderData, processPurchaseOrderData],
   );
 
   useEffect(() => {
@@ -276,57 +288,65 @@ export const ProfitLossPage = () => {
   }, [setPageTitle, dateRange, processFinancialData]);
 
   const mainMetrics = useMemo(() => {
-    if (!financialData) return []; 
-  
+    if (!financialData) return [];
+
     return [
-      { 
-        key: 'revenue', 
+      {
+        key: "revenue",
         title: "Revenue",
         description: "Detailed breakdown of revenue by category.",
-        chartDescription: 'Chart of revenue by category',
+        chartDescription: "Chart of revenue by category",
         amount: financialData.revenue.total,
-        items: financialData.revenue.items
+        items: financialData.revenue.items,
       },
-      { 
-        key: 'expenses', 
+      {
+        key: "expenses",
         title: "Expenses",
         description: "Detailed breakdown of expenses from purchase orders.",
-        chartDescription: 'Chart of expenses from purchase orders',
+        chartDescription: "Chart of expenses from purchase orders",
         amount: financialData.expenses.total,
-        items: financialData.expenses.items
+        items: financialData.expenses.items,
       },
-      { 
-        key: 'netProfitLoss', 
+      {
+        key: "netProfitLoss",
         title: "Net Profit/Loss",
         description: "Summary of financial performance.",
-        chartDescription: 'Chart summary of financial performance',
-        amount: financialData.netProfitLoss.items.find(i => i.label === 'Net Profit/Loss')?.amount ?? 0,
-        items: financialData.netProfitLoss.items
+        chartDescription: "Chart summary of financial performance",
+        amount:
+          financialData.netProfitLoss.items.find(
+            (i) => i.label === "Net Profit/Loss",
+          )?.amount ?? 0,
+        items: financialData.netProfitLoss.items,
       },
     ];
   }, [financialData]);
 
-  const selectedData = useMemo(() => 
-    mainMetrics.find((m) => m.key === selectedMetric),
-    [mainMetrics, selectedMetric]
+  const selectedData = useMemo(
+    () => mainMetrics.find((m) => m.key === selectedMetric),
+    [mainMetrics, selectedMetric],
   );
 
-  let chartTitle = selectedData?.title + " Chart";
-  let chartDescription = selectedData?.chartDescription;
+  const chartTitle = selectedData?.title + " Chart";
+  const chartDescription = selectedData?.chartDescription;
   const chartData = useMemo(
-    () => [...(selectedData?.items ?? [])], 
-    [selectedData]
+    () => [...(selectedData?.items ?? [])],
+    [selectedData],
   );
 
   if (!selectedMetric) {
-    return (<div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-      Data not found.
+    return (
+      <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        Data not found.
       </div>
     );
   }
 
   if (!financialData) {
-      return <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   return (
@@ -353,53 +373,42 @@ export const ProfitLossPage = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">  
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Graph */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                {chartTitle}
-              </h2>
-              <p className="text-gray-600">
-                {chartDescription}
-              </p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">
+              {chartTitle}
+            </h2>
+            <p className="text-gray-600">{chartDescription}</p>
           </div>
           <div className="space-y-3">
-          <div className="h-80 w-full">
-          <ResponsiveContainer>
-            <BarChart 
-              data={chartData}
-              layout="vertical"
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <YAxis 
-                dataKey="label"
-                type="category"
-                width={150} 
-                >
-                  {/* <Label value="Date" offset={-5} position="insideBottom" /> */}
-                </YAxis>
-                <XAxis
-                type="number"
-                >
-                  <Label
-                      value = "Amount ($)"
-                      position = "insideBottom"
-                      offset = {-5}
-                      style = {{ textAnchor: "middle" }}
-                  />
-                </XAxis>
-                <Tooltip/>
+            <div className="h-80 w-full">
+              <ResponsiveContainer>
+                <BarChart data={chartData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <YAxis dataKey="label" type="category" width={150}>
+                    {/* <Label value="Date" offset={-5} position="insideBottom" /> */}
+                  </YAxis>
+                  <XAxis type="number">
+                    <Label
+                      value="Amount ($)"
+                      position="insideBottom"
+                      offset={-5}
+                      style={{ textAnchor: "middle" }}
+                    />
+                  </XAxis>
+                  <Tooltip />
 
-                <Bar 
-                  dataKey = "amount" 
-                  fill = "#6f597b"
-                  name = "Amount" 
-                  isAnimationActive = {false}
-                />
-            </BarChart>
-          </ResponsiveContainer>
-          </div>
+                  <Bar
+                    dataKey="amount"
+                    fill="#6f597b"
+                    name="Amount"
+                    isAnimationActive={false}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 

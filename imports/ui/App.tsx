@@ -30,10 +30,7 @@ const router = createBrowserRouter([
       {
         path: "finance",
         children: [
-          {
-            index: true,
-            Component: () => <Navigate replace to={"profit-loss"} />,
-          },
+          { index: true, Component: () => <Navigate replace to={"profit-loss"} /> },
           { path: "profit-loss", Component: ProfitLossPage },
           { path: "tax", Component: TaxPage },
           { path: "expenses", Component: ExpensesPage },
