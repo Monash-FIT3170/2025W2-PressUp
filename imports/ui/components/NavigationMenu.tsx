@@ -35,7 +35,7 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
     <div
       className={`bg-press-up-purple min-h-full transition-all ease-in-out duration-300 ${
         show ? "w-[20vw]" : "w-0"
-      } overflow-hidden flex flex-col h-screen`}
+      } overflow-hidden flex flex-col h-60`}
     >
       <div className="flex-1 overflow-y-auto p-6 text-lg">
         <NavigationEntry
