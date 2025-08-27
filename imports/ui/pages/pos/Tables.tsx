@@ -138,7 +138,6 @@ export const TablesPage = () => {
 
   // Prefill grid with tables from DB on initial load
   useEffect(() => {
-    // Only run if tablesFromDb has data and grid is empty
     if (tablesFromDb.length > 0 && grid.every((cell) => cell === null)) {
       const newGrid = Array(GRID_SIZE).fill(null);
       tablesFromDb.forEach((table, idx) => {
@@ -265,34 +264,48 @@ export const TablesPage = () => {
         style={{ maxHeight: "calc(100vh - 100px)" }}
       >
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
-          {userIsAdmin &&
-            (editMode ? (
-              <div className="flex gap-2">
+          <div className="flex gap-4 items-center">
+            {userIsAdmin &&
+              (editMode ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={saveChanges}
+                    style={{ backgroundColor: "#6f597b", color: "#fff" }}
+                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={exitEditMode}
+                    style={{ backgroundColor: "#c97f97", color: "#fff" }}
+                    className="px-4 py-1 rounded hover:brightness-90"
+                  >
+                    Exit Edit Mode
+                  </button>
+                </div>
+              ) : (
                 <button
-                  onClick={saveChanges}
-                  style={{ backgroundColor: "#6f597b", color: "#fff" }}
-                  className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
+                  onClick={enterEditMode}
+                  style={{ backgroundColor: "#1e032e", color: "#fff" }}
+                  className="px-4 py-1 rounded hover:bg-[#6f597b]"
                 >
-                  Save
+                  Enter Edit Mode
                 </button>
-                <button
-                  onClick={exitEditMode}
-                  style={{ backgroundColor: "#c97f97", color: "#fff" }}
-                  className="px-4 py-1 rounded hover:brightness-90"
-                >
-                  Exit Edit Mode
-                </button>
+              ))}
+            {/* Legend - always visible */}
+            <div className="flex gap-4 ml-6">
+              <div className="flex items-center gap-1">
+                <div className="w-5 h-5 rounded-full bg-purple-600 border border-gray-500"></div>
+                <span className="text-sm">Occupied</span>
               </div>
-            ) : (
-              <button
-                onClick={enterEditMode}
-                style={{ backgroundColor: "#1e032e", color: "#fff" }}
-                className="px-4 py-1 rounded hover:bg-[#6f597b]"
-              >
-                Enter Edit Mode
-              </button>
-            ))}
+              <div className="flex items-center gap-1">
+                <div className="w-5 h-5 rounded-full bg-gray-300 border border-gray-500"></div>
+                <span className="text-sm">Not Occupied</span>
+              </div>
+            </div>
+          </div>
         </div>
+
 
         {/* Add Table & Delete Table Buttons */}
         {editMode && (
@@ -358,7 +371,6 @@ export const TablesPage = () => {
                         return;
                       }
                       const updated = [...grid];
-                      // Find the first empty slot if not adding to a specific cell
                       let idx = selectedCellIndex;
                       if (idx === null) {
                         idx = updated.findIndex((cell) => cell === null);
@@ -383,7 +395,6 @@ export const TablesPage = () => {
                         setModalType(null);
                         setCapacityInput("");
                         markChanged();
-                        // Insert into TablesCollection
                         await Meteor.callAsync("tables.addTable", newTable);
                       }
                     }}
@@ -421,7 +432,8 @@ export const TablesPage = () => {
                   placeholder="Number of seats"
                   min={1}
                 />
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-2">
+                  {/* Save Button */}
                   <button
                     onClick={async () => {
                       if (
@@ -443,7 +455,6 @@ export const TablesPage = () => {
                       setModalType(null);
                       setCapacityInput("");
                       markChanged();
-                      // Update in DB
                       const dbTable = tablesFromDb.find(
                         (t) => t.tableNo === editTableData!.tableNo,
                       );
@@ -460,6 +471,35 @@ export const TablesPage = () => {
                   >
                     Save
                   </button>
+
+                  {/* Add Order Button */}
+                  <button
+                    onClick={async () => {
+                      const updated = grid.map((t) =>
+                        t?.tableNo === editTableData!.tableNo
+                          ? { ...t, isOccupied: true }
+                          : t,
+                      );
+                      setGrid(updated);
+                      setModalType(null);
+                      markChanged();
+                      const dbTable = tablesFromDb.find(
+                        (t) => t.tableNo === editTableData!.tableNo,
+                      );
+                      if (dbTable && dbTable._id) {
+                        await Meteor.callAsync(
+                          "tables.setOccupied",
+                          dbTable._id,
+                          true,
+                        );
+                      }
+                    }}
+                    style={{ backgroundColor: "#6f597b", color: "#fff" }}
+                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
+                  >
+                    Add Order
+                  </button>
+
                   <button
                     onClick={() => setModalType(null)}
                     style={{
