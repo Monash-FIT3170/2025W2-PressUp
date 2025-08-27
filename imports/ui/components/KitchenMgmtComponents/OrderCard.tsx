@@ -109,12 +109,12 @@ export const OrderCard = ({ order }: OrderCardProps) => {
   const handleSave = () => {
     if (!order || !order._id) {
       return;
-    };
+    }
 
     Meteor.call(
       "orders.updateOrder",
       order._id,
-      { orderStatus: status},
+      { orderStatus: status },
       (err?: Meteor.Error) => {
         if (err) {
           console.error(err);
