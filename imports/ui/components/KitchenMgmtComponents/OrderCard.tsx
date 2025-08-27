@@ -107,15 +107,14 @@ export const OrderCard = ({ order }: OrderCardProps) => {
   };
 
   const handleSave = () => {
-    const mergedMenuItems = order.menuItems.map((mi, idx) => ({
-      ...mi,
-      served: items[idx]?.served ?? mi.served ?? false,
-    }));
+    if (!order || !order._id) {
+      return;
+    };
 
     Meteor.call(
       "orders.updateOrder",
       order._id,
-      { orderStatus: status, menuItems: mergedMenuItems },
+      { orderStatus: status},
       (err?: Meteor.Error) => {
         if (err) {
           console.error(err);
