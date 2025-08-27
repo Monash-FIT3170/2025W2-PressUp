@@ -1,7 +1,7 @@
 name: Deploy Application
 on:
   push:
-    branches: [main, feature/render-deployment-workflow]
+    branches: [main]
 jobs:
   deploy:
     runs-on: ubuntu-latest
