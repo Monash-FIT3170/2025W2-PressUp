@@ -14,3 +14,5 @@ import "./accounts/userPublishing";
 import "./accounts/userMethods.ts";
 import "./shifts/shiftsMethods.ts";
 import "./shifts/shiftsPublishing.ts";
+import "./posts/postsMethods.ts";
+import "./posts/postsPublishing.ts";

@@ -1,25 +1,70 @@
-import { useState } from "react";
+import { FormEventHandler, useState } from "react";
 import { SearchBar } from "./SearchBar";
 import { Select } from "./interaction/Select";
 import { Button } from "./interaction/Button";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Post, PostsCollection } from "/imports/api/posts/PostsCollection";
+import { Modal } from "./Modal";
+import { Form } from "./interaction/form/Form";
+import { Meteor } from "meteor/meteor";
+import { Input } from "./interaction/Input";
+import { ConfirmModal } from "./ConfirmModal";
+import PostHeader from "./PostHeader";
 
 export default function ForumPage() {
   useSubscribe("posts");
-  const [posts, setPosts] = useState<Post[]>(
-    useTracker(() => PostsCollection.find().fetch()),
-  );
-  const [selectedPost, setSelectedPost] = useState<Post>(null);
+  const posts = useTracker(() => PostsCollection.find().fetch());
+  const [selectedPost, setSelectedPost] = useState<Post | undefined>();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("");
+  const [postModalOpen, setPostModalOpen] = useState<boolean>(false);
+  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
 
-  const filteredPosts = posts.filter(
-    (p) =>
-      p.subject.toLowerCase().includes(search.toLowerCase()) ||
-      p.content.toLowerCase().includes(search.toLowerCase()) ||
-      p.category.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredPosts = posts
+    .filter(
+      (p) =>
+        p.subject.toLowerCase().includes(search.toLowerCase()) ||
+        p.content.toLowerCase().includes(search.toLowerCase()) ||
+        p.category.toLowerCase().includes(search.toLowerCase()),
+    )
+    .sort((a, b) => b.datePosted.getTime() - a.datePosted.getTime());
+  const [subject, setSubject] = useState<string>("");
+  const [content, setContent] = useState<string>("");
+  const [category, setCategory] = useState<string>("General");
+
+  const onCloseConfirmation = () => {
+    setShowConfirmation(false);
+    setPostModalOpen(false);
+  };
+
+  const handleCreateNewPost: FormEventHandler = (e) => {
+    e.preventDefault();
+
+    /*    postedBy: Meteor.User;
+    datePosted: Date;
+    subject: string;
+    content: string;
+    category: string;*/
+
+    Meteor.call(
+      "posts.create",
+      {
+        postedBy: Meteor.user()?._id,
+        datePosted: new Date(),
+        subject: subject,
+        content: content,
+        category: category,
+      },
+      (error: Meteor.Error) => {
+        if (error) {
+          alert(`Error publishing post: ${error.message}`);
+        } else {
+          setPostModalOpen(false);
+          //   alert("Post published successfully!");
+        }
+      },
+    );
+  };
 
   return (
     <div className="flex h-full">
@@ -38,7 +83,9 @@ export default function ForumPage() {
             <option value="question">Question</option>
           </Select>
 
-          <Button width={"full"}>Start New Post</Button>
+          <Button width={"full"} onClick={() => setPostModalOpen(true)}>
+            Start New Post
+          </Button>
         </div>
 
         {/* Posts list */}
@@ -70,10 +117,10 @@ export default function ForumPage() {
       </div>
 
       {/* RIGHT PANEL */}
-      <div className="flex-1 p-6 overflow-y-auto">
+      <div className="flex-1 px-12 py-6 overflow-y-auto">
         {selectedPost ? (
           <div>
-            <h1 className="text-2xl font-bold mb-4">{selectedPost.subject}</h1>
+            <PostHeader post={selectedPost}></PostHeader>
             <p className="text-gray-700">{selectedPost.content}</p>
           </div>
         ) : (
@@ -82,6 +129,50 @@ export default function ForumPage() {
           </p>
         )}
       </div>
+      {postModalOpen && (
+        <Modal
+          open={postModalOpen}
+          onClose={() => {
+            setShowConfirmation(true);
+          }}
+        >
+          <Form onSubmit={handleCreateNewPost} title={"Create Post"}>
+            <div className="mb-4">
+              <Input
+                placeholder="Post Title"
+                type="text"
+                onChange={(e) => setSubject(e.target.value)}
+                required
+              ></Input>
+            </div>
+            <div className="mb-4">
+              <Select onChange={(e) => setCategory(e.target.value)}>
+                <option>General</option>
+                <option>Social</option>
+                <option>Front of House</option> // TODO: modify to use category
+                implementation
+              </Select>
+            </div>
+            <div className="mb-4">
+              <textarea
+                placeholder="Write your forum message here..."
+                className="h-36 sm:text-3xl md:text-sm rounded-lg w-full p-3 bg-gray-50 border border-gray-300 text-red-900 focus:ring-red-900 focus:border-red-900 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+                onChange={(e) => setContent(e.target.value)}
+                required
+              ></textarea>
+            </div>
+            <Button width="full" onClick={handleCreateNewPost}>
+              Publish
+            </Button>
+          </Form>
+        </Modal>
+      )}
+      <ConfirmModal
+        open={showConfirmation}
+        message="Are you sure you want to discard your changes?"
+        onConfirm={onCloseConfirmation}
+        onCancel={() => setShowConfirmation(false)}
+      />
     </div>
   );
 }
