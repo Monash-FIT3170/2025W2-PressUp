@@ -256,7 +256,7 @@ export const PosSideMenu = ({
                 <option
                   key={table.tableNo}
                   value={table.tableNo}
-                  disabled={!table.isOccupied} // ✅ free tables not selectable
+                  disabled={!table.isOccupied}
                   className={table.isOccupied ? "bg-red-500" : "bg-green-500"}
                 >
                   Table {table.tableNo}
