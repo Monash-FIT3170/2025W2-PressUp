@@ -257,7 +257,7 @@ export const PosSideMenu = ({
                   key={table.tableNo}
                   value={table.tableNo}
                   disabled={!table.isOccupied}
-                  className={table.isOccupied ? "bg-red-500" : "bg-green-500"}
+                  className={table.isOccupied ? "bg-red-400" : "bg-green-400"}
                 >
                   Table {table.tableNo}
                 </option>
@@ -349,7 +349,7 @@ export const PosSideMenu = ({
                   className={`px-4 py-2 rounded font-bold text-white ${
                     tables.find((t) => t.tableNo === selectedTable && t.orderID)
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-600 hover:bg-green-500"
+                      : "bg-press-up-positive-button hover:bg-press-up-hover"
                   }`}
                 >
                   Start a new order?
