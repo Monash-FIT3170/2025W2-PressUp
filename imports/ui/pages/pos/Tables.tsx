@@ -5,6 +5,8 @@ import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { TablesCollection } from "/imports/api/tables/TablesCollection";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
+
 
 // -------- Seat positioning helper --------
 const getSeatPositions = (
@@ -475,31 +477,57 @@ export const TablesPage = () => {
                   {/* Add Order Button */}
                   <button
                     onClick={async () => {
-                      const updated = grid.map((t) =>
-                        t?.tableNo === editTableData!.tableNo
-                          ? { ...t, isOccupied: true }
-                          : t,
-                      );
-                      setGrid(updated);
-                      setModalType(null);
-                      markChanged();
-                      const dbTable = tablesFromDb.find(
-                        (t) => t.tableNo === editTableData!.tableNo,
-                      );
-                      if (dbTable && dbTable._id) {
-                        await Meteor.callAsync(
-                          "tables.setOccupied",
-                          dbTable._id,
-                          true,
+                      try {
+                        const dbTable = tablesFromDb.find(
+                          (t) => t.tableNo === editTableData!.tableNo,
                         );
+                        if (!dbTable || !dbTable._id) {
+                          alert("Could not find table in database.");
+                          return;
+                        }
+
+                        // Create new order (only if no existing one, because we disable otherwise)
+                        const orderId = await Meteor.callAsync("orders.addOrder", {
+                          orderNo: Date.now(), 
+                          tableNo: editTableData!.tableNo,
+                          menuItems: [],
+                          totalPrice: 0,
+                          createdAt: new Date(),
+                          orderStatus: "pending",
+                          paid: false,
+                        });
+
+                        // Link order to table
+                        await Meteor.callAsync("tables.addOrder", dbTable._id, orderId);
+
+                        // 3. Update local grid
+                        const updated = grid.map((t) =>
+                          t?.tableNo === editTableData!.tableNo
+                            ? { ...t, isOccupied: true, orderID: orderId }
+                            : t,
+                        );
+                        setGrid(updated);
+                        setModalType(null);
+                        markChanged();
+                      } catch (err) {
+                        console.error("Error adding order:", err);
+                        alert("Failed to add order. Check console for details.");
                       }
                     }}
-                    style={{ backgroundColor: "#6f597b", color: "#fff" }}
+                    disabled={!!tablesFromDb.find((t) => t.tableNo === editTableData!.tableNo && t.orderID)} // disable if table already has order
+                    style={{
+                      backgroundColor: tablesFromDb.find((t) => t.tableNo === editTableData!.tableNo && t.orderID)
+                        ? "#ccc" 
+                        : "#6f597b",
+                      color: "#fff",
+                      cursor: tablesFromDb.find((t) => t.tableNo === editTableData!.tableNo && t.orderID)
+                        ? "not-allowed"
+                        : "pointer",
+                    }}
                     className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
                   >
                     Add Order
                   </button>
-
                   <button
                     onClick={() => setModalType(null)}
                     style={{
