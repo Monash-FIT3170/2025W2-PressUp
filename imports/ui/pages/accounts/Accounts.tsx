@@ -4,7 +4,6 @@ import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { Modal } from "../../components/Modal";
 import { ConfirmModal } from "../../components/ConfirmModal";
-import { Roles } from "meteor/alanning:roles";
 import { PressUpRole } from "/imports/api/accounts/roles";
 
 export const Accounts = () => {
@@ -44,15 +43,13 @@ export const Accounts = () => {
   const [formResetKey, setFormResetKey] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirm, setConfirm] = useState<"cancel" | null>(null);
-  const [editRole, setEditRole] = useState<string>("");
+  const [editRoles, setEditRoles] = useState<string[]>([]);
 
+  
   const handleEdit = (user: Meteor.User) => {
     setEditUser(user);
-    const userRoles = Roles.getRolesForUser(user._id);
-    console.log(
-      `Editing user: ${user.username}, Roles: ${userRoles.join(", ")}`,
-    );
-    setEditRole(userRoles[0] || "");
+    const roles = userRoles[user._id] || [];
+    setEditRoles(roles);
     setOpen(true);
   };
 
@@ -61,13 +58,19 @@ export const Accounts = () => {
     setFormResetKey((prev) => prev + 1);
   };
 
-  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setEditRole(e.target.value);
+  const handleRolesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const options = Array.from(e.target.selectedOptions).map((o) => o.value);
+    setEditRoles(options);
   };
 
   const handleRoleSave = async () => {
-    if (editUser && editRole) {
-      await Meteor.callAsync("accounts.setRole", editUser._id, editRole);
+    if (editUser) {
+      try {
+        await Meteor.callAsync("accounts.setUserRoles", editUser._id, editRoles);
+      } catch (e) {
+        alert((e as Meteor.Error).reason || "Failed to set roles");
+        return;
+      }
       handleSuccess();
     }
   };
@@ -149,12 +152,13 @@ export const Accounts = () => {
             </div>
             <div>
               <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-                Role
+                Roles
               </label>
               <select
-                value={editRole}
-                onChange={handleRoleChange}
-                className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg block w-full p-2.5"
+                multiple
+                value={editRoles}
+                onChange={handleRolesChange}
+                className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg block w-full p-2.5 h-28"
               >
                 {Object.values(PressUpRole).map((role) => (
                   <option value={role} key={role}>

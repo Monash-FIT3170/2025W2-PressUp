@@ -11,3 +11,4 @@ import "./orders/ordersMethods";
 import "./tables/tablesMethods";
 import "./tables/tablesPublishing";
 import "./accounts/accountPublications.ts";
+import "./accounts/accountMethods.ts";

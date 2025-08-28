@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router";
 import { RootPage } from "./pages/Root";
+import { RequireRole } from "./components/Access";
 import { StockPage } from "./pages/inventory/Stock";
 import { SuppliersPage } from "./pages/inventory/Suppliers";
 import { Menu } from "./pages/menuManagement/Menu";
@@ -35,7 +36,14 @@ const router = createBrowserRouter([
         path: "inventory",
         children: [
           { index: true, Component: () => <Navigate replace to={"stock"} /> },
-          { path: "stock", Component: StockPage },
+          {
+            path: "stock",
+            Component: () => (
+              <RequireRole anyOf={["admin", "manager"]}>
+                <StockPage />
+              </RequireRole>
+            ),
+          },
           { path: "suppliers", Component: SuppliersPage },
         ],
       },
@@ -59,7 +67,11 @@ const router = createBrowserRouter([
       },
       {
         path: "accounts",
-        Component: Accounts,
+        Component: () => (
+          <RequireRole anyOf={["admin"]}>
+            <Accounts />
+          </RequireRole>
+        ),
       }
     ],
   },
