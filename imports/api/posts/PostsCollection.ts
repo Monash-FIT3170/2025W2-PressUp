@@ -1,9 +1,8 @@
 import { Mongo } from "meteor/mongo";
 import { DBEntry, OmitDB } from "../database";
-import { Meteor } from "meteor/meteor";
 
 export interface Post extends DBEntry {
-    postedBy: Meteor.User;
+    postedBy: string;
     datePosted: Date;
     subject: string;
     content: string;
