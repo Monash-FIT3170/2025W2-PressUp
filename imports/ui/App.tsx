@@ -17,6 +17,7 @@ import { ReceiptPage } from "./pages/receipt/Receipt";
 import { LoginPage } from "./pages/Login";
 import { UserManagementPage } from "./pages/userManagement/userManagement";
 import { RosterPage } from "./pages/staff/Roster";
+import { CommunicationPage } from "./pages/staff/Communication";
 
 const router = createBrowserRouter([
   {
@@ -80,6 +81,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, Component: () => <Navigate replace to={"roster"} /> },
           { path: "roster", Component: RosterPage },
+          { path: "communication", Component: CommunicationPage },
         ],
       },
     ],
