@@ -44,12 +44,8 @@ Meteor.publish(
 Meteor.publish(
   "users.roles",
   requireLoginPublish(async function () {
-    if (await Roles.userIsInRoleAsync(this.userId, [RoleEnum.MANAGER])) {
       return Meteor.roleAssignment.find({});
-    } else {
-      return Meteor.roleAssignment.find({ "user._id": this.userId });
-    }
-  }),
+    })
 );
 
 // Used by the client to determine role hierarchy
