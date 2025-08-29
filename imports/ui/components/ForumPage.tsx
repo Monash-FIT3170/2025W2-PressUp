@@ -10,6 +10,7 @@ import { Meteor } from "meteor/meteor";
 import { Input } from "./interaction/Input";
 import { ConfirmModal } from "./ConfirmModal";
 import PostHeader from "./PostHeader";
+import { TextArea } from "./interaction/TextArea";
 
 export default function ForumPage() {
   useSubscribe("posts");
@@ -40,17 +41,10 @@ export default function ForumPage() {
   const handleCreateNewPost: FormEventHandler = (e) => {
     e.preventDefault();
 
-    /*    postedBy: Meteor.User;
-    datePosted: Date;
-    subject: string;
-    content: string;
-    category: string;*/
-
     Meteor.call(
       "posts.create",
       {
         postedBy: Meteor.user()?._id,
-        datePosted: new Date(),
         subject: subject,
         content: content,
         category: category,
@@ -121,7 +115,9 @@ export default function ForumPage() {
         {selectedPost ? (
           <div>
             <PostHeader post={selectedPost}></PostHeader>
-            <p className="text-gray-700">{selectedPost.content}</p>
+            <p className="text-gray-700 whitespace-pre-wrap">
+              {selectedPost.content}
+            </p>
           </div>
         ) : (
           <p className="text-gray-500 text-center p-10">
@@ -154,14 +150,14 @@ export default function ForumPage() {
               </Select>
             </div>
             <div className="mb-4">
-              <textarea
+              <TextArea
                 placeholder="Write your forum message here..."
-                className="h-36 sm:text-3xl md:text-sm rounded-lg w-full p-3 bg-gray-50 border border-gray-300 text-red-900 focus:ring-red-900 focus:border-red-900 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+                rows={8}
                 onChange={(e) => setContent(e.target.value)}
                 required
-              ></textarea>
+              ></TextArea>
             </div>
-            <Button width="full" onClick={handleCreateNewPost}>
+            <Button width="full" type="submit">
               Publish
             </Button>
           </Form>
