@@ -35,9 +35,9 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
     <div
       className={`bg-press-up-purple min-h-full transition-all ease-in-out duration-300 ${
         show ? "w-[20vw]" : "w-0"
-      } overflow-hidden`}
+      } overflow-hidden flex flex-col h-60`}
     >
-      <div className="flex flex-col p-6 text-lg">
+      <div className="flex-1 overflow-y-auto p-6 text-lg">
         <NavigationEntry
           icon={<FinanceIcon fill="var(--color-press-up-grey)" />}
           name="Finance"
@@ -115,6 +115,19 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         />
         <NavigationEntry
+          icon={<Clock3Icon />}
+          name="Kitchen Management"
+          path="/kitchenManagement"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        >
+          <NavigationEntry
+            icon={<HistoryIcon />}
+            name="Order History"
+            path="/kitchenManagement/history"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+        </NavigationEntry>
+        <NavigationEntry
           icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
           name="Accounts"
           path="/accounts"
@@ -130,19 +143,6 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             icon={<Calendar />}
             name="Roster"
             path="/staff/roster"
-            selectionType={NavigationEntrySelection.ARROW}
-          />
-        </NavigationEntry>
-        <NavigationEntry
-          icon={<Clock3Icon />}
-          name="Kitchen Management"
-          path="/kitchenManagement"
-          selectionType={NavigationEntrySelection.HIGHLIGHT}
-        >
-          <NavigationEntry
-            icon={<HistoryIcon />}
-            name="Order History"
-            path="/kitchenManagement/history"
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>
