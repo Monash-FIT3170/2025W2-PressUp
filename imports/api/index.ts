@@ -21,4 +21,4 @@ export {
 } from "./purchaseOrders/PurchaseOrdersCollection";
 
 // Tables
-export { Tables, TablesCollection } from "./tables/TablesCollection"
+export { Tables, TablesCollection } from "./tables/TablesCollection";

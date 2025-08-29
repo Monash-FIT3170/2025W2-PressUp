@@ -1,14 +1,46 @@
+<<<<<<< HEAD
 import { useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
+=======
+import { useEffect, useState } from "react";
+>>>>>>> 64cac7a5e19c32a4a58f5efe769f9f4c5198e0a0
 import { Button } from "../../components/interaction/Button";
 import { Modal } from "../../components/Modal";
 import { PublishShiftForm } from "../../components/PublishShiftForm";
 import { RosterTable } from "../../components/RosterTable";
+<<<<<<< HEAD
 import { ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
+=======
+import { ConfirmModal } from "../../components/ConfirmModal";
+import { usePageTitle } from "../../hooks/PageTitleContext";
+import { Hide } from "../../components/display/Hide";
+import { Roles } from "meteor/alanning:roles";
+import { Meteor } from "meteor/meteor";
+import { RoleEnum } from "/imports/api/accounts/roles";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+>>>>>>> 64cac7a5e19c32a4a58f5efe769f9f4c5198e0a0
 
 export const RosterPage = () => {
+  const [_, setPageTitle] = usePageTitle();
+  useEffect(() => {
+    setPageTitle("Staff Management - Roster");
+  }, [setPageTitle]);
+
   const [shiftModalOpen, setShiftModalOpen] = useState(false);
+  const [showShiftModalCloseConfirmation, setShowShiftModalCloseConfirmation] =
+    useState(false);
+  const onCloseShiftModalConfirm = () => {
+    setShiftModalOpen(false);
+    setShowShiftModalCloseConfirmation(false);
+  };
+
+  const rolesLoaded = useSubscribe("users.roles")();
+  const rolesGraphLoaded = useSubscribe("users.rolesGraph")();
+  const canPublishShifts = useTracker(
+    () => Roles.userIsInRole(Meteor.userId(), [RoleEnum.MANAGER]),
+    [rolesLoaded, rolesGraphLoaded],
+  );
 
   const { user, activeShift, isLoading } = useTracker(() => {
     const user = Meteor.user();
@@ -60,6 +92,7 @@ export const RosterPage = () => {
 
   return (
     <div className="flex flex-1 flex-col">
+<<<<<<< HEAD
       {/* Header section with buttons */}
       <div className="flex justify-between items-center mb-4">
         <Button onClick={() => setShiftModalOpen(true)}>
@@ -93,8 +126,29 @@ export const RosterPage = () => {
 
       <Modal open={shiftModalOpen} onClose={() => setShiftModalOpen(false)}>
         <PublishShiftForm />
+=======
+      <Modal
+        open={shiftModalOpen}
+        onClose={() => setShowShiftModalCloseConfirmation(true)}
+      >
+        <PublishShiftForm onSuccess={() => setShiftModalOpen(false)} />
+>>>>>>> 64cac7a5e19c32a4a58f5efe769f9f4c5198e0a0
       </Modal>
-      <RosterTable />
+      <RosterTable
+        PublishShiftButton={
+          <Hide hide={!canPublishShifts}>
+            <Button onClick={() => setShiftModalOpen(true)}>
+              Publish Shift
+            </Button>
+          </Hide>
+        }
+      />
+      <ConfirmModal
+        open={showShiftModalCloseConfirmation}
+        message="Are you sure you want to discard your changes?"
+        onConfirm={onCloseShiftModalConfirm}
+        onCancel={() => setShowShiftModalCloseConfirmation(false)}
+      />
     </div>
   );
 };

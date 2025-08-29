@@ -2,10 +2,23 @@ import { Meteor } from "meteor/meteor";
 import { useState, useEffect } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, Select, MenuItem, FormControl, InputLabel,
-  Checkbox, List, ListItem, ListItemIcon, ListItemText,
-  Chip, Stack, Typography
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Checkbox,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Chip,
+  Stack,
+  Typography,
 } from "@mui/material";
 import type { UiOrder } from "./KitchenMgmtTypes";
 
@@ -17,13 +30,10 @@ type OrderCardProps = {
 
 function mergeItemsWithPrev(
   prev: UiMenuItem[],
-  fromDb: UiMenuItem[]
+  fromDb: UiMenuItem[],
 ): UiMenuItem[] {
   return fromDb.map((dbIt, i) => {
-    const prevServed =
-      prev[i]?.served ?? 
-      dbIt.served ??     
-      false;             
+    const prevServed = prev[i]?.served ?? dbIt.served ?? false;
     return {
       ...dbIt,
       served: prevServed,
@@ -31,15 +41,15 @@ function mergeItemsWithPrev(
   });
 }
 
-
-export const OrderCard = ({order}: OrderCardProps) => {
-
-  const {attributes, listeners, setNodeRef, transform} = useDraggable({
-    id: order._id, 
+export const OrderCard = ({ order }: OrderCardProps) => {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: order._id,
   });
 
   const style = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
   };
 
   // Dialog state
@@ -51,30 +61,38 @@ export const OrderCard = ({order}: OrderCardProps) => {
     order.menuItems.map((mi) => ({
       ...mi,
       served: mi.served ?? false,
-    }))
+    })),
   );
 
-  const allServed = items.length > 0 && items.every(it => !!it.served);
+  const allServed = items.length > 0 && items.every((it) => !!it.served);
 
   useEffect(() => {
-    setItems(prev => mergeItemsWithPrev(
-      prev,
-      order.menuItems.map(mi => ({ ...mi, served: mi.served ?? false }))
-    ));
+    setItems((prev) =>
+      mergeItemsWithPrev(
+        prev,
+        order.menuItems.map((mi) => ({ ...mi, served: mi.served ?? false })),
+      ),
+    );
   }, [order._id, order.menuItems]);
 
-
   const toggleServed = (index: number) => {
-    setItems(prev => {
-      const next = prev.map((it, i) => i === index ? { ...it, served: !it.served } : it);
-      Meteor.call("orders.setMenuItemServed", order._id, index, !prev[index].served);
+    setItems((prev) => {
+      const next = prev.map((it, i) =>
+        i === index ? { ...it, served: !it.served } : it,
+      );
+      Meteor.call(
+        "orders.setMenuItemServed",
+        order._id,
+        index,
+        !prev[index].served,
+      );
       return next;
     });
   };
 
   const setAll = (val: boolean) => {
-    setItems(prev => {
-      const next = prev.map(it => ({ ...it, served: val }));
+    setItems((prev) => {
+      const next = prev.map((it) => ({ ...it, served: val }));
       Meteor.call("orders.setAllMenuItemsServed", order._id, val);
       return next;
     });
@@ -89,15 +107,14 @@ export const OrderCard = ({order}: OrderCardProps) => {
   };
 
   const handleSave = () => {
-    const mergedMenuItems = order.menuItems.map((mi, idx) => ({
-      ...mi,
-      served: items[idx]?.served ?? mi.served ?? false,
-    }));
-  
+    if (!order || !order._id) {
+      return;
+    }
+
     Meteor.call(
       "orders.updateOrder",
       order._id,
-      { orderStatus: status, menuItems: mergedMenuItems },
+      { orderStatus: status },
       (err?: Meteor.Error) => {
         if (err) {
           console.error(err);
@@ -105,7 +122,7 @@ export const OrderCard = ({order}: OrderCardProps) => {
           return;
         }
         setOpen(false);
-      }
+      },
     );
   };
 
@@ -148,7 +165,12 @@ export const OrderCard = ({order}: OrderCardProps) => {
       </div>
 
       {/* Dialog */}
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Order Details</DialogTitle>
         <DialogContent dividers>
           <p>
@@ -169,37 +191,37 @@ export const OrderCard = ({order}: OrderCardProps) => {
           >
             <Typography fontWeight={700}>Menu Items:</Typography>
             <Stack direction="row" spacing={1}>
-            <Button
-              size="small"
-              onClick={() => setAll(true)}
-              sx={{
-                borderColor: "#8E44AD",
-                color: "#8E44AD",
-                border: "1px solid",
-                "&:hover": {
-                  borderColor: "#732d91",
-                  backgroundColor: "rgba(142,68,173,0.08)"
-                }
-              }}
-            >
-              Check all
-            </Button>
+              <Button
+                size="small"
+                onClick={() => setAll(true)}
+                sx={{
+                  borderColor: "#8E44AD",
+                  color: "#8E44AD",
+                  border: "1px solid",
+                  "&:hover": {
+                    borderColor: "#732d91",
+                    backgroundColor: "rgba(142,68,173,0.08)",
+                  },
+                }}
+              >
+                Check all
+              </Button>
 
-            <Button
-              size="small"
-              onClick={() => setAll(false)}
-              sx={{
-                borderColor: "#8E44AD",
-                color: "#8E44AD",
-                border: "1px solid",
-                "&:hover": {
-                  borderColor: "#732d91",
-                  backgroundColor: "rgba(142,68,173,0.08)"
-                }
-              }}
-            >
-              Uncheck all
-            </Button>
+              <Button
+                size="small"
+                onClick={() => setAll(false)}
+                sx={{
+                  borderColor: "#8E44AD",
+                  color: "#8E44AD",
+                  border: "1px solid",
+                  "&:hover": {
+                    borderColor: "#732d91",
+                    backgroundColor: "rgba(142,68,173,0.08)",
+                  },
+                }}
+              >
+                Uncheck all
+              </Button>
             </Stack>
           </Stack>
 
@@ -231,21 +253,27 @@ export const OrderCard = ({order}: OrderCardProps) => {
 
           {/* Status Dropdown */}
           <FormControl fullWidth sx={{ mt: 2 }}>
-          <InputLabel>Status</InputLabel>
-          <Select
-            value={status}
-            label="Status"
-            onChange={(e) => handleStatusChange(String(e.target.value))}
-          >
-            <MenuItem value="pending">Pending</MenuItem>
-            <MenuItem value="preparing">Preparing</MenuItem>
-            <MenuItem value="ready">Ready</MenuItem>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={status}
+              label="Status"
+              onChange={(e) => handleStatusChange(String(e.target.value))}
+            >
+              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="preparing">Preparing</MenuItem>
+              <MenuItem value="ready">Ready</MenuItem>
 
-            <MenuItem value="served" disabled={!(status === "ready" && allServed)}>
-              Served {!(status === "ready" && allServed) ? "(Ready + all checked)" : ""}
-            </MenuItem>
-          </Select>
-        </FormControl>
+              <MenuItem
+                value="served"
+                disabled={!(status === "ready" && allServed)}
+              >
+                Served{" "}
+                {!(status === "ready" && allServed)
+                  ? "(Ready + all checked)"
+                  : ""}
+              </MenuItem>
+            </Select>
+          </FormControl>
         </DialogContent>
 
         <DialogActions>
@@ -256,8 +284,8 @@ export const OrderCard = ({order}: OrderCardProps) => {
               color: "#8E44AD",
               "&:hover": {
                 borderColor: "#732d91",
-                backgroundColor: "rgba(142,68,173,0.08)"
-              }
+                backgroundColor: "rgba(142,68,173,0.08)",
+              },
             }}
           >
             Cancel
@@ -268,8 +296,8 @@ export const OrderCard = ({order}: OrderCardProps) => {
             sx={{
               backgroundColor: "#8E44AD",
               "&:hover": {
-                backgroundColor: "#732d91"
-              }
+                backgroundColor: "#732d91",
+              },
             }}
           >
             Save

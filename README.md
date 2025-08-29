@@ -1,22 +1,35 @@
 # PressUp
 
-# Getting Started
+# Development
 
-In order to run the project:
+## Getting Started
 
-## For Development
-1. Install [Meteor](https://docs.meteor.com/about/install.html)
-2. Clone the project and navigate into the cloned directory
-3. After ensuring that `meteor` is on your PATH run `meteor npm install`
-4. Run `meteor npm start`
+1. Install [Meteor](https://docs.meteor.com/about/install.html).
+2. Clone the project and navigate into the cloned directory.
+3. After ensuring that `meteor` is on your PATH run `meteor npm install`.
+4. Run `meteor npm start` to launch a local server to test against.
 
-## In a Production Environment using Docker
+## Code Quality
+
+Before committing changes, run `npm run fix` to lint and format your code. Note that some problems may require manual resolution. All PRs are automatically checked for code quality and must pass before merging.
+
+# Deployment
+
+## Docker
+
+The production environment can be tested against by using Docker.
+
 1. Install [Docker](https://docs.docker.com/engine/install/)
 2. Run `docker compose up`
 
+## Render Deployment
+
+TODO
+
 # Team
-<!-- System Architects -->
+
 ## 🧠 System Architects
+
 <table>
   <tbody>
     <tr>
@@ -27,9 +40,8 @@ In order to run the project:
   </tbody>
 </table>
 
-
-<!-- Product Managers -->
 ## 📦 Product Managers
+
 <table>
   <tbody>
     <tr>
@@ -45,9 +57,8 @@ In order to run the project:
   </tbody>
 </table>
 
-
-<!-- Release Train Engineers -->
 ## 🚂 Release Train Engineers
+
 <table>
   <tbody>
     <tr>
