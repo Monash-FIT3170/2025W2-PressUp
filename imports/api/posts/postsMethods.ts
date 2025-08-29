@@ -6,9 +6,9 @@ import { requireLoginMethod } from "../accounts/wrappers";
 Meteor.methods({
   "posts.create": requireLoginMethod(async function (post: Post) {
     check(post.postedBy, String);
-    check(post.datePosted, Date);
     check(post.subject, String);
     check(post.content, String);
+    post.datePosted = new Date();
 
     if (!post)
       throw new Meteor.Error("invalid-arguments", "Post data is required");
