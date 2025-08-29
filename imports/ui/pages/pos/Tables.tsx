@@ -5,9 +5,7 @@ import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { TablesCollection } from "/imports/api/tables/TablesCollection";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
 import { useNavigate } from "react-router";
-
 
 // -------- Seat positioning helper --------
 const getSeatPositions = (
@@ -318,7 +316,6 @@ export const TablesPage = () => {
           </div>
         </div>
 
-
         {/* Add Table & Delete Table Buttons */}
         {editMode && (
           <div className="mb-4 flex gap-2">
@@ -497,18 +494,25 @@ export const TablesPage = () => {
                         }
 
                         // Create new order (only if no existing one, because we disable otherwise)
-                        const orderId = await Meteor.callAsync("orders.addOrder", {
-                          orderNo: Date.now(), 
-                          tableNo: editTableData!.tableNo,
-                          menuItems: [],
-                          totalPrice: 0,
-                          createdAt: new Date(),
-                          orderStatus: "pending",
-                          paid: false,
-                        });
+                        const orderId = await Meteor.callAsync(
+                          "orders.addOrder",
+                          {
+                            orderNo: Date.now(),
+                            tableNo: editTableData!.tableNo,
+                            menuItems: [],
+                            totalPrice: 0,
+                            createdAt: new Date(),
+                            orderStatus: "pending",
+                            paid: false,
+                          },
+                        );
 
                         // Link order to table
-                        await Meteor.callAsync("tables.addOrder", dbTable._id, orderId);
+                        await Meteor.callAsync(
+                          "tables.addOrder",
+                          dbTable._id,
+                          orderId,
+                        );
 
                         // 3. Update local grid
                         const updated = grid.map((t) =>
@@ -522,16 +526,29 @@ export const TablesPage = () => {
                         goToOrder(editTableData!.tableNo);
                       } catch (err) {
                         console.error("Error adding order:", err);
-                        alert("Failed to add order. Check console for details.");
+                        alert(
+                          "Failed to add order. Check console for details.",
+                        );
                       }
                     }}
-                    disabled={!!tablesFromDb.find((t) => t.tableNo === editTableData!.tableNo && t.orderID)} // disable if table already has order
+                    disabled={
+                      !!tablesFromDb.find(
+                        (t) =>
+                          t.tableNo === editTableData!.tableNo && t.orderID,
+                      )
+                    } // disable if table already has order
                     style={{
-                      backgroundColor: tablesFromDb.find((t) => t.tableNo === editTableData!.tableNo && t.orderID)
-                        ? "#ccc" 
+                      backgroundColor: tablesFromDb.find(
+                        (t) =>
+                          t.tableNo === editTableData!.tableNo && t.orderID,
+                      )
+                        ? "#ccc"
                         : "#6f597b",
                       color: "#fff",
-                      cursor: tablesFromDb.find((t) => t.tableNo === editTableData!.tableNo && t.orderID)
+                      cursor: tablesFromDb.find(
+                        (t) =>
+                          t.tableNo === editTableData!.tableNo && t.orderID,
+                      )
                         ? "not-allowed"
                         : "pointer",
                     }}

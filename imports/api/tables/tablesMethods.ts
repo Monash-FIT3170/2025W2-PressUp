@@ -13,9 +13,9 @@ Meteor.methods({
         "invalid-arguments",
         "Table ID and Order ID are required",
       );
-      return await TablesCollection.updateAsync(tableID, {
-        $set: { orderID: orderID, isOccupied: true },
-      });
+    return await TablesCollection.updateAsync(tableID, {
+      $set: { orderID: orderID, isOccupied: true },
+    });
   }),
 
   "tables.changeOrder": requireLoginMethod(async function (

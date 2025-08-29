@@ -193,9 +193,9 @@ export const PosSideMenu = ({
   };
 
   const tables: Tables[] = useTracker(
-  () => TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch(),
-  [],
-);
+    () => TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch(),
+    [],
+  );
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -272,10 +272,17 @@ export const PosSideMenu = ({
             const qty = item.quantity ?? 1;
             const price = item.price;
             return (
-              <div key={idx} className="bg-white p-4 rounded-md shadow-md space-y-2">
+              <div
+                key={idx}
+                className="bg-white p-4 rounded-md shadow-md space-y-2"
+              >
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-800">{item.name}</span>
-                  <span className="font-semibold text-gray-800">${(price * qty).toFixed(2)}</span>
+                  <span className="font-semibold text-gray-800">
+                    {item.name}
+                  </span>
+                  <span className="font-semibold text-gray-800">
+                    ${(price * qty).toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -313,33 +320,41 @@ export const PosSideMenu = ({
                   onClick={async () => {
                     try {
                       const dbTable = tables.find(
-                        (t) => t.tableNo === selectedTable
+                        (t) => t.tableNo === selectedTable,
                       );
                       if (!dbTable || !dbTable._id) {
                         alert("Could not find table in database.");
                         return;
                       }
 
-                      const orderId = await Meteor.callAsync("orders.addOrder", {
-                        orderNo: Date.now(),
-                        tableNo: selectedTable,
-                        menuItems: [],
-                        totalPrice: 0,
-                        createdAt: new Date(),
-                        orderStatus: "pending",
-                        paid: false,
-                      });
+                      const orderId = await Meteor.callAsync(
+                        "orders.addOrder",
+                        {
+                          orderNo: Date.now(),
+                          tableNo: selectedTable,
+                          menuItems: [],
+                          totalPrice: 0,
+                          createdAt: new Date(),
+                          orderStatus: "pending",
+                          paid: false,
+                        },
+                      );
 
-                      await Meteor.callAsync("tables.addOrder", dbTable._id, orderId);
-
+                      await Meteor.callAsync(
+                        "tables.addOrder",
+                        dbTable._id,
+                        orderId,
+                      );
                     } catch (err) {
                       console.error("Error adding order:", err);
                       alert("Failed to add order. Check console for details.");
                     }
                   }}
-                  disabled={!!tables.find(
-                    (t) => t.tableNo === selectedTable && t.orderID
-                  )}
+                  disabled={
+                    !!tables.find(
+                      (t) => t.tableNo === selectedTable && t.orderID,
+                    )
+                  }
                   className={`px-4 py-2 rounded font-bold text-white ${
                     tables.find((t) => t.tableNo === selectedTable && t.orderID)
                       ? "bg-gray-400 cursor-not-allowed"

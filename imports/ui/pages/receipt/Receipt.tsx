@@ -18,7 +18,7 @@ export const ReceiptPage = () => {
   const lowestOccupiedTableNo = useTracker(() => {
     const occupiedTables = TablesCollection.find(
       { isOccupied: true },
-      { sort: { tableNo: 1 } }
+      { sort: { tableNo: 1 } },
     ).fetch();
     return occupiedTables.length > 0 ? occupiedTables[0].tableNo : null;
   }, []);
