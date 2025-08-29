@@ -57,18 +57,18 @@ export const MainDisplay = () => {
   useEffect(() => {
     if (selectedTable !== null) return; // Only set on initial load
 
-    if (orders.length > 0) {
-      // Find the unpaid order with the lowest table number
-      const unpaidOrders = orders.filter((ord) => !ord.paid);
-      if (unpaidOrders.length > 0) {
-        const lowestUnpaidTableNo = Math.min(
-          ...unpaidOrders.map((o) => o.tableNo),
+    if (tables.length > 0) {
+      // Find the lowest table number that is occupied
+      const occupiedTables = tables.filter((t) => t.isOccupied);
+      if (occupiedTables.length > 0) {
+        const lowestOccupiedTableNo = Math.min(
+          ...occupiedTables.map((t) => t.tableNo),
         );
-        setSelectedTable(lowestUnpaidTableNo);
+        setSelectedTable(lowestOccupiedTableNo);
         return;
       }
     }
-  }, [tables, orders, selectedTable]);
+  }, [tables, selectedTable]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
