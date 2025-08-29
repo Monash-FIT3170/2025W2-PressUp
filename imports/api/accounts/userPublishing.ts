@@ -44,11 +44,7 @@ Meteor.publish(
 Meteor.publish(
   "users.roles",
   requireLoginPublish(async function () {
-    if (await Roles.userIsInRoleAsync(this.userId, [RoleEnum.MANAGER])) {
-      return Meteor.roleAssignment.find({});
-    } else {
-      return Meteor.roleAssignment.find({ "user._id": this.userId });
-    }
+    return Meteor.roleAssignment.find({});
   }),
 );
 
