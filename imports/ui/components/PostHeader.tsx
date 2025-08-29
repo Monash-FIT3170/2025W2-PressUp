@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { useEffect, useState } from "react";
 import { CircleUserRound } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 type Post = {
   postedBy: string;
@@ -20,7 +21,7 @@ function PostHeader({ post }: PostHeaderProps) {
   useEffect(() => {
     let isMounted = true;
     Meteor.users.findOneAsync(post.postedBy).then((u) => {
-      if (isMounted) setUser(u);
+      if (isMounted) setUser(u ?? null);
     });
     return () => {
       isMounted = false; // prevent setting state after unmount
@@ -44,9 +45,18 @@ function PostHeader({ post }: PostHeaderProps) {
         <div className="text-sm text-gray-400 ml-auto">
           <p>
             {new Date(post.datePosted).toLocaleDateString()},{" "}
-            {new Date(post.datePosted).toLocaleTimeString()}
+            {new Date(post.datePosted).toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </p>
-          <p> </p>
+          <p>
+            {"("}
+            {formatDistanceToNow(new Date(post.datePosted), {
+              addSuffix: true,
+            })}
+            {")"}
+          </p>
         </div>
       </div>
     </div>
