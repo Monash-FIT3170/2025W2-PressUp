@@ -280,9 +280,9 @@ Meteor.methods({
         fields: {
           username: 1,
           "profile.firstName": 1,
-          "profile.lastName": 1
+          "profile.lastName": 1,
         },
-      }
+      },
     );
 
     return user || null;

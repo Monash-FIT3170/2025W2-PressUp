@@ -29,7 +29,7 @@ function PostHeader({ post }: PostHeaderProps) {
     Meteor.call(
       "users.getBasicInfo",
       post.postedBy,
-      (err: string, res: any) => {
+      (err: string, res: Meteor.User) => {
         if (isMounted && !err) {
           setUser(res);
           setUserRole(Roles.getRolesForUser(user)[0]);
@@ -40,7 +40,7 @@ function PostHeader({ post }: PostHeaderProps) {
     return () => {
       isMounted = false;
     };
-  }, [post.postedBy]);
+  }, [post.postedBy, user]);
 
   return (
     <div>

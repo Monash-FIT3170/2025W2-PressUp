@@ -44,8 +44,8 @@ Meteor.publish(
 Meteor.publish(
   "users.roles",
   requireLoginPublish(async function () {
-      return Meteor.roleAssignment.find({});
-    })
+    return Meteor.roleAssignment.find({});
+  }),
 );
 
 // Used by the client to determine role hierarchy

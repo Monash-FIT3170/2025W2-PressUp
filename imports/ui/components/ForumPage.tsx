@@ -149,8 +149,8 @@ export default function ForumPage() {
               <Select onChange={(e) => setCategory(e.target.value)}>
                 <option>General</option>
                 <option>Social</option>
-                <option>Front of House</option> // TODO: modify to use category
-                implementation
+                <option>Front of House</option>{" "}
+                {/* TODO: modify to use category implementation */}
               </Select>
             </div>
             <div className="mb-4">
