@@ -6,8 +6,10 @@ import { Button } from "./interaction/Button";
 import { TextArea } from "./interaction/TextArea";
 import { ConfirmModal } from "./ConfirmModal";
 import { IdType } from "/imports/api/database";
+import Comment from "./Comment";
 
-interface Comment {
+interface CommentProps {
+  _id?: IdType;
   postedBy: string;
   datePosted: Date;
   content: string;
@@ -20,7 +22,7 @@ interface Post {
   subject: string;
   content: string;
   category: string; // TODO: 5.3 to implement this functionality
-  comments?: Comment[];
+  comments?: CommentProps[];
 }
 
 interface CommentsSectionProps {
@@ -33,8 +35,6 @@ function CommentsSection({ post }: CommentsSectionProps) {
   const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
 
   const [user, setUser] = useState<Meteor.User | null>(null);
-  const [userRole, setUserRole] = useState("");
-  useSubscribe("users.roles")();
   useSubscribe("posts");
 
   useEffect(() => {
@@ -47,7 +47,6 @@ function CommentsSection({ post }: CommentsSectionProps) {
       (err: string, res: Meteor.User) => {
         if (isMounted && !err) {
           setUser(res);
-          setUserRole(Roles.getRolesForUser(user)[0]);
         }
       },
     );
@@ -64,7 +63,8 @@ function CommentsSection({ post }: CommentsSectionProps) {
     };
     Meteor.call(
       "posts.addComment",
-      { postId: post._id, comment: newComment },
+      post._id,
+      newComment,
       (error: Meteor.Error) => {
         if (error) {
           alert(`Error publishing comment: ${error.message}`);
@@ -104,13 +104,18 @@ function CommentsSection({ post }: CommentsSectionProps) {
           </div>
         </div>
       ) : (
-        <Button width="full" onClick={() => setWritingComment(true)}>
-          Add Comment
-        </Button>
+        <div className="p-4">
+          <Button width="full" onClick={() => setWritingComment(true)}>
+            Add Comment
+          </Button>
+        </div>
       )}
-      {post.comments?.map((comment) => (
-        <div>{comment.content}</div>
-      ))}
+      <div className="flex flex-col">
+        {post.comments &&
+          post.comments.map((comment: CommentProps) => (
+            <Comment key={comment._id} comment={comment}></Comment>
+          ))}
+      </div>
       <ConfirmModal
         open={showConfirmation}
         message={"Are you sure you want to discard your comment?"}

@@ -2,7 +2,7 @@ import { Mongo } from "meteor/mongo";
 import { DBEntry, IdType, OmitDB } from "../database";
 
 export interface Comment {
-    _id?: IdType;
+    _id?: string;
   postedBy: string;
   datePosted: Date;
   content: string; 
