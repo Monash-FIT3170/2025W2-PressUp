@@ -11,7 +11,13 @@ interface PaymentModalProps {
 
 export const PaymentModal = ({ order }: PaymentModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const openModal = () => setIsOpen(true);
+  const openModal = () => {
+    if (order.menuItems.length === 0) {
+      alert("Cannot pay for an order with no items.");
+      return;
+    }
+    setIsOpen(true);
+  };
   const closeModal = () => setIsOpen(false);
 
   const navigate = useNavigate();
