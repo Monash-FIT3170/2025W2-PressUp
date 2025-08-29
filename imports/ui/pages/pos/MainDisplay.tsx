@@ -13,6 +13,7 @@ import {
 } from "/imports/api/orders/OrdersCollection";
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { IdType } from "/imports/api/database";
+import { useLocation } from "react-router";
 
 export const MainDisplay = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -23,6 +24,7 @@ export const MainDisplay = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
+  const location = useLocation();
 
   useSubscribe("menuItems");
   useSubscribe("orders");
@@ -67,6 +69,14 @@ export const MainDisplay = () => {
       }
     }
   }, [tables, orders, selectedTable]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tableNoParam = params.get("tableNo");
+    if (tableNoParam) {
+      setSelectedTable(Number(tableNoParam));
+    }
+  }, [location.search]);
 
   // Update order status (accept partial updates)
   const updateOrderInDb = (updatedFields: Partial<Order>) => {

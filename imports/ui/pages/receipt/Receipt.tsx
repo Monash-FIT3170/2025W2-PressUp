@@ -2,6 +2,7 @@ import React from "react";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { useNavigate, useLocation } from "react-router";
 import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
+import { TablesCollection } from "/imports/api/tables/TablesCollection";
 
 export const ReceiptPage = () => {
   const navigate = useNavigate(); // For navigating between PaymentModal and Receipt
@@ -10,11 +11,26 @@ export const ReceiptPage = () => {
   const searchParams = new URLSearchParams(location.search); // Get URL search parameters
   const orderNumber = searchParams.get("orderNo"); // Get order number based on URL
 
+  useSubscribe("orders");
+  useSubscribe("tables");
+
+  // Find the lowest table number which is occupied
+  const lowestOccupiedTableNo = useTracker(() => {
+    const occupiedTables = TablesCollection.find(
+      { isOccupied: true },
+      { sort: { tableNo: 1 } }
+    ).fetch();
+    return occupiedTables.length > 0 ? occupiedTables[0].tableNo : null;
+  }, []);
+
   const handleGoBack = () => {
-    navigate(-1);
+    if (lowestOccupiedTableNo !== null) {
+      navigate(`/pos/orders?tableNo=${lowestOccupiedTableNo}`);
+    } else {
+      navigate("/pos/orders");
+    }
   };
 
-  useSubscribe("orders");
   // Retrieve order based on order number in URL from PaymentModal
   const parsedOrderNumber = Number(orderNumber);
   const order = useTracker(() => {

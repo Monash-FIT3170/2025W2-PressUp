@@ -6,6 +6,7 @@ import { PaymentModal } from "./PaymentModal";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Order, OrdersCollection, TablesCollection } from "/imports/api";
 import { IdType } from "/imports/api/database";
+import { useNavigate, useLocation } from "react-router";
 
 interface PosSideMenuProps {
   tableNo: number | null;
@@ -191,29 +192,22 @@ export const PosSideMenu = ({
     }
   };
 
-  const handleDelete = (itemId: IdType) => {
-    onDelete(itemId);
-  };
-
-  // Fetch unpaid orders for dropdown
-  const orders: Order[] = useTracker(
-    () =>
-      OrdersCollection.find(
-        { paid: { $ne: true } },
-        { sort: { tableNo: 1 } },
-      ).fetch(),
-    [],
-  );
-
   const tables: Tables[] = useTracker(
   () => TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch(),
   [],
 );
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   // Table change handler
   const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = Number(e.target.value);
     setSelectedTable(selected);
+    // Update the URL with the new tableNo as a query parameter
+    const params = new URLSearchParams(location.search);
+    params.set("tableNo", String(selected));
+    navigate(`${location.pathname}?${params.toString()}`);
   };
 
   return (

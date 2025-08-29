@@ -6,6 +6,7 @@ import { TablesCollection } from "/imports/api/tables/TablesCollection";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
+import { useNavigate } from "react-router";
 
 
 // -------- Seat positioning helper --------
@@ -101,6 +102,7 @@ const TableCard = ({
 };
 
 export const TablesPage = () => {
+  const navigate = useNavigate();
   const [_, setPageTitle] = usePageTitle();
   useEffect(() => {
     setPageTitle("POS System - Tables");
@@ -255,6 +257,14 @@ export const TablesPage = () => {
       setModalType("exitConfirm");
     } else {
       setEditMode(false);
+    }
+  };
+
+  const goToOrder = (tableNo?: number) => {
+    if (tableNo !== null) {
+      navigate(`/pos/orders?tableNo=${tableNo}`);
+    } else {
+      navigate("/pos/orders");
     }
   };
 
@@ -509,6 +519,7 @@ export const TablesPage = () => {
                         setGrid(updated);
                         setModalType(null);
                         markChanged();
+                        goToOrder(editTableData!.tableNo);
                       } catch (err) {
                         console.error("Error adding order:", err);
                         alert("Failed to add order. Check console for details.");
