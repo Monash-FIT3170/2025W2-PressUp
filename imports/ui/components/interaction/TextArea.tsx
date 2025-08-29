@@ -4,7 +4,7 @@ import React from "react";
 interface TextAreaProps
   extends Pick<
     React.TextareaHTMLAttributes<HTMLTextAreaElement>,
-    "value" | "onChange" | "required" | "disabled" | "name"
+    "value" | "onChange" | "required" | "disabled" | "name" | "autoFocus"
   > {
   variant?: TextAreaVariant;
   placeholder: string;
