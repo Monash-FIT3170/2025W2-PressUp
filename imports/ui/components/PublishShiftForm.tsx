@@ -18,7 +18,16 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
 
   useSubscribe("users");
   const users = useTracker(
-    () => Meteor.users.find({}, { sort: { username: 1 } }).fetch() ?? [],
+    () =>
+      Meteor.users
+        .find(
+          {},
+          {
+            fields: { "profile.firstName": 1, "profile.lastName": 1 },
+            sort: { "profile.firstName": 1 },
+          },
+        )
+        .fetch() ?? [],
   );
 
   const onSubmit: FormEventHandler = (e) => {
@@ -57,7 +66,7 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
     <Form title="Publish Shift" onSubmit={onSubmit}>
       <div className="flex flex-col gap-4">
         <div>
-          <Label>User</Label>
+          <Label>Name</Label>
           <Select
             placeholder="--Select user--"
             value={userId}
@@ -66,7 +75,8 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
           >
             {users.map((user, i) => (
               <option value={user._id} key={i}>
-                {user.username}
+                {`${user.profile?.firstName ?? ""} ${user.profile?.lastName ?? ""}`.trim() ||
+                  "Unknown"}
               </option>
             ))}
           </Select>

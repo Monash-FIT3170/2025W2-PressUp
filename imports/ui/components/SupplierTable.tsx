@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Supplier } from "/imports/api/suppliers/SuppliersCollection";
+import { StockItemsCollection } from "/imports/api/stockItems/StockItemsCollection";
 import { InfoSymbol, Cross } from "./symbols/GeneralSymbols";
 import { SupplierInfo } from "./SupplierInfo";
 import { Modal } from "./Modal";
 import { PurchaseOrderForm } from "./PurchaseOrderForm";
 import { Meteor } from "meteor/meteor";
 import { IdType } from "/imports/api/database";
+import { useTracker } from "meteor/react-meteor-data";
 
 interface SupplierTableProps {
   suppliers: Supplier[];
@@ -17,6 +19,11 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
     null,
   );
   const [purchaseOrderId, setPurchaseOrderId] = useState<IdType | null>(null);
+
+  // Fetch stock items for all suppliers
+  const stockItems = useTracker(() => {
+    return StockItemsCollection.find({}, { sort: { name: 1 } }).fetch();
+  }, []);
 
   const toggleExpanded = (supplierId: string) => {
     setExpandedSupplierId(
@@ -46,6 +53,25 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
     );
   };
 
+  const removeItemFromSupplier = (itemId: IdType) => {
+    if (
+      confirm("Are you sure you want to remove this item from the supplier?")
+    ) {
+      Meteor.call(
+        "stockItems.removeFromSupplier",
+        itemId,
+        (err: Meteor.Error | undefined) => {
+          if (err) {
+            console.error("Error removing item from supplier:", err.reason);
+            alert("Error removing item from supplier: " + err.reason);
+          } else {
+            console.log("Item successfully removed from supplier");
+          }
+        },
+      );
+    }
+  };
+
   return (
     <div id="grid-container" className="overflow-auto flex-1">
       <div className="grid gap-y-2 text-nowrap text-center grid-cols-15 text-red-900">
@@ -58,7 +84,7 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
           <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
         </div>
         <div className="col-span-3 bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple sticky top-0 z-1">
-          Supplier Goods
+          Stock Items
           <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
         </div>
         <div className="col-span-2 bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple sticky top-0 z-1">
@@ -101,19 +127,24 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
               <div className="col-span-3 flex flex-wrap relative py-1 px-2">
-                {supplier.goods &&
-                  supplier.goods.map((good, goodIndex) => (
+                {stockItems
+                  .filter((item) => item.supplier === supplier._id)
+                  .map((item, itemIndex) => (
                     <span
-                      key={goodIndex}
+                      key={itemIndex}
                       className="bg-press-up-purple border-press-up-light-purple text-white rounded-sm text-xs m-1 w-max h-max px-2 py-1 inline-flex items-center"
                     >
-                      {good}
-                      <span className="pl-2 ml-auto cursor-pointer">
+                      {item.name}
+                      <span
+                        className="pl-2 ml-auto cursor-pointer hover:bg-red-600 rounded-full p-1 transition-colors"
+                        onClick={() => removeItemFromSupplier(item._id)}
+                        title="Remove from supplier"
+                      >
                         <Cross height="8px" width="8px" viewBox="0 0 14 14" />
                       </span>
                     </span>
                   ))}
-                <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
+                <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-8" />
               </div>
               <div className="col-span-2 relative py-1 px-2 flex items-center justify-center">
                 {supplier.pastOrderQty}
