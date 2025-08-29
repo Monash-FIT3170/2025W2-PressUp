@@ -1,5 +1,12 @@
 import { Mongo } from "meteor/mongo";
-import { DBEntry, OmitDB } from "../database";
+import { DBEntry, IdType, OmitDB } from "../database";
+
+export interface Comment {
+    _id?: IdType;
+  postedBy: string;
+  datePosted: Date;
+  content: string; 
+}
 
 export interface Post extends DBEntry {
   postedBy: string;
@@ -7,6 +14,7 @@ export interface Post extends DBEntry {
   subject: string;
   content: string;
   category: string; // TODO: 5.3 to implement this functionality
+  comments?: Comment[];
 }
 
 export const PostsCollection = new Mongo.Collection<OmitDB<Post>, Post>(

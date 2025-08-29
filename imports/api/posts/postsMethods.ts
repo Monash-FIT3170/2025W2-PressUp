@@ -1,5 +1,5 @@
 import { Meteor } from "meteor/meteor";
-import { Post, PostsCollection } from "./PostsCollection";
+import { Comment, Post, PostsCollection } from "./PostsCollection";
 import { check } from "meteor/check";
 import { requireLoginMethod } from "../accounts/wrappers";
 
@@ -13,5 +13,16 @@ Meteor.methods({
     if (!post)
       throw new Meteor.Error("invalid-arguments", "Post data is required");
     return await PostsCollection.insertAsync(post);
+  }),
+  "posts.addComment": requireLoginMethod(async function (postId: string, comment: Comment) {
+      if (!postId || !comment)
+        throw new Meteor.Error(
+    "invalid-arguments",
+    "Post ID and comment are required",
+);
+check(comment.postedBy, String)
+check(comment.content, String)
+comment.datePosted = new Date();
+    return await PostsCollection.updateAsync(postId, {$push: { comments: comment}});
   }),
 });
