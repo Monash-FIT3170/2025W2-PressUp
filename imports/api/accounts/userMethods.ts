@@ -271,4 +271,20 @@ Meteor.methods({
       );
     }
   }),
+  "users.getBasicInfo"(userId: string) {
+    check(userId, String);
+
+    const user = Meteor.users.findOneAsync(
+      { _id: userId },
+      {
+        fields: {
+          username: 1,
+          "profile.firstName": 1,
+          "profile.lastName": 1
+        },
+      }
+    );
+
+    return user || null;
+  },
 });

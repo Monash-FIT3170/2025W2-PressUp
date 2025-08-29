@@ -19,12 +19,21 @@ function PostHeader({ post }: PostHeaderProps) {
   const [user, setUser] = useState<Meteor.User | null>(null);
 
   useEffect(() => {
+    if (!post.postedBy) return;
+
     let isMounted = true;
-    Meteor.users.findOneAsync(post.postedBy).then((u) => {
-      if (isMounted) setUser(u ?? null);
-    });
+    Meteor.call(
+      "users.getBasicInfo",
+      post.postedBy,
+      (err: string, res: any) => {
+        if (isMounted && !err) {
+          setUser(res);
+        }
+      },
+    );
+
     return () => {
-      isMounted = false; // prevent setting state after unmount
+      isMounted = false;
     };
   }, [post.postedBy]);
 
