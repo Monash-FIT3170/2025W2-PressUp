@@ -20,6 +20,11 @@ import {
   PenTool,
   Users,
 } from "lucide-react";
+  Clock3Icon,
+  HistoryIcon,
+  MessageSquare,
+  Users,
+} from "lucide-react";
 
 interface NavigationMenuProps {
   show: boolean;
@@ -138,6 +143,12 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             icon={<Calendar />}
             name="Roster"
             path="/staff/roster"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+          <NavigationEntry
+            icon={<MessageSquare />}
+            name="Communication"
+            path="/staff/communication"
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>
