@@ -15,7 +15,6 @@ Meteor.methods({
     check(supplier.email, String);
     check(supplier.website, String);
     check(supplier.address, String);
-    check(supplier.goods, Array);
 
     return await SuppliersCollection.insertAsync(supplier);
   }),

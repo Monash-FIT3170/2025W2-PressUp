@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 import { Supplier } from "/imports/api/suppliers/SuppliersCollection";
+import { StockItemsCollection } from "/imports/api/stockItems/StockItemsCollection";
+import { useTracker } from "meteor/react-meteor-data";
+import { Meteor } from "meteor/meteor";
+import { IdType } from "/imports/api/database";
+import { Cross } from "./symbols/GeneralSymbols";
 
 interface Order {
   no: number;
@@ -18,11 +23,37 @@ interface SupplierInfoProps {
 export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
   const [sortBy, setSortBy] = useState<"date-desc" | "date-asc">("date-desc");
 
+  // Fetch stock items for this supplier
+  const stockItems = useTracker(() => {
+    return StockItemsCollection.find(
+      { supplier: supplier._id },
+      { sort: { name: 1 } },
+    ).fetch();
+  }, [supplier._id]);
+
+  const removeItemFromSupplier = (itemId: IdType) => {
+    if (
+      confirm("Are you sure you want to remove this item from the supplier?")
+    ) {
+      Meteor.call(
+        "stockItems.removeFromSupplier",
+        itemId,
+        (err: Meteor.Error | undefined) => {
+          if (err) {
+            console.error("Error removing item from supplier:", err.reason);
+            alert("Error removing item from supplier: " + err.reason);
+          } else {
+            console.log("Item successfully removed from supplier");
+          }
+        },
+      );
+    }
+  };
+
   if (!supplier) return null;
   if (!supplier.name) return null;
   if (!supplier.email) return null;
   if (!supplier.phone) return null;
-  if (!supplier.goods) supplier.goods = [];
   if (!supplier.address) supplier.address = "";
   if (!supplier.website) supplier.website = "";
 
@@ -115,16 +146,28 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
         {/* Supplier Goods */}
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b border-gray-200 pb-2 underline">
-            Supplier Goods
+            Stock Items
           </h3>
           <ul className="space-y-1">
-            {supplier.goods &&
-              supplier.goods.map((good, index) => (
-                <li key={index} className="flex items-center">
-                  <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>
-                  <span className="text-gray-800">{good}</span>
+            {stockItems.length > 0 ? (
+              stockItems.map((item, index) => (
+                <li key={index} className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>
+                    <span className="text-gray-800">{item.name}</span>
+                  </div>
+                  <button
+                    onClick={() => removeItemFromSupplier(item._id)}
+                    className="text-red-600 hover:text-red-800 hover:bg-red-100 rounded-full p-1 transition-colors"
+                    title="Remove from supplier"
+                  >
+                    <Cross height="12px" width="12px" viewBox="0 0 14 14" />
+                  </button>
                 </li>
-              ))}
+              ))
+            ) : (
+              <li className="text-gray-500 italic">No stock items found</li>
+            )}
           </ul>
         </div>
 

@@ -1,9 +1,9 @@
 import { Roles } from "meteor/alanning:roles";
 
 export enum RoleEnum {
-  ADMIN = "admin",
-  MANAGER = "manager",
-  CASUAL = "casual",
+  ADMIN = "Admin",
+  MANAGER = "Manager",
+  CASUAL = "Casual",
 }
 
 export const setupRoles = async () => {

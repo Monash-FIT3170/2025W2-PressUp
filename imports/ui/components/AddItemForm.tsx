@@ -162,11 +162,13 @@ export const AddItemForm = ({ onSuccess, item }: Props) => {
               required
             >
               <option value="">--Select supplier--</option>
-              {suppliers.map((supplier, i) => (
-                <option value={String(supplier._id)} key={i}>
-                  {supplier.name}
-                </option>
-              ))}
+              {suppliers
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((supplier, i) => (
+                  <option value={String(supplier._id)} key={i}>
+                    {supplier.name}
+                  </option>
+                ))}
             </select>
           </div>
           {!item && (

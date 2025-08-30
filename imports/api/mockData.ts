@@ -161,10 +161,6 @@ export const mockDataGenerator = async ({
         phone: faker.phone.number(),
         email: faker.internet.email(),
         address: faker.location.streetAddress(),
-        goods: Array.from(
-          { length: faker.number.int({ min: 1, max: 5 }) },
-          faker.commerce.product,
-        ),
       });
     }
   }
