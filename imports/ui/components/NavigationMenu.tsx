@@ -17,12 +17,8 @@ import {
   DollarSign,
   Folder,
   HistoryIcon,
-  PenTool,
-  Users,
-} from "lucide-react";
-  Clock3Icon,
-  HistoryIcon,
   MessageSquare,
+  PenTool,
   Users,
 } from "lucide-react";
 
