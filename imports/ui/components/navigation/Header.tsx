@@ -1,7 +1,8 @@
 import React from "react";
-import { usePageTitle } from "../hooks/PageTitleContext";
-import { HamburgerMenuIcon } from "./symbols/navigation/HamburgerMenu";
-import { Logo } from "./symbols/Logo";
+import { usePageTitle } from "../../hooks/PageTitleContext";
+import { HamburgerMenuIcon } from "../symbols/navigation/HamburgerMenu";
+import { Logo } from "../symbols/Logo";
+import { UserMenu } from "./UserMenu";
 
 interface HeaderProps {
   onHamburgerClick: () => void;
@@ -24,8 +25,8 @@ export const Header = ({ onHamburgerClick }: HeaderProps) => {
         </div>
       </div>
       <div className="col-span-3 text-white text-4xl">{title ?? "PressUp"}</div>
-      <div className="col-span-1 justify-self-end">
-        {/* TODO: Login information here */}
+      <div className="col-span-1 justify-self-end flex flex-row gap-4">
+        <UserMenu />
         <Logo />
       </div>
     </div>

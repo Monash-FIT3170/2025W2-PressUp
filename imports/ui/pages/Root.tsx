@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
-import { Header } from "../components/Header";
-import { NavigationMenu } from "../components/NavigationMenu";
+import { Header } from "../components/navigation/Header";
+import { NavigationMenu } from "../components/navigation/NavigationMenu";
 import { PageTitleProvider } from "../hooks/PageTitleContext";
 import { Meteor } from "meteor/meteor";
 
