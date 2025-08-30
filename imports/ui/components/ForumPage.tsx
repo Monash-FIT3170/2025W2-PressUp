@@ -1,4 +1,4 @@
-import { FormEventHandler, useState } from "react";
+import { FormEventHandler, useState, useEffect } from "react";
 import { SearchBar } from "./SearchBar";
 import { Select } from "./interaction/Select";
 import { Button } from "./interaction/Button";
@@ -31,11 +31,29 @@ export default function ForumPage() {
     .sort((a, b) => b.datePosted.getTime() - a.datePosted.getTime());
   const [subject, setSubject] = useState<string>("");
   const [content, setContent] = useState<string>("");
-  const [category, setCategory] = useState<string>("General");
+  const [category, setCategory] = useState<string>("");
+  const [categories, setCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    Meteor.call(
+      "posts.getCategories",
+      (error: Meteor.Error, result: string[]) => {
+        if (error) {
+          console.error(error);
+          setCategories([]);
+        } else {
+          setCategories(result.sort());
+        }
+      },
+    );
+  }, [posts]);
 
   const onCloseConfirmation = () => {
     setShowConfirmation(false);
     setPostModalOpen(false);
+    setSubject("");
+    setContent("");
+    setCategory("");
   };
 
   const handleCreateNewPost: FormEventHandler = (e) => {
@@ -54,7 +72,9 @@ export default function ForumPage() {
           alert(`Error publishing post: ${error.message}`);
         } else {
           setPostModalOpen(false);
-          //   alert("Post published successfully!");
+          setSubject("");
+          setContent("");
+          setCategory("");
         }
       },
     );
@@ -142,12 +162,20 @@ export default function ForumPage() {
               ></Input>
             </div>
             <div className="mb-4">
-              <Select onChange={(e) => setCategory(e.target.value)}>
-                <option>General</option>
-                <option>Social</option>
-                <option>Front of House</option>{" "}
-                {/* TODO: modify to use category implementation */}
-              </Select>
+              <Input
+                type="text"
+                placeholder="Category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                autoComplete="off"
+                list="categories"
+                required
+              />
+              <datalist id="categories">
+                {categories.map((cat) => (
+                  <option key={cat} value={cat} />
+                ))}
+              </datalist>
             </div>
             <div className="mb-4">
               <TextArea
