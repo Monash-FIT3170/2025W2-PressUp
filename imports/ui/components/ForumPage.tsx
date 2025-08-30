@@ -17,16 +17,17 @@ export default function ForumPage() {
   const posts = useTracker(() => PostsCollection.find().fetch());
   const [selectedPost, setSelectedPost] = useState<Post | undefined>();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [postModalOpen, setPostModalOpen] = useState<boolean>(false);
   const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
 
   const filteredPosts = posts
     .filter(
       (p) =>
-        p.subject.toLowerCase().includes(search.toLowerCase()) ||
-        p.content.toLowerCase().includes(search.toLowerCase()) ||
-        p.category.toLowerCase().includes(search.toLowerCase()),
+        (p.subject.toLowerCase().includes(search.toLowerCase()) ||
+          p.content.toLowerCase().includes(search.toLowerCase()) ||
+          p.category.toLowerCase().includes(search.toLowerCase())) &&
+        (categoryFilter === "" || p.category === categoryFilter),
     )
     .sort((a, b) => b.datePosted.getTime() - a.datePosted.getTime());
   const [subject, setSubject] = useState<string>("");
@@ -91,10 +92,16 @@ export default function ForumPage() {
             initialSearchTerm={search}
           ></SearchBar>
 
-          <Select value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="">All</option>
-            <option value="discussion">Discussion</option>
-            <option value="question">Question</option>
+          <Select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            <option value="">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
           </Select>
 
           <Button width={"full"} onClick={() => setPostModalOpen(true)}>
