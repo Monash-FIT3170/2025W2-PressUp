@@ -32,9 +32,10 @@ interface DetailItemProps {
   label: string;
   amount: number;
   percentage?: number;
+  isExpense?: boolean;
 }
 
-const DetailItem = ({ label, amount, percentage }: DetailItemProps) => {
+const DetailItem = ({ label, amount, percentage, isExpense }: DetailItemProps) => {
   const isPositive = amount > 0;
   const sign = amount < 0 ? "-" : "";
 
@@ -49,9 +50,8 @@ const DetailItem = ({ label, amount, percentage }: DetailItemProps) => {
         )}
       </div>
       <div
-        className={`font-semibold text-lg ${isPositive ? "text-green-700" : "text-red-700"}`}
+        className={`font-semibold text-lg ${isExpense ? "text-red-700" : "text-green-700"}`}
       >
-        ${sign}
         {Math.abs(amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
       </div>
     </div>
@@ -333,6 +333,7 @@ export const ExpensesPage = () => {
                 label={item.label}
                 amount={item.amount ?? 0}
                 percentage={Number(item.percentage)}
+                isExpense={selectedMetric === "expenses"}
               />
             ))}
           </div>
