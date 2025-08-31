@@ -41,6 +41,15 @@ function mergeItemsWithPrev(
   });
 }
 
+function formatWait(ms: number) {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  const h = Math.floor(m / 60);
+  if (h > 0) return `${h}h ${m % 60}m`;
+  return `${m}m ${s.toString().padStart(2, "0")}s`;
+}
+
 export const OrderCard = ({ order }: OrderCardProps) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: order._id,
