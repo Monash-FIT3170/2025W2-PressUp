@@ -2,7 +2,6 @@ import { createBrowserRouter, RouterProvider, Navigate } from "react-router";
 import { RootPage } from "./pages/Root";
 import { StockPage } from "./pages/inventory/Stock";
 import { SuppliersPage } from "./pages/inventory/Suppliers";
-import { Menu } from "./pages/menuManagement/Menu";
 import { ProfitLossPage } from "./pages/finance/ProfitLossPage";
 import { TaxPage } from "./pages/finance/TaxPage";
 import { ExpensesPage } from "./pages/finance/ExpensesPage";
@@ -55,10 +54,6 @@ const router = createBrowserRouter([
           { path: "orders", Component: MainDisplay },
           { path: "tables", Component: TablesPage },
         ],
-      },
-      {
-        path: "menuManagement",
-        Component: Menu,
       },
       {
         path: "kitchenManagement",

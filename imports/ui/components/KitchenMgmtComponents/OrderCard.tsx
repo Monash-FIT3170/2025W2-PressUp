@@ -51,15 +51,10 @@ function formatWait(ms: number) {
 }
 
 export const OrderCard = ({ order }: OrderCardProps) => {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef } = useDraggable({
     id: order._id,
   });
 
-  const style = {
-    transform: transform
-      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
-      : undefined,
-  };
 
   // Dialog state
   const [open, setOpen] = useState(false);
@@ -186,16 +181,6 @@ export const OrderCard = ({ order }: OrderCardProps) => {
                   fontWeight: 600,
                 }}
               />
-              <span
-                style={{
-                  marginLeft: 8,
-                  fontSize: 12,
-                  color: waitColor,
-                  fontWeight: 600,
-                }}
-              >
-                {waitText} ({createdMs})
-              </span>
             </div>
           </div>
 
