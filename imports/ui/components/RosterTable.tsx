@@ -2,13 +2,7 @@ import { Meteor } from "meteor/meteor";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import React, { useEffect, useState, useMemo } from "react";
 import { Shift, ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
-
-// Assign a color to each role for color coding
-const roleColors: Record<string, string> = {
-  "Wait Staff": "#8b5cf6", // Purple
-  Chef: "#10b981", // Emerald
-  Supervisor: "#f59e0b", // Amber
-};
+import { RoleEnum, roleColors } from "/imports/api/accounts/roles";
 
 // Helper to get the most recent Monday from a date
 function getMonday(d: Date) {
@@ -62,13 +56,27 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
       { name: string; role: string; shifts: Shift[] }
     >();
 
-    Meteor.users.find({}, { fields: { username: 1 } }).forEach((user) => {
-      staffMap.set(user._id, {
-        name: user.username ?? "Unknown",
-        role: "Chef", // TODO Dynamically set role here
-        shifts: [],
+    Meteor.users
+      .find(
+        {},
+        {
+          fields: {
+            "profile.firstName": 1,
+            "profile.lastName": 1,
+            username: 1,
+          },
+        },
+      )
+      .forEach((user) => {
+        staffMap.set(user._id, {
+          name:
+            `${user.profile?.firstName ?? ""} ${user.profile?.lastName ?? ""}`.trim() ||
+            user.username ||
+            "Unknown",
+          role: RoleEnum.CASUAL,
+          shifts: [],
+        });
       });
-    });
 
     ShiftsCollection.find({}, { sort: { date: 1 } }).forEach((shift) => {
       if (!staffMap.has(shift.user)) {
@@ -84,9 +92,10 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
   const [roleFilter, setRoleFilter] = useState<string[]>([]);
 
   useEffect(() => {
-    const newRoles = Array.from(new Set(staffShifts.map((s) => s.role)));
-    setAllRoles(newRoles);
-  }, [staffShifts]);
+    // Use roles defined in roles.ts instead of dynamically generating from data
+    const definedRoles = Object.values(RoleEnum);
+    setAllRoles(definedRoles);
+  }, []);
 
   useEffect(() => {
     if (allRoles.length > 0 && roleFilter.length === 0) {
@@ -219,6 +228,7 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
               <th
                 key={day}
                 className="border border-gray-300 px-2 py-1 bg-gray-100"
+                style={{ minHeight: "60px" }}
               >
                 {day}
                 <div className="text-xs text-gray-500">
@@ -239,7 +249,8 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
                 return (
                   <td
                     key={dayIndex}
-                    className="border border-gray-300 px-2 py-1 align-top"
+                    className="border border-gray-300 p-0 align-top"
+                    style={{ minHeight: "60px", position: "relative" }}
                   >
                     {shift ? (
                       <div
@@ -248,21 +259,25 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
                           color: "#fff",
                           borderRadius: "0.375rem",
                           padding: "0.25rem 0.5rem",
-                          display: "inline-flex",
+                          display: "flex",
                           flexDirection: "column",
-                          alignItems: "flex-start",
+                          alignItems: "center",
+                          justifyContent: "center",
                           gap: "2px",
+                          width: "100%",
+                          height: "100%",
+                          minHeight: "60px",
                         }}
                       >
                         <span
-                          className="font-mono text-sm"
+                          className="font-mono text-sm text-center"
                           style={{ color: "#fff" }}
                         >
                           {formatTime(shift.start.hour, shift.start.minute)} -{" "}
                           {formatTime(shift.end.hour, shift.end.minute)}
                         </span>
                         <span
-                          className="text-xs"
+                          className="text-xs text-center font-mono"
                           style={{ color: "rgba(255,255,255,0.9)" }}
                         >
                           {staff.role}
