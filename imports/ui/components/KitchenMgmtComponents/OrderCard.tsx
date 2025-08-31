@@ -65,7 +65,6 @@ export const OrderCard = ({ order }: OrderCardProps) => {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState(order.status);
 
-  type UiMenuItem = UiOrder["menuItems"][number];
   const [items, setItems] = useState<UiMenuItem[]>(
     order.menuItems.map((mi) => ({
       ...mi,
@@ -109,11 +108,21 @@ export const OrderCard = ({ order }: OrderCardProps) => {
 
   const handleStatusChange = (next: string) => {
     if (next === "served" && !(status === "ready" && allServed)) {
-      alert("you must check all items as served before marking as served");
+      alert("You must check all items as served before marking as served");
       return;
     }
     setStatus(next as UiOrder["status"]);
   };
+
+  // Calculate wait time and color
+  const ageMs = Date.now() - order.createdAtMs;
+  const waitText = formatWait(ageMs); // Declare and use waitText
+  const waitColor =
+    ageMs < 10 * 60 * 1000
+      ? "#2ecc71"
+      : ageMs < 20 * 60 * 1000
+      ? "#f39c12"
+      : "#e74c3c"; // Declare and use waitColor
 
   const handleSave = () => {
     if (!order || !order._id) {
@@ -153,23 +162,36 @@ export const OrderCard = ({ order }: OrderCardProps) => {
 
         {/* click space */}
         <div className="cursor-pointer" onClick={() => setOpen(true)}>
-          <h3 className="font-medium text-press-up-purple text-xl">
-            Order #{order.orderNo}
-          </h3>
-          <p className="font-bold text-lg text-press-up-purple">
-            Table {order.tableNo}
-          </p>
-          <p className="text-sm text-press-up-purple">{order.createdAt}</p>
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-press-up-purple text-xl">
+              Order #{order.orderNo}
+            </h3>
 
-          <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
-            {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
-              order.menuItems.map((item, index) => (
-                <li key={index}>{item.name}</li>
-              ))
-            ) : (
-              <li className="italic text-sm text-press-up-purple">No items</li>
-            )}
-          </ul>
+            {/* Waiting chip */}
+            <Chip
+              size="small"
+              label={`Waiting ${waitText}`}
+              title={new Date(order.createdAtMs).toLocaleString()}
+              sx={{ bgcolor: waitColor, color: "#fff", fontWeight: 600 }}
+            />
+          </div>
+
+          <div>
+            <p className="font-bold text-lg text-press-up-purple">
+              Table {order.tableNo}
+            </p>
+            <p className="text-sm text-press-up-purple">{order.createdAt}</p>
+
+            <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
+              {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
+                order.menuItems.map((item, index) => (
+                  <li key={index}>{item.name}</li>
+                ))
+              ) : (
+                <li className="italic text-sm text-press-up-purple">No items</li>
+              )}
+            </ul>
+          </div>
         </div>
       </div>
 
