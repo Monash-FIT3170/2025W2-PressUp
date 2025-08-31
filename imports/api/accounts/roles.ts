@@ -6,6 +6,12 @@ export enum RoleEnum {
   CASUAL = "Casual",
 }
 
+export const roleColors: Record<string, string> = {
+  [RoleEnum.ADMIN]: "#dc2626", // Red
+  [RoleEnum.MANAGER]: "#f59e0b", // Amber
+  [RoleEnum.CASUAL]: "#10b981", // Emerald
+};
+
 export const setupRoles = async () => {
   await Roles.createRoleAsync(RoleEnum.ADMIN, { unlessExists: true });
   await Roles.createRoleAsync(RoleEnum.MANAGER, { unlessExists: true });

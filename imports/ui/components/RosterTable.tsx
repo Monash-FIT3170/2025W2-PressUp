@@ -2,14 +2,7 @@ import { Meteor } from "meteor/meteor";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import React, { useEffect, useState, useMemo } from "react";
 import { Shift, ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
-import { RoleEnum } from "/imports/api/accounts/roles";
-
-// Assign a color to each role for color coding
-const roleColors: Record<string, string> = {
-  [RoleEnum.ADMIN]: "#dc2626", // Red
-  [RoleEnum.MANAGER]: "#f59e0b", // Amber
-  [RoleEnum.CASUAL]: "#10b981", // Emerald
-};
+import { RoleEnum, roleColors } from "/imports/api/accounts/roles";
 
 // Helper to get the most recent Monday from a date
 function getMonday(d: Date) {
