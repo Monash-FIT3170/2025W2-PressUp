@@ -136,9 +136,10 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
                     >
                       {item.name}
                       <span
-                        className="pl-2 ml-auto cursor-pointer hover:bg-red-600 rounded-full p-1 transition-colors"
+                        className="ml-2 cursor-pointer hover:bg-red-600 rounded-full p-1 transition-colors flex items-center justify-center"
                         onClick={() => removeItemFromSupplier(item._id)}
                         title="Remove from supplier"
+                        style={{ width: "20px", height: "20px" }}
                       >
                         <Cross height="8px" width="8px" viewBox="0 0 14 14" />
                       </span>

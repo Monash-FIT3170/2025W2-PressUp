@@ -76,6 +76,7 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
             {users.map((user, i) => (
               <option value={user._id} key={i}>
                 {`${user.profile?.firstName ?? ""} ${user.profile?.lastName ?? ""}`.trim() ||
+                  user.username ||
                   "Unknown"}
               </option>
             ))}

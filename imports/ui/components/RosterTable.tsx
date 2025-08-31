@@ -57,13 +57,23 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
     >();
 
     Meteor.users
-      .find({}, { fields: { "profile.firstName": 1, "profile.lastName": 1 } })
+      .find(
+        {},
+        {
+          fields: {
+            "profile.firstName": 1,
+            "profile.lastName": 1,
+            username: 1,
+          },
+        },
+      )
       .forEach((user) => {
         staffMap.set(user._id, {
           name:
             `${user.profile?.firstName ?? ""} ${user.profile?.lastName ?? ""}`.trim() ||
+            user.username ||
             "Unknown",
-          role: RoleEnum.CASUAL, // Default role - TODO: Get actual role from user profile
+          role: RoleEnum.CASUAL,
           shifts: [],
         });
       });
