@@ -31,4 +31,13 @@ Meteor.methods({
     check(itemId, String);
     return await StockItemsCollection.removeAsync(itemId);
   }),
+
+  "stockItems.removeFromSupplier": requireLoginMethod(async function (
+    itemId: IdType,
+  ) {
+    check(itemId, String);
+    return await StockItemsCollection.updateAsync(itemId, {
+      $set: { supplier: null },
+    });
+  }),
 });

@@ -21,6 +21,7 @@ export const SuppliersPage = () => {
   const [confirm, setConfirm] = useState<"cancel" | "delete" | null>(null);
 
   const isLoadingSuppliers = useSubscribe("suppliers");
+  const isLoadingStockItems = useSubscribe("stockItems.all");
   const suppliers: Supplier[] = useTracker(() => {
     return SuppliersCollection.find({}, { sort: { name: 1 } }).fetch();
   });
@@ -29,11 +30,7 @@ export const SuppliersPage = () => {
   const filteredSuppliers = suppliers.filter(
     (supplier) =>
       searchTerm === "" ||
-      supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (supplier.goods &&
-        supplier.goods.some((good) =>
-          good.toLowerCase().includes(searchTerm.toLowerCase()),
-        )),
+      supplier.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleModalClose = () => {
@@ -61,7 +58,7 @@ export const SuppliersPage = () => {
         id="supplier-container"
         className="flex flex-1 flex-col overflow-auto"
       >
-        {isLoadingSuppliers() ? (
+        {isLoadingSuppliers() || isLoadingStockItems() ? (
           <p className="text-gray-400 p-4">Loading suppliers...</p>
         ) : (
           <SupplierTable suppliers={filteredSuppliers} />

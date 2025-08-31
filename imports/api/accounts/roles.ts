@@ -1,10 +1,16 @@
 import { Roles } from "meteor/alanning:roles";
 
 export enum RoleEnum {
-  ADMIN = "admin",
-  MANAGER = "manager",
-  CASUAL = "casual",
+  ADMIN = "Admin",
+  MANAGER = "Manager",
+  CASUAL = "Casual",
 }
+
+export const roleColors: Record<string, string> = {
+  [RoleEnum.ADMIN]: "#dc2626", // Red
+  [RoleEnum.MANAGER]: "#f59e0b", // Amber
+  [RoleEnum.CASUAL]: "#10b981", // Emerald
+};
 
 export const setupRoles = async () => {
   await Roles.createRoleAsync(RoleEnum.ADMIN, { unlessExists: true });
