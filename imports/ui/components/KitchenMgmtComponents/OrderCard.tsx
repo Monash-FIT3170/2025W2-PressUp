@@ -114,15 +114,26 @@ export const OrderCard = ({ order }: OrderCardProps) => {
     setStatus(next as UiOrder["status"]);
   };
 
-  // Calculate wait time and color
-  const ageMs = Date.now() - order.createdAtMs;
-  const waitText = formatWait(ageMs); // Declare and use waitText
+  // (A) createdMs: Safely calculate (prevent NaN/undefined issues)
+  const createdMs = Number.isFinite(order.createdAtMs)
+    ? (order.createdAtMs as number)
+    : (Date.parse(order.createdAt) || Date.now());
+
+  // (B) Waiting time state/effect
+  const [waitText, setWaitText] = useState(() => formatWait(Date.now() - createdMs));
+  useEffect(() => {
+    const tick = () => setWaitText(formatWait(Date.now() - createdMs));
+    tick();
+    const id = setInterval(tick, 30_000);
+    return () => clearInterval(id);
+  }, [createdMs]);
+
+  // (C) Color calculation (also uses createdMs)
+  const ageMs = Date.now() - createdMs;
   const waitColor =
-    ageMs < 10 * 60 * 1000
-      ? "#2ecc71"
-      : ageMs < 20 * 60 * 1000
-      ? "#f39c12"
-      : "#e74c3c"; // Declare and use waitColor
+    ageMs < 10 * 60 * 1000 ? "#2ecc71"
+  : ageMs < 20 * 60 * 1000 ? "#f39c12"
+  : "#e74c3c";
 
   const handleSave = () => {
     if (!order || !order._id) {
@@ -146,13 +157,11 @@ export const OrderCard = ({ order }: OrderCardProps) => {
 
   return (
     <>
-      {/* entire card */}
       <div
         ref={setNodeRef}
         className="rounded-lg bg-white p-4 shadow-sm hover:shadow-md border-press-up-purple border-3"
-        style={{ ...style, border: "3px solid #8E44AD" }}
+        style={{ border: "3px solid #8E44AD" }}
       >
-        {/* drag handler */}
         <div
           {...listeners}
           {...attributes}
@@ -160,20 +169,34 @@ export const OrderCard = ({ order }: OrderCardProps) => {
           title="Drag to move"
         />
 
-        {/* click space */}
         <div className="cursor-pointer" onClick={() => setOpen(true)}>
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-press-up-purple text-xl">
+          <div className="flex items-center justify-between gap-2 w-full">
+            <h3 className="font-medium text-press-up-purple text-xl flex-1 min-w-0 truncate">
               Order #{order.orderNo}
             </h3>
 
-            {/* Waiting chip */}
-            <Chip
-              size="small"
-              label={`Waiting ${waitText}`}
-              title={new Date(order.createdAtMs).toLocaleString()}
-              sx={{ bgcolor: waitColor, color: "#fff", fontWeight: 600 }}
-            />
+            <div className="mt-1">
+              <Chip
+                size="small"
+                label={`Waiting ${waitText}`}
+                title={new Date(createdMs).toLocaleString()}
+                sx={{
+                  backgroundColor: waitColor,
+                  color: "#fff",
+                  fontWeight: 600,
+                }}
+              />
+              <span
+                style={{
+                  marginLeft: 8,
+                  fontSize: 12,
+                  color: waitColor,
+                  fontWeight: 600,
+                }}
+              >
+                {waitText} ({createdMs})
+              </span>
+            </div>
           </div>
 
           <div>
@@ -181,7 +204,6 @@ export const OrderCard = ({ order }: OrderCardProps) => {
               Table {order.tableNo}
             </p>
             <p className="text-sm text-press-up-purple">{order.createdAt}</p>
-
             <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
               {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
                 order.menuItems.map((item, index) => (
@@ -195,7 +217,6 @@ export const OrderCard = ({ order }: OrderCardProps) => {
         </div>
       </div>
 
-      {/* Dialog */}
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
