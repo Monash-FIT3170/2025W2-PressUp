@@ -120,7 +120,7 @@ export const OrderCard = ({ order }: OrderCardProps) => {
   useEffect(() => {
     const tick = () => setWaitText(formatWait(Date.now() - createdMs));
     tick();
-    const id = setInterval(tick, 30_000);
+    const id = setInterval(tick, 1_000);
     return () => clearInterval(id);
   }, [createdMs]);
 
