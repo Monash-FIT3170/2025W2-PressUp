@@ -1,15 +1,15 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { Pill } from "./Pill";
-import { ArrowLeft } from "./symbols/navigation/Arrows";
+import { Pill } from "../Pill";
+import { ArrowLeft } from "../symbols/navigation/Arrows";
 import {
   PencilIcon,
   StockIcon,
   SupplierIcon,
-} from "./symbols/navigation/Inventory";
-import { MonitorIcon, BookIcon, TableIcon } from "./symbols/navigation/POS";
-import { CoffeeIcon } from "./symbols/navigation/Coffee";
+} from "../symbols/navigation/Inventory";
+import { MonitorIcon, BookIcon, TableIcon } from "../symbols/navigation/POS";
+import { CoffeeIcon } from "../symbols/navigation/Coffee";
 import {
   Calendar,
   Clipboard,
