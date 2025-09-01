@@ -5,7 +5,7 @@ import { Order } from "/imports/api";
 import { OrderStatus } from "/imports/api/orders/OrdersCollection";
 
 interface PaymentModalProps {
-  tableNo: number;
+  tableNo?: number | null;
   order: Order;
 }
 
