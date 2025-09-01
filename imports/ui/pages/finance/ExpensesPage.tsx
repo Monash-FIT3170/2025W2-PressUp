@@ -41,7 +41,6 @@ const DetailItem = ({
   percentage,
   isExpense,
 }: DetailItemProps) => {
-
   return (
     <div className="flex justify-between items-center py-3 px-4 bg-white rounded-lg shadow-sm border border-gray-100">
       <div className="flex-1">
@@ -296,7 +295,9 @@ export const ExpensesPage = () => {
               title={metric.title}
               amount={metric.amount}
               isSelected={selectedMetric === metric.key}
-              onClick={() => setSelectedMetric(metric.key)}
+              onClick={() =>
+                setSelectedMetric(metric.key as "sales" | "expenses")
+              }
             />
           ))}
         </div>
