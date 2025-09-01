@@ -72,7 +72,9 @@ const TableCard = ({
         <div
           key={i}
           className={`w-7 h-7 rounded-full border border-gray-500 absolute ${
-            occupiedIndexes.includes(i) ? "bg-press-up-purple" : "bg-press-up-grey"
+            occupiedIndexes.includes(i)
+              ? "bg-press-up-purple"
+              : "bg-press-up-grey"
           }`}
           style={{
             left: pos.left,
@@ -136,6 +138,7 @@ export const TablesPage = () => {
   );
   const [editTableData, setEditTableData] = useState<Table | null>(null);
   const [capacityInput, setCapacityInput] = useState("");
+  const [occupancyInput, setOccupancyInput] = useState("");
   const [deleteTableInput, setDeleteTableInput] = useState("");
 
   // Prefill grid with tables from DB on initial load
@@ -203,12 +206,15 @@ export const TablesPage = () => {
         {table ? (
           <TableCard
             table={table}
-            cardColour={table.isOccupied ? "bg-press-up-light-purple" : "bg-press-up-grey"}
+            cardColour={
+              table.isOccupied ? "bg-press-up-light-purple" : "bg-press-up-grey"
+            }
             isDragging={isDragging}
             dragRef={drag as unknown as React.Ref<HTMLDivElement>}
             onEdit={() => {
               setEditTableData(table);
               setCapacityInput(table.capacity.toString());
+              setOccupancyInput(table.noOccupants?.toString() || "0");
               setModalType("editTable");
             }}
           />
@@ -358,6 +364,12 @@ export const TablesPage = () => {
             {modalType === "addTable" && (
               <>
                 <h2 className="text-lg font-semibold mb-4">Add Table</h2>
+                <label
+                  htmlFor="edit-table-capacity"
+                  className="block mb-2 text-sm font-medium text-red-900 dark:text-black"
+                >
+                  Capacity
+                </label>
                 <input
                   type="number"
                   value={capacityInput}
@@ -433,12 +445,35 @@ export const TablesPage = () => {
                 <h2 className="text-lg font-semibold mb-4">
                   Edit Table {editTableData!.tableNo}
                 </h2>
+                <label
+                  htmlFor="edit-table-capacity"
+                  className="block mb-2 text-sm font-medium text-red-900 dark:text-black"
+                >
+                  Capacity
+                </label>
                 <input
+                  id="edit-table-capacity"
                   type="number"
                   value={capacityInput}
                   onChange={(e) => setCapacityInput(e.target.value)}
                   className="w-full border rounded px-2 py-1 mb-4"
                   placeholder="Number of seats"
+                  min={1}
+                />
+                <button></button>
+                <label
+                  htmlFor="edit-table-occupancy"
+                  className="block mb-2 text-sm font-medium text-red-900 dark:text-black"
+                >
+                  Number of Occupants
+                </label>
+                <input
+                  id="edit-table-occupancy"
+                  type="number"
+                  value={occupancyInput}
+                  onChange={(e) => setOccupancyInput(e.target.value)}
+                  className="w-full border rounded px-2 py-1 mb-4"
+                  placeholder="Number of occupants"
                   min={1}
                 />
                 <div className="flex justify-between gap-2">
@@ -454,15 +489,27 @@ export const TablesPage = () => {
                           "Please enter a valid number of seats (must be at least 1).",
                         );
                         return;
+                      } else if (
+                        isNaN(Number(occupancyInput)) ||
+                        Number(occupancyInput) > Number(capacityInput)
+                      ) {
+                        alert(
+                          "Please enter a valid number of occupants (cannot exceed capacity).",
+                        );
                       }
                       const updated = grid.map((t) =>
                         t?.tableNo === editTableData!.tableNo
-                          ? { ...t, capacity: parseInt(capacityInput, 10) }
+                          ? {
+                              ...t,
+                              capacity: parseInt(capacityInput, 10),
+                              noOccupants: parseInt(occupancyInput, 10),
+                            }
                           : t,
                       );
                       setGrid(updated);
                       setModalType(null);
                       setCapacityInput("");
+                      setOccupancyInput("");
                       markChanged();
                       const dbTable = tablesFromDb.find(
                         (t) => t.tableNo === editTableData!.tableNo,
@@ -472,6 +519,7 @@ export const TablesPage = () => {
                           "tables.changeCapacity",
                           dbTable._id,
                           parseInt(capacityInput, 10),
+                          parseInt(occupancyInput, 10),
                         );
                       }
                     }}
