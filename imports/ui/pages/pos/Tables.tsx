@@ -72,7 +72,7 @@ const TableCard = ({
         <div
           key={i}
           className={`w-7 h-7 rounded-full border border-gray-500 absolute ${
-            occupiedIndexes.includes(i) ? "bg-purple-600" : "bg-gray-300"
+            occupiedIndexes.includes(i) ? "bg-press-up-purple" : "bg-press-up-grey"
           }`}
           style={{
             left: pos.left,
@@ -203,7 +203,7 @@ export const TablesPage = () => {
         {table ? (
           <TableCard
             table={table}
-            cardColour={table.isOccupied ? "bg-purple-200" : "bg-gray-200"}
+            cardColour={table.isOccupied ? "bg-press-up-light-purple" : "bg-press-up-grey"}
             isDragging={isDragging}
             dragRef={drag as unknown as React.Ref<HTMLDivElement>}
             onEdit={() => {
@@ -305,11 +305,11 @@ export const TablesPage = () => {
             {/* Legend - always visible */}
             <div className="flex gap-4 ml-6">
               <div className="flex items-center gap-1">
-                <div className="w-5 h-5 rounded-full bg-purple-600 border border-gray-500"></div>
+                <div className="w-5 h-5 rounded-full bg-press-up-purple border border-gray-500"></div>
                 <span className="text-sm">Occupied</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-5 h-5 rounded-full bg-gray-300 border border-gray-500"></div>
+                <div className="w-5 h-5 rounded-full bg-press-up-grey border border-gray-500"></div>
                 <span className="text-sm">Not Occupied</span>
               </div>
             </div>
