@@ -311,12 +311,8 @@ export const PosSideMenu = ({
         ) : (
           <div className="p-4 text-center text-gray-500">
             {selectedTable != null &&
-              tables.find(
-                (t) => t.tableNo === selectedTable,
-              )?.isOccupied &&
-              !tables.find(
-                (t) => t.tableNo === selectedTable,
-              )?.orderID ? (
+            tables.find((t) => t.tableNo === selectedTable)?.isOccupied &&
+            !tables.find((t) => t.tableNo === selectedTable)?.orderID ? (
               <div className="bg-yellow-100 p-4 rounded-md space-y-2">
                 <p className="font-bold text-gray-800 mb-2">
                   No active orders for this table.
@@ -325,7 +321,9 @@ export const PosSideMenu = ({
                   onClick={async () => {
                     try {
                       console.log("Creating order for table:", selectedTable);
-                      const dbTable = tables.find((t) => t.tableNo === selectedTable);
+                      const dbTable = tables.find(
+                        (t) => t.tableNo === selectedTable,
+                      );
                       if (!dbTable || !dbTable._id) {
                         alert("Could not find table in database.");
                         return;
@@ -374,7 +372,6 @@ export const PosSideMenu = ({
               <span>No items yet</span>
             )}
           </div>
-
         )}
       </div>
 
