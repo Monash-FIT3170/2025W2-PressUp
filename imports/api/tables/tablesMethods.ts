@@ -14,7 +14,7 @@ Meteor.methods({
         "Table ID and Order ID are required",
       );
     return await TablesCollection.updateAsync(tableID, {
-      $set: { orderID: orderID, occupied: true },
+      $set: { orderID: orderID, isOccupied: true },
     });
   }),
 
