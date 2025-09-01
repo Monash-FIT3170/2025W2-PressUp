@@ -31,7 +31,6 @@ export const MainDisplay = () => {
   useSubscribe("tables");
 
   const tables = useTracker(() => TablesCollection.find().fetch());
-  const orders = useTracker(() => OrdersCollection.find().fetch());
   const posItems = useTracker(() => MenuItemsCollection.find().fetch());
   // Fetch the current order for the selected table
   const order = useTracker(

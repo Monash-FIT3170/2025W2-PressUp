@@ -311,8 +311,12 @@ export const PosSideMenu = ({
         ) : (
           <div className="p-4 text-center text-gray-500">
             {selectedTable != null &&
-            tables.find((t) => t.tableNo === selectedTable)?.isOccupied &&
-            !tables.find((t) => t.tableNo === selectedTable)?.orderID ? (
+              tables.find(
+                (t) => t.tableNo === selectedTable,
+              )?.isOccupied &&
+              !tables.find(
+                (t) => t.tableNo === selectedTable,
+              )?.orderID ? (
               <div className="bg-yellow-100 p-4 rounded-md space-y-2">
                 <p className="font-bold text-gray-800 mb-2">
                   No active orders for this table.
@@ -327,17 +331,24 @@ export const PosSideMenu = ({
                         return;
                       }
 
-                      const orderId = await Meteor.callAsync("orders.addOrder", {
-                        orderNo: Date.now(),
-                        tableNo: selectedTable,
-                        menuItems: [],
-                        totalPrice: 0,
-                        createdAt: new Date(),
-                        orderStatus: "pending",
-                        paid: false,
-                      });
+                      const orderId = await Meteor.callAsync(
+                        "orders.addOrder",
+                        {
+                          orderNo: Date.now(),
+                          tableNo: selectedTable,
+                          menuItems: [],
+                          totalPrice: 0,
+                          createdAt: new Date(),
+                          orderStatus: "pending",
+                          paid: false,
+                        },
+                      );
 
-                      await Meteor.callAsync("tables.addOrder", dbTable._id, orderId);
+                      await Meteor.callAsync(
+                        "tables.addOrder",
+                        dbTable._id,
+                        orderId,
+                      );
 
                       console.log("Order created:", orderId);
                     } catch (err) {
@@ -346,7 +357,9 @@ export const PosSideMenu = ({
                     }
                   }}
                   disabled={
-                    !!tables.find((t) => t.tableNo === selectedTable && t.orderID)
+                    !!tables.find(
+                      (t) => t.tableNo === selectedTable && t.orderID,
+                    )
                   }
                   className={`px-4 py-2 rounded font-bold text-white ${
                     tables.find((t) => t.tableNo === selectedTable && t.orderID)
