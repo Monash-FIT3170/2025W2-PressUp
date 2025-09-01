@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { FinanceDateFilter } from "../../components/FinanceDateFilter";
@@ -35,9 +35,12 @@ interface DetailItemProps {
   isExpense?: boolean;
 }
 
-const DetailItem = ({ label, amount, percentage, isExpense }: DetailItemProps) => {
-  const isPositive = amount > 0;
-  const sign = amount < 0 ? "-" : "";
+const DetailItem = ({
+  label,
+  amount,
+  percentage,
+  isExpense,
+}: DetailItemProps) => {
 
   return (
     <div className="flex justify-between items-center py-3 px-4 bg-white rounded-lg shadow-sm border border-gray-100">
@@ -169,7 +172,7 @@ export const ExpensesPage = () => {
     const salesItems = Object.keys(salesByCategory).map((cat) => ({
       label: cat,
       amount: salesByCategory[cat],
-      percentage: ((salesByCategory[cat] / salesTotal) * 100),
+      percentage: (salesByCategory[cat] / salesTotal) * 100,
     }));
 
     // Calc expenses
@@ -188,7 +191,7 @@ export const ExpensesPage = () => {
     const expenseItems = Object.keys(expensesBySupplier).map((supplier) => ({
       label: supplier,
       amount: expensesBySupplier[supplier],
-      percentage: ((expensesBySupplier[supplier] / expenses) * 100),
+      percentage: (expensesBySupplier[supplier] / expenses) * 100,
     }));
 
     return {
@@ -211,50 +214,42 @@ export const ExpensesPage = () => {
     setPageTitle("Finance - Sales & Expense Tracking");
   }, [setPageTitle]);
 
-  if (!financialData) {
-    return (
-      <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        Loading...
-      </div>
-    );
-  }
-
   const mainMetrics = useMemo(() => {
-      if (!financialData) return [];
-  
-      return [
-        {
-          key: "sales",
-          title: "Sales",
-          description: "Detailed breakdown of Sales by category.",
-          chartDescription: "Chart of sales by category",
-          amount: financialData.sales.total,
-          items: financialData.sales.items,
-        },
-        {
-          key: "expenses",
-          title: "Expenses",
-          description: "Detailed breakdown of expenses from purchase orders.",
-          chartDescription: "Chart of expenses from purchase orders",
-          amount: financialData.expenses.total,
-          items: financialData.expenses.items,
-        }
-      ];
-    }, [financialData]);
-  
-    const selectedData = useMemo(
-      () => mainMetrics.find((m) => m.key === selectedMetric),
-      [mainMetrics, selectedMetric],
-    );
-  
-    const chartTitle = selectedData?.title + " Chart";
-    const chartDescription = selectedData?.chartDescription;
-    const chartData = useMemo(
-      () => [...(selectedData?.items ?? [])],
-      [selectedData],
-    );
+    if (!financialData) return [];
 
-    if (!selectedMetric) {
+    return [
+      {
+        key: "sales",
+        title: "Sales",
+        description: "Detailed breakdown of Sales by category.",
+        chartDescription: "Chart of sales by category",
+        amount: financialData.sales.total,
+        items: financialData.sales.items,
+      },
+      {
+        key: "expenses",
+        title: "Expenses",
+        description: "Detailed breakdown of expenses from purchase orders.",
+        chartDescription: "Chart of expenses from purchase orders",
+        amount: financialData.expenses.total,
+        items: financialData.expenses.items,
+      },
+    ];
+  }, [financialData]);
+
+  const selectedData = useMemo(
+    () => mainMetrics.find((m) => m.key === selectedMetric),
+    [mainMetrics, selectedMetric],
+  );
+
+  const chartTitle = selectedData?.title + " Chart";
+  const chartDescription = selectedData?.chartDescription;
+  const chartData = useMemo(
+    () => [...(selectedData?.items ?? [])],
+    [selectedData],
+  );
+
+  if (!selectedMetric) {
     return (
       <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
         Data not found.
@@ -317,66 +312,65 @@ export const ExpensesPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Detail Section */}
-        <div className="w-full bg-pink-100 rounded-xl shadow-lg p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">
-              {currentData.title}
-            </h2>
-            <p className="text-gray-600">{currentData.description}</p>
-          </div>
+          {/* Detail Section */}
+          <div className="w-full bg-pink-100 rounded-xl shadow-lg p-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                {currentData.title}
+              </h2>
+              <p className="text-gray-600">{currentData.description}</p>
+            </div>
 
-          <div className="space-y-3 max-h-76 overflow-y-auto pr-2">
-            {filteredItems.map((item, index) => (
-              <DetailItem
-                key={index}
-                label={item.label}
-                amount={item.amount ?? 0}
-                percentage={Number(item.percentage)}
-                isExpense={selectedMetric === "expenses"}
-              />
-            ))}
-          </div>
-        </div>
-
-    {/* Graph */}
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">
-          {chartTitle}
-        </h2>
-        <p className="text-gray-600">{chartDescription}</p>
-      </div>
-      <div className="space-y-3">
-        <div className="h-80 w-full">
-          <ResponsiveContainer>
-            <BarChart data={chartData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" />
-              <YAxis dataKey="label" type="category" width={150}>
-              </YAxis>
-              <XAxis type="number">
-                <Label
-                  value="Amount ($)"
-                  position="insideBottom"
-                  offset={-5}
-                  style={{ textAnchor: "middle" }}
+            <div className="space-y-3 max-h-76 overflow-y-auto pr-2">
+              {filteredItems.map((item, index) => (
+                <DetailItem
+                  key={index}
+                  label={item.label}
+                  amount={item.amount ?? 0}
+                  percentage={Number(item.percentage)}
+                  isExpense={selectedMetric === "expenses"}
                 />
-              </XAxis>
-              <Tooltip />
+              ))}
+            </div>
+          </div>
 
-              <Bar
-                dataKey="amount"
-                fill="#6f597b"
-                name="Amount"
-                isAnimationActive={false}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          {/* Graph */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                {chartTitle}
+              </h2>
+              <p className="text-gray-600">{chartDescription}</p>
+            </div>
+            <div className="space-y-3">
+              <div className="h-80 w-full">
+                <ResponsiveContainer>
+                  <BarChart data={chartData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <YAxis dataKey="label" type="category" width={150}></YAxis>
+                    <XAxis type="number">
+                      <Label
+                        value="Amount ($)"
+                        position="insideBottom"
+                        offset={-5}
+                        style={{ textAnchor: "middle" }}
+                      />
+                    </XAxis>
+                    <Tooltip />
+
+                    <Bar
+                      dataKey="amount"
+                      fill="#6f597b"
+                      name="Amount"
+                      isAnimationActive={false}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      </div>
     </div>
-    </div>
-  </div>
-);
+  );
 };
