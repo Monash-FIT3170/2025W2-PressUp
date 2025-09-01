@@ -245,31 +245,23 @@ export const mockDataGenerator = async ({
     }
   }
 
-  // Create orders and assign to tableNos
+  // Create orders: mix of dine-in (linked to tables) and takeaway (no table)
   if ((await OrdersCollection.countDocuments()) === 0) {
-    // Fetch all existing table numbers
     const allTables = await TablesCollection.find(
       {},
       { fields: { tableNo: 1 } },
     ).fetchAsync();
     const availableTableNos = allTables.map((t) => t.tableNo);
 
-    // Shuffle table numbers and get up to orderCount amount
-    const shuffledTableNos = faker.helpers
-      .shuffle(availableTableNos)
-      .slice(0, orderCount);
+    const dineInCount = Math.max(0, Math.min(orderCount!, availableTableNos.length));
+    const takeawayCount = Math.max(0, orderCount! - dineInCount);
 
-    // Create orders using these table numbers
-    for (let i = 0; i < shuffledTableNos.length; ++i) {
-      const tableNo = shuffledTableNos[i];
-
+    const genOrderMenuItems = async (): Promise<OrderMenuItem[]> => {
       const rawMenuItems = await MenuItemsCollection.rawCollection()
-        .aggregate([
-          { $sample: { size: faker.number.int({ min: 0, max: 3 }) } },
-        ])
+        .aggregate([{ $sample: { size: faker.number.int({ min: 0, max: 3 }) } }])
         .toArray();
 
-      const orderMenuItems: OrderMenuItem[] = rawMenuItems.map((item) => ({
+      return rawMenuItems.map((item: any) => ({
         _id: faker.string.alpha(10),
         name: item.name,
         quantity: faker.number.int({ min: 1, max: 3 }),
@@ -279,38 +271,55 @@ export const mockDataGenerator = async ({
         category: item.category ?? [],
         image: item.image ?? "",
       }));
+    };
 
-      // Set orderStatus Pending if no items, otherwise 50% chance Preparing, 30% Ready and 20% Pending
-      let orderStatus: OrderStatus;
-      if (orderMenuItems.length === 0) {
-        orderStatus = OrderStatus.Pending;
-      } else {
-        orderStatus = faker.datatype.boolean(0.5)
-          ? OrderStatus.Preparing
-          : faker.datatype.boolean(0.3)
-            ? OrderStatus.Ready
-            : OrderStatus.Pending;
-      }
+    const decideStatus = (items: OrderMenuItem[]): OrderStatus => {
+      if (items.length === 0) return OrderStatus.Pending;
+      return faker.datatype.boolean(0.5)
+        ? OrderStatus.Preparing
+        : faker.datatype.boolean(0.3)
+        ? OrderStatus.Ready
+        : OrderStatus.Pending;
+    };
 
-      // Insert order and get its ID
+    const shuffledTableNos = faker.helpers.shuffle(availableTableNos).slice(0, dineInCount);
+    for (const tableNo of shuffledTableNos) {
+      const items = await genOrderMenuItems();
+      const status = decideStatus(items);
+      const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
+
       const orderID = await OrdersCollection.insertAsync({
         orderNo: faker.number.int({ min: 1000, max: 9999 }),
-        tableNo: tableNo,
-        menuItems: orderMenuItems,
-        totalPrice: orderMenuItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0,
-        ),
+        orderType: "dine-in",
+        tableNo,
+        menuItems: items,
+        totalPrice: total,
         paid: false,
-        orderStatus,
+        orderStatus: status,
         createdAt: faker.date.recent({ days: 7 }),
       });
 
-      // Update the table to reference this order ID
       await TablesCollection.updateAsync(
         { tableNo },
         { $set: { orderID: String(orderID) } },
       );
+    }
+
+    for (let i = 0; i < takeawayCount; i++) {
+      const items = await genOrderMenuItems();
+      const status = decideStatus(items);
+      const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
+
+      await OrdersCollection.insertAsync({
+        orderNo: faker.number.int({ min: 1000, max: 9999 }),
+        orderType: "takeaway",
+        tableNo: null,
+        menuItems: items,
+        totalPrice: total,
+        paid: false,
+        orderStatus: status,
+        createdAt: faker.date.recent({ days: 7 }),
+      });
     }
   }
 };
