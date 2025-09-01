@@ -36,14 +36,14 @@ export const KitchenManagement = () => {
       const created =
         doc.createdAt instanceof Date
           ? doc.createdAt
-          : new Date(doc.createdAt as any);
-    
+          : new Date(doc.createdAt as Date);
+
       return {
         _id: doc._id,
         orderNo: doc.orderNo,
         tableNo: doc.tableNo,
         createdAt: created.toLocaleTimeString().toUpperCase(),
-        createdAtMs: created.getTime(),      
+        createdAtMs: created.getTime(),
         status: doc.orderStatus,
         menuItems: (doc.menuItems ?? []).map((it) => ({
           name: it.name,

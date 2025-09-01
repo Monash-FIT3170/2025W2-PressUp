@@ -55,7 +55,6 @@ export const OrderCard = ({ order }: OrderCardProps) => {
     id: order._id,
   });
 
-
   // Dialog state
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState(order.status);
@@ -112,10 +111,12 @@ export const OrderCard = ({ order }: OrderCardProps) => {
   // (A) createdMs: Safely calculate (prevent NaN/undefined issues)
   const createdMs = Number.isFinite(order.createdAtMs)
     ? (order.createdAtMs as number)
-    : (Date.parse(order.createdAt) || Date.now());
+    : Date.parse(order.createdAt) || Date.now();
 
   // (B) Waiting time state/effect
-  const [waitText, setWaitText] = useState(() => formatWait(Date.now() - createdMs));
+  const [waitText, setWaitText] = useState(() =>
+    formatWait(Date.now() - createdMs),
+  );
   useEffect(() => {
     const tick = () => setWaitText(formatWait(Date.now() - createdMs));
     tick();
@@ -126,9 +127,11 @@ export const OrderCard = ({ order }: OrderCardProps) => {
   // (C) Color calculation (also uses createdMs)
   const ageMs = Date.now() - createdMs;
   const waitColor =
-    ageMs < 10 * 60 * 1000 ? "#2ecc71"
-  : ageMs < 20 * 60 * 1000 ? "#f39c12"
-  : "#e74c3c";
+    ageMs < 10 * 60 * 1000
+      ? "#2ecc71"
+      : ageMs < 20 * 60 * 1000
+        ? "#f39c12"
+        : "#e74c3c";
 
   const handleSave = () => {
     if (!order || !order._id) {
@@ -195,7 +198,9 @@ export const OrderCard = ({ order }: OrderCardProps) => {
                   <li key={index}>{item.name}</li>
                 ))
               ) : (
-                <li className="italic text-sm text-press-up-purple">No items</li>
+                <li className="italic text-sm text-press-up-purple">
+                  No items
+                </li>
               )}
             </ul>
           </div>
