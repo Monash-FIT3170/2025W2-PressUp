@@ -195,7 +195,12 @@ export const OrderCard = ({ order }: OrderCardProps) => {
             <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
               {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
                 order.menuItems.map((item, index) => (
-                  <li key={index}>{item.name}</li>
+                  <li key={index}>
+                    <span className="ml-2 text-base font-semibold">
+                      {item.quantity} x{" "}
+                    </span>
+                    {item.name}
+                  </li>
                 ))
               ) : (
                 <li className="italic text-sm text-press-up-purple">
