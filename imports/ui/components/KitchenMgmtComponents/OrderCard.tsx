@@ -148,7 +148,7 @@ export const OrderCard = ({ order }: OrderCardProps) => {
             Order #{order.orderNo}
           </h3>
           <p className="font-bold text-lg text-press-up-purple">
-            Table {order.tableNo}
+            {order.tableNo != null ? `Table ${order.tableNo}` : "Takeaway"}
           </p>
           <p className="text-sm text-press-up-purple">{order.createdAt}</p>
 
@@ -177,7 +177,8 @@ export const OrderCard = ({ order }: OrderCardProps) => {
             <strong>Order No:</strong> {order.orderNo}
           </p>
           <p>
-            <strong>Table No:</strong> {order.tableNo}
+            <strong>Table:</strong>{" "}
+            {order.tableNo != null ? order.tableNo : "Takeaway"}
           </p>
           <p>
             <strong>Created At:</strong> {order.createdAt}
