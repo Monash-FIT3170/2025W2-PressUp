@@ -6,6 +6,7 @@ import { TablesCollection } from "/imports/api/tables/TablesCollection";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useNavigate } from "react-router";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 // -------- Seat positioning helper --------
 const getSeatPositions = (
@@ -30,6 +31,7 @@ interface Table {
   capacity: number;
   noOccupants?: number;
   isOccupied?: boolean;
+  orderID?: string | null;
 }
 
 interface TableCardProps {
@@ -146,6 +148,10 @@ export const TablesPage = () => {
   const [modalOriginalTable, setModalOriginalTable] = useState<Table | null>(
     null,
   );
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMsg, setConfirmMsg] = useState("");
+  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+  const [clearOrderOnSave, setClearOrderOnSave] = useState(false);
   const [deleteTableInput, setDeleteTableInput] = useState("");
 
   // Prefill grid with tables from DB on initial load
@@ -535,10 +541,14 @@ export const TablesPage = () => {
                           orderId,
                         );
 
-                        // 3. Update local grid
+                        // Update local grid
                         const updated = grid.map((t) =>
                           t?.tableNo === editTableData!.tableNo
-                            ? { ...t, isOccupied: true, orderID: orderId }
+                            ? {
+                                ...t,
+                                isOccupied: true,
+                                orderID: String(orderId),
+                              }
                             : t,
                         );
                         setGrid(updated);
@@ -582,13 +592,37 @@ export const TablesPage = () => {
                   <button
                     onClick={() => {
                       const newOccupied = !occupiedToggle;
+                      // if we're marking vacant and there's an existing order, confirm first
+                      const dbTable = tablesFromDb.find(
+                        (t) => t.tableNo === editTableData!.tableNo,
+                      );
+                      const hasOrder = !!(
+                        dbTable?.orderID ||
+                        editTableData?.orderID ||
+                        modalOriginalTable?.orderID
+                      );
+                      if (!newOccupied && hasOrder) {
+                        setConfirmMsg(
+                          "This will remove the linked order and mark the table as vacant. Continue?",
+                        );
+                        setConfirmAction(() => () => {
+                          setOccupiedToggle(false);
+                          setOccupancyInput("");
+                          setClearOrderOnSave(true);
+                          setConfirmOpen(false);
+                        });
+                        setConfirmOpen(true);
+                        return;
+                      }
                       setOccupiedToggle(newOccupied);
                       if (!newOccupied) {
                         // hide/clear occupancy input when marking vacant
                         setOccupancyInput("");
+                        setClearOrderOnSave(false);
                       } else if (!occupancyInput) {
                         // default to 1 occupant when marking occupied and no value present
                         setOccupancyInput("1");
+                        setClearOrderOnSave(false);
                       }
                     }}
                     aria-pressed={occupiedToggle}
@@ -669,6 +703,8 @@ export const TablesPage = () => {
                         const copy = { ...base } as TableWithOptionalOccupants;
                         copy.isOccupied = false;
                         delete copy.noOccupants;
+                        // also clear any local order link
+                        copy.orderID = null;
                         return copy;
                       });
                       setGrid(updated);
@@ -686,21 +722,37 @@ export const TablesPage = () => {
                           dbTable._id,
                           parseInt(capacityInput, 10),
                         );
-                        // persist occupancy state (unset noOccupants when vacant)
+                        // persist occupancy and order state
                         try {
-                          await Meteor.callAsync(
-                            "tables.setOccupied",
-                            dbTable._id,
-                            occupiedToggle,
-                            occupiedToggle
-                              ? parseInt(occupancyInput || "0", 10)
-                              : 0,
-                          );
+                          if (!occupiedToggle) {
+                            // We are marking vacant. If there is an order, clear it too.
+                            if (dbTable.orderID || clearOrderOnSave) {
+                              await Meteor.callAsync(
+                                "tables.clearOrder",
+                                dbTable._id,
+                              );
+                            } else {
+                              await Meteor.callAsync(
+                                "tables.setOccupied",
+                                dbTable._id,
+                                false,
+                                0,
+                              );
+                            }
+                          } else {
+                            await Meteor.callAsync(
+                              "tables.setOccupied",
+                              dbTable._id,
+                              true,
+                              parseInt(occupancyInput || "0", 10),
+                            );
+                          }
                           // clear snapshot after successful save
                           setModalOriginalTable(null);
+                          setClearOrderOnSave(false);
                         } catch (err) {
                           console.error(
-                            "Failed to persist occupancy on save:",
+                            "Failed to persist occupancy/order on save:",
                             err,
                           );
                         }
@@ -714,6 +766,16 @@ export const TablesPage = () => {
                 </div>
               </>
             )}
+
+            {/* Confirmation Modal */}
+            <ConfirmModal
+              open={confirmOpen}
+              message={confirmMsg}
+              onConfirm={() => {
+                if (confirmAction) confirmAction();
+              }}
+              onCancel={() => setConfirmOpen(false)}
+            />
 
             {/* Delete Table Modal */}
             {modalType === "deleteTable" && (
