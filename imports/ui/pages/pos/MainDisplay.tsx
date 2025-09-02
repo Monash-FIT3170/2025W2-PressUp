@@ -39,10 +39,10 @@ export const MainDisplay = () => {
       return OrdersCollection.findOne(activeOrderId as any) ?? null;
     }
     return selectedTable
-      ? OrdersCollection.find({
+      ? (OrdersCollection.find({
           tableNo: selectedTable,
           $or: [{ orderType: "dine-in" }, { orderType: { $exists: false } }],
-        }).fetch()[0] ?? null
+        }).fetch()[0] ?? null)
       : null;
   }, [activeOrderId, selectedTable]);
 
@@ -308,7 +308,7 @@ export const MainDisplay = () => {
           onUpdateOrder={updateOrderInDb}
           selectedTable={selectedTable} // pass down
           setSelectedTable={setSelectedTable} // pass down
-          onActiveOrderChange={setActiveOrderId}  
+          onActiveOrderChange={setActiveOrderId}
         />
       </div>
     </div>

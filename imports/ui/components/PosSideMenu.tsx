@@ -39,8 +39,9 @@ export const PosSideMenu = ({
   useSubscribe("tables");
   const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
 
-
-  const [selectedTakeawayId, setSelectedTakeawayId] = useState<string | null>(null);
+  const [selectedTakeawayId, setSelectedTakeawayId] = useState<string | null>(
+    null,
+  );
   const activeTakeawayOrders = useTracker(
     () =>
       OrdersCollection.find(
@@ -49,7 +50,6 @@ export const PosSideMenu = ({
       ).fetch(),
     [],
   );
-
 
   const order = useTracker(() => {
     if (orderType === "dine-in" && selectedTable != null) {
@@ -95,12 +95,21 @@ export const PosSideMenu = ({
   }, [order?._id, order?.discountPercent, order?.discountAmount]);
 
   useEffect(() => {
-    if ((order?.discountPercent ?? 0) === 0 && (order?.discountAmount ?? 0) === 0) {
+    if (
+      (order?.discountPercent ?? 0) === 0 &&
+      (order?.discountAmount ?? 0) === 0
+    ) {
       setOriginalPrice(baseTotal); // use baseTotal, not props.total
     } else if (order?.originalPrice) {
       setOriginalPrice(order.originalPrice);
     }
-  }, [baseTotal, order?._id, order?.originalPrice, order?.discountPercent, order?.discountAmount]);
+  }, [
+    baseTotal,
+    order?._id,
+    order?.originalPrice,
+    order?.discountPercent,
+    order?.discountAmount,
+  ]);
 
   useEffect(() => {
     // Always calculate discounts from originalPrice
@@ -229,7 +238,7 @@ export const PosSideMenu = ({
   };
 
   const generateFourDigitOrderNo = (): number => {
-    for (let i = 0; i < 10; i++) { 
+    for (let i = 0; i < 10; i++) {
       const candidate = Math.floor(1000 + Math.random() * 9000); // 1000~9999
       const exists = OrdersCollection.findOne({ orderNo: candidate });
       if (!exists) return candidate;
@@ -237,7 +246,6 @@ export const PosSideMenu = ({
     // Fallback (extremely unlikely) — still return a 4-digit number
     return Math.floor(1000 + Math.random() * 9000);
   };
-
 
   return (
     <div className="w-64 h-[75vh] flex flex-col">
@@ -286,8 +294,8 @@ export const PosSideMenu = ({
                 </option>
               ))}
             </select>
-            ) : (
-              <div className="flex items-center gap-2">
+          ) : (
+            <div className="flex items-center gap-2">
               <select
                 className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none"
                 value={selectedTakeawayId ?? ""}
@@ -297,15 +305,15 @@ export const PosSideMenu = ({
                   onActiveOrderChange?.(v);
                 }}
               >
-                  <option value="">Select Takeaway Order</option>
-                  {activeTakeawayOrders.map((o) => (
-                    <option key={o._id} value={o._id}>
-                      Order #{o.orderNo}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+                <option value="">Select Takeaway Order</option>
+                {activeTakeawayOrders.map((o) => (
+                  <option key={o._id} value={o._id}>
+                    Order #{o.orderNo}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {/* Close button */}
           <button className="text-2xl font-bold absolute right-0">×</button>
         </div>
@@ -413,17 +421,21 @@ export const PosSideMenu = ({
                 >
                   Start a new order?
                 </button>
-                </div>
-                ) : orderType === "takeaway" && !selectedTakeawayId ? (
-                  /* takeaway empty + no selected order: show helper */
-                  <div className="bg-yellow-100 p-4 rounded-md space-y-2">
-                    <p className="font-bold text-gray-800 mb-2">No active takeaway order.</p>
-                    <p className="text-sm text-gray-700">Use the button below to start.</p>
-                  </div>
-                ) : (
-                  /* takeaway with an order selected but no items: show nothing (so the user can add from menu) */
-                  <span className="sr-only">{/* keep area clean */}</span>
-                )}
+              </div>
+            ) : orderType === "takeaway" && !selectedTakeawayId ? (
+              /* takeaway empty + no selected order: show helper */
+              <div className="bg-yellow-100 p-4 rounded-md space-y-2">
+                <p className="font-bold text-gray-800 mb-2">
+                  No active takeaway order.
+                </p>
+                <p className="text-sm text-gray-700">
+                  Use the button below to start.
+                </p>
+              </div>
+            ) : (
+              /* takeaway with an order selected but no items: show nothing (so the user can add from menu) */
+              <span className="sr-only">{/* keep area clean */}</span>
+            )}
           </div>
         )}
       </div>
@@ -691,7 +703,9 @@ export const PosSideMenu = ({
         {/* Pay button */}
         {order && (
           <PaymentModal
-            tableNo={order.orderType === "dine-in" ? order.tableNo ?? null : null}
+            tableNo={
+              order.orderType === "dine-in" ? (order.tableNo ?? null) : null
+            }
             order={order}
           />
         )}

@@ -253,12 +253,17 @@ export const mockDataGenerator = async ({
     ).fetchAsync();
     const availableTableNos = allTables.map((t) => t.tableNo);
 
-    const dineInCount = Math.max(0, Math.min(orderCount!, availableTableNos.length));
+    const dineInCount = Math.max(
+      0,
+      Math.min(orderCount!, availableTableNos.length),
+    );
     const takeawayCount = Math.max(0, orderCount! - dineInCount);
 
     const genOrderMenuItems = async (): Promise<OrderMenuItem[]> => {
       const rawMenuItems = await MenuItemsCollection.rawCollection()
-        .aggregate([{ $sample: { size: faker.number.int({ min: 0, max: 3 }) } }])
+        .aggregate([
+          { $sample: { size: faker.number.int({ min: 0, max: 3 }) } },
+        ])
         .toArray();
 
       return rawMenuItems.map((item: any) => ({
@@ -278,11 +283,13 @@ export const mockDataGenerator = async ({
       return faker.datatype.boolean(0.5)
         ? OrderStatus.Preparing
         : faker.datatype.boolean(0.3)
-        ? OrderStatus.Ready
-        : OrderStatus.Pending;
+          ? OrderStatus.Ready
+          : OrderStatus.Pending;
     };
 
-    const shuffledTableNos = faker.helpers.shuffle(availableTableNos).slice(0, dineInCount);
+    const shuffledTableNos = faker.helpers
+      .shuffle(availableTableNos)
+      .slice(0, dineInCount);
     for (const tableNo of shuffledTableNos) {
       const items = await genOrderMenuItems();
       const status = decideStatus(items);

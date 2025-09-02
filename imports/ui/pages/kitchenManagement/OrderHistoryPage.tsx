@@ -47,7 +47,7 @@ export const OrderHistoryPage = () => {
     return docs.map((doc: DBOrder) => ({
       _id: doc._id,
       orderNo: doc.orderNo,
-      tableNo: doc.tableNo ?? null,  
+      tableNo: doc.tableNo ?? null,
       createdAt: new Date(doc.createdAt).toLocaleString(),
       status: doc.orderStatus,
       items: (doc.menuItems ?? [])
