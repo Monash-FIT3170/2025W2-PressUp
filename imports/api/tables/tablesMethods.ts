@@ -60,6 +60,34 @@ Meteor.methods({
     });
   }),
 
+  "tables.setOccupied": requireLoginMethod(async function (
+    tableID: IdType,
+    isOccupied: boolean,
+    occupants: number,
+  ) {
+    if (!tableID || typeof isOccupied !== "boolean")
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Table ID and occupancy flag are required",
+      );
+    const updateOps: {
+      $set?: Partial<Tables>;
+      $unset?: { [k: string]: "" };
+    } = {};
+    if (isOccupied) {
+      updateOps.$set = { isOccupied };
+      if (typeof occupants === "number") {
+        updateOps.$set.noOccupants = occupants;
+      }
+    } else {
+      // set isOccupied false and remove noOccupants from DB
+      updateOps.$set = { isOccupied };
+      updateOps.$unset = { noOccupants: "" };
+    }
+
+    return await TablesCollection.updateAsync(tableID, updateOps);
+  }),
+
   "tables.addTable": requireLoginMethod(async function (table: OmitDB<Tables>) {
     if (
       typeof table.tableNo !== "number" ||

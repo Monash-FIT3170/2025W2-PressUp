@@ -40,6 +40,9 @@ interface TableCardProps {
   onEdit: () => void;
 }
 
+// helper local type to avoid long inline intersection in casts
+type TableWithOptionalOccupants = Table & { noOccupants?: number };
+
 // -------- TableCard --------
 const TableCard = ({
   table,
@@ -139,6 +142,10 @@ export const TablesPage = () => {
   const [editTableData, setEditTableData] = useState<Table | null>(null);
   const [capacityInput, setCapacityInput] = useState("");
   const [occupancyInput, setOccupancyInput] = useState("");
+  const [occupiedToggle, setOccupiedToggle] = useState(false);
+  const [modalOriginalTable, setModalOriginalTable] = useState<Table | null>(
+    null,
+  );
   const [deleteTableInput, setDeleteTableInput] = useState("");
 
   // Prefill grid with tables from DB on initial load
@@ -212,9 +219,9 @@ export const TablesPage = () => {
             isDragging={isDragging}
             dragRef={drag as unknown as React.Ref<HTMLDivElement>}
             onEdit={() => {
+              // open modal and capture a snapshot of the table so Cancel can revert
               setEditTableData(table);
-              setCapacityInput(table.capacity.toString());
-              setOccupancyInput(table.noOccupants?.toString() || "0");
+              setModalOriginalTable(table);
               setModalType("editTable");
             }}
           />
@@ -271,6 +278,20 @@ export const TablesPage = () => {
       navigate("/pos/orders");
     }
   };
+
+  // initialize modal-local fields from snapshot when opening edit modal
+  useEffect(() => {
+    if (modalType === "editTable" && modalOriginalTable) {
+      setEditTableData(modalOriginalTable);
+      setCapacityInput(modalOriginalTable.capacity.toString());
+      setOccupancyInput(modalOriginalTable.noOccupants?.toString() ?? "");
+      setOccupiedToggle(!!modalOriginalTable.isOccupied);
+    }
+    if (modalType === null) {
+      // clean up snapshot when modal closes
+      setModalOriginalTable(null);
+    }
+  }, [modalType, modalOriginalTable]);
 
   // -------- Render --------
   return (
@@ -460,75 +481,27 @@ export const TablesPage = () => {
                   placeholder="Number of seats"
                   min={1}
                 />
-                <button></button>
-                <label
-                  htmlFor="edit-table-occupancy"
-                  className="block mb-2 text-sm font-medium text-red-900 dark:text-black"
-                >
-                  Number of Occupants
-                </label>
-                <input
-                  id="edit-table-occupancy"
-                  type="number"
-                  value={occupancyInput}
-                  onChange={(e) => setOccupancyInput(e.target.value)}
-                  className="w-full border rounded px-2 py-1 mb-4"
-                  placeholder="Number of occupants"
-                  min={1}
-                />
-                <div className="flex justify-between gap-2">
-                  {/* Save Button */}
-                  <button
-                    onClick={async () => {
-                      if (
-                        !capacityInput ||
-                        isNaN(Number(capacityInput)) ||
-                        Number(capacityInput) < 1
-                      ) {
-                        alert(
-                          "Please enter a valid number of seats (must be at least 1).",
-                        );
-                        return;
-                      } else if (
-                        isNaN(Number(occupancyInput)) ||
-                        Number(occupancyInput) > Number(capacityInput)
-                      ) {
-                        alert(
-                          "Please enter a valid number of occupants (cannot exceed capacity).",
-                        );
-                      }
-                      const updated = grid.map((t) =>
-                        t?.tableNo === editTableData!.tableNo
-                          ? {
-                              ...t,
-                              capacity: parseInt(capacityInput, 10),
-                              noOccupants: parseInt(occupancyInput, 10),
-                            }
-                          : t,
-                      );
-                      setGrid(updated);
-                      setModalType(null);
-                      setCapacityInput("");
-                      setOccupancyInput("");
-                      markChanged();
-                      const dbTable = tablesFromDb.find(
-                        (t) => t.tableNo === editTableData!.tableNo,
-                      );
-                      if (dbTable && dbTable._id) {
-                        await Meteor.callAsync(
-                          "tables.changeCapacity",
-                          dbTable._id,
-                          parseInt(capacityInput, 10),
-                          parseInt(occupancyInput, 10),
-                        );
-                      }
-                    }}
-                    style={{ backgroundColor: "#1e032e", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:bg-[#6f597b]"
-                  >
-                    Save
-                  </button>
-
+                {occupiedToggle && (
+                  <>
+                    <label
+                      htmlFor="edit-table-occupancy"
+                      className="block mb-2 text-sm font-medium text-red-900 dark:text-black"
+                    >
+                      Number of Occupants
+                    </label>
+                    <input
+                      id="edit-table-occupancy"
+                      type="number"
+                      value={occupancyInput}
+                      onChange={(e) => setOccupancyInput(e.target.value)}
+                      className="w-full border rounded px-2 py-1 mb-4"
+                      placeholder="Number of occupants"
+                      min={1}
+                    />
+                  </>
+                )}
+                {/* Top row: Add Order + Occupied toggle */}
+                <div className="flex justify-between items-center gap-2 mb-3">
                   {/* Add Order Button */}
                   <button
                     onClick={async () => {
@@ -604,8 +577,53 @@ export const TablesPage = () => {
                   >
                     Add Order
                   </button>
+
+                  {/* Occupied toggle */}
                   <button
-                    onClick={() => setModalType(null)}
+                    onClick={() => {
+                      const newOccupied = !occupiedToggle;
+                      setOccupiedToggle(newOccupied);
+                      if (!newOccupied) {
+                        // hide/clear occupancy input when marking vacant
+                        setOccupancyInput("");
+                      } else if (!occupancyInput) {
+                        // default to 1 occupant when marking occupied and no value present
+                        setOccupancyInput("1");
+                      }
+                    }}
+                    aria-pressed={occupiedToggle}
+                    aria-label={occupiedToggle ? "Set Vacant" : "Set Occupied"}
+                    style={{
+                      backgroundColor: occupiedToggle ? "#c97f97" : "#6f597b",
+                      color: "#fff",
+                      minWidth: 110,
+                    }}
+                    className="px-4 py-1 rounded"
+                  >
+                    {occupiedToggle ? "Occupied" : "Vacant"}
+                  </button>
+                </div>
+
+                {/* Bottom row: Cancel & Save */}
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => {
+                      // discard modal-local changes: restore snapshot
+                      setModalType(null);
+                      if (modalOriginalTable) {
+                        setCapacityInput(
+                          modalOriginalTable.capacity.toString(),
+                        );
+                        setOccupancyInput(
+                          modalOriginalTable.noOccupants?.toString() ?? "",
+                        );
+                        setOccupiedToggle(!!modalOriginalTable.isOccupied);
+                      } else {
+                        setCapacityInput("");
+                        setOccupancyInput("");
+                        setOccupiedToggle(false);
+                      }
+                    }}
                     style={{
                       backgroundColor: "#fff",
                       border: "1px solid #6f597b",
@@ -614,6 +632,84 @@ export const TablesPage = () => {
                     className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
                   >
                     Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (
+                        !capacityInput ||
+                        isNaN(Number(capacityInput)) ||
+                        Number(capacityInput) < 1
+                      ) {
+                        alert(
+                          "Please enter a valid number of seats (must be at least 1).",
+                        );
+                        return;
+                      } else if (
+                        isNaN(Number(occupancyInput)) ||
+                        Number(occupancyInput) > Number(capacityInput)
+                      ) {
+                        alert(
+                          "Please enter a valid number of occupants (cannot exceed capacity).",
+                        );
+                      }
+                      const updated = grid.map((t) => {
+                        if (t?.tableNo !== editTableData!.tableNo) return t;
+                        const base = {
+                          ...t,
+                          capacity: parseInt(capacityInput, 10),
+                        } as TableWithOptionalOccupants;
+                        if (occupiedToggle) {
+                          return {
+                            ...base,
+                            isOccupied: true,
+                            noOccupants: parseInt(occupancyInput, 10),
+                          };
+                        }
+                        // vacant: remove local noOccupants and mark not occupied
+                        const copy = { ...base } as TableWithOptionalOccupants;
+                        copy.isOccupied = false;
+                        delete copy.noOccupants;
+                        return copy;
+                      });
+                      setGrid(updated);
+                      setModalType(null);
+                      setCapacityInput("");
+                      setOccupancyInput("");
+                      markChanged();
+                      const dbTable = tablesFromDb.find(
+                        (t) => t.tableNo === editTableData!.tableNo,
+                      );
+                      if (dbTable && dbTable._id) {
+                        // persist capacity first
+                        await Meteor.callAsync(
+                          "tables.changeCapacity",
+                          dbTable._id,
+                          parseInt(capacityInput, 10),
+                        );
+                        // persist occupancy state (unset noOccupants when vacant)
+                        try {
+                          await Meteor.callAsync(
+                            "tables.setOccupied",
+                            dbTable._id,
+                            occupiedToggle,
+                            occupiedToggle
+                              ? parseInt(occupancyInput || "0", 10)
+                              : 0,
+                          );
+                          // clear snapshot after successful save
+                          setModalOriginalTable(null);
+                        } catch (err) {
+                          console.error(
+                            "Failed to persist occupancy on save:",
+                            err,
+                          );
+                        }
+                      }
+                    }}
+                    style={{ backgroundColor: "#1e032e", color: "#fff" }}
+                    className="px-4 py-1 rounded hover:bg-[#6f597b]"
+                  >
+                    Save
                   </button>
                 </div>
               </>
