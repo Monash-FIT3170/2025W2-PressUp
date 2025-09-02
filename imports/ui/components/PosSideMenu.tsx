@@ -228,6 +228,7 @@ export const PosSideMenu = ({
     navigate(`${location.pathname}?${params.toString()}`);
   };
 
+
   return (
     <div className="w-64 h-[75vh] flex flex-col">
       {/* Header */}
