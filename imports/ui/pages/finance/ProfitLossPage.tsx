@@ -350,7 +350,7 @@ export const ProfitLossPage = () => {
   }
 
   return (
-    <div className="w-full p-6 bg-gray-50 min-h-screen">
+    <div className="w-full p-6 bg-gray-50 max-h-screen overflow-y-auto">
       {/* Date Filter and Period Display */}
       <div className="flex items-baseline gap-4 mb-4">
         <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
