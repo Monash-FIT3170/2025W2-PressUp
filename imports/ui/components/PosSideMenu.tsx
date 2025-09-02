@@ -314,8 +314,6 @@ export const PosSideMenu = ({
               </select>
             </div>
           )}
-          {/* Close button */}
-          <button className="text-2xl font-bold absolute right-0">×</button>
         </div>
       </div>
       {/* Items */}
