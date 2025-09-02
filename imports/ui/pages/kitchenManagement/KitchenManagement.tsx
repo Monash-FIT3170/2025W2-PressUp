@@ -36,7 +36,7 @@ export const KitchenManagement = () => {
       (doc: DBOrder): UiOrder => ({
         _id: doc._id,
         orderNo: doc.orderNo,
-        tableNo: doc.tableNo,
+        tableNo: doc.tableNo ?? null,
         createdAt: new Date(doc.createdAt).toLocaleTimeString().toUpperCase(),
         status: doc.orderStatus,
         menuItems: (doc.menuItems ?? []).map((it) => ({

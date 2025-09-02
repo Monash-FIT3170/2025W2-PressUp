@@ -6,7 +6,7 @@ export type UiOrder = {
   _id: IdType;
   orderNo: number;
   status: OrderStatus;
-  tableNo: number;
+  tableNo: number | null;
   createdAt: string;
   menuItems: Array<{
     name: string;
