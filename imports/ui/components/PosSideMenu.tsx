@@ -19,10 +19,11 @@ interface PosSideMenuProps {
   onUpdateOrder?: (fields: Partial<Order>) => void;
   selectedTable: number | null;
   setSelectedTable: (tableNo: number) => void;
+  onActiveOrderChange?: (orderId: string | null) => void;
 }
 
 export const PosSideMenu = ({
-  items,
+  items: _items,
   total,
   orderId,
   onIncrease,
@@ -31,6 +32,7 @@ export const PosSideMenu = ({
   onUpdateOrder,
   selectedTable,
   setSelectedTable,
+  onActiveOrderChange,
 }: PosSideMenuProps) => {
   // Fetch the current order for this table
   useSubscribe("orders");
@@ -51,15 +53,12 @@ export const PosSideMenu = ({
 
   const order = useTracker(() => {
     if (orderType === "dine-in" && selectedTable != null) {
-      return OrdersCollection.find(
-        {
-          tableNo: selectedTable,
-          $or: [{ orderType: "dine-in" }, { orderType: { $exists: false } }],
-        },
-      ).fetch()[0];
+      return OrdersCollection.find({
+        tableNo: selectedTable,
+        $or: [{ orderType: "dine-in" }, { orderType: { $exists: false } }],
+      }).fetch()[0];
     }
     if (orderType === "takeaway" && selectedTakeawayId) {
-
       return OrdersCollection.findOne(selectedTakeawayId as any) ?? undefined;
     }
     return undefined;
@@ -112,6 +111,10 @@ export const PosSideMenu = ({
     const saved = originalPrice - final;
     setSavedAmount(saved);
   }, [originalPrice, discountPercent, discountAmount]);
+
+  useEffect(() => {
+    onActiveOrderChange?.(order?._id ?? null);
+  }, [order?._id]);
 
   // Discount handlers
   const applyPercentDiscount = (percentage: number | string) => {
@@ -274,11 +277,15 @@ export const PosSideMenu = ({
             </select>
             ) : (
               <div className="flex items-center gap-2">
-                <select
-                  className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none"
-                  value={selectedTakeawayId ?? ""}
-                  onChange={(e) => setSelectedTakeawayId(e.target.value || null)}
-                >
+              <select
+                className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none"
+                value={selectedTakeawayId ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value || null;
+                  setSelectedTakeawayId(v);
+                  onActiveOrderChange?.(v);
+                }}
+              >
                   <option value="">Select Takeaway Order</option>
                   {activeTakeawayOrders.map((o) => (
                     <option key={o._id} value={o._id}>
@@ -340,6 +347,7 @@ export const PosSideMenu = ({
             {selectedTable != null &&
             tables.find((t) => t.tableNo === selectedTable)?.isOccupied &&
             !tables.find((t) => t.tableNo === selectedTable)?.orderID ? (
+              /* dine-in empty: show "start new order for table" card (keep as-is) */
               <div className="bg-yellow-100 p-4 rounded-md space-y-2">
                 <p className="font-bold text-gray-800 mb-2">
                   No active orders for this table.
@@ -394,39 +402,17 @@ export const PosSideMenu = ({
                 >
                   Start a new order?
                 </button>
-              </div>
-              ) : (
-                orderType === "takeaway" ? (
+                </div>
+                ) : orderType === "takeaway" && !selectedTakeawayId ? (
+                  /* takeaway empty + no selected order: show helper */
                   <div className="bg-yellow-100 p-4 rounded-md space-y-2">
                     <p className="font-bold text-gray-800 mb-2">No active takeaway order.</p>
-                    <button
-                      onClick={async () => {
-                        try {
-                          const newId = await Meteor.callAsync("orders.addOrder", {
-                            orderNo: Date.now(),
-                            orderType: "takeaway",
-                            tableNo: null,
-                            menuItems: [],
-                            totalPrice: 0,
-                            createdAt: new Date(),
-                            orderStatus: "pending",
-                            paid: false,
-                          });
-                          setSelectedTakeawayId(String(newId));
-                        } catch (err) {
-                          console.error(err);
-                          alert("Failed to add takeaway order.");
-                        }
-                      }}
-                      className="px-4 py-2 rounded font-bold text-white bg-press-up-positive-button hover:bg-press-up-hover"
-                    >
-                      Start a new order?
-                    </button>
+                    <p className="text-sm text-gray-700">Use the button below to start.</p>
                   </div>
                 ) : (
-                  <span>No items yet</span>
-                )
-              )}
+                  /* takeaway with an order selected but no items: show nothing (so the user can add from menu) */
+                  <span className="sr-only">{/* keep area clean */}</span>
+                )}
           </div>
         )}
       </div>
@@ -476,7 +462,7 @@ export const PosSideMenu = ({
         {orderType === "takeaway" && (
           <button
             // full width, sits right under Discount button
-            className="w-full bg-press-up-positive-button hover:bg-press-up-hover text-white font-bold py-2 px-4 rounded-full mb-2"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full mb-2"
             onClick={async () => {
               try {
                 // create a fresh takeaway order
@@ -491,6 +477,7 @@ export const PosSideMenu = ({
                   paid: false,
                 });
                 setSelectedTakeawayId(String(newId)); // select the new order immediately
+                onActiveOrderChange?.(String(newId));
               } catch (e) {
                 console.error(e);
                 alert("Failed to create takeaway order.");
