@@ -88,6 +88,16 @@ Meteor.methods({
     return await TablesCollection.updateAsync(tableID, updateOps);
   }),
 
+  "tables.clearOrder": requireLoginMethod(async function (tableID: IdType) {
+    if (!tableID)
+      throw new Meteor.Error("invalid-arguments", "Table ID is required");
+    // clear orderID, unset noOccupants and mark not occupied
+    return await TablesCollection.updateAsync(tableID, {
+      $set: { orderID: null, isOccupied: false },
+      $unset: { noOccupants: "" },
+    });
+  }),
+
   "tables.addTable": requireLoginMethod(async function (table: OmitDB<Tables>) {
     if (
       typeof table.tableNo !== "number" ||
