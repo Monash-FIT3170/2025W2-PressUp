@@ -41,22 +41,24 @@ function mergeItemsWithPrev(
   });
 }
 
+function formatWait(ms: number) {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  const h = Math.floor(m / 60);
+  if (h > 0) return `${h}h ${m % 60}m`;
+  return `${m}m ${s.toString().padStart(2, "0")}s`;
+}
+
 export const OrderCard = ({ order }: OrderCardProps) => {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef } = useDraggable({
     id: order._id,
   });
-
-  const style = {
-    transform: transform
-      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
-      : undefined,
-  };
 
   // Dialog state
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState(order.status);
 
-  type UiMenuItem = UiOrder["menuItems"][number];
   const [items, setItems] = useState<UiMenuItem[]>(
     order.menuItems.map((mi) => ({
       ...mi,
@@ -100,11 +102,36 @@ export const OrderCard = ({ order }: OrderCardProps) => {
 
   const handleStatusChange = (next: string) => {
     if (next === "served" && !(status === "ready" && allServed)) {
-      alert("you must check all items as served before marking as served");
+      alert("You must check all items as served before marking as served");
       return;
     }
     setStatus(next as UiOrder["status"]);
   };
+
+  // (A) createdMs: Safely calculate (prevent NaN/undefined issues)
+  const createdMs = Number.isFinite(order.createdAtMs)
+    ? (order.createdAtMs as number)
+    : Date.parse(order.createdAt) || Date.now();
+
+  // (B) Waiting time state/effect
+  const [waitText, setWaitText] = useState(() =>
+    formatWait(Date.now() - createdMs),
+  );
+  useEffect(() => {
+    const tick = () => setWaitText(formatWait(Date.now() - createdMs));
+    tick();
+    const id = setInterval(tick, 1_000);
+    return () => clearInterval(id);
+  }, [createdMs]);
+
+  // (C) Color calculation (also uses createdMs)
+  const ageMs = Date.now() - createdMs;
+  const waitColor =
+    ageMs < 10 * 60 * 1000
+      ? "#2ecc71"
+      : ageMs < 20 * 60 * 1000
+        ? "#f39c12"
+        : "#e74c3c";
 
   const handleSave = () => {
     if (!order || !order._id) {
@@ -128,13 +155,11 @@ export const OrderCard = ({ order }: OrderCardProps) => {
 
   return (
     <>
-      {/* entire card */}
       <div
         ref={setNodeRef}
         className="rounded-lg bg-white p-4 shadow-sm hover:shadow-md border-press-up-purple border-3"
-        style={{ ...style, border: "3px solid #8E44AD" }}
+        style={{ border: "3px solid #8E44AD" }}
       >
-        {/* drag handler */}
         <div
           {...listeners}
           {...attributes}
@@ -142,29 +167,51 @@ export const OrderCard = ({ order }: OrderCardProps) => {
           title="Drag to move"
         />
 
-        {/* click space */}
         <div className="cursor-pointer" onClick={() => setOpen(true)}>
-          <h3 className="font-medium text-press-up-purple text-xl">
-            Order #{order.orderNo}
-          </h3>
-          <p className="font-bold text-lg text-press-up-purple">
-            Table {order.tableNo}
-          </p>
-          <p className="text-sm text-press-up-purple">{order.createdAt}</p>
+          <div className="flex items-center justify-between gap-2 w-full">
+            <h3 className="font-medium text-press-up-purple text-xl flex-1 min-w-0 truncate">
+              Order #{order.orderNo}
+            </h3>
 
-          <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
-            {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
-              order.menuItems.map((item, index) => (
-                <li key={index}>{item.name}</li>
-              ))
-            ) : (
-              <li className="italic text-sm text-press-up-purple">No items</li>
-            )}
-          </ul>
+            <div className="mt-1">
+              <Chip
+                size="small"
+                label={`Waiting ${waitText}`}
+                title={new Date(createdMs).toLocaleString()}
+                sx={{
+                  backgroundColor: waitColor,
+                  color: "#fff",
+                  fontWeight: 600,
+                }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <p className="font-bold text-lg text-press-up-purple">
+              Table {order.tableNo}
+            </p>
+            <p className="text-sm text-press-up-purple">{order.createdAt}</p>
+            <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
+              {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
+                order.menuItems.map((item, index) => (
+                  <li key={index}>
+                    <span className="ml-2 text-base font-semibold">
+                      {item.quantity} x{" "}
+                    </span>
+                    {item.name}
+                  </li>
+                ))
+              ) : (
+                <li className="italic text-sm text-press-up-purple">
+                  No items
+                </li>
+              )}
+            </ul>
+          </div>
         </div>
       </div>
 
-      {/* Dialog */}
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
