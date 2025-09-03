@@ -1,7 +1,7 @@
-import React, { useState }  from "react";
+import React, { useState } from "react";
 import { MenuItem } from "/imports/api";
-import { ConfirmModal } from './ConfirmModal';
-import { Meteor } from 'meteor/meteor';
+import { ConfirmModal } from "./ConfirmModal";
+import { Meteor } from "meteor/meteor";
 
 interface Props {
   item: MenuItem;
@@ -9,7 +9,8 @@ interface Props {
   // onDelete: (item: MenuItem) => void; // New prop for delete functionality
 }
 
-export const MenuManagementCard = ({ item, onClick }: Props) => { // removed: , onDelete from parameters
+export const MenuManagementCard = ({ item, onClick }: Props) => {
+  // removed: , onDelete from parameters
   // set for confirmation modal
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -20,11 +21,15 @@ export const MenuManagementCard = ({ item, onClick }: Props) => { // removed: , 
   };
   // confirmation modal
   const handleConfirm = () => {
-    Meteor.call('menuItems.delete', item.name, (err: Meteor.Error | undefined) => {
-      if (err) {
-        alert(`Delete failed: ${err.reason}`);
-      }
-    });
+    Meteor.call(
+      "menuItems.delete",
+      item.name,
+      (err: Meteor.Error | undefined) => {
+        if (err) {
+          alert(`Delete failed: ${err.reason}`);
+        }
+      },
+    );
     setShowConfirm(false);
   };
 
@@ -74,7 +79,7 @@ export const MenuManagementCard = ({ item, onClick }: Props) => { // removed: , 
         <h3 className="text-sm font-semibold text-gray-900 truncate">
           {item.name}
         </h3>
-        {item.discount ?? 0 > 0 ? (
+        {(item.discount ?? 0 > 0) ? (
           <p className="text-sm">
             <span className="line-through text-pink-700/50 mr-2 font-semibold">
               ${item.price.toFixed(2)}

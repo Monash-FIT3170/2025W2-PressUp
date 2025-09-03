@@ -1,31 +1,67 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { Pill } from "./Pill";
-import { ArrowLeft } from "./symbols/navigation/Arrows";
+import { Pill } from "../Pill";
+import { ArrowLeft } from "../symbols/navigation/Arrows";
 import {
   PencilIcon,
   StockIcon,
   SupplierIcon,
-} from "./symbols/navigation/Inventory";
-import { MonitorIcon } from "./symbols/navigation/POS";
-import { CoffeeIcon } from "./symbols/navigation/Coffee";
-import { AnalyticsIcon } from "./symbols/navigation/Analytics";
+} from "../symbols/navigation/Inventory";
+import { MonitorIcon, BookIcon, TableIcon } from "../symbols/navigation/POS";
+import { CoffeeIcon } from "../symbols/navigation/Coffee";
+import {
+  Calendar,
+  Clipboard,
+  Clock3Icon,
+  DollarSign,
+  Folder,
+  HistoryIcon,
+  MessageSquare,
+  PenTool,
+  Users,
+} from "lucide-react";
 
 interface NavigationMenuProps {
   show: boolean;
 }
 
 export const NavigationMenu = ({ show }: NavigationMenuProps) => {
-  // NOTE: The shown width of the menu is related to how much the global header title is indented.
-  // If you want to change the width here you should also make a change there.
   return (
     <div
       className={`bg-press-up-purple min-h-full transition-all ease-in-out duration-300 ${
         show ? "w-[20vw]" : "w-0"
-      } overflow-hidden`}
+      } overflow-hidden flex flex-col h-60`}
     >
-      <div className="flex flex-col p-6 text-lg">
+      <div className="flex-1 overflow-y-auto p-6 text-lg">
+        <NavigationEntry
+          icon={<DollarSign />}
+          name="Finance"
+          path="/finance"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        >
+          <NavigationEntry
+            icon={<Clipboard />}
+            name="P/L Reporting"
+            path="/finance/profit-loss"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+
+          <NavigationEntry
+            icon={<PenTool />}
+            name="Tax Management"
+            path="/finance/tax"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+
+          <NavigationEntry
+            icon={<Folder />}
+            name="Expense Tracking"
+            path="/finance/Expenses"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+        </NavigationEntry>
+
         <NavigationEntry
           icon={<PencilIcon fill="var(--color-press-up-grey)" />}
           name="Inventory Management"
@@ -50,21 +86,70 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
         <NavigationEntry
           icon={<MonitorIcon fill="var(--color-press-up-grey)" />}
           name="POS System"
-          path="/pos/display"
+          path="/pos"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
-        ></NavigationEntry>
+        >
+          <NavigationEntry
+            icon={<BookIcon fill="var(--color-press-up-grey)" />}
+            name="Orders"
+            path="/pos/orders"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+
+          <NavigationEntry
+            icon={<TableIcon fill="var(--color-press-up-grey)" />}
+            name="Tables"
+            path="/pos/tables"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+        </NavigationEntry>
+
+        <NavigationEntry
+          icon={<Clock3Icon />}
+          name="Kitchen Management"
+          path="/kitchenManagement"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        >
+          <NavigationEntry
+            icon={<HistoryIcon />}
+            name="Order History"
+            path="/kitchenManagement/history"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+        </NavigationEntry>
+
         <NavigationEntry
           icon={<CoffeeIcon fill="var(--color-press-up-grey)" />}
           name="Menu Management"
           path="/menuManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
-        ></NavigationEntry>
+        />
+
         <NavigationEntry
-          icon={<AnalyticsIcon fill="var(--color-press-up-grey)" />}
-          name="Analytics"
-          path="/analytics"
+          icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
+          name="Accounts"
+          path="/accounts"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
-        ></NavigationEntry>
+        />
+        <NavigationEntry
+          icon={<Users />}
+          name="Staff Management"
+          path="/staff"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        >
+          <NavigationEntry
+            icon={<Calendar />}
+            name="Roster"
+            path="/staff/roster"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+          <NavigationEntry
+            icon={<MessageSquare />}
+            name="Communication"
+            path="/staff/communication"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+        </NavigationEntry>
       </div>
     </div>
   );
@@ -95,7 +180,7 @@ const NavigationEntry = ({
 
   useEffect(() => {
     setActive(location.pathname.startsWith(path));
-  }, [location]);
+  }, [location, path]);
 
   const ActiveContent = () => {
     switch (selectionType) {
@@ -126,7 +211,11 @@ const NavigationEntry = ({
       <Link to={path}>
         <div className="flex flex-row text-press-up-grey border-b-[0.15em] border-press-up-grey min-w-full items mb-2">
           <div className="flex-0 content-center min-h-[2.3em]">{icon}</div>
-          {active ? <ActiveContent /> : <div className="px-3 content-center">{name}</div>}
+          {active ? (
+            <ActiveContent />
+          ) : (
+            <div className="px-3 content-center">{name}</div>
+          )}
         </div>
       </Link>
       <div className="grid grid-cols-12 text-[0.8em]">

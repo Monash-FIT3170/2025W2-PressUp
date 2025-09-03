@@ -1,10 +1,44 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { useNavigate } from "react-router";
+import { Meteor } from "meteor/meteor";
+import { Order } from "/imports/api";
+import { OrderStatus } from "/imports/api/orders/OrdersCollection";
 
-export const PaymentModal = () => {
+interface PaymentModalProps {
+  tableNo: number;
+  order: Order;
+}
+
+export const PaymentModal = ({ order }: PaymentModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const openModal = () => setIsOpen(true);
+  const openModal = () => {
+    if (order.menuItems.length === 0) {
+      alert("Cannot pay for an order with no items.");
+      return;
+    }
+    setIsOpen(true);
+  };
   const closeModal = () => setIsOpen(false);
+
+  const navigate = useNavigate();
+
+  // Update order status
+  const updateOrderStatus = () => {
+    if (!order || !order._id) {
+      return;
+    }
+    const fields = {
+      orderStatus: OrderStatus.Served,
+      paid: true,
+    };
+    Meteor.call("orders.updateOrder", order._id, { ...fields });
+  };
+
+  const handleConfirm = () => {
+    updateOrderStatus();
+    closeModal();
+    navigate(`/receipt?orderNo=${order.orderNo}`);
+  };
 
   return (
     <div>
@@ -40,15 +74,13 @@ export const PaymentModal = () => {
             >
               Cancel
             </button>
-            {/* Linke to receipt page */}
-            <Link to="/receipt">
-              <button
-                onClick={closeModal}
-                className="px-4 py-2 bg-press-up-purple text-white font-semibold rounded-lg"
-              >
-                Confirm
-              </button>
-            </Link>
+            {/* Link to receipt page */}
+            <button
+              onClick={handleConfirm}
+              className="px-4 py-2 bg-press-up-purple text-white font-semibold rounded-lg"
+            >
+              Confirm
+            </button>
           </div>
         </div>
       </div>

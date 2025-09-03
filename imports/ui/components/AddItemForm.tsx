@@ -1,28 +1,25 @@
 import { Meteor } from "meteor/meteor";
-import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { useFind, useSubscribe } from "meteor/react-meteor-data";
 import { FormEvent, useEffect, useState } from "react";
-import { Supplier, SuppliersCollection, StockItem } from "/imports/api";
+import { SuppliersCollection, StockItem } from "/imports/api";
+import { IdType } from "/imports/api/database";
 
-export const AddItemForm = ({
-  onSuccess,
-  onCancel,
-  item,
-}: {
+interface Props {
   onSuccess: () => void;
   onCancel: () => void;
   item?: StockItem | null;
-}) => {
-  useSubscribe("suppliers") === false;
-  const suppliers: Supplier[] = useTracker(() => {
-    return SuppliersCollection.find().fetch();
-  });
+}
+
+export const AddItemForm = ({ onSuccess, item }: Props) => {
+  useSubscribe("suppliers");
+  const suppliers = useFind(() => SuppliersCollection.find());
 
   const [itemName, setItemName] = useState(item?.name ?? "");
   const [quantity, setQuantity] = useState<string>(
     item ? String(item.quantity) : "",
   );
   const [location, setLocation] = useState(item?.location ?? "");
-  const [supplier, setSupplier] = useState<string | null>(
+  const [supplier, setSupplier] = useState<IdType | null>(
     item?.supplier ?? null,
   );
   const [selectedValue, setSelectedValue] = useState<string>(
@@ -34,14 +31,7 @@ export const AddItemForm = ({
     setQuantity(item ? String(item.quantity) : "");
     setLocation(item?.location ?? "");
 
-    let supplierId = "";
-    if (item?.supplier) {
-      if (typeof item.supplier === "object" && "_id" in item.supplier) {
-        supplierId = (item.supplier as Supplier)._id ?? "";
-      } else if (typeof item.supplier === "string") {
-        supplierId = item.supplier;
-      }
-    }
+    const supplierId = item?.supplier ?? "";
     setSupplier(supplierId || null);
     setSelectedValue(supplierId);
   }, [item]);
@@ -172,11 +162,13 @@ export const AddItemForm = ({
               required
             >
               <option value="">--Select supplier--</option>
-              {suppliers.map((supplier, i) => (
-                <option value={String(supplier._id)} key={i}>
-                  {supplier.name}
-                </option>
-              ))}
+              {suppliers
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((supplier, i) => (
+                  <option value={String(supplier._id)} key={i}>
+                    {supplier.name}
+                  </option>
+                ))}
             </select>
           </div>
           {!item && (

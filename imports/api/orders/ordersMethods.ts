@@ -1,16 +1,53 @@
 import { Meteor } from "meteor/meteor";
-import { OrdersCollection } from "./OrdersCollection";
-import { Mongo } from "meteor/mongo";
+import { Order, OrdersCollection } from "./OrdersCollection";
+import { check } from "meteor/check";
 import { requireLoginMethod } from "../accounts/wrappers";
+import { IdType } from "../database";
 
 Meteor.methods({
-  "orders.updateOrder": requireLoginMethod(async function (orderId: Mongo.ObjectID, update: Partial<any>) {
-    if (!orderId || !update) throw new Meteor.Error("invalid-arguments", "Order ID and update are required");
+  "orders.updateOrder": requireLoginMethod(async function (
+    orderId: IdType,
+    update: Partial<Order>,
+  ) {
+    if (!orderId || !update)
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Order ID and update are required",
+      );
     await OrdersCollection.updateAsync(orderId, { $set: update });
   }),
 
-  "orders.addOrder": requireLoginMethod(async function (order: any) {
-    if (!order) throw new Meteor.Error("invalid-arguments", "Order data is required");
+  "orders.addOrder": requireLoginMethod(async function (order: Order) {
+    if (!order)
+      throw new Meteor.Error("invalid-arguments", "Order data is required");
     return await OrdersCollection.insertAsync(order);
+  }),
+
+  "orders.getAll": requireLoginMethod(async function () {
+    return OrdersCollection.find().fetch();
+  }),
+
+  "orders.setMenuItemServed": requireLoginMethod(async function (
+    orderId: IdType,
+    index: number,
+    served: boolean,
+  ) {
+    check(orderId, String);
+    check(index, Number);
+    check(served, Boolean);
+    return await OrdersCollection.updateAsync(orderId, {
+      $set: { [`menuItems.${index}.served`]: served },
+    });
+  }),
+
+  "orders.setAllMenuItemsServed": requireLoginMethod(async function (
+    orderId: IdType,
+    served: boolean,
+  ) {
+    check(orderId, String);
+    check(served, Boolean);
+    return await OrdersCollection.updateAsync(orderId, {
+      $set: { "menuItems.$[].served": served },
+    });
   }),
 });
