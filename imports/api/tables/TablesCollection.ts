@@ -6,7 +6,7 @@ export interface Tables extends DBEntry {
   orderID: IdType | null;
   capacity: number;
   isOccupied: boolean;
-  noOccupants: number;
+  noOccupants?: number;
 }
 
 export const TablesCollection = new Mongo.Collection<OmitDB<Tables>, Tables>(
