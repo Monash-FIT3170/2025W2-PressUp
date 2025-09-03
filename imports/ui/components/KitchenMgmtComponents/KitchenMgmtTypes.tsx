@@ -8,6 +8,7 @@ export type UiOrder = {
   status: OrderStatus;
   tableNo: number | null;
   createdAt: string;
+  createdAtMs: number;
   menuItems: Array<{
     name: string;
     quantity: number;

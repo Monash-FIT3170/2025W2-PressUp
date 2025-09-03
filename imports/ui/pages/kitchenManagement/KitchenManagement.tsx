@@ -32,20 +32,26 @@ export const KitchenManagement = () => {
 
     const docs = OrdersCollection.find().fetch();
 
-    return docs.map(
-      (doc: DBOrder): UiOrder => ({
+    return docs.map((doc: DBOrder): UiOrder => {
+      const created =
+        doc.createdAt instanceof Date
+          ? doc.createdAt
+          : new Date(doc.createdAt as Date);
+
+      return {
         _id: doc._id,
         orderNo: doc.orderNo,
         tableNo: doc.tableNo ?? null,
         createdAt: new Date(doc.createdAt).toLocaleTimeString().toUpperCase(),
+        createdAtMs: created.getTime(),
         status: doc.orderStatus,
         menuItems: (doc.menuItems ?? []).map((it) => ({
           name: it.name,
           quantity: typeof it.quantity === "number" ? it.quantity : 1,
           served: it.served === true,
         })),
-      }),
-    );
+      };
+    });
   }, []);
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {

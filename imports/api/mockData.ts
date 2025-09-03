@@ -303,7 +303,9 @@ export const mockDataGenerator = async ({
         totalPrice: total,
         paid: false,
         orderStatus: status,
-        createdAt: faker.date.recent({ days: 7 }),
+        createdAt: new Date(
+          Date.now() - faker.number.int({ min: 0, max: 25 * 60 }) * 1000,
+        ), // within last 25 minutes
       });
 
       await TablesCollection.updateAsync(
