@@ -429,7 +429,9 @@ export const TablesPage = () => {
                       }
                       if (idx !== -1) {
                         // Find the smallest available table number
-                        const usedTableNos = grid.filter((t) => t !== null).map((t) => t!.tableNo);
+                        const usedTableNos = grid
+                          .filter((t) => t !== null)
+                          .map((t) => t!.tableNo);
                         let nextTableNo = 1;
                         while (usedTableNos.includes(nextTableNo)) {
                           nextTableNo++;
@@ -726,7 +728,10 @@ export const TablesPage = () => {
                             { tableNo: newTable.tableNo },
                           );
                           // Re-render by updating grid from DB
-                          const refreshedTables = TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch();
+                          const refreshedTables = TablesCollection.find(
+                            {},
+                            { sort: { tableNo: 1 } },
+                          ).fetch();
                           const newGrid = Array(GRID_SIZE).fill(null);
                           refreshedTables.forEach((table, idx) => {
                             if (idx < GRID_SIZE) {
@@ -926,7 +931,10 @@ export const TablesPage = () => {
                       if (dbTable && dbTable._id) {
                         // Clear order from kitchen management if table has an active order
                         if (dbTable.activeOrderID) {
-                          await Meteor.callAsync("orders.removeOrder", dbTable.activeOrderID);
+                          await Meteor.callAsync(
+                            "orders.removeOrder",
+                            dbTable.activeOrderID,
+                          );
                         }
                         await Meteor.callAsync(
                           "tables.removeTable",
