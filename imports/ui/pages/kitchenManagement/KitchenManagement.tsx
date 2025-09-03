@@ -41,8 +41,8 @@ export const KitchenManagement = () => {
       return {
         _id: doc._id,
         orderNo: doc.orderNo,
-        tableNo: doc.tableNo,
-        createdAt: created.toLocaleTimeString().toUpperCase(),
+        tableNo: doc.tableNo ?? null,
+        createdAt: new Date(doc.createdAt).toLocaleTimeString().toUpperCase(),
         createdAtMs: created.getTime(),
         status: doc.orderStatus,
         menuItems: (doc.menuItems ?? []).map((it) => ({
