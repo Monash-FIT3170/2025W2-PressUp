@@ -236,7 +236,7 @@ export const mockDataGenerator = async ({
       //   : 0;
       const capacity = faker.number.int({ min: 1, max: 6 });
       // Set every even table to be occupied
-      const isOccupied = (i%2==0) ? true : false;
+      const isOccupied = i % 2 == 0 ? true : false;
       // If occupied, set number of occupants from 1 to max capacity of table, otherwise, zero occupants
       const noOccupants = isOccupied
         ? faker.number.int({ min: 1, max: capacity })
@@ -267,6 +267,9 @@ export const mockDataGenerator = async ({
       Math.min(orderCount!, availableTableNos.length),
     );
     const takeawayCount = Math.max(0, orderCount! - dineInCount);
+
+    // Start orderNo from 1001
+    let nextOrderNo = 1001;
 
     const genOrderMenuItems = async (): Promise<OrderMenuItem[]> => {
       const rawMenuItems = await MenuItemsCollection.rawCollection()
@@ -305,7 +308,7 @@ export const mockDataGenerator = async ({
       const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
 
       const orderID = await OrdersCollection.insertAsync({
-        orderNo: faker.number.int({ min: 1000, max: 9999 }),
+        orderNo: nextOrderNo,
         orderType: "dine-in",
         tableNo,
         menuItems: items,
@@ -314,8 +317,9 @@ export const mockDataGenerator = async ({
         orderStatus: status,
         createdAt: new Date(
           Date.now() - faker.number.int({ min: 0, max: 25 * 60 }) * 1000,
-        ), // within last 25 minutes
+        ),
       });
+      nextOrderNo++;
 
       // Update the table with activeOrderID and push to orderIDs
       await TablesCollection.updateAsync(
@@ -333,7 +337,7 @@ export const mockDataGenerator = async ({
       const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
 
       await OrdersCollection.insertAsync({
-        orderNo: faker.number.int({ min: 1000, max: 9999 }),
+        orderNo: nextOrderNo,
         orderType: "takeaway",
         tableNo: null,
         menuItems: items,
@@ -342,6 +346,7 @@ export const mockDataGenerator = async ({
         orderStatus: status,
         createdAt: faker.date.recent({ days: 7 }),
       });
+      nextOrderNo++;
     }
   }
 };

@@ -21,12 +21,16 @@ Meteor.methods({
     if (!order)
       throw new Meteor.Error("invalid-arguments", "Order data is required");
     if (!order.orderNo) {
-      let candidate: number;
-      for (let i = 0; i < 10; i++) {
-        candidate = Math.floor(1000 + Math.random() * 9000);
-        if (!OrdersCollection.findOneAsync({ orderNo: candidate })) break;
+      // Find the highest existing orderNo and increment
+      const lastOrder = await OrdersCollection.find(
+        {},
+        { sort: { orderNo: -1 }, limit: 1 },
+      ).fetchAsync();
+      let nextOrderNo = 1;
+      if (lastOrder.length > 0 && typeof lastOrder[0].orderNo === "number") {
+        nextOrderNo = lastOrder[0].orderNo + 1;
       }
-      order.orderNo = candidate!;
+      order.orderNo = nextOrderNo;
     }
     return await OrdersCollection.insertAsync(order as Order);
   }),
