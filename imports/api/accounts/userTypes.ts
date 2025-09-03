@@ -5,6 +5,7 @@ export interface CreateUserData {
   username: string;
   password: string;
   role: string;
+  payRate: number;
 }
 
 // Update users

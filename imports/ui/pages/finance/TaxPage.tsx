@@ -7,6 +7,7 @@ import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
 import { PurchaseOrdersCollection } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
 import { DeductionsCollection } from "/imports/api/tax/DeductionsCollection";
+import { ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
 import {
   format,
   startOfToday,
@@ -39,7 +40,7 @@ interface FinancialDataField {
 
 export const TaxPage = () => {
   const [_, setPageTitle] = usePageTitle();
-  const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
+  const [selectedMetric, setSelectedMetric] = useState<string>("incomeTax");
   const [deductionForm, setDeductionForm] = useState({
     name: "",
     date: format(new Date(), "yyyy-MM-dd"),
@@ -54,6 +55,7 @@ export const TaxPage = () => {
   useSubscribe("orders");
   useSubscribe("purchaseOrders");
   useSubscribe("deductions");
+  useSubscribe("shifts");
 
   const getDateRange = (range: typeof dateRange) => {
     const today = startOfToday();
@@ -102,6 +104,7 @@ export const TaxPage = () => {
     const orders = OrdersCollection.find().fetch();
     const purchaseOrders = PurchaseOrdersCollection.find().fetch();
     const allDeductions = DeductionsCollection.find().fetch();
+    const shifts = ShiftsCollection.find().fetch();
     const { start, end } = getDateRange(dateRange);
 
     const filteredOrders = orders.filter(
@@ -114,6 +117,10 @@ export const TaxPage = () => {
     const filteredDeductions = allDeductions.filter(
       (d) => (d.date instanceof Date ? d.date : new Date(d.date)) >= start &&
              (d.date instanceof Date ? d.date : new Date(d.date)) <= end
+    );
+    const filteredShifts = shifts.filter(
+      (s) => (s.date instanceof Date ? s.date : new Date(s.date)) >= start &&
+             (s.date instanceof Date ? s.date : new Date(s.date)) <= end
     );
 
     const formatDateKey = (date: Date) => {
@@ -153,13 +160,21 @@ export const TaxPage = () => {
     let deductionsTotal = 0;
     filteredDeductions.forEach((d) => { deductionsTotal += Number(d.amount); });
 
-    const taxableIncome = profitTotal - expensesTotal - deductionsTotal;
+    let taxableIncome = 0;
+    const payrollTax = 0;
+    if ((profitTotal - expensesTotal - deductionsTotal) > 0) {
+      taxableIncome = profitTotal - expensesTotal - deductionsTotal;
+      filteredShifts.forEach((s) => {
+        //taxableIncome =- s.user.getPayRate();
+      });
+    };
 
     return {
       financialData: {
+        incomeTax: { title: "Taxable Income", description: "Profit minus business deductions", items: [], total: taxableIncome },
+        payrollTax: { title: "Payroll Tax", description: "Tax collected on wages paid", items: [], total: payrollTax},
         GSTCollected: { title: "GST Collected", description: "Goods and Services Tax collected on orders", items: GSTItems, total: GSTTotal },
         GSTPaid: { title: "GST Paid", description: "Goods and Services Tax paid on stock orders", items: expenseItems, total: GSTexpenses },
-        incomeTax: { title: "Taxable Income", description: "Profit minus business deductions", items: [], total: taxableIncome },
       },
       deductions: filteredDeductions,
     };
@@ -168,17 +183,18 @@ export const TaxPage = () => {
   useEffect(() => { setPageTitle("Finance - Tax Management"); }, [setPageTitle]);
 
   const mainMetrics = [
+    { key: "incomeTax", title: "Taxable Income", amount: financialData.incomeTax.total, isSelected: true },
+    { key: "payrollTax", title: "Payroll Tax", amount: financialData.payrollTax.total },
     { key: "GSTCollected", title: "Total GST Collected", amount: financialData.GSTCollected.total },
     { key: "GSTPaid", title: "Total GST Paid", amount: financialData.GSTPaid.total },
-    { key: "incomeTax", title: "Taxable Income", amount: financialData.incomeTax.total },
   ] as const;
 
-  type MetricKey = "GSTCollected" | "GSTPaid" | "incomeTax";
+  type MetricKey = "payrollTax" | "GSTCollected" | "GSTPaid" | "incomeTax";
 
-  const currentData: FinancialDataField | null =
+  const currentData: FinancialDataField =
     selectedMetric && selectedMetric in financialData
       ? financialData[selectedMetric as MetricKey]
-      : null;
+      : financialData["incomeTax"];
 
   const combinedItems = (() => {
     const collectedMap = Object.fromEntries(financialData.GSTCollected.items.map((i) => [i.label, i.amount]));
@@ -217,7 +233,7 @@ export const TaxPage = () => {
         </div>
 
         {/* Finance Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {mainMetrics.map((metric) => (
             <FinanceCard
               key={metric.key}
@@ -228,12 +244,16 @@ export const TaxPage = () => {
             />
           ))}
         </div>
-
+        {selectedMetric === "incomeTax" && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h3 className="text-l text-gray-900 mb-4">Taxable income is calculated by subtracting wages and deductions from profits. Wages are calculated from shifts logged in Staff Management - Roster. If there is no profit for the given time period, taxable income will display as $0.00</h3>
+          </div>
+        )}
         {/* Left/Right Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left: Deduction Entry (only for incomeTax) */}
+          {/* Left: Deduction Entry (only for incomeTax) or GST singular graph*/}
           {selectedMetric === "incomeTax" && (
-            <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="bg-pink-100 rounded-xl shadow-lg p-6">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Add Deduction</h2>
                 <p className="text-gray-600">Enter business operation related expenses as tax deductions</p>
@@ -241,33 +261,53 @@ export const TaxPage = () => {
               <form onSubmit={handleAddDeduction} className="space-y-4">
                 <input type="text" placeholder="Deduction Name" value={deductionForm.name}
                   onChange={e => setDeductionForm({ ...deductionForm, name: e.target.value })}
-                  className="w-full p-2 border rounded" required />
+                  className="w-full p-2 border bg-white rounded-lg" required />
                 <input type="date" value={deductionForm.date}
                   onChange={e => setDeductionForm({ ...deductionForm, date: e.target.value })}
-                  className="w-full p-2 border rounded" required />
+                  className="w-full p-2 border bg-white rounded-lg" required />
                 <input type="number" placeholder="Amount" value={deductionForm.amount}
                   onChange={e => setDeductionForm({ ...deductionForm, amount: e.target.value })}
-                  className="w-full p-2 border rounded" required />
+                  className="w-full p-2 border bg-white rounded-lg" required />
                 <textarea placeholder="Description" value={deductionForm.description}
                   onChange={e => setDeductionForm({ ...deductionForm, description: e.target.value })}
-                  className="w-full p-2 border rounded" />
+                  className="w-full p-2 border bg-white rounded-lg" />
                 <button type="submit" className="px-4 py-2 bg-press-up-purple text-white rounded">Add Deduction</button>
               </form>
             </div>
           )}
 
-          {/* Right: Deductions list or GST Graph */}
+          {(selectedMetric === "GSTCollected" || selectedMetric === "GSTPaid") && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-1">{chartTitle}</h2>
+                  <p className="text-gray-600">{chartDescription}</p>
+                </div>
+                <div className="h-80 w-full">
+                  <ResponsiveContainer>
+                    <BarChart data={currentData.items}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="label"><Label value="Date" offset={-5} position="insideBottom" /></XAxis>
+                      <YAxis><Label value="GST ($)" angle={-90} position="insideLeft" style={{ textAnchor: "middle" }} /></YAxis>
+                      <Tooltip />
+                        <Bar dataKey="amount" fill="#c6b6cf" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+          {/* Right: Deductions list or GST Comparison Graph */}
           <div className="space-y-6">
             {selectedMetric === "incomeTax" && (
               <div className="w-full bg-pink-100 rounded-xl shadow-lg p-6">
                 <input type="text" placeholder="Search deductions" value={searchDeduction}
                   onChange={e => setSearchDeduction(e.target.value)}
-                  className="w-1/2 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 mb-4" />
+                  className="w-1/2 px-4 py-2 bg-white rounded-lg border border-black focus:outline-none focus:ring-2 focus:ring-purple-400 mb-4" />
                 <div className="max-h-72 overflow-y-auto space-y-2">
                   {filteredDeductionList.length === 0 ? (
                     <p className="text-gray-600">No deductions found.</p>
                   ) : filteredDeductionList.map(d => (
-                    <div key={d.name} className="p-3 bg-gray-100 rounded flex justify-between">
+                    <div key={d.name} className="p-3 bg-white rounded-lg border border-black flex justify-between">
                       <div>
                         <p className="font-bold">{d.name} - {format(new Date(d.date), "dd/MM/yy")}</p>
                         <p className="text-sm text-gray-600">{d.description}</p>
@@ -279,27 +319,23 @@ export const TaxPage = () => {
               </div>
             )}
 
-            {(selectedMetric === null || selectedMetric === "GSTCollected" || selectedMetric === "GSTPaid") && (
+            {(selectedMetric === "GSTCollected" || selectedMetric === "GSTPaid") && (
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-1">{chartTitle}</h2>
-                  <p className="text-gray-600">{chartDescription}</p>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-1">GST Paid vs GST Collected</h2>
+                  <p className="text-gray-600">Comparison of Goods and Services Tax Collected and Paid</p>
                 </div>
                 <div className="h-80 w-full">
                   <ResponsiveContainer>
-                    <BarChart data={currentData ? currentData.items : combinedItems}>
+                    <BarChart data={combinedItems}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="label"><Label value="Date" offset={-5} position="insideBottom" /></XAxis>
                       <YAxis><Label value="GST ($)" angle={-90} position="insideLeft" style={{ textAnchor: "middle" }} /></YAxis>
                       <Tooltip />
-                      {currentData ? (
-                        <Bar dataKey="amount" fill="#c6b6cf" />
-                      ) : (
                         <>
                           <Bar dataKey="collected" fill="#6f597b" name="GST Collected" />
                           <Bar dataKey="paid" fill="#c6b6cf" name="GST Paid" />
                         </>
-                      )}
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

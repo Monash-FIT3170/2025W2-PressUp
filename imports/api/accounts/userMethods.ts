@@ -18,6 +18,7 @@ Meteor.methods({
       username: String,
       password: String,
       role: String,
+      payRate: Number,
     });
 
     // check user level and authorisation
