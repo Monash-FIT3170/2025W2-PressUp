@@ -508,89 +508,84 @@ export const TablesPage = () => {
                   </>
                 )}
                 {/* Top row: Add Order + Occupied toggle */}
-                <div className="flex justify-between items-center gap-2 mb-3">
+                <div
+                  className={`flex items-center gap-2 mb-3 ${
+                    tablesFromDb.find(
+                      (t) =>
+                        t.tableNo === editTableData!.tableNo && t.activeOrderID,
+                    )
+                      ? "justify-end"
+                      : "justify-between"
+                  }`}
+                >
                   {/* Add Order Button */}
-                  <button
-                    onClick={async () => {
-                      try {
-                        const dbTable = tablesFromDb.find(
-                          (t) => t.tableNo === editTableData!.tableNo,
-                        );
-                        if (!dbTable || !dbTable._id) {
-                          alert("Could not find table in database.");
-                          return;
+                  {!tablesFromDb.find(
+                    (t) =>
+                      t.tableNo === editTableData!.tableNo && t.activeOrderID,
+                  ) && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const dbTable = tablesFromDb.find(
+                            (t) => t.tableNo === editTableData!.tableNo,
+                          );
+                          if (!dbTable || !dbTable._id) {
+                            alert("Could not find table in database.");
+                            return;
+                          }
+
+                          // Create new order (only if no existing one, because we disable otherwise)
+                          const orderId = await Meteor.callAsync(
+                            "orders.addOrder",
+                            {
+                              // orderNo is now auto-generated server-side
+                              tableNo: editTableData!.tableNo,
+                              menuItems: [],
+                              totalPrice: 0,
+                              createdAt: new Date(),
+                              orderStatus: "pending",
+                              paid: false,
+                            },
+                          );
+
+                          // Link order to table
+                          await Meteor.callAsync(
+                            "tables.addOrder",
+                            dbTable._id,
+                            orderId,
+                          );
+
+                          // Update local grid
+                          const updated = grid.map((t) =>
+                            t?.tableNo === editTableData!.tableNo
+                              ? {
+                                  ...t,
+                                  isOccupied: true,
+                                  activeOrderID: String(orderId),
+                                }
+                              : t,
+                          );
+                          setGrid(updated);
+                          setModalType(null);
+                          markChanged();
+                          goToOrder(editTableData!.tableNo);
+                        } catch (err) {
+                          console.error("Error adding order:", err);
+                          alert(
+                            "Failed to add order. Check console for details.",
+                          );
                         }
-
-                        // Create new order (only if no existing one, because we disable otherwise)
-                        const orderId = await Meteor.callAsync(
-                          "orders.addOrder",
-                          {
-                            orderNo: Math.floor(1000 + Math.random() * 9000),
-                            tableNo: editTableData!.tableNo,
-                            menuItems: [],
-                            totalPrice: 0,
-                            createdAt: new Date(),
-                            orderStatus: "pending",
-                            paid: false,
-                          },
-                        );
-
-                        // Link order to table
-                        await Meteor.callAsync(
-                          "tables.addOrder",
-                          dbTable._id,
-                          orderId,
-                        );
-
-                        // Update local grid
-                        const updated = grid.map((t) =>
-                          t?.tableNo === editTableData!.tableNo
-                            ? {
-                                ...t,
-                                isOccupied: true,
-                                orderID: String(orderId),
-                              }
-                            : t,
-                        );
-                        setGrid(updated);
-                        setModalType(null);
-                        markChanged();
-                        goToOrder(editTableData!.tableNo);
-                      } catch (err) {
-                        console.error("Error adding order:", err);
-                        alert(
-                          "Failed to add order. Check console for details.",
-                        );
-                      }
-                    }}
-                    disabled={
-                      !!tablesFromDb.find(
-                        (t) =>
-                          t.tableNo === editTableData!.tableNo &&
-                          t.activeOrderID,
-                      )
-                    } // disable if table already has active order
-                    style={{
-                      backgroundColor: tablesFromDb.find(
-                        (t) =>
-                          t.tableNo === editTableData!.tableNo &&
-                          t.activeOrderID,
-                      )
-                        ? "#ccc"
-                        : "#6f597b",
-                      color: "#fff",
-                      cursor: tablesFromDb.find(
-                        (t) =>
-                          t.tableNo === editTableData!.tableNo &&
-                          t.activeOrderID,
-                      )
-                        ? "not-allowed"
-                        : "pointer",
-                    }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
-                  >
-                    Add Order
-                  </button>
+                      }}
+                      style={{
+                        backgroundColor: "#6f597b",
+                        color: "#fff",
+                        cursor: "pointer",
+                      }}
+                      className="px-4 py-1 rounded font-semibold hover:bg-[#c4b5cf] hover:text-[#1e032e]"
+                    >
+                      Add Order
+                    </button>
+                  )}
 
                   {/* Occupied/Vacant Toggle */}
                   <div className="flex gap-2">
