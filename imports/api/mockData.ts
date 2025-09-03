@@ -237,7 +237,8 @@ export const mockDataGenerator = async ({
 
       await TablesCollection.insertAsync({
         tableNo: i,
-        orderID: null,
+        activeOrderID: null,
+        orderIDs: [],
         capacity: capacity,
         isOccupied: isOccupied,
         noOccupants: noOccupants,
@@ -308,9 +309,13 @@ export const mockDataGenerator = async ({
         ), // within last 25 minutes
       });
 
+      // Update the table with activeOrderID and push to orderIDs
       await TablesCollection.updateAsync(
         { tableNo },
-        { $set: { orderID: String(orderID) } },
+        {
+          $set: { activeOrderID: String(orderID) },
+          $push: { orderIDs: String(orderID) },
+        },
       );
     }
 

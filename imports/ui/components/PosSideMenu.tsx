@@ -53,15 +53,17 @@ export const PosSideMenu = ({
 
   const order = useTracker(() => {
     if (orderType === "dine-in" && selectedTable != null) {
-      return OrdersCollection.find({
-        tableNo: selectedTable,
-        $or: [{ orderType: "dine-in" }, { orderType: { $exists: false } }],
-      }).fetch()[0];
+      // Find the table and get its activeOrderID
+      const table = TablesCollection.findOne({ tableNo: selectedTable });
+      if (table?.activeOrderID) {
+        return OrdersCollection.findOne(table.activeOrderID) ?? null;
+      }
+      return null;
     }
     if (orderType === "takeaway" && selectedTakeawayId) {
-      return OrdersCollection.findOne(selectedTakeawayId as any) ?? undefined;
+      return OrdersCollection.findOne(selectedTakeawayId as any) ?? null;
     }
-    return undefined;
+    return null;
   }, [orderType, selectedTable, selectedTakeawayId]);
 
   const displayedItems = order?.menuItems ?? [];
@@ -363,7 +365,7 @@ export const PosSideMenu = ({
           <div className="p-4 text-center text-gray-500">
             {selectedTable != null &&
             tables.find((t) => t.tableNo === selectedTable)?.isOccupied &&
-            !tables.find((t) => t.tableNo === selectedTable)?.orderID ? (
+            !tables.find((t) => t.tableNo === selectedTable)?.activeOrderID ? (
               /* dine-in empty: show "start new order for table" card (keep as-is) */
               <div className="bg-yellow-100 p-4 rounded-md space-y-2">
                 <p className="font-bold text-gray-800 mb-2">
@@ -408,11 +410,13 @@ export const PosSideMenu = ({
                   }}
                   disabled={
                     !!tables.find(
-                      (t) => t.tableNo === selectedTable && t.orderID,
+                      (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
                     )
                   }
                   className={`px-4 py-2 rounded font-bold text-white ${
-                    tables.find((t) => t.tableNo === selectedTable && t.orderID)
+                    tables.find(
+                      (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
+                    )
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-press-up-positive-button hover:bg-press-up-hover"
                   }`}

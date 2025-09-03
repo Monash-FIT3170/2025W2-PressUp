@@ -6,29 +6,33 @@ import { IdType, OmitDB } from "../database";
 Meteor.methods({
   "tables.addOrder": requireLoginMethod(async function (
     tableID: IdType,
-    orderID: IdType,
+    orderIDs: IdType,
   ) {
-    if (!tableID || !orderID)
+    if (!tableID || !orderIDs)
       throw new Meteor.Error(
         "invalid-arguments",
         "Table ID and Order ID are required",
       );
+    // Push to orderIDs history and set activeOrderID
     return await TablesCollection.updateAsync(tableID, {
-      $set: { orderID: orderID, isOccupied: true },
+      $set: { activeOrderID: orderIDs, isOccupied: true },
+      $push: { orderIDs: orderIDs },
     });
   }),
 
   "tables.changeOrder": requireLoginMethod(async function (
     tableID: IdType,
-    orderID: IdType,
+    orderIDs: IdType,
   ) {
-    if (!tableID || !orderID)
+    if (!tableID || !orderIDs)
       throw new Meteor.Error(
         "invalid-arguments",
         "Table ID and Order ID are required",
       );
+    // Set new activeOrderID and push to history
     return await TablesCollection.updateAsync(tableID, {
-      $set: { orderID: orderID },
+      $set: { activeOrderID: orderIDs },
+      $push: { orderIDs: orderIDs },
     });
   }),
 
@@ -91,9 +95,11 @@ Meteor.methods({
   "tables.clearOrder": requireLoginMethod(async function (tableID: IdType) {
     if (!tableID)
       throw new Meteor.Error("invalid-arguments", "Table ID is required");
-    // clear orderID, unset noOccupants and mark not occupied
+    // clear activeOrderID, unset noOccupants and mark not occupied
+    await TablesCollection.updateAsync(tableID, {
+      $set: { activeOrderID: null, isOccupied: false },
+    });
     return await TablesCollection.updateAsync(tableID, {
-      $set: { orderID: null, isOccupied: false },
       $unset: { noOccupants: "" },
     });
   }),

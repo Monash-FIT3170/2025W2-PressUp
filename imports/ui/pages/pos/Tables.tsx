@@ -31,7 +31,8 @@ interface Table {
   capacity: number;
   noOccupants?: number;
   isOccupied?: boolean;
-  orderID?: string | null;
+  activeOrderID?: string | null;
+  orderIDs?: string[];
 }
 
 interface TableCardProps {
@@ -524,7 +525,7 @@ export const TablesPage = () => {
                         const orderId = await Meteor.callAsync(
                           "orders.addOrder",
                           {
-                            orderNo: Date.now(),
+                            orderNo: Math.floor(1000 + Math.random() * 9000),
                             tableNo: editTableData!.tableNo,
                             menuItems: [],
                             totalPrice: 0,
@@ -565,20 +566,23 @@ export const TablesPage = () => {
                     disabled={
                       !!tablesFromDb.find(
                         (t) =>
-                          t.tableNo === editTableData!.tableNo && t.orderID,
+                          t.tableNo === editTableData!.tableNo &&
+                          t.activeOrderID,
                       )
-                    } // disable if table already has order
+                    } // disable if table already has active order
                     style={{
                       backgroundColor: tablesFromDb.find(
                         (t) =>
-                          t.tableNo === editTableData!.tableNo && t.orderID,
+                          t.tableNo === editTableData!.tableNo &&
+                          t.activeOrderID,
                       )
                         ? "#ccc"
                         : "#6f597b",
                       color: "#fff",
                       cursor: tablesFromDb.find(
                         (t) =>
-                          t.tableNo === editTableData!.tableNo && t.orderID,
+                          t.tableNo === editTableData!.tableNo &&
+                          t.activeOrderID,
                       )
                         ? "not-allowed"
                         : "pointer",
@@ -597,9 +601,9 @@ export const TablesPage = () => {
                         (t) => t.tableNo === editTableData!.tableNo,
                       );
                       const hasOrder = !!(
-                        dbTable?.orderID ||
-                        editTableData?.orderID ||
-                        modalOriginalTable?.orderID
+                        dbTable?.activeOrderID ||
+                        editTableData?.activeOrderID ||
+                        modalOriginalTable?.activeOrderID
                       );
                       if (!newOccupied && hasOrder) {
                         setConfirmMsg(
@@ -704,7 +708,7 @@ export const TablesPage = () => {
                         copy.isOccupied = false;
                         delete copy.noOccupants;
                         // also clear any local order link
-                        copy.orderID = null;
+                        copy.activeOrderID = null;
                         return copy;
                       });
                       setGrid(updated);
@@ -726,7 +730,7 @@ export const TablesPage = () => {
                         try {
                           if (!occupiedToggle) {
                             // We are marking vacant. If there is an order, clear it too.
-                            if (dbTable.orderID || clearOrderOnSave) {
+                            if (dbTable.activeOrderID || clearOrderOnSave) {
                               await Meteor.callAsync(
                                 "tables.clearOrder",
                                 dbTable._id,
