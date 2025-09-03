@@ -176,43 +176,39 @@ export const OrderCard = ({ order }: OrderCardProps) => {
           </p>
           <p className="text-sm text-press-up-purple">{order.createdAt}</p>
 
-
-            <div className="mt-1">
-              <Chip
-                size="small"
-                label={`Waiting ${waitText}`}
-                title={new Date(createdMs).toLocaleString()}
-                sx={{
-                  backgroundColor: waitColor,
-                  color: "#fff",
-                  fontWeight: 600,
-                }}
-              />
-            </div>
+          <div className="mt-1">
+            <Chip
+              size="small"
+              label={`Waiting ${waitText}`}
+              title={new Date(createdMs).toLocaleString()}
+              sx={{
+                backgroundColor: waitColor,
+                color: "#fff",
+                fontWeight: 600,
+              }}
+            />
           </div>
+        </div>
 
-          <div>
-            <p className="font-bold text-lg text-press-up-purple">
-              Table {order.tableNo}
-            </p>
-            <p className="text-sm text-press-up-purple">{order.createdAt}</p>
-            <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
-              {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
-                order.menuItems.map((item, index) => (
-                  <li key={index}>
-                    <span className="ml-2 text-base font-semibold">
-                      {item.quantity} x{" "}
-                    </span>
-                    {item.name}
-                  </li>
-                ))
-              ) : (
-                <li className="italic text-sm text-press-up-purple">
-                  No items
+        <div>
+          <p className="font-bold text-lg text-press-up-purple">
+            Table {order.tableNo}
+          </p>
+          <p className="text-sm text-press-up-purple">{order.createdAt}</p>
+          <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
+            {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
+              order.menuItems.map((item, index) => (
+                <li key={index}>
+                  <span className="ml-2 text-base font-semibold">
+                    {item.quantity} x{" "}
+                  </span>
+                  {item.name}
                 </li>
-              )}
-            </ul>
-          </div>
+              ))
+            ) : (
+              <li className="italic text-sm text-press-up-purple">No items</li>
+            )}
+          </ul>
         </div>
       </div>
 
@@ -303,7 +299,6 @@ export const OrderCard = ({ order }: OrderCardProps) => {
             )}
           </List>
 
-          {/* Status Dropdown */}
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel>Status</InputLabel>
             <Select
@@ -314,7 +309,6 @@ export const OrderCard = ({ order }: OrderCardProps) => {
               <MenuItem value="pending">Pending</MenuItem>
               <MenuItem value="preparing">Preparing</MenuItem>
               <MenuItem value="ready">Ready</MenuItem>
-
               <MenuItem
                 value="served"
                 disabled={!(status === "ready" && allServed)}
