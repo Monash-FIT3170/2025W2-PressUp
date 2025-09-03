@@ -1,18 +1,19 @@
 import { Meteor } from "meteor/meteor";
 import { useEffect, useState } from "react";
-import { useSubscribe } from "meteor/react-meteor-data";
-import { Roles } from "meteor/alanning:roles";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Button } from "./interaction/Button";
 import { TextArea } from "./interaction/TextArea";
 import { ConfirmModal } from "./ConfirmModal";
 import { IdType } from "/imports/api/database";
 import Comment from "./Comment";
+import { CommentsCollection } from "/imports/api/posts/CommentsCollection";
 
 interface CommentProps {
-  _id?: IdType;
+  _id: IdType;
   postedBy: string;
   datePosted: Date;
   content: string;
+  postId: IdType;
 }
 
 interface Post {
@@ -22,7 +23,6 @@ interface Post {
   subject: string;
   content: string;
   category: string; // TODO: 5.3 to implement this functionality
-  comments?: CommentProps[];
 }
 
 interface CommentsSectionProps {
@@ -33,9 +33,14 @@ function CommentsSection({ post }: CommentsSectionProps) {
   const [writingComment, setWritingComment] = useState<boolean>(false);
   const [content, setContent] = useState("");
   const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const [, setNewCommentAdded] = useState(0);
 
   const [user, setUser] = useState<Meteor.User | null>(null);
   useSubscribe("posts");
+  useSubscribe("comments");
+  const comments = useTracker(() =>
+    CommentsCollection.find({ postId: post._id }).fetch(),
+  );
 
   useEffect(() => {
     if (!post.postedBy) return;
@@ -60,25 +65,22 @@ function CommentsSection({ post }: CommentsSectionProps) {
     const newComment = {
       postedBy: Meteor.user()?._id,
       content: content,
+      postId: post._id,
     };
-    Meteor.call(
-      "posts.addComment",
-      post._id,
-      newComment,
-      (error: Meteor.Error) => {
-        if (error) {
-          alert(`Error publishing comment: ${error.message}`);
-        } else {
-          setWritingComment(false);
-        }
-      },
-    );
+    Meteor.call("comments.addComment", newComment, (error: Meteor.Error) => {
+      if (error) {
+        alert(`Error publishing comment: ${error.message}`);
+      } else {
+        setWritingComment(false);
+        setNewCommentAdded((prev) => prev + 1);
+      }
+    });
   };
 
   return (
     <div className="p-4">
       {writingComment ? (
-        <div>
+        <div className="mb-4">
           <TextArea
             autoFocus
             placeholder="New comment"
@@ -104,15 +106,15 @@ function CommentsSection({ post }: CommentsSectionProps) {
           </div>
         </div>
       ) : (
-        <div className="p-4">
+        <div className="p-4 mb-4">
           <Button width="full" onClick={() => setWritingComment(true)}>
             Add Comment
           </Button>
         </div>
       )}
       <div className="flex flex-col">
-        {post.comments &&
-          post.comments.map((comment: CommentProps) => (
+        {comments &&
+          comments.map((comment: CommentProps) => (
             <Comment key={comment._id} comment={comment}></Comment>
           ))}
       </div>
