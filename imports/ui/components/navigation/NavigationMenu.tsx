@@ -1,36 +1,26 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { Pill } from "./Pill";
-import { ArrowLeft } from "./symbols/navigation/Arrows";
+import { Pill } from "../Pill";
+import { ArrowLeft } from "../symbols/navigation/Arrows";
 import {
   PencilIcon,
   StockIcon,
   SupplierIcon,
-} from "./symbols/navigation/Inventory";
-import { MonitorIcon, BookIcon, TableIcon } from "./symbols/navigation/POS";
-import { CoffeeIcon } from "./symbols/navigation/Coffee";
+} from "../symbols/navigation/Inventory";
+import { MonitorIcon, BookIcon, TableIcon } from "../symbols/navigation/POS";
+import { CoffeeIcon } from "../symbols/navigation/Coffee";
 import {
   Calendar,
+  Clipboard,
   Clock3Icon,
+  DollarSign,
+  Folder,
   HistoryIcon,
   MessageSquare,
+  PenTool,
   Users,
 } from "lucide-react";
-
-// Create empty icons, NEED TO FIND ICON
-const FinanceIcon = ({ fill: _fill }: { fill: string }) => (
-  <div style={{ width: "24px", height: "24px" }}></div>
-);
-const ProfitLossIcon = ({ fill: _fill }: { fill: string }) => (
-  <div style={{ width: "24px", height: "24px" }}></div>
-);
-const TaxIcon = ({ fill: _fill }: { fill: string }) => (
-  <div style={{ width: "24px", height: "24px" }}></div>
-);
-const ExpensesIcon = ({ fill: _fill }: { fill: string }) => (
-  <div style={{ width: "24px", height: "24px" }}></div>
-);
 
 interface NavigationMenuProps {
   show: boolean;
@@ -45,27 +35,27 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
     >
       <div className="flex-1 overflow-y-auto p-6 text-lg">
         <NavigationEntry
-          icon={<FinanceIcon fill="var(--color-press-up-grey)" />}
+          icon={<DollarSign />}
           name="Finance"
           path="/finance"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         >
           <NavigationEntry
-            icon={<ProfitLossIcon fill="var(--color-press-up-grey)" />}
+            icon={<Clipboard />}
             name="P/L Reporting"
             path="/finance/profit-loss"
             selectionType={NavigationEntrySelection.ARROW}
           />
 
           <NavigationEntry
-            icon={<TaxIcon fill="var(--color-press-up-grey)" />}
+            icon={<PenTool />}
             name="Tax Management"
             path="/finance/tax"
             selectionType={NavigationEntrySelection.ARROW}
           />
 
           <NavigationEntry
-            icon={<ExpensesIcon fill="var(--color-press-up-grey)" />}
+            icon={<Folder />}
             name="Expense Tracking"
             path="/finance/Expenses"
             selectionType={NavigationEntrySelection.ARROW}
@@ -115,12 +105,6 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
         </NavigationEntry>
 
         <NavigationEntry
-          icon={<CoffeeIcon fill="var(--color-press-up-grey)" />}
-          name="Menu Management"
-          path="/menuManagement"
-          selectionType={NavigationEntrySelection.HIGHLIGHT}
-        />
-        <NavigationEntry
           icon={<Clock3Icon />}
           name="Kitchen Management"
           path="/kitchenManagement"
@@ -133,6 +117,14 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>
+
+        <NavigationEntry
+          icon={<CoffeeIcon fill="var(--color-press-up-grey)" />}
+          name="Menu Management"
+          path="/menuManagement"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        />
+
         <NavigationEntry
           icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
           name="Accounts"

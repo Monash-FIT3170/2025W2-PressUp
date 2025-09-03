@@ -12,7 +12,14 @@ const variantColours: Record<InputVaraint, string> = {
 interface InputProps
   extends Pick<
     React.InputHTMLAttributes<HTMLInputElement>,
-    "value" | "type" | "onChange" | "placeholder" | "autoComplete" | "required"
+    | "value"
+    | "type"
+    | "onChange"
+    | "placeholder"
+    | "autoComplete"
+    | "required"
+    | "onFocus"
+    | "list"
   > {
   variant?: InputVaraint;
 }

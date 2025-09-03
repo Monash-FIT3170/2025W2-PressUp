@@ -5,6 +5,7 @@ import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { TablesCollection } from "/imports/api/tables/TablesCollection";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { useNavigate } from "react-router";
 
 // -------- Seat positioning helper --------
 const getSeatPositions = (
@@ -99,6 +100,7 @@ const TableCard = ({
 };
 
 export const TablesPage = () => {
+  const navigate = useNavigate();
   const [_, setPageTitle] = usePageTitle();
   useEffect(() => {
     setPageTitle("POS System - Tables");
@@ -138,7 +140,6 @@ export const TablesPage = () => {
 
   // Prefill grid with tables from DB on initial load
   useEffect(() => {
-    // Only run if tablesFromDb has data and grid is empty
     if (tablesFromDb.length > 0 && grid.every((cell) => cell === null)) {
       const newGrid = Array(GRID_SIZE).fill(null);
       tablesFromDb.forEach((table, idx) => {
@@ -257,6 +258,14 @@ export const TablesPage = () => {
     }
   };
 
+  const goToOrder = (tableNo?: number) => {
+    if (tableNo !== null) {
+      navigate(`/pos/orders?tableNo=${tableNo}`);
+    } else {
+      navigate("/pos/orders");
+    }
+  };
+
   // -------- Render --------
   return (
     <DndProvider backend={HTML5Backend}>
@@ -265,33 +274,46 @@ export const TablesPage = () => {
         style={{ maxHeight: "calc(100vh - 100px)" }}
       >
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
-          {userIsAdmin &&
-            (editMode ? (
-              <div className="flex gap-2">
+          <div className="flex gap-4 items-center">
+            {userIsAdmin &&
+              (editMode ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={saveChanges}
+                    style={{ backgroundColor: "#6f597b", color: "#fff" }}
+                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={exitEditMode}
+                    style={{ backgroundColor: "#c97f97", color: "#fff" }}
+                    className="px-4 py-1 rounded hover:brightness-90"
+                  >
+                    Exit Edit Mode
+                  </button>
+                </div>
+              ) : (
                 <button
-                  onClick={saveChanges}
-                  style={{ backgroundColor: "#6f597b", color: "#fff" }}
-                  className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
+                  onClick={enterEditMode}
+                  style={{ backgroundColor: "#1e032e", color: "#fff" }}
+                  className="px-4 py-1 rounded hover:bg-[#6f597b]"
                 >
-                  Save
+                  Enter Edit Mode
                 </button>
-                <button
-                  onClick={exitEditMode}
-                  style={{ backgroundColor: "#c97f97", color: "#fff" }}
-                  className="px-4 py-1 rounded hover:brightness-90"
-                >
-                  Exit Edit Mode
-                </button>
+              ))}
+            {/* Legend - always visible */}
+            <div className="flex gap-4 ml-6">
+              <div className="flex items-center gap-1">
+                <div className="w-5 h-5 rounded-full bg-purple-600 border border-gray-500"></div>
+                <span className="text-sm">Occupied</span>
               </div>
-            ) : (
-              <button
-                onClick={enterEditMode}
-                style={{ backgroundColor: "#1e032e", color: "#fff" }}
-                className="px-4 py-1 rounded hover:bg-[#6f597b]"
-              >
-                Enter Edit Mode
-              </button>
-            ))}
+              <div className="flex items-center gap-1">
+                <div className="w-5 h-5 rounded-full bg-gray-300 border border-gray-500"></div>
+                <span className="text-sm">Not Occupied</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Add Table & Delete Table Buttons */}
@@ -358,7 +380,6 @@ export const TablesPage = () => {
                         return;
                       }
                       const updated = [...grid];
-                      // Find the first empty slot if not adding to a specific cell
                       let idx = selectedCellIndex;
                       if (idx === null) {
                         idx = updated.findIndex((cell) => cell === null);
@@ -383,7 +404,6 @@ export const TablesPage = () => {
                         setModalType(null);
                         setCapacityInput("");
                         markChanged();
-                        // Insert into TablesCollection
                         await Meteor.callAsync("tables.addTable", newTable);
                       }
                     }}
@@ -421,7 +441,8 @@ export const TablesPage = () => {
                   placeholder="Number of seats"
                   min={1}
                 />
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-2">
+                  {/* Save Button */}
                   <button
                     onClick={async () => {
                       if (
@@ -443,7 +464,6 @@ export const TablesPage = () => {
                       setModalType(null);
                       setCapacityInput("");
                       markChanged();
-                      // Update in DB
                       const dbTable = tablesFromDb.find(
                         (t) => t.tableNo === editTableData!.tableNo,
                       );
@@ -459,6 +479,82 @@ export const TablesPage = () => {
                     className="px-4 py-1 rounded hover:bg-[#6f597b]"
                   >
                     Save
+                  </button>
+
+                  {/* Add Order Button */}
+                  <button
+                    onClick={async () => {
+                      try {
+                        const dbTable = tablesFromDb.find(
+                          (t) => t.tableNo === editTableData!.tableNo,
+                        );
+                        if (!dbTable || !dbTable._id) {
+                          alert("Could not find table in database.");
+                          return;
+                        }
+
+                        // Create new order (only if no existing one, because we disable otherwise)
+                        const orderId = await Meteor.callAsync(
+                          "orders.addOrder",
+                          {
+                            orderNo: Date.now(),
+                            tableNo: editTableData!.tableNo,
+                            menuItems: [],
+                            totalPrice: 0,
+                            createdAt: new Date(),
+                            orderStatus: "pending",
+                            paid: false,
+                          },
+                        );
+
+                        // Link order to table
+                        await Meteor.callAsync(
+                          "tables.addOrder",
+                          dbTable._id,
+                          orderId,
+                        );
+
+                        // 3. Update local grid
+                        const updated = grid.map((t) =>
+                          t?.tableNo === editTableData!.tableNo
+                            ? { ...t, isOccupied: true, orderID: orderId }
+                            : t,
+                        );
+                        setGrid(updated);
+                        setModalType(null);
+                        markChanged();
+                        goToOrder(editTableData!.tableNo);
+                      } catch (err) {
+                        console.error("Error adding order:", err);
+                        alert(
+                          "Failed to add order. Check console for details.",
+                        );
+                      }
+                    }}
+                    disabled={
+                      !!tablesFromDb.find(
+                        (t) =>
+                          t.tableNo === editTableData!.tableNo && t.orderID,
+                      )
+                    } // disable if table already has order
+                    style={{
+                      backgroundColor: tablesFromDb.find(
+                        (t) =>
+                          t.tableNo === editTableData!.tableNo && t.orderID,
+                      )
+                        ? "#ccc"
+                        : "#6f597b",
+                      color: "#fff",
+                      cursor: tablesFromDb.find(
+                        (t) =>
+                          t.tableNo === editTableData!.tableNo && t.orderID,
+                      )
+                        ? "not-allowed"
+                        : "pointer",
+                    }}
+                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
+                  >
+                    Add Order
                   </button>
                   <button
                     onClick={() => setModalType(null)}

@@ -1,4 +1,4 @@
-import { FormEventHandler, useState } from "react";
+import { FormEventHandler, useState, useEffect } from "react";
 import { SearchBar } from "./SearchBar";
 import { Select } from "./interaction/Select";
 import { Button } from "./interaction/Button";
@@ -18,25 +18,44 @@ export default function ForumPage() {
   const posts = useTracker(() => PostsCollection.find().fetch());
   const [selectedPost, setSelectedPost] = useState<Post | undefined>();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [postModalOpen, setPostModalOpen] = useState<boolean>(false);
   const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
 
   const filteredPosts = posts
     .filter(
       (p) =>
-        p.subject.toLowerCase().includes(search.toLowerCase()) ||
-        p.content.toLowerCase().includes(search.toLowerCase()) ||
-        p.category.toLowerCase().includes(search.toLowerCase()),
+        (p.subject.toLowerCase().includes(search.toLowerCase()) ||
+          p.content.toLowerCase().includes(search.toLowerCase()) ||
+          p.category.toLowerCase().includes(search.toLowerCase())) &&
+        (categoryFilter === "" || p.category === categoryFilter),
     )
     .sort((a, b) => b.datePosted.getTime() - a.datePosted.getTime());
   const [subject, setSubject] = useState<string>("");
   const [content, setContent] = useState<string>("");
-  const [category, setCategory] = useState<string>("General");
+  const [category, setCategory] = useState<string>("");
+  const [categories, setCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    Meteor.call(
+      "posts.getCategories",
+      (error: Meteor.Error, result: string[]) => {
+        if (error) {
+          console.error(error);
+          setCategories([]);
+        } else {
+          setCategories(result.sort());
+        }
+      },
+    );
+  }, [posts]);
 
   const onCloseConfirmation = () => {
     setShowConfirmation(false);
     setPostModalOpen(false);
+    setSubject("");
+    setContent("");
+    setCategory("");
   };
 
   const handleCreateNewPost: FormEventHandler = (e) => {
@@ -55,6 +74,9 @@ export default function ForumPage() {
           alert(`Error publishing post: ${error.message}`);
         } else {
           setPostModalOpen(false);
+          setSubject("");
+          setContent("");
+          setCategory("");
         }
       },
     );
@@ -71,10 +93,16 @@ export default function ForumPage() {
             initialSearchTerm={search}
           ></SearchBar>
 
-          <Select value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="">All</option>
-            <option value="discussion">Discussion</option>
-            <option value="question">Question</option>
+          <Select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            <option value="">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
           </Select>
 
           <Button width={"full"} onClick={() => setPostModalOpen(true)}>
@@ -143,12 +171,20 @@ export default function ForumPage() {
               ></Input>
             </div>
             <div className="mb-4">
-              <Select onChange={(e) => setCategory(e.target.value)}>
-                <option>General</option>
-                <option>Social</option>
-                <option>Front of House</option>{" "}
-                {/* TODO: modify to use category implementation */}
-              </Select>
+              <Input
+                type="text"
+                placeholder="Category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                autoComplete="off"
+                list="categories"
+                required
+              />
+              <datalist id="categories">
+                {categories.map((cat) => (
+                  <option key={cat} value={cat} />
+                ))}
+              </datalist>
             </div>
             <div className="mb-4">
               <TextArea

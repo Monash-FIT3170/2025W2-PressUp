@@ -13,6 +13,7 @@ import {
 } from "/imports/api/orders/OrdersCollection";
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { IdType } from "/imports/api/database";
+import { useLocation } from "react-router";
 
 export const MainDisplay = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -23,22 +24,27 @@ export const MainDisplay = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
+  const location = useLocation();
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
 
   useSubscribe("menuItems");
   useSubscribe("orders");
   useSubscribe("tables");
 
   const tables = useTracker(() => TablesCollection.find().fetch());
-  const orders = useTracker(() => OrdersCollection.find().fetch());
   const posItems = useTracker(() => MenuItemsCollection.find().fetch());
   // Fetch the current order for the selected table
-  const order = useTracker(
-    () =>
-      selectedTable
-        ? OrdersCollection.find({ tableNo: selectedTable }).fetch()[0]
-        : null,
-    [selectedTable],
-  );
+  const order = useTracker(() => {
+    if (activeOrderId) {
+      return OrdersCollection.findOne(activeOrderId as any) ?? null;
+    }
+    return selectedTable
+      ? (OrdersCollection.find({
+          tableNo: selectedTable,
+          $or: [{ orderType: "dine-in" }, { orderType: { $exists: false } }],
+        }).fetch()[0] ?? null)
+      : null;
+  }, [activeOrderId, selectedTable]);
 
   const filteredItems = posItems.filter((item) => {
     const matchesName = item.name
@@ -55,18 +61,26 @@ export const MainDisplay = () => {
   useEffect(() => {
     if (selectedTable !== null) return; // Only set on initial load
 
-    if (orders.length > 0) {
-      // Find the unpaid order with the lowest table number
-      const unpaidOrders = orders.filter((ord) => !ord.paid);
-      if (unpaidOrders.length > 0) {
-        const lowestUnpaidTableNo = Math.min(
-          ...unpaidOrders.map((o) => o.tableNo),
+    if (tables.length > 0) {
+      // Find the lowest table number that is occupied
+      const occupiedTables = tables.filter((t) => t.isOccupied);
+      if (occupiedTables.length > 0) {
+        const lowestOccupiedTableNo = Math.min(
+          ...occupiedTables.map((t) => t.tableNo),
         );
-        setSelectedTable(lowestUnpaidTableNo);
+        setSelectedTable(lowestOccupiedTableNo);
         return;
       }
     }
-  }, [tables, orders, selectedTable]);
+  }, [tables, selectedTable]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tableNoParam = params.get("tableNo");
+    if (tableNoParam) {
+      setSelectedTable(Number(tableNoParam));
+    }
+  }, [location.search]);
 
   // Update order status (accept partial updates)
   const updateOrderInDb = (updatedFields: Partial<Order>) => {
@@ -294,6 +308,7 @@ export const MainDisplay = () => {
           onUpdateOrder={updateOrderInDb}
           selectedTable={selectedTable} // pass down
           setSelectedTable={setSelectedTable} // pass down
+          onActiveOrderChange={setActiveOrderId}
         />
       </div>
     </div>

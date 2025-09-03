@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { FinanceDateFilter } from "../../components/FinanceDateFilter";
@@ -17,31 +17,43 @@ import {
   endOfMonth,
   endOfYear,
 } from "date-fns";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Label,
+} from "recharts";
 
 interface DetailItemProps {
   label: string;
   amount: number;
   percentage?: number;
+  isExpense?: boolean;
 }
 
-const DetailItem = ({ label, amount, percentage }: DetailItemProps) => {
-  const isPositive = amount > 0;
-  const sign = amount < 0 ? "-" : "";
-
+const DetailItem = ({
+  label,
+  amount,
+  percentage,
+  isExpense,
+}: DetailItemProps) => {
   return (
     <div className="flex justify-between items-center py-3 px-4 bg-white rounded-lg shadow-sm border border-gray-100">
       <div className="flex-1">
         <span className="font-medium text-gray-800">{label}</span>
         {percentage !== undefined && (
           <span className="ml-2 text-sm text-gray-500">
-            ({percentage}% of total)
+            ({percentage.toFixed(2)}% of total)
           </span>
         )}
       </div>
       <div
-        className={`font-semibold text-lg ${isPositive ? "text-green-700" : "text-red-700"}`}
+        className={`font-semibold text-lg ${isExpense ? "text-red-700" : "text-green-700"}`}
       >
-        ${sign}
         {Math.abs(amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
       </div>
     </div>
@@ -159,7 +171,7 @@ export const ExpensesPage = () => {
     const salesItems = Object.keys(salesByCategory).map((cat) => ({
       label: cat,
       amount: salesByCategory[cat],
-      percentage: ((salesByCategory[cat] / salesTotal) * 100).toFixed(2),
+      percentage: (salesByCategory[cat] / salesTotal) * 100,
     }));
 
     // Calc expenses
@@ -178,7 +190,7 @@ export const ExpensesPage = () => {
     const expenseItems = Object.keys(expensesBySupplier).map((supplier) => ({
       label: supplier,
       amount: expensesBySupplier[supplier],
-      percentage: ((expensesBySupplier[supplier] / expenses) * 100).toFixed(2),
+      percentage: (expensesBySupplier[supplier] / expenses) * 100,
     }));
 
     return {
@@ -201,6 +213,49 @@ export const ExpensesPage = () => {
     setPageTitle("Finance - Sales & Expense Tracking");
   }, [setPageTitle]);
 
+  const mainMetrics = useMemo(() => {
+    if (!financialData) return [];
+
+    return [
+      {
+        key: "sales",
+        title: "Sales",
+        description: "Detailed breakdown of Sales by category.",
+        chartDescription: "Chart of sales by category",
+        amount: financialData.sales.total,
+        items: financialData.sales.items,
+      },
+      {
+        key: "expenses",
+        title: "Expenses",
+        description: "Detailed breakdown of expenses from purchase orders.",
+        chartDescription: "Chart of expenses from purchase orders",
+        amount: financialData.expenses.total,
+        items: financialData.expenses.items,
+      },
+    ];
+  }, [financialData]);
+
+  const selectedData = useMemo(
+    () => mainMetrics.find((m) => m.key === selectedMetric),
+    [mainMetrics, selectedMetric],
+  );
+
+  const chartTitle = selectedData?.title + " Chart";
+  const chartDescription = selectedData?.chartDescription;
+  const chartData = useMemo(
+    () => [...(selectedData?.items ?? [])],
+    [selectedData],
+  );
+
+  if (!selectedMetric) {
+    return (
+      <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        Data not found.
+      </div>
+    );
+  }
+
   if (!financialData) {
     return (
       <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
@@ -208,15 +263,6 @@ export const ExpensesPage = () => {
       </div>
     );
   }
-
-  const mainMetrics = [
-    { key: "sales", title: "Total Sales", amount: financialData.sales.total },
-    {
-      key: "expenses",
-      title: "Total Expenditure",
-      amount: financialData.expenses.total,
-    },
-  ] as const;
 
   const currentData = financialData[selectedMetric] || {
     title: "No data available",
@@ -242,14 +288,16 @@ export const ExpensesPage = () => {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 justify-center">
           {mainMetrics.map((metric) => (
             <FinanceCard
               key={metric.key}
               title={metric.title}
               amount={metric.amount}
               isSelected={selectedMetric === metric.key}
-              onClick={() => setSelectedMetric(metric.key)}
+              onClick={() =>
+                setSelectedMetric(metric.key as "sales" | "expenses")
+              }
             />
           ))}
         </div>
@@ -264,24 +312,63 @@ export const ExpensesPage = () => {
           />
         </div>
 
-        {/* Detail Section */}
-        <div className="w-full md:w-1/2 bg-pink-100 rounded-xl shadow-lg p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">
-              {currentData.title}
-            </h2>
-            <p className="text-gray-600">{currentData.description}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Detail Section */}
+          <div className="w-full bg-pink-100 rounded-xl shadow-lg p-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                {currentData.title}
+              </h2>
+              <p className="text-gray-600">{currentData.description}</p>
+            </div>
+
+            <div className="space-y-3 max-h-76 overflow-y-auto pr-2">
+              {filteredItems.map((item, index) => (
+                <DetailItem
+                  key={index}
+                  label={item.label}
+                  amount={item.amount ?? 0}
+                  percentage={Number(item.percentage)}
+                  isExpense={selectedMetric === "expenses"}
+                />
+              ))}
+            </div>
           </div>
 
-          <div className="space-y-3 max-h-76 overflow-y-auto pr-2">
-            {filteredItems.map((item, index) => (
-              <DetailItem
-                key={index}
-                label={item.label}
-                amount={item.amount ?? 0}
-                percentage={Number(item.percentage)}
-              />
-            ))}
+          {/* Graph */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                {chartTitle}
+              </h2>
+              <p className="text-gray-600">{chartDescription}</p>
+            </div>
+            <div className="space-y-3">
+              <div className="h-80 w-full">
+                <ResponsiveContainer>
+                  <BarChart data={chartData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <YAxis dataKey="label" type="category" width={150}></YAxis>
+                    <XAxis type="number">
+                      <Label
+                        value="Amount ($)"
+                        position="insideBottom"
+                        offset={-5}
+                        style={{ textAnchor: "middle" }}
+                      />
+                    </XAxis>
+                    <Tooltip />
+
+                    <Bar
+                      dataKey="amount"
+                      fill="#6f597b"
+                      name="Amount"
+                      isAnimationActive={false}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
         </div>
       </div>

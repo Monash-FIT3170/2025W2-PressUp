@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { MenuItem } from "/imports/api";
+import { Meteor } from "meteor/meteor";
+import { MenuItem, Tables } from "/imports/api";
 import { OrderMenuItem } from "/imports/api/orders/OrdersCollection";
 import { PaymentModal } from "./PaymentModal";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-import { Order, OrdersCollection } from "/imports/api";
+import { Order, OrdersCollection, TablesCollection } from "/imports/api";
 import { IdType } from "/imports/api/database";
+import { useNavigate, useLocation } from "react-router";
 
 interface PosSideMenuProps {
   tableNo: number | null;
@@ -17,10 +19,11 @@ interface PosSideMenuProps {
   onUpdateOrder?: (fields: Partial<Order>) => void;
   selectedTable: number | null;
   setSelectedTable: (tableNo: number) => void;
+  onActiveOrderChange?: (orderId: string | null) => void;
 }
 
 export const PosSideMenu = ({
-  items,
+  items: _items,
   total,
   orderId,
   onIncrease,
@@ -29,19 +32,43 @@ export const PosSideMenu = ({
   onUpdateOrder,
   selectedTable,
   setSelectedTable,
+  onActiveOrderChange,
 }: PosSideMenuProps) => {
   // Fetch the current order for this table
   useSubscribe("orders");
-  const order = useTracker(
+  useSubscribe("tables");
+  const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
+
+  const [selectedTakeawayId, setSelectedTakeawayId] = useState<string | null>(
+    null,
+  );
+  const activeTakeawayOrders = useTracker(
     () =>
-      selectedTable != null
-        ? OrdersCollection.find({ tableNo: selectedTable }).fetch()[0]
-        : undefined,
-    [selectedTable],
+      OrdersCollection.find(
+        { orderType: "takeaway", paid: false },
+        { sort: { createdAt: -1 } },
+      ).fetch(),
+    [],
   );
 
-  // New state for order type (dine-in/takeaway)
-  const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
+  const order = useTracker(() => {
+    if (orderType === "dine-in" && selectedTable != null) {
+      return OrdersCollection.find({
+        tableNo: selectedTable,
+        $or: [{ orderType: "dine-in" }, { orderType: { $exists: false } }],
+      }).fetch()[0];
+    }
+    if (orderType === "takeaway" && selectedTakeawayId) {
+      return OrdersCollection.findOne(selectedTakeawayId as any) ?? undefined;
+    }
+    return undefined;
+  }, [orderType, selectedTable, selectedTakeawayId]);
+
+  const displayedItems = order?.menuItems ?? [];
+  const baseTotal =
+    order?.totalPrice ??
+    displayedItems.reduce((s, i) => s + i.price * (i.quantity ?? 1), 0) ??
+    total;
 
   // Discount states
   const [discountPercent, setDiscountPercent] = useState(
@@ -57,10 +84,10 @@ export const PosSideMenu = ({
   const [discountPopupScreen, setDiscountPopupScreen] = useState<
     "menu" | "percentage" | "flat"
   >("menu");
-  const [finalTotal, setFinalTotal] = useState(total);
+  const [finalTotal, setFinalTotal] = useState(baseTotal);
 
   // Store original price in state, and always use it for discount calculations
-  const [originalPrice, setOriginalPrice] = useState(total);
+  const [originalPrice, setOriginalPrice] = useState(baseTotal);
 
   useEffect(() => {
     setDiscountPercent(order?.discountPercent || 0);
@@ -68,17 +95,16 @@ export const PosSideMenu = ({
   }, [order?._id, order?.discountPercent, order?.discountAmount]);
 
   useEffect(() => {
-    // When the order or total changes, update the original price ONLY if this order has no discount
     if (
       (order?.discountPercent ?? 0) === 0 &&
       (order?.discountAmount ?? 0) === 0
     ) {
-      setOriginalPrice(total);
+      setOriginalPrice(baseTotal); // use baseTotal, not props.total
     } else if (order?.originalPrice) {
       setOriginalPrice(order.originalPrice);
     }
   }, [
-    total,
+    baseTotal,
     order?._id,
     order?.originalPrice,
     order?.discountPercent,
@@ -94,6 +120,10 @@ export const PosSideMenu = ({
     const saved = originalPrice - final;
     setSavedAmount(saved);
   }, [originalPrice, discountPercent, discountAmount]);
+
+  useEffect(() => {
+    onActiveOrderChange?.(order?._id ?? null);
+  }, [order?._id]);
 
   // Discount handlers
   const applyPercentDiscount = (percentage: number | string) => {
@@ -189,24 +219,32 @@ export const PosSideMenu = ({
     }
   };
 
-  const handleDelete = (itemId: IdType) => {
-    onDelete(itemId);
-  };
-
-  // Fetch unpaid orders for dropdown
-  const orders: Order[] = useTracker(
-    () =>
-      OrdersCollection.find(
-        { paid: { $ne: true } },
-        { sort: { tableNo: 1 } },
-      ).fetch(),
+  const tables: Tables[] = useTracker(
+    () => TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch(),
     [],
   );
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Table change handler
   const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = Number(e.target.value);
     setSelectedTable(selected);
+    // Update the URL with the new tableNo as a query parameter
+    const params = new URLSearchParams(location.search);
+    params.set("tableNo", String(selected));
+    navigate(`${location.pathname}?${params.toString()}`);
+  };
+
+  const generateFourDigitOrderNo = (): number => {
+    for (let i = 0; i < 10; i++) {
+      const candidate = Math.floor(1000 + Math.random() * 9000); // 1000~9999
+      const exists = OrdersCollection.findOne({ orderNo: candidate });
+      if (!exists) return candidate;
+    }
+    // Fallback (extremely unlikely) — still return a 4-digit number
+    return Math.floor(1000 + Math.random() * 9000);
   };
 
   return (
@@ -245,83 +283,159 @@ export const PosSideMenu = ({
               value={selectedTable ?? ""}
               onChange={handleTableChange}
             >
-              {orders.length === 0 ? (
-                <option value="">No Orders</option>
-              ) : (
-                orders.map((order: Order) => (
-                  <option key={String(order._id)} value={order.tableNo}>
-                    Table {order.tableNo}
-                  </option>
-                ))
-              )}
+              {tables.map((table) => (
+                <option
+                  key={table.tableNo}
+                  value={table.tableNo}
+                  disabled={!table.isOccupied}
+                  className={table.isOccupied ? "bg-red-400" : "bg-green-400"}
+                >
+                  Table {table.tableNo}
+                </option>
+              ))}
             </select>
           ) : (
-            <span className="text-lg font-semibold">Takeaway Order</span>
+            <div className="flex items-center gap-2">
+              <select
+                className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none"
+                value={selectedTakeawayId ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value || null;
+                  setSelectedTakeawayId(v);
+                  onActiveOrderChange?.(v);
+                }}
+              >
+                <option value="">Select Takeaway Order</option>
+                {activeTakeawayOrders.map((o) => (
+                  <option key={o._id} value={o._id}>
+                    Order #{o.orderNo}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
-
-          {/* Close button */}
-          <button className="text-2xl font-bold absolute right-0">×</button>
         </div>
       </div>
       {/* Items */}
       <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
-        {items.map((item, idx) => {
-          // Type guard to detect _id
-          function hasIdProp(x: unknown): x is { _id: IdType } {
+        {displayedItems.length > 0 ? (
+          displayedItems.map((item, idx) => {
+            const qty = item.quantity ?? 1;
+            const price = item.price;
             return (
-              typeof x === "object" &&
-              x !== null &&
-              "_id" in (x as object) &&
-              (x as Record<string, unknown>)["_id"] != null
-            );
-          }
-
-          const itemId = hasIdProp(item) ? item._id : undefined;
-          const qty = item.quantity ?? 1;
-          const price = item.price;
-          const key = itemId ?? `${item.name}-${idx}`;
-
-          return (
-            <div
-              key={String(key)}
-              className="bg-white rounded-md p-3 shadow-sm space-y-2"
-            >
-              <div className="text-sm font-semibold text-gray-800">
-                {item.name}
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+              <div
+                key={idx}
+                className="bg-white p-4 rounded-md shadow-md space-y-2"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-gray-800">
+                    {item.name}
+                  </span>
+                  <span className="font-semibold text-gray-800">
+                    ${(price * qty).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => itemId && onDecrease(itemId)}
+                    onClick={() => item._id && onDecrease(item._id)}
                     className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
-                    title="Decrease Item"
                   >
                     –
                   </button>
-                  <span className="px-2">{qty}</span>
+                  <span>{qty}</span>
                   <button
-                    onClick={() => itemId && onIncrease(itemId)}
+                    onClick={() => item._id && onIncrease(item._id)}
                     className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
-                    title="Increase Item"
                   >
                     ＋
                   </button>
-
                   <button
-                    onClick={() => itemId && handleDelete(itemId)}
+                    onClick={() => item._id && onDelete(item._id)}
                     className="text-red-500 hover:text-red-700 text-lg font-bold"
-                    title="Remove Item"
                   >
                     🗑
                   </button>
                 </div>
-                <div className="text-sm font-semibold text-gray-800">
-                  ${(price * qty).toFixed(2)}
-                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        ) : (
+          <div className="p-4 text-center text-gray-500">
+            {selectedTable != null &&
+            tables.find((t) => t.tableNo === selectedTable)?.isOccupied &&
+            !tables.find((t) => t.tableNo === selectedTable)?.orderID ? (
+              /* dine-in empty: show "start new order for table" card (keep as-is) */
+              <div className="bg-yellow-100 p-4 rounded-md space-y-2">
+                <p className="font-bold text-gray-800 mb-2">
+                  No active orders for this table.
+                </p>
+                <button
+                  onClick={async () => {
+                    try {
+                      console.log("Creating order for table:", selectedTable);
+                      const dbTable = tables.find(
+                        (t) => t.tableNo === selectedTable,
+                      );
+                      if (!dbTable || !dbTable._id) {
+                        alert("Could not find table in database.");
+                        return;
+                      }
+
+                      const orderId = await Meteor.callAsync(
+                        "orders.addOrder",
+                        {
+                          orderNo: generateFourDigitOrderNo(),
+                          tableNo: selectedTable,
+                          menuItems: [],
+                          totalPrice: 0,
+                          createdAt: new Date(),
+                          orderStatus: "pending",
+                          paid: false,
+                        },
+                      );
+
+                      await Meteor.callAsync(
+                        "tables.addOrder",
+                        dbTable._id,
+                        orderId,
+                      );
+
+                      console.log("Order created:", orderId);
+                    } catch (err) {
+                      console.error("Error adding order:", err);
+                      alert("Failed to add order. Check console for details.");
+                    }
+                  }}
+                  disabled={
+                    !!tables.find(
+                      (t) => t.tableNo === selectedTable && t.orderID,
+                    )
+                  }
+                  className={`px-4 py-2 rounded font-bold text-white ${
+                    tables.find((t) => t.tableNo === selectedTable && t.orderID)
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-press-up-positive-button hover:bg-press-up-hover"
+                  }`}
+                >
+                  Start a new order?
+                </button>
+              </div>
+            ) : orderType === "takeaway" && !selectedTakeawayId ? (
+              /* takeaway empty + no selected order: show helper */
+              <div className="bg-yellow-100 p-4 rounded-md space-y-2">
+                <p className="font-bold text-gray-800 mb-2">
+                  No active takeaway order.
+                </p>
+                <p className="text-sm text-gray-700">
+                  Use the button below to start.
+                </p>
+              </div>
+            ) : (
+              /* takeaway with an order selected but no items: show nothing (so the user can add from menu) */
+              <span className="sr-only">{/* keep area clean */}</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Footer */}
@@ -365,7 +479,35 @@ export const PosSideMenu = ({
         >
           Discount
         </button>
-
+        {/* [ADD] Start new takeaway order (below Discount) */}
+        {orderType === "takeaway" && (
+          <button
+            // full width, sits right under Discount button
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-full mb-2"
+            onClick={async () => {
+              try {
+                // create a fresh takeaway order
+                const newId = await Meteor.callAsync("orders.addOrder", {
+                  orderNo: generateFourDigitOrderNo(),
+                  orderType: "takeaway",
+                  tableNo: null,
+                  menuItems: [],
+                  totalPrice: 0,
+                  createdAt: new Date(),
+                  orderStatus: "pending",
+                  paid: false,
+                });
+                setSelectedTakeawayId(String(newId)); // select the new order immediately
+                onActiveOrderChange?.(String(newId));
+              } catch (e) {
+                console.error(e);
+                alert("Failed to create takeaway order.");
+              }
+            }}
+          >
+            Start new order
+          </button>
+        )}
         {/* Discount Popup */}
         {openDiscountPopup && (
           <div>
@@ -557,8 +699,13 @@ export const PosSideMenu = ({
         )}
 
         {/* Pay button */}
-        {order && selectedTable != null && (
-          <PaymentModal tableNo={selectedTable} order={order} />
+        {order && (
+          <PaymentModal
+            tableNo={
+              order.orderType === "dine-in" ? (order.tableNo ?? null) : null
+            }
+            order={order}
+          />
         )}
       </div>
     </div>
