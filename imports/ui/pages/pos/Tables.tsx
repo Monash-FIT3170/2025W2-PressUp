@@ -521,7 +521,9 @@ export const TablesPage = () => {
                   {/* Add Order Button */}
                   {!tablesFromDb.find(
                     (t) =>
-                      t.tableNo === editTableData!.tableNo && t.activeOrderID,
+                      t.tableNo === editTableData!.tableNo &&
+                      t.activeOrderID &&
+                      t.isOccupied,
                   ) && (
                     <button
                       onClick={async () => {
@@ -610,11 +612,29 @@ export const TablesPage = () => {
                             setConfirmMsg(
                               "This will remove the linked order and mark the table as vacant. Continue?",
                             );
-                            setConfirmAction(() => () => {
+                            setConfirmAction(() => async () => {
                               setOccupiedToggle(false);
                               setOccupancyInput("");
                               setClearOrderOnSave(true);
                               setConfirmOpen(false);
+
+                              // Clear the table's activeOrderID in the DB
+                              const dbTable = tablesFromDb.find(
+                                (t) => t.tableNo === editTableData!.tableNo,
+                              );
+                              if (dbTable && dbTable._id) {
+                                await Meteor.callAsync(
+                                  "tables.clearOrder",
+                                  dbTable._id,
+                                );
+                                // Also remove the order from OrdersCollection so it doesn't display in Kitchen Management
+                                if (dbTable.activeOrderID) {
+                                  await Meteor.callAsync(
+                                    "orders.removeOrder",
+                                    dbTable.activeOrderID,
+                                  );
+                                }
+                              }
                             });
                             setConfirmOpen(true);
                             return;

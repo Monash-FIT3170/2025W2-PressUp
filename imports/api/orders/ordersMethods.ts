@@ -18,17 +18,18 @@ Meteor.methods({
   }),
 
   "orders.addOrder": requireLoginMethod(async function (order: Partial<Order>) {
-  if (!order) throw new Meteor.Error("invalid-arguments", "Order data is required");
-  if (!order.orderNo) {
-    let candidate: number;
-    for (let i = 0; i < 10; i++) {
-      candidate = Math.floor(1000 + Math.random() * 9000);
-      if (!OrdersCollection.findOneAsync({ orderNo: candidate })) break;
+    if (!order)
+      throw new Meteor.Error("invalid-arguments", "Order data is required");
+    if (!order.orderNo) {
+      let candidate: number;
+      for (let i = 0; i < 10; i++) {
+        candidate = Math.floor(1000 + Math.random() * 9000);
+        if (!OrdersCollection.findOneAsync({ orderNo: candidate })) break;
+      }
+      order.orderNo = candidate!;
     }
-    order.orderNo = candidate!;
-  }
-  return await OrdersCollection.insertAsync(order as Order);
-}),
+    return await OrdersCollection.insertAsync(order as Order);
+  }),
 
   "orders.getAll": requireLoginMethod(async function () {
     return OrdersCollection.find().fetch();
@@ -56,5 +57,11 @@ Meteor.methods({
     return await OrdersCollection.updateAsync(orderId, {
       $set: { "menuItems.$[].served": served },
     });
+  }),
+
+  "orders.removeOrder": requireLoginMethod(async function (orderId: IdType) {
+    if (!orderId)
+      throw new Meteor.Error("invalid-arguments", "Order ID is required");
+    await OrdersCollection.removeAsync(orderId);
   }),
 });

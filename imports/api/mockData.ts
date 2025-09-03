@@ -255,11 +255,12 @@ export const mockDataGenerator = async ({
 
   // Create orders: mix of dine-in (linked to tables) and takeaway (no table)
   if ((await OrdersCollection.countDocuments()) === 0) {
-    const allTables = await TablesCollection.find(
-      {},
+    // Only select tables that are occupied
+    const allOccupiedTables = await TablesCollection.find(
+      { isOccupied: true },
       { fields: { tableNo: 1 } },
     ).fetchAsync();
-    const availableTableNos = allTables.map((t) => t.tableNo);
+    const availableTableNos = allOccupiedTables.map((t) => t.tableNo);
 
     const dineInCount = Math.max(
       0,
