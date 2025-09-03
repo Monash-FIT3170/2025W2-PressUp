@@ -592,54 +592,53 @@ export const TablesPage = () => {
                     Add Order
                   </button>
 
-                  {/* Occupied toggle */}
-                  <button
-                    onClick={() => {
-                      const newOccupied = !occupiedToggle;
-                      // if we're marking vacant and there's an existing order, confirm first
-                      const dbTable = tablesFromDb.find(
-                        (t) => t.tableNo === editTableData!.tableNo,
-                      );
-                      const hasOrder = !!(
-                        dbTable?.activeOrderID ||
-                        editTableData?.activeOrderID ||
-                        modalOriginalTable?.activeOrderID
-                      );
-                      if (!newOccupied && hasOrder) {
-                        setConfirmMsg(
-                          "This will remove the linked order and mark the table as vacant. Continue?",
-                        );
-                        setConfirmAction(() => () => {
+                  {/* Occupied/Vacant Toggle */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!occupiedToggle) {
+                          setOccupiedToggle(true);
+                          setOccupancyInput(occupancyInput || "1");
+                        } else {
+                          // If marking vacant and there's an active order, confirm
+                          const dbTable = tablesFromDb.find(
+                            (t) => t.tableNo === editTableData!.tableNo,
+                          );
+                          const hasOrder = !!(
+                            dbTable?.activeOrderID ||
+                            editTableData?.activeOrderID ||
+                            modalOriginalTable?.activeOrderID
+                          );
+                          if (hasOrder) {
+                            setConfirmMsg(
+                              "This will remove the linked order and mark the table as vacant. Continue?",
+                            );
+                            setConfirmAction(() => () => {
+                              setOccupiedToggle(false);
+                              setOccupancyInput("");
+                              setClearOrderOnSave(true);
+                              setConfirmOpen(false);
+                            });
+                            setConfirmOpen(true);
+                            return;
+                          }
                           setOccupiedToggle(false);
                           setOccupancyInput("");
-                          setClearOrderOnSave(true);
-                          setConfirmOpen(false);
-                        });
-                        setConfirmOpen(true);
-                        return;
-                      }
-                      setOccupiedToggle(newOccupied);
-                      if (!newOccupied) {
-                        // hide/clear occupancy input when marking vacant
-                        setOccupancyInput("");
-                        setClearOrderOnSave(false);
-                      } else if (!occupancyInput) {
-                        // default to 1 occupant when marking occupied and no value present
-                        setOccupancyInput("1");
-                        setClearOrderOnSave(false);
-                      }
-                    }}
-                    aria-pressed={occupiedToggle}
-                    aria-label={occupiedToggle ? "Set Vacant" : "Set Occupied"}
-                    style={{
-                      backgroundColor: occupiedToggle ? "#c97f97" : "#6f597b",
-                      color: "#fff",
-                      minWidth: 110,
-                    }}
-                    className="px-4 py-1 rounded"
-                  >
-                    {occupiedToggle ? "Occupied" : "Vacant"}
-                  </button>
+                        }
+                      }}
+                      className={`px-4 py-1 rounded font-semibold transition-colors duration-300 ${
+                        occupiedToggle
+                          ? "bg-press-up-purple text-white"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      }`}
+                      aria-pressed={occupiedToggle}
+                      aria-label={occupiedToggle ? "Occupied" : "Vacant"}
+                      style={{ minWidth: 110 }}
+                    >
+                      {occupiedToggle ? "Occupied" : "Vacant"}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Bottom row: Cancel & Save */}
