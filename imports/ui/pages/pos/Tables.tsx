@@ -540,6 +540,7 @@ export const TablesPage = () => {
                             {
                               // orderNo is now auto-generated server-side
                               tableNo: editTableData!.tableNo,
+                              orderType: "dine-in",
                               menuItems: [],
                               totalPrice: 0,
                               createdAt: new Date(),

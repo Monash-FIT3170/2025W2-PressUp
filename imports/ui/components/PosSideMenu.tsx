@@ -239,16 +239,6 @@ export const PosSideMenu = ({
     navigate(`${location.pathname}?${params.toString()}`);
   };
 
-  const generateFourDigitOrderNo = (): number => {
-    for (let i = 0; i < 10; i++) {
-      const candidate = Math.floor(1000 + Math.random() * 9000); // 1000~9999
-      const exists = OrdersCollection.findOne({ orderNo: candidate });
-      if (!exists) return candidate;
-    }
-    // Fallback (extremely unlikely) — still return a 4-digit number
-    return Math.floor(1000 + Math.random() * 9000);
-  };
-
   return (
     <div className="w-64 h-[75vh] flex flex-col">
       {/* Header */}
@@ -386,7 +376,6 @@ export const PosSideMenu = ({
                       const orderId = await Meteor.callAsync(
                         "orders.addOrder",
                         {
-                          orderNo: generateFourDigitOrderNo(),
                           tableNo: selectedTable,
                           menuItems: [],
                           totalPrice: 0,
@@ -492,7 +481,6 @@ export const PosSideMenu = ({
               try {
                 // create a fresh takeaway order
                 const newId = await Meteor.callAsync("orders.addOrder", {
-                  orderNo: generateFourDigitOrderNo(),
                   orderType: "takeaway",
                   tableNo: null,
                   menuItems: [],

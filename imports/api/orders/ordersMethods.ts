@@ -17,11 +17,18 @@ Meteor.methods({
     await OrdersCollection.updateAsync(orderId, { $set: update });
   }),
 
-  "orders.addOrder": requireLoginMethod(async function (order: Order) {
-    if (!order)
-      throw new Meteor.Error("invalid-arguments", "Order data is required");
-    return await OrdersCollection.insertAsync(order);
-  }),
+  "orders.addOrder": requireLoginMethod(async function (order: Partial<Order>) {
+  if (!order) throw new Meteor.Error("invalid-arguments", "Order data is required");
+  if (!order.orderNo) {
+    let candidate: number;
+    for (let i = 0; i < 10; i++) {
+      candidate = Math.floor(1000 + Math.random() * 9000);
+      if (!OrdersCollection.findOneAsync({ orderNo: candidate })) break;
+    }
+    order.orderNo = candidate!;
+  }
+  return await OrdersCollection.insertAsync(order as Order);
+}),
 
   "orders.getAll": requireLoginMethod(async function () {
     return OrdersCollection.find().fetch();
