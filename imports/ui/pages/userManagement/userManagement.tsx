@@ -35,6 +35,7 @@ export const UserManagementPage = () => {
     };
   }, []);
 
+
   /* const canManageUsers = useTracker(() => {
     return Roles.userIsInRoleAsync(Meteor.userId(), [
       RoleEnum.ADMIN,
@@ -364,12 +365,16 @@ const AddUserModal = ({
     username: "",
     password: "",
     role: RoleEnum.CASUAL as string,
+    payRate: 0,
   });
   const [showPassword, setShowPassword] = useState(false);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
   };
+
+  const currentUserRole = Roles.getRolesForUser(Meteor.userId());
+  const canEditPayRate = currentUserRole.includes(RoleEnum.ADMIN) || currentUserRole.includes(RoleEnum.MANAGER);
 
   return (
     <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
@@ -430,6 +435,21 @@ const AddUserModal = ({
             <option value={RoleEnum.MANAGER}>Manager</option>
             <option value={RoleEnum.ADMIN}>Admin</option>
           </select>
+          {canEditPayRate && (
+          <Input
+            type="number"
+            placeholder="Pay Rate"
+            value={formData.payRate ?? ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setFormData({
+                ...formData,
+                payRate: value === "" ? 0 : parseFloat(value),
+              });
+            }}
+            required
+          />
+        )}
           <div className="flex gap-2 pt-4">
             <button
               type="button"
@@ -471,9 +491,13 @@ const EditUserModal = ({
     firstName: user.profile?.firstName || "",
     lastName: user.profile?.lastName || "",
     role: Roles.getRolesForUser(user._id)[0] || RoleEnum.CASUAL,
+    payRate: (user as any).payRate ?? 0,
     oldPassword: "",
     password: "",
   });
+
+  const currentUserRole = Roles.getRolesForUser(Meteor.userId());
+  const canEditPayRate = currentUserRole.includes(RoleEnum.ADMIN) || currentUserRole.includes(RoleEnum.MANAGER);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -484,7 +508,8 @@ const EditUserModal = ({
         lastName: formData.lastName,
       },
       role: formData.role,
-    });
+      payRate: formData.payRate,
+    } as any);
 
     // Only update password if user entered one
     if (formData.password && formData.password.trim() !== "") {
@@ -550,6 +575,21 @@ const EditUserModal = ({
             <option value={RoleEnum.MANAGER}>Manager</option>
             <option value={RoleEnum.ADMIN}>Admin</option>
           </select>
+          {canEditPayRate && (
+            <Input
+              type="number"
+              placeholder="Pay Rate"
+              value={formData.payRate ?? ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData({
+                  ...formData,
+                  payRate: value === "" ? 0 : parseFloat(value),
+                });
+              }}
+              required
+            />
+          )}
           <EditPassword
             user={user}
             oldPassword={formData.oldPassword}
