@@ -154,6 +154,9 @@ export const TablesPage = () => {
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
   const [clearOrderOnSave, setClearOrderOnSave] = useState(false);
   const [deleteTableInput, setDeleteTableInput] = useState("");
+  const [selectedMoveTableNo, setSelectedMoveTableNo] = useState<number | null>(
+    null,
+  );
 
   // Prefill grid with tables from DB on initial load
   useEffect(() => {
@@ -656,6 +659,90 @@ export const TablesPage = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Move Order to Table */}
+                {editTableData?.activeOrderID && (
+                  <div className="mb-3">
+                    <hr></hr>
+                    <label className="block mt-2 font-semibold">
+                      Move Order to Table:
+                    </label>
+                    <div className="mb-3 flex flex-row items-center justify-between gap-2">
+                      <select
+                        value={selectedMoveTableNo ?? ""}
+                        onChange={(e) =>
+                          setSelectedMoveTableNo(Number(e.target.value))
+                        }
+                        className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none rounded-full px-4 py-2 shadow-md"
+                        style={{ minWidth: 160 }}
+                      >
+                        <option value="" className="bg-white text-gray-700">
+                          Select Table
+                        </option>
+                        {tablesFromDb
+                          .filter(
+                            (t) =>
+                              !t.isOccupied &&
+                              t.tableNo !== editTableData.tableNo,
+                          )
+                          .map((t) => (
+                            <option
+                              key={t.tableNo}
+                              value={t.tableNo}
+                              className="bg-white text-gray-700"
+                            >
+                              Table {t.tableNo}
+                            </option>
+                          ))}
+                      </select>
+                      <button
+                        className="px-4 py-1 rounded font-semibold bg-press-up-positive-button text-white shadow-md hover:bg-press-up-hover transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        disabled={!selectedMoveTableNo}
+                        onClick={async () => {
+                          const newTable = tablesFromDb.find(
+                            (t) => t.tableNo === selectedMoveTableNo,
+                          );
+                          if (!newTable || !editTableData.activeOrderID) return;
+                          // Clear old table
+                          await Meteor.callAsync(
+                            "tables.clearOrder",
+                            editTableData._id,
+                          );
+                          // Set new table
+                          await Meteor.callAsync(
+                            "tables.addOrder",
+                            newTable._id,
+                            editTableData.activeOrderID,
+                          );
+                          await Meteor.callAsync(
+                            "tables.setOccupied",
+                            newTable._id,
+                            true,
+                            1,
+                          );
+                          // Update order's tableNo
+                          await Meteor.callAsync(
+                            "orders.updateOrder",
+                            editTableData.activeOrderID,
+                            { tableNo: newTable.tableNo },
+                          );
+                          // Re-render by updating grid from DB
+                          const refreshedTables = TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch();
+                          const newGrid = Array(GRID_SIZE).fill(null);
+                          refreshedTables.forEach((table, idx) => {
+                            if (idx < GRID_SIZE) {
+                              newGrid[idx] = table;
+                            }
+                          });
+                          setGrid(newGrid);
+                          setModalType(null);
+                        }}
+                      >
+                        Move
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Bottom row: Cancel & Save */}
                 <div className="flex justify-end gap-2">
