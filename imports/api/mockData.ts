@@ -227,9 +227,16 @@ export const mockDataGenerator = async ({
   // Create tables first with no order assigned
   if ((await TablesCollection.countDocuments()) === 0) {
     for (let i = 1; i < tableCount + 1; ++i) {
-      const capacity = faker.number.int({ min: 1, max: 10 });
-      // Set 70% occupied, and 30% not occupied
-      const isOccupied = faker.datatype.boolean(0.7) ? true : false;
+      // const capacity = faker.number.int({ min: 1, max: 6 });
+      // // Set 70% occupied, and 30% not occupied
+      // const isOccupied = faker.datatype.boolean(0.7) ? true : false;
+      // // If occupied, set number of occupants from 1 to max capacity of table, otherwise, zero occupants
+      // const noOccupants = isOccupied
+      //   ? faker.number.int({ min: 1, max: capacity })
+      //   : 0;
+      const capacity = faker.number.int({ min: 1, max: 6 });
+      // Set every even table to be occupied
+      const isOccupied = (i%2==0) ? true : false;
       // If occupied, set number of occupants from 1 to max capacity of table, otherwise, zero occupants
       const noOccupants = isOccupied
         ? faker.number.int({ min: 1, max: capacity })
