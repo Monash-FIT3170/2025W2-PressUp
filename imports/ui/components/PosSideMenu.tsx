@@ -19,10 +19,11 @@ interface PosSideMenuProps {
   onUpdateOrder?: (fields: Partial<Order>) => void;
   selectedTable: number | null;
   setSelectedTable: (tableNo: number) => void;
+  onActiveOrderChange?: (orderId: string | null) => void;
 }
 
 export const PosSideMenu = ({
-  items,
+  items: _items,
   total,
   orderId,
   onIncrease,
@@ -31,20 +32,43 @@ export const PosSideMenu = ({
   onUpdateOrder,
   selectedTable,
   setSelectedTable,
+  onActiveOrderChange,
 }: PosSideMenuProps) => {
   // Fetch the current order for this table
   useSubscribe("orders");
   useSubscribe("tables");
-  const order = useTracker(
+  const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
+
+  const [selectedTakeawayId, setSelectedTakeawayId] = useState<string | null>(
+    null,
+  );
+  const activeTakeawayOrders = useTracker(
     () =>
-      selectedTable != null
-        ? OrdersCollection.find({ tableNo: selectedTable }).fetch()[0]
-        : undefined,
-    [selectedTable],
+      OrdersCollection.find(
+        { orderType: "takeaway", paid: false },
+        { sort: { createdAt: -1 } },
+      ).fetch(),
+    [],
   );
 
-  // New state for order type (dine-in/takeaway)
-  const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
+  const order = useTracker(() => {
+    if (orderType === "dine-in" && selectedTable != null) {
+      return OrdersCollection.find({
+        tableNo: selectedTable,
+        $or: [{ orderType: "dine-in" }, { orderType: { $exists: false } }],
+      }).fetch()[0];
+    }
+    if (orderType === "takeaway" && selectedTakeawayId) {
+      return OrdersCollection.findOne(selectedTakeawayId as any) ?? undefined;
+    }
+    return undefined;
+  }, [orderType, selectedTable, selectedTakeawayId]);
+
+  const displayedItems = order?.menuItems ?? [];
+  const baseTotal =
+    order?.totalPrice ??
+    displayedItems.reduce((s, i) => s + i.price * (i.quantity ?? 1), 0) ??
+    total;
 
   // Discount states
   const [discountPercent, setDiscountPercent] = useState(
@@ -60,10 +84,10 @@ export const PosSideMenu = ({
   const [discountPopupScreen, setDiscountPopupScreen] = useState<
     "menu" | "percentage" | "flat"
   >("menu");
-  const [finalTotal, setFinalTotal] = useState(total);
+  const [finalTotal, setFinalTotal] = useState(baseTotal);
 
   // Store original price in state, and always use it for discount calculations
-  const [originalPrice, setOriginalPrice] = useState(total);
+  const [originalPrice, setOriginalPrice] = useState(baseTotal);
 
   useEffect(() => {
     setDiscountPercent(order?.discountPercent || 0);
@@ -71,17 +95,16 @@ export const PosSideMenu = ({
   }, [order?._id, order?.discountPercent, order?.discountAmount]);
 
   useEffect(() => {
-    // When the order or total changes, update the original price ONLY if this order has no discount
     if (
       (order?.discountPercent ?? 0) === 0 &&
       (order?.discountAmount ?? 0) === 0
     ) {
-      setOriginalPrice(total);
+      setOriginalPrice(baseTotal); // use baseTotal, not props.total
     } else if (order?.originalPrice) {
       setOriginalPrice(order.originalPrice);
     }
   }, [
-    total,
+    baseTotal,
     order?._id,
     order?.originalPrice,
     order?.discountPercent,
@@ -97,6 +120,10 @@ export const PosSideMenu = ({
     const saved = originalPrice - final;
     setSavedAmount(saved);
   }, [originalPrice, discountPercent, discountAmount]);
+
+  useEffect(() => {
+    onActiveOrderChange?.(order?._id ?? null);
+  }, [order?._id]);
 
   // Discount handlers
   const applyPercentDiscount = (percentage: number | string) => {
@@ -210,6 +237,16 @@ export const PosSideMenu = ({
     navigate(`${location.pathname}?${params.toString()}`);
   };
 
+  const generateFourDigitOrderNo = (): number => {
+    for (let i = 0; i < 10; i++) {
+      const candidate = Math.floor(1000 + Math.random() * 9000); // 1000~9999
+      const exists = OrdersCollection.findOne({ orderNo: candidate });
+      if (!exists) return candidate;
+    }
+    // Fallback (extremely unlikely) — still return a 4-digit number
+    return Math.floor(1000 + Math.random() * 9000);
+  };
+
   return (
     <div className="w-64 h-[75vh] flex flex-col">
       {/* Header */}
@@ -258,17 +295,31 @@ export const PosSideMenu = ({
               ))}
             </select>
           ) : (
-            <span className="text-lg font-semibold">Takeaway Order</span>
+            <div className="flex items-center gap-2">
+              <select
+                className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none"
+                value={selectedTakeawayId ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value || null;
+                  setSelectedTakeawayId(v);
+                  onActiveOrderChange?.(v);
+                }}
+              >
+                <option value="">Select Takeaway Order</option>
+                {activeTakeawayOrders.map((o) => (
+                  <option key={o._id} value={o._id}>
+                    Order #{o.orderNo}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
-
-          {/* Close button */}
-          <button className="text-2xl font-bold absolute right-0">×</button>
         </div>
       </div>
       {/* Items */}
       <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
-        {items.length > 0 ? (
-          items.map((item, idx) => {
+        {displayedItems.length > 0 ? (
+          displayedItems.map((item, idx) => {
             const qty = item.quantity ?? 1;
             const price = item.price;
             return (
@@ -313,6 +364,7 @@ export const PosSideMenu = ({
             {selectedTable != null &&
             tables.find((t) => t.tableNo === selectedTable)?.isOccupied &&
             !tables.find((t) => t.tableNo === selectedTable)?.orderID ? (
+              /* dine-in empty: show "start new order for table" card (keep as-is) */
               <div className="bg-yellow-100 p-4 rounded-md space-y-2">
                 <p className="font-bold text-gray-800 mb-2">
                   No active orders for this table.
@@ -332,7 +384,7 @@ export const PosSideMenu = ({
                       const orderId = await Meteor.callAsync(
                         "orders.addOrder",
                         {
-                          orderNo: Date.now(),
+                          orderNo: generateFourDigitOrderNo(),
                           tableNo: selectedTable,
                           menuItems: [],
                           totalPrice: 0,
@@ -368,8 +420,19 @@ export const PosSideMenu = ({
                   Start a new order?
                 </button>
               </div>
+            ) : orderType === "takeaway" && !selectedTakeawayId ? (
+              /* takeaway empty + no selected order: show helper */
+              <div className="bg-yellow-100 p-4 rounded-md space-y-2">
+                <p className="font-bold text-gray-800 mb-2">
+                  No active takeaway order.
+                </p>
+                <p className="text-sm text-gray-700">
+                  Use the button below to start.
+                </p>
+              </div>
             ) : (
-              <span>No items yet</span>
+              /* takeaway with an order selected but no items: show nothing (so the user can add from menu) */
+              <span className="sr-only">{/* keep area clean */}</span>
             )}
           </div>
         )}
@@ -416,7 +479,35 @@ export const PosSideMenu = ({
         >
           Discount
         </button>
-
+        {/* [ADD] Start new takeaway order (below Discount) */}
+        {orderType === "takeaway" && (
+          <button
+            // full width, sits right under Discount button
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-full mb-2"
+            onClick={async () => {
+              try {
+                // create a fresh takeaway order
+                const newId = await Meteor.callAsync("orders.addOrder", {
+                  orderNo: generateFourDigitOrderNo(),
+                  orderType: "takeaway",
+                  tableNo: null,
+                  menuItems: [],
+                  totalPrice: 0,
+                  createdAt: new Date(),
+                  orderStatus: "pending",
+                  paid: false,
+                });
+                setSelectedTakeawayId(String(newId)); // select the new order immediately
+                onActiveOrderChange?.(String(newId));
+              } catch (e) {
+                console.error(e);
+                alert("Failed to create takeaway order.");
+              }
+            }}
+          >
+            Start new order
+          </button>
+        )}
         {/* Discount Popup */}
         {openDiscountPopup && (
           <div>
@@ -608,8 +699,13 @@ export const PosSideMenu = ({
         )}
 
         {/* Pay button */}
-        {order && selectedTable != null && (
-          <PaymentModal tableNo={selectedTable} order={order} />
+        {order && (
+          <PaymentModal
+            tableNo={
+              order.orderType === "dine-in" ? (order.tableNo ?? null) : null
+            }
+            order={order}
+          />
         )}
       </div>
     </div>
