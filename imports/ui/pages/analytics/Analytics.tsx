@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSubscribe } from "meteor/react-meteor-data";
-import { Order, OrderMenuItem } from "/imports/api/orders/OrdersCollection";
-import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
+import { Order } from "/imports/api/orders/OrdersCollection";
 import { PopularItemsAnalysis } from "./components/PopularItemsAnalysis";
 import { SalesTrendsVisualization } from "./components/SalesTrendsVisualization";
 import { PeakHoursAnalysis } from "./components/PeakHoursAnalysis";
@@ -18,13 +17,10 @@ import {
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceDateFilter } from "../../components/FinanceDateFilter";
 
-
-
 export const AnalyticsPage = () => {
-
   const [_, setPageTitle] = usePageTitle();
 
-  const [dateRange, setDateRange] = React.useState<
+  const [dateRange, setDateRange] = useState<
     | "all"
     | "today"
     | "thisWeek"
@@ -34,20 +30,30 @@ export const AnalyticsPage = () => {
     | "past30Days"
   >("all");
 
-  const [customDateRange, setCustomDateRange] = useState<{ start: Date; end: Date } | null>(null);
-  const [ordersFiltered, setOrdersFiletered] = useState<Order[]>([]);
-  const [dateRangeBounds, setDateRangeBounds] = useState<{ start: Date | null; end: Date | null }>({
+  const [customDateRange, setCustomDateRange] = useState<{
+    start: Date;
+    end: Date;
+  } | null>(null);
+
+  const [ordersFiltered, setOrdersFiltered] = useState<Order[]>([]);
+  const [dateRangeBounds, setDateRangeBounds] = useState<{
+    start: Date | null;
+    end: Date | null;
+  }>({
     start: null,
     end: null,
   });
 
   useSubscribe("orders");
 
-  const getDateRangeText = (dateRange: string) => {
+  const getDateRangeText = (range: string) => {
     if (!dateRangeBounds.start || !dateRangeBounds.end) {
       return "All Time";
     }
-    return `${format(dateRangeBounds.start, "dd/MM/yy")} – ${format(dateRangeBounds.end, "dd/MM/yy")}`;
+    return `${format(dateRangeBounds.start, "dd/MM/yy")} – ${format(
+      dateRangeBounds.end,
+      "dd/MM/yy"
+    )}`;
   };
 
   useEffect(() => {
@@ -83,35 +89,24 @@ export const AnalyticsPage = () => {
     setDateRangeBounds({ start, end });
   }, [dateRange]);
 
-
   useEffect(() => {
-
     setPageTitle("Analytics & Reporting");
 
     const fetchOrders = async () => {
       try {
-        //const dateFilter = getDateRangeFilter(dateRange);
-
         const orderData = (await Meteor.callAsync("orders.getAll")) as Order[];
-        setOrdersFiletered(orderData);
-
-        // // Filter the data based on date range
-        // setOrdersFiletered(orderData.filter((order) => {
-        //   const orderDate = new Date(order.createdAt);
-        //   return dateFilter(orderDate);
-        // }))
-
+        setOrdersFiltered(orderData);
       } catch (error) {
         console.error("Error fetching order data", error);
       }
     };
+
     fetchOrders();
   }, [setPageTitle, dateRange]);
 
+  const convertToCSV = (objArray: any) => {
+    const array = typeof objArray !== "object" ? JSON.parse(objArray) : objArray;
 
-  const convertToCSV = (objArray: string) => {
-
-    const array = typeof objArray !== 'object' ? JSON.parse(objArray) : objArray;
     const header = [
       "Order ID",
       "Order Number",
@@ -122,29 +117,27 @@ export const AnalyticsPage = () => {
     ];
     let str = header.join(",") + "\r\n";
 
-    for (let i = 0; i < array.length; i++) {
-      const order = array[i];
+    for (const order of array) {
       const row = [
         order._id || "",
         order.orderNo || "",
-        order.menuItems ? order.menuItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0,
+        order.menuItems
+          ? order.menuItems.reduce((sum: number, item: any) => sum + item.quantity, 0)
+          : 0,
         order.paid ? "FALSE" : "TRUE",
         order.orderStatus || "",
         order.createdAt ? format(new Date(order.createdAt), "yyyy-MM-dd HH:mm:ss") : "",
       ];
-
       str += row.join(",") + "\r\n";
     }
 
     return str;
   };
 
-
-  const downloadCSV = (data: any, fileName: any) => {
-
-    const csvData = new Blob([convertToCSV(data)], { type: 'text/csv' });
+  const downloadCSV = (data: any, fileName: string) => {
+    const csvData = new Blob([convertToCSV(data)], { type: "text/csv" });
     const csvURL = URL.createObjectURL(csvData);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = csvURL;
     link.download = `${fileName}.csv`;
     document.body.appendChild(link);
@@ -152,7 +145,7 @@ export const AnalyticsPage = () => {
     document.body.removeChild(link);
   };
 
-  const handleExport = async () => {
+  const handleExport = () => {
     if (!dateRangeBounds.start || !dateRangeBounds.end) {
       downloadCSV(ordersFiltered, "CSV_Analytics_PressUp_All_Time");
       return;
@@ -160,8 +153,11 @@ export const AnalyticsPage = () => {
     const formattedStart = format(dateRangeBounds.start, "yyyy-MM-dd");
     const formattedEnd = format(dateRangeBounds.end, "yyyy-MM-dd");
 
-    downloadCSV(ordersFiltered, `CSV_Analytics_PressUp_${formattedStart}_to_${formattedEnd}`);
-  }
+    downloadCSV(
+      ordersFiltered,
+      `CSV_Analytics_PressUp_${formattedStart}_to_${formattedEnd}`
+    );
+  };
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto scroll-smooth bg-gray-50 p-6">
@@ -192,11 +188,8 @@ export const AnalyticsPage = () => {
           }
         />
 
-        <PeakHoursAnalysis
-          orders={ordersFiltered}
-          timeFrame={dateRange}
-        />
+        <PeakHoursAnalysis orders={ordersFiltered} timeFrame={dateRange} />
       </div>
     </div>
   );
-}; 
+};
