@@ -20,12 +20,10 @@ import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceDateFilter } from "../../components/FinanceDateFilter";
 
 
-export type TimeFrame = "day" | "week" | "month" | "year" | "custom";
 
 export const AnalyticsPage = () => {
 
   const [_, setPageTitle] = usePageTitle();
-  const [selectedTimeFrame, setSelectedTimeFrame] = useState<TimeFrame>("week");
 
   const [dateRange, setDateRange] = React.useState<
     | "all"
@@ -212,23 +210,34 @@ export const AnalyticsPage = () => {
     const now = new Date();
     let startDate: Date;
 
-    switch (selectedTimeFrame) {
-      case "day":
+    switch (dateRange) {
+
+      case "today":
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         break;
-      case "week":
+      case "thisWeek":
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;
-      case "month":
+      case "past7Days":
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case "thisMonth":
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
         break;
-      case "year":
+      case "past30Days":
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case "thisYear":
         startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      case "all":
+      default:
+        startDate = new Date(2025, 0, 1); // or pick something meaningful
         break;
     }
     // TODO 
     // add a date and possible account name tage here
-    downloadCSV(ordersFiltered, "CSV_Analytics_PressUp");
+    downloadCSV(ordersFiltered, "CSV_Analytics_PressUp" + startDate.toDateString());
   }
 
   return (
@@ -244,7 +253,7 @@ export const AnalyticsPage = () => {
           </div>
 
           <ExportButton onExport={handleExport} />
-          
+
         </div>
 
 
@@ -256,7 +265,7 @@ export const AnalyticsPage = () => {
               <div className="bg-white rounded-lg shadow-md p-6">
                 <PopularItemsAnalysis
                   transactions={ordersFiltered}
-                  timeFrame={selectedTimeFrame}
+                  timeFrame={dateRange}
                   customDateRange={customDateRange}
                 />
               </div>
@@ -265,7 +274,7 @@ export const AnalyticsPage = () => {
               <div className="bg-white rounded-lg shadow-md p-6">
                 <SalesTrendsVisualization
                   transactions={ordersFiltered}
-                  timeFrame={selectedTimeFrame}
+                  timeFrame={dateRange}
                   customDateRange={customDateRange}
                 />
               </div>
@@ -274,7 +283,7 @@ export const AnalyticsPage = () => {
               <div className="bg-white rounded-lg shadow-md p-6 lg:col-span-2">
                 <PeakHoursAnalysis
                   orders={ordersFiltered}
-                  timeFrame={selectedTimeFrame}
+                  timeFrame={dateRange}
                   customDateRange={customDateRange}
                 />
               </div>
