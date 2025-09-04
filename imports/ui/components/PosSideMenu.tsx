@@ -285,8 +285,9 @@ export const PosSideMenu = ({
             </button>
         </div>
       </div>
-      {/* Items */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
+      {/* Items + Footer (wrapped so we can overlay when locked) */}
+      <div className="relative flex-1 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
         {items.map((item, idx) => {
           // Type guard to detect _id
           function hasIdProp(x: unknown): x is { _id: IdType } {
@@ -347,10 +348,10 @@ export const PosSideMenu = ({
             </div>
           );
         })}
-      </div>
+  </div>
 
-      {/* Footer */}
-      <div className="bg-press-up-purple text-white p-4 flex-shrink-0">
+  {/* Footer */}
+  <div className="bg-press-up-purple text-white p-4 flex-shrink-0">
         {/* Displaying total cost*/}
         <div className="flex justify-between items-center mb-2">
           <span className="text-lg font-bold">Total</span>
@@ -587,6 +588,16 @@ export const PosSideMenu = ({
         {order && selectedTable != null && (
           <PaymentModal tableNo={selectedTable} order={order} />
         )}
+
+        {/* Locked overlay */}
+        {order?.isLocked && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/50 text-white p-4">
+            <div className="text-5xl">🔒</div>
+            <div className="mt-2 text-lg font-bold text-center">Order locked: edits disabled</div>
+            <div className="mt-1 text-sm opacity-90 text-center">Only managers can unlock this order</div>
+          </div>
+        )}
+      </div>
       </div>
     </div>
   );
