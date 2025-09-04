@@ -377,7 +377,7 @@ const AddUserModal = ({
   const canEditPayRate = currentUserRole.includes(RoleEnum.ADMIN) || currentUserRole.includes(RoleEnum.MANAGER);
 
   return (
-    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999]">
       <div className="bg-white p-6 rounded-lg w-96 shadow-2xl">
         <h2 className="text-xl font-bold mb-4" style={{ color: "#1e032e" }}>
           Add New User
@@ -436,20 +436,20 @@ const AddUserModal = ({
             <option value={RoleEnum.ADMIN}>Admin</option>
           </select>
           {canEditPayRate && (
-          <Input
-            type="number"
-            placeholder="Pay Rate"
-            value={formData.payRate ?? ""}
-            onChange={(e) => {
-              const value = e.target.value;
-              setFormData({
-                ...formData,
-                payRate: value === "" ? 0 : parseFloat(value),
-              });
-            }}
-            required
-          />
-        )}
+            <Input
+              type="number"
+              placeholder="Pay Rate"
+              value={formData.payRate ?? ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData({
+                  ...formData,
+                  payRate: value === "" ? 0 : parseFloat(value),
+                });
+              }}
+              required
+            />
+          )}
           <div className="flex gap-2 pt-4">
             <button
               type="button"
@@ -491,7 +491,7 @@ const EditUserModal = ({
     firstName: user.profile?.firstName || "",
     lastName: user.profile?.lastName || "",
     role: Roles.getRolesForUser(user._id)[0] || RoleEnum.CASUAL,
-    payRate: (user as any).payRate ?? 0,
+    payRate: (user as any).payRate ?? undefined,
     oldPassword: "",
     password: "",
   });
@@ -542,7 +542,7 @@ const EditUserModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999]">
       <div className="bg-white p-6 rounded-lg w-96 shadow-2xl">
         <h2 className="text-xl font-bold mb-4" style={{ color: "#1e032e" }}>
           Edit User
@@ -584,10 +584,9 @@ const EditUserModal = ({
                 const value = e.target.value;
                 setFormData({
                   ...formData,
-                  payRate: value === "" ? 0 : parseFloat(value),
+                  payRate: value === "" ? undefined : parseFloat(value),
                 });
               }}
-              required
             />
           )}
           <EditPassword
