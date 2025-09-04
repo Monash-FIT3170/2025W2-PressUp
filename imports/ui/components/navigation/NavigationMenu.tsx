@@ -33,7 +33,9 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
   Meteor.subscribe("users.all");
   Meteor.subscribe("users.roles");
   const currentUserRole = Roles.getRolesForUser(Meteor.userId());
-  const isAdminOrManager = currentUserRole.includes(RoleEnum.ADMIN) || currentUserRole.includes(RoleEnum.MANAGER);
+  const isAdminOrManager =
+    currentUserRole.includes(RoleEnum.ADMIN) ||
+    currentUserRole.includes(RoleEnum.MANAGER);
 
   return (
     <div
@@ -42,34 +44,34 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
       } overflow-hidden flex flex-col h-60`}
     >
       <div className="flex-1 overflow-y-auto p-6 text-lg">
-        { isAdminOrManager && (
-        <NavigationEntry
-          icon={<DollarSign />}
-          name="Finance"
-          path="/finance"
-          selectionType={NavigationEntrySelection.HIGHLIGHT}
-        >
+        {isAdminOrManager && (
           <NavigationEntry
-            icon={<Clipboard />}
-            name="P/L Reporting"
-            path="/finance/profit-loss"
-            selectionType={NavigationEntrySelection.ARROW}
-          />
+            icon={<DollarSign />}
+            name="Finance"
+            path="/finance"
+            selectionType={NavigationEntrySelection.HIGHLIGHT}
+          >
+            <NavigationEntry
+              icon={<Clipboard />}
+              name="P/L Reporting"
+              path="/finance/profit-loss"
+              selectionType={NavigationEntrySelection.ARROW}
+            />
 
-          <NavigationEntry
-            icon={<PenTool />}
-            name="Tax Management"
-            path="/finance/tax"
-            selectionType={NavigationEntrySelection.ARROW}
-          />
+            <NavigationEntry
+              icon={<PenTool />}
+              name="Tax Management"
+              path="/finance/tax"
+              selectionType={NavigationEntrySelection.ARROW}
+            />
 
-          <NavigationEntry
-            icon={<Folder />}
-            name="Expense Tracking"
-            path="/finance/Expenses"
-            selectionType={NavigationEntrySelection.ARROW}
-          />
-        </NavigationEntry>
+            <NavigationEntry
+              icon={<Folder />}
+              name="Expense Tracking"
+              path="/finance/Expenses"
+              selectionType={NavigationEntrySelection.ARROW}
+            />
+          </NavigationEntry>
         )}
 
         <NavigationEntry

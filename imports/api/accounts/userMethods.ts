@@ -321,5 +321,4 @@ Meteor.methods({
 
     return user?.payRate ?? null;
   }),
-
 });

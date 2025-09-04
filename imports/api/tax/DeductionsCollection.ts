@@ -8,6 +8,7 @@ export interface Deduction extends DBEntry {
   amount: number;
 }
 
-export const DeductionsCollection = new Mongo.Collection<OmitDB<Deduction>, Deduction>(
-  "deductions",
-);
+export const DeductionsCollection = new Mongo.Collection<
+  OmitDB<Deduction>,
+  Deduction
+>("deductions");

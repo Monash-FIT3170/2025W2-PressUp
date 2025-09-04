@@ -66,9 +66,7 @@ export const TaxDateFilter = ({
         id="date-filter"
         value={range}
         onChange={(e) =>
-          onRangeChange(
-            e.target.value as "all" | "PAYG" | "year" | "month"
-          )
+          onRangeChange(e.target.value as "all" | "PAYG" | "year" | "month")
         }
         className="border border-red-900 rounded-xl px-3 py-1 text-red-900 bg-white"
       >

@@ -35,7 +35,6 @@ export const UserManagementPage = () => {
     };
   }, []);
 
-
   /* const canManageUsers = useTracker(() => {
     return Roles.userIsInRoleAsync(Meteor.userId(), [
       RoleEnum.ADMIN,
@@ -374,7 +373,9 @@ const AddUserModal = ({
   };
 
   const currentUserRole = Roles.getRolesForUser(Meteor.userId());
-  const canEditPayRate = currentUserRole.includes(RoleEnum.ADMIN) || currentUserRole.includes(RoleEnum.MANAGER);
+  const canEditPayRate =
+    currentUserRole.includes(RoleEnum.ADMIN) ||
+    currentUserRole.includes(RoleEnum.MANAGER);
 
   return (
     <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999]">
@@ -497,7 +498,9 @@ const EditUserModal = ({
   });
 
   const currentUserRole = Roles.getRolesForUser(Meteor.userId());
-  const canEditPayRate = currentUserRole.includes(RoleEnum.ADMIN) || currentUserRole.includes(RoleEnum.MANAGER);
+  const canEditPayRate =
+    currentUserRole.includes(RoleEnum.ADMIN) ||
+    currentUserRole.includes(RoleEnum.MANAGER);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
