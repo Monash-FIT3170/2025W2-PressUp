@@ -37,10 +37,22 @@ Meteor.methods({
     return await OrdersCollection.updateAsync(orderId, { $set: update });
   }),
 
-  "orders.addOrder": requireLoginMethod(async function (order: Order) {
+  "orders.addOrder": requireLoginMethod(async function (order: Partial<Order>) {
     if (!order)
       throw new Meteor.Error("invalid-arguments", "Order data is required");
-    return await OrdersCollection.insertAsync(order);
+    if (!order.orderNo) {
+      // Find the highest existing orderNo and increment
+      const lastOrder = await OrdersCollection.find(
+        {},
+        { sort: { orderNo: -1 }, limit: 1 },
+      ).fetchAsync();
+      let nextOrderNo = 1;
+      if (lastOrder.length > 0 && typeof lastOrder[0].orderNo === "number") {
+        nextOrderNo = lastOrder[0].orderNo + 1;
+      }
+      order.orderNo = nextOrderNo;
+    }
+    return await OrdersCollection.insertAsync(order as Order);
   }),
 
   "orders.getAll": requireLoginMethod(async function () {
@@ -69,6 +81,12 @@ Meteor.methods({
     return await OrdersCollection.updateAsync(orderId, {
       $set: { "menuItems.$[].served": served },
     });
+  }),
+
+  "orders.removeOrder": requireLoginMethod(async function (orderId: IdType) {
+    if (!orderId)
+      throw new Meteor.Error("invalid-arguments", "Order ID is required");
+    await OrdersCollection.removeAsync(orderId);
   }),
 
   "orders.setLocked": requireLoginMethod(async function (
