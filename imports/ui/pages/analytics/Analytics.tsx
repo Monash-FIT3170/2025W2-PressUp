@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { useSubscribe } from "meteor/react-meteor-data";
 import { Order, OrderMenuItem } from "/imports/api/orders/OrdersCollection";
 import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
 import { PopularItemsAnalysis } from "./components/PopularItemsAnalysis";
@@ -34,6 +34,11 @@ export const AnalyticsPage = () => {
     | "past7Days"
     | "past30Days"
   >("all");
+
+  const [customDateRange, setCustomDateRange] = useState<{ start: Date; end: Date } | null>(null);
+  const [ordersFiltered, setOrdersFiletered] = useState<Order[]>([]);
+
+  useSubscribe("orders");
 
   const getDateRangeText = (range: typeof dateRange): string => {
     const today = startOfToday();
@@ -88,18 +93,7 @@ export const AnalyticsPage = () => {
         return () => true;
     }
   };
-  const [customDateRange, setCustomDateRange] = useState<{ start: Date; end: Date } | null>(null);
-  useSubscribe("orders");
 
-
-  // const { orders } = useTracker(() => {
-  //   const ordersHandle = Meteor.subscribe("orders");
-
-  //   return {
-  //     orders: OrdersCollection.find().fetch(),
-  //   };
-  // });
-  const [ordersFiltered, setOrdersFiletered] = useState<Order[]>([]);
 
   useEffect(() => {
 
