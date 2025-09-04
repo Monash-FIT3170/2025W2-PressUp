@@ -33,55 +33,73 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
   customDateRange,
 }) => {
   const popularItems = useMemo(() => {
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date = now;
+    const today = startOfToday();
+    let startDate: Date | null = null;
+    let endDate: Date | null = today;
 
-    if (timeFrame === "custom" && customDateRange) {
-      startDate = customDateRange.start;
-      endDate = customDateRange.end;
-    } else {
       switch (timeFrame) {
-        case "day":
-          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        case "today":
+          startDate = today;
           break;
-        case "week":
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        case "thisWeek":
+          startDate = startOfWeek(today, { weekStartsOn: 1 });
           break;
-        case "month":
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        case "thisMonth":
+          startDate = startOfMonth(today);
           break;
-        case "year":
-          startDate = new Date(now.getFullYear(), 0, 1);
+        case "thisYear":
+          startDate = startOfYear(today);
           break;
+        case "past7Days":
+          startDate = subDays(today, 6);
+          break;
+        case "past30Days":
+          startDate = subDays(today, 29);
+          break;
+        case "all":
         default:
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          startDate = null;
+          endDate = null;
       }
-    }
+      
+    
 
-    const filteredorders = orders.filter(
-      (t) => {
-        const transactionDate = new Date(t.createdAt);
-        return transactionDate >= startDate && transactionDate <= endDate;
+    const filteredorders = orders.filter((order) => {
+        const orderDate = new Date(order.createdAt);
+
+        if (!startDate || !endDate){
+          return true;
+        }
+
+        return orderDate >= startDate && orderDate <= endDate;
       }
     );
 
     const itemMap = new Map<string, ItemStats>();
 
-    filteredorders.forEach((transaction) => {
-      const existing = itemMap.get(transaction.name);
-      if (existing) {
-        existing.totalQuantity += transaction.quantity;
-        existing.totalRevenue += transaction.quantity * transaction.price;
+    filteredorders.forEach((order) => {
+
+      if(!order.paid){
+        return;
+      }
+      order.menuItems.forEach((menuItem: OrderMenuItem) => {
+        const existing = itemMap.get(menuItem.name);
+        const revenue = menuItem.price * menuItem.quantity;
+
+        if (existing) {
+        existing.totalQuantity += menuItem.quantity;
+        existing.totalRevenue += menuItem.quantity * menuItem.price;
         existing.averagePrice = existing.totalRevenue / existing.totalQuantity;
       } else {
-        itemMap.set(transaction.name, {
-          name: transaction.name,
-          totalQuantity: transaction.quantity,
-          totalRevenue: transaction.quantity * transaction.price,
-          averagePrice: transaction.price,
+        itemMap.set(menuItem.name, {
+          name: menuItem.name,
+          totalQuantity: menuItem.quantity,
+          totalRevenue: revenue,
+          averagePrice: menuItem.price,
         });
       }
+
+      })  
     });
 
     return Array.from(itemMap.values())
