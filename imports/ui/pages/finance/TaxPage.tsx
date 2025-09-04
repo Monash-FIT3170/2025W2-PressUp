@@ -204,7 +204,7 @@ export const TaxPage = () => {
 
   // Payroll tax and taxable income
   const [payrollTax, setPayrollTax] = useState(0);
-  const [taxableIncome, setTaxableIncome] = useState(0);
+  const [payTotal, setPayTotal] = useState(0);
   const [payrollItems, setPayrollItems] = useState<
     { label: string; amount: number }[]
   >([]);
@@ -233,14 +233,21 @@ export const TaxPage = () => {
             amount,
           })),
         );
-        const income = profitTotal - expensesTotal - deductionsTotal - payTotal;
-        setTaxableIncome(income > 0 ? income : 0);
+        // just store payTotal instead of taxable income
+        setPayTotal(payTotal);
       }
     })();
     return () => {
       mounted = false;
     };
-  }, [filteredShifts, profitTotal, expensesTotal, deductionsTotal, dateRange]);
+  }, [filteredShifts, dateRange]);
+
+  // Then compute taxable income in useMemo instead of useEffect
+  const taxableIncome = useMemo(() => {
+    const income = profitTotal - expensesTotal - deductionsTotal - payTotal;
+    return income > 0 ? income : 0;
+  }, [profitTotal, expensesTotal, deductionsTotal, payTotal]);
+
 
   const financialData: Record<string, FinancialDataField> = useMemo(
     () => ({
