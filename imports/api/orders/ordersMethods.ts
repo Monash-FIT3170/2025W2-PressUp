@@ -50,16 +50,24 @@ Meteor.methods({
       $set: { "menuItems.$[].served": served },
     });
   }),
-  
-  "orders.setLocked": requireLoginMethod(async function (orderId: IdType, locked: boolean) {
+
+  "orders.setLocked": requireLoginMethod(async function (
+    orderId: IdType,
+    locked: boolean,
+  ) {
     check(orderId, String);
     check(locked, Boolean);
     // Only managers can change the locked state
     const Roles = require("meteor/alanning:roles").Roles;
     const { RoleEnum } = require("../accounts/roles");
     if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.MANAGER]))) {
-      throw new Meteor.Error("invalid-permissions", "No permissions to edit locked state.");
+      throw new Meteor.Error(
+        "invalid-permissions",
+        "No permissions to edit locked state.",
+      );
     }
-    return await OrdersCollection.updateAsync(orderId, { $set: { isLocked: locked } });
+    return await OrdersCollection.updateAsync(orderId, {
+      $set: { isLocked: locked },
+    });
   }),
 });
