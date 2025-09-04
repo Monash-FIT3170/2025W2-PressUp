@@ -108,77 +108,40 @@ export const AnalyticsPage = () => {
     fetchOrders();
   }, [setPageTitle, dateRange]);
 
-  const handleCustomRangeChange = (startDate: Date, endDate: Date) => {
-    setCustomDateRange({ start: startDate, end: endDate });
-    setDateRangeBounds({ start: startDate, end: endDate });   //sync with global state
-  };
 
   const convertToCSV = (objArray: string) => {
+
     const array = typeof objArray !== 'object' ? JSON.parse(objArray) : objArray;
-    let str = '';
+    const header = [
+      "Order ID",
+      "Order Number",
+      "Number of Items",
+      "Paid",
+      "Order Status",
+      "Order Date",
+    ];
+    let str = header.join(",") + "\r\n";
 
     for (let i = 0; i < array.length; i++) {
-      let line = '';
-      for (let index in array[i]) {
-        if (line !== '') line += ',';
+      const order = array[i];
+      const row = [
+        order._id || "",
+        order.orderNo || "",
+        order.menuItems ? order.menuItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0,
+        order.paid ? "FALSE" : "TRUE",
+        order.orderStatus || "",
+        order.createdAt ? format(new Date(order.createdAt), "yyyy-MM-dd HH:mm:ss") : "",
+      ];
 
-        line += array[i][index];
-      }
-      str += line + '\r\n';
+      str += row.join(",") + "\r\n";
     }
+
     return str;
   };
 
-  const processOrderData = useCallback(
-    (
-      orders: Order[],
-    ): {
-      revenue: number;
-      revenueItems: { label: string; amount: number; percentage: number }[];
-    } => {
-      const revenueByCat: { [key: string]: number } = {};
-
-      let totalRevenue = 0;
-
-      orders.forEach((order) => {
-        if (!order.paid) return;
-
-        let orderRevenue = 0;
-
-        order.menuItems.forEach((menuItem: OrderMenuItem) => {
-          const itemRevenue = menuItem.price * menuItem.quantity;
-
-          orderRevenue += itemRevenue; // prevents double counting
-
-          const categories =
-            menuItem.category && menuItem.category.length > 0
-              ? menuItem.category
-              : ["uncategorized"];
-
-          categories.forEach((category: string) => {
-            revenueByCat[category] =
-              (revenueByCat[category] || 0) + itemRevenue;
-          });
-        });
-        totalRevenue += orderRevenue;
-      });
-
-      const revenueItems = Object.keys(revenueByCat).map((category) => ({
-        label: category,
-        amount: revenueByCat[category],
-        percentage: (revenueByCat[category] / totalRevenue) * 100,
-      }));
-
-      return { revenue: totalRevenue, revenueItems };
-    },
-    [],
-  );
-
 
   const downloadCSV = (data: any, fileName: any) => {
-    //TODO
-    // need to add a top row with column names. 
-    // may also need to tidy up data.
+
     const csvData = new Blob([convertToCSV(data)], { type: 'text/csv' });
     const csvURL = URL.createObjectURL(csvData);
     const link = document.createElement('a');
