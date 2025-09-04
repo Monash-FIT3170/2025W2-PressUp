@@ -37,13 +37,19 @@ export const AnalyticsPage = () => {
 
   const [customDateRange, setCustomDateRange] = useState<{ start: Date; end: Date } | null>(null);
   const [ordersFiltered, setOrdersFiletered] = useState<Order[]>([]);
+  const [dateRangeBounds, setDateRangeBounds] = useState<{ start: Date | null; end: Date | null }>({
+    start: null,
+    end: null,
+  });
 
   useSubscribe("orders");
 
   const getDateRangeText = (range: typeof dateRange): string => {
     const today = startOfToday();
-    const end = today; // assume end is always today unless "all"
-    let start: Date;
+    
+    let start: Date | null = null;
+    let end: Date | null = today;
+
     switch (range) {
       case "today":
         start = today;
@@ -65,33 +71,16 @@ export const AnalyticsPage = () => {
         break;
       case "all":
       default:
-        return "All Time";
+        start = null;
+        end = null;
+    }
+
+    setDateRangeBounds({ start, end });
+
+    if (!start || !end) {
+      return "All Time";
     }
     return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
-  };
-
-  // Filters data by date range
-  const getDateRangeFilter = (range: string) => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    switch (range) {
-      case "today":
-        return (date: Date) => date >= today;
-      case "thisWeek":
-        return (date: Date) => date >= startOfWeek(today, { weekStartsOn: 1 });
-      case "thisMonth":
-        return (date: Date) => date >= startOfMonth(today);
-      case "thisYear":
-        return (date: Date) => date >= startOfYear(today);
-      case "past7Days":
-        return (date: Date) => date >= subDays(today, 6);
-      case "past30Days":
-        return (date: Date) => date >= subDays(today, 29);
-      case "all":
-      default:
-        return () => true;
-    }
   };
 
 
@@ -119,8 +108,9 @@ export const AnalyticsPage = () => {
     fetchOrders();
   }, [setPageTitle, dateRange]);
 
-  const handleCustomRangeChange = (startDate: Date, endDate: Date) => {
+const handleCustomRangeChange = (startDate: Date, endDate: Date) => {
     setCustomDateRange({ start: startDate, end: endDate });
+    setDateRangeBounds({ start: startDate, end: endDate });   //sync with global state
   };
 
   const convertToCSV = (objArray: string) => {
@@ -200,38 +190,14 @@ export const AnalyticsPage = () => {
   };
 
   const handleExport = async () => {
-    // try {
-    const now = new Date();
-    let startDate: Date;
-
-    switch (dateRange) {
-
-      case "today":
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        break;
-      case "thisWeek":
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case "past7Days":
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case "thisMonth":
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case "past30Days":
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case "thisYear":
-        startDate = new Date(now.getFullYear(), 0, 1);
-        break;
-      case "all":
-      default:
-        startDate = new Date(2025, 0, 1); // or pick something meaningful
-        break;
+    if (!dateRangeBounds.start || !dateRangeBounds.end) {
+      downloadCSV(ordersFiltered, "CSV_Analytics_PressUp_All_Time");
+      return;
     }
-    // TODO 
-    // add a date and possible account name tage here
-    downloadCSV(ordersFiltered, "CSV_Analytics_PressUp" + startDate.toDateString());
+    const formattedStart = format(dateRangeBounds.start, "yyyy-MM-dd");
+    const formattedEnd = format(dateRangeBounds.end, "yyyy-MM-dd");
+
+    downloadCSV(ordersFiltered, `CSV_Analytics_PressUp_${formattedStart}_to_${formattedEnd}`);
   }
 
   return (
