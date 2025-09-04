@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useTracker } from "meteor/react-meteor-data";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Order, OrderMenuItem } from "/imports/api/orders/OrdersCollection";
 import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
 import { PopularItemsAnalysis } from "./components/PopularItemsAnalysis";
@@ -8,17 +8,90 @@ import { PeakHoursAnalysis } from "./components/PeakHoursAnalysis";
 import { ExportButton } from "./components/ExportButton";
 import { DateRangeSelector } from "./components/DateRangeSelector";
 import { Meteor } from "meteor/meteor";
+import {
+  format,
+  startOfToday,
+  startOfWeek,
+  startOfMonth,
+  startOfYear,
+  subDays,
+} from "date-fns";
 import { usePageTitle } from "../../hooks/PageTitleContext";
+import { FinanceDateFilter } from "../../components/FinanceDateFilter";
 
 
 export type TimeFrame = "day" | "week" | "month" | "year" | "custom";
 
 export const AnalyticsPage = () => {
 
-  // Set title
   const [_, setPageTitle] = usePageTitle();
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<TimeFrame>("week");
+
+  const [dateRange, setDateRange] = React.useState<
+    | "all"
+    | "today"
+    | "thisWeek"
+    | "thisMonth"
+    | "thisYear"
+    | "past7Days"
+    | "past30Days"
+  >("all");
+
+  const getDateRangeText = (range: typeof dateRange): string => {
+    const today = startOfToday();
+    const end = today; // assume end is always today unless "all"
+    let start: Date;
+    switch (range) {
+      case "today":
+        start = today;
+        break;
+      case "thisWeek":
+        start = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+        break;
+      case "thisMonth":
+        start = startOfMonth(today);
+        break;
+      case "thisYear":
+        start = startOfYear(today);
+        break;
+      case "past7Days":
+        start = subDays(today, 6); // 6 days ago + today = 7
+        break;
+      case "past30Days":
+        start = subDays(today, 29);
+        break;
+      case "all":
+      default:
+        return "All Time";
+    }
+    return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
+  };
+
+  // Filters data by date range
+  const getDateRangeFilter = (range: string) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    switch (range) {
+      case "today":
+        return (date: Date) => date >= today;
+      case "thisWeek":
+        return (date: Date) => date >= startOfWeek(today, { weekStartsOn: 1 });
+      case "thisMonth":
+        return (date: Date) => date >= startOfMonth(today);
+      case "thisYear":
+        return (date: Date) => date >= startOfYear(today);
+      case "past7Days":
+        return (date: Date) => date >= subDays(today, 6);
+      case "past30Days":
+        return (date: Date) => date >= subDays(today, 29);
+      case "all":
+      default:
+        return () => true;
+    }
+  };
   const [customDateRange, setCustomDateRange] = useState<{ start: Date; end: Date } | null>(null);
+  useSubscribe("orders");
 
 
   // const { orders } = useTracker(() => {
@@ -161,19 +234,19 @@ export const AnalyticsPage = () => {
   return (
     <div className="h-screen overflow-y-auto">
       <div className="flex flex-col space-y-6 p-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-press-up-purple">Analytics & Reporting</h1>
-
-          {/* Controls */}
-          <div className="flex items-center space-x-4">
-            <DateRangeSelector
-              timeFrame={selectedTimeFrame}
-              onTimeFrameChange={setSelectedTimeFrame}
-              onCustomRangeChange={handleCustomRangeChange}
-            />
-            <ExportButton onExport={handleExport} />
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-baseline gap-4">
+            <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
+            <h2 className="ml-4 text-red-900">
+              <span className="font-bold">Viewing Period:</span>{" "}
+              <span className="font-normal">{getDateRangeText(dateRange)}</span>
+            </h2>
           </div>
+
+          <ExportButton onExport={handleExport} />
+          
         </div>
+
 
         {/* Analytics Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
