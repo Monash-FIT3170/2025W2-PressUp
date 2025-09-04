@@ -3,7 +3,8 @@ import { DBEntry, IdType, OmitDB } from "../database";
 
 export interface Tables extends DBEntry {
   tableNo: number;
-  orderID: IdType | null;
+  activeOrderID: IdType | null;
+  orderIDs: IdType[] | null;
   capacity: number;
   isOccupied: boolean;
   noOccupants?: number;

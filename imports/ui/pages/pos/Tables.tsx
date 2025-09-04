@@ -31,7 +31,8 @@ interface Table {
   capacity: number;
   noOccupants?: number;
   isOccupied?: boolean;
-  orderID?: string | null;
+  activeOrderID?: string | null;
+  orderIDs?: string[];
 }
 
 interface TableCardProps {
@@ -153,6 +154,9 @@ export const TablesPage = () => {
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
   const [clearOrderOnSave, setClearOrderOnSave] = useState(false);
   const [deleteTableInput, setDeleteTableInput] = useState("");
+  const [selectedMoveTableNo, setSelectedMoveTableNo] = useState<number | null>(
+    null,
+  );
 
   // Prefill grid with tables from DB on initial load
   useEffect(() => {
@@ -424,13 +428,14 @@ export const TablesPage = () => {
                         idx = updated.findIndex((cell) => cell === null);
                       }
                       if (idx !== -1) {
-                        const nextTableNo =
-                          Math.max(
-                            0,
-                            ...grid
-                              .filter((t) => t !== null)
-                              .map((t) => t!.tableNo),
-                          ) + 1;
+                        // Find the smallest available table number
+                        const usedTableNos = grid
+                          .filter((t) => t !== null)
+                          .map((t) => t!.tableNo);
+                        let nextTableNo = 1;
+                        while (usedTableNos.includes(nextTableNo)) {
+                          nextTableNo++;
+                        }
                         const newTable = {
                           tableNo: nextTableNo,
                           capacity: parseInt(capacityInput, 10),
@@ -507,136 +512,241 @@ export const TablesPage = () => {
                   </>
                 )}
                 {/* Top row: Add Order + Occupied toggle */}
-                <div className="flex justify-between items-center gap-2 mb-3">
+                <div
+                  className={`flex items-center gap-2 mb-3 ${
+                    tablesFromDb.find(
+                      (t) =>
+                        t.tableNo === editTableData!.tableNo && t.activeOrderID,
+                    )
+                      ? "justify-end"
+                      : "justify-between"
+                  }`}
+                >
                   {/* Add Order Button */}
-                  <button
-                    onClick={async () => {
-                      try {
-                        const dbTable = tablesFromDb.find(
-                          (t) => t.tableNo === editTableData!.tableNo,
-                        );
-                        if (!dbTable || !dbTable._id) {
-                          alert("Could not find table in database.");
-                          return;
+                  {!tablesFromDb.find(
+                    (t) =>
+                      t.tableNo === editTableData!.tableNo &&
+                      t.activeOrderID &&
+                      t.isOccupied,
+                  ) && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const dbTable = tablesFromDb.find(
+                            (t) => t.tableNo === editTableData!.tableNo,
+                          );
+                          if (!dbTable || !dbTable._id) {
+                            alert("Could not find table in database.");
+                            return;
+                          }
+
+                          // Create new order (only if no existing one, because we disable otherwise)
+                          const orderId = await Meteor.callAsync(
+                            "orders.addOrder",
+                            {
+                              // orderNo is now auto-generated server-side
+                              tableNo: editTableData!.tableNo,
+                              orderType: "dine-in",
+                              menuItems: [],
+                              totalPrice: 0,
+                              createdAt: new Date(),
+                              orderStatus: "pending",
+                              paid: false,
+                            },
+                          );
+
+                          // Link order to table
+                          await Meteor.callAsync(
+                            "tables.addOrder",
+                            dbTable._id,
+                            orderId,
+                          );
+
+                          // Update local grid
+                          const updated = grid.map((t) =>
+                            t?.tableNo === editTableData!.tableNo
+                              ? {
+                                  ...t,
+                                  isOccupied: true,
+                                  activeOrderID: String(orderId),
+                                }
+                              : t,
+                          );
+                          setGrid(updated);
+                          setModalType(null);
+                          markChanged();
+                          goToOrder(editTableData!.tableNo);
+                        } catch (err) {
+                          console.error("Error adding order:", err);
+                          alert(
+                            "Failed to add order. Check console for details.",
+                          );
                         }
+                      }}
+                      style={{
+                        backgroundColor: "#6f597b",
+                        color: "#fff",
+                        cursor: "pointer",
+                      }}
+                      className="px-4 py-1 rounded font-semibold hover:bg-[#c4b5cf] hover:text-[#1e032e]"
+                    >
+                      Add Order
+                    </button>
+                  )}
 
-                        // Create new order (only if no existing one, because we disable otherwise)
-                        const orderId = await Meteor.callAsync(
-                          "orders.addOrder",
-                          {
-                            orderNo: Date.now(),
-                            tableNo: editTableData!.tableNo,
-                            menuItems: [],
-                            totalPrice: 0,
-                            createdAt: new Date(),
-                            orderStatus: "pending",
-                            paid: false,
-                          },
-                        );
+                  {/* Occupied/Vacant Toggle */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!occupiedToggle) {
+                          setOccupiedToggle(true);
+                          setOccupancyInput(occupancyInput || "1");
+                        } else {
+                          // If marking vacant and there's an active order, confirm
+                          const dbTable = tablesFromDb.find(
+                            (t) => t.tableNo === editTableData!.tableNo,
+                          );
+                          const hasOrder = !!(
+                            dbTable?.activeOrderID ||
+                            editTableData?.activeOrderID ||
+                            modalOriginalTable?.activeOrderID
+                          );
+                          if (hasOrder) {
+                            setConfirmMsg(
+                              "This will remove the linked order and mark the table as vacant. Continue?",
+                            );
+                            setConfirmAction(() => async () => {
+                              setOccupiedToggle(false);
+                              setOccupancyInput("");
+                              setClearOrderOnSave(true);
+                              setConfirmOpen(false);
 
-                        // Link order to table
-                        await Meteor.callAsync(
-                          "tables.addOrder",
-                          dbTable._id,
-                          orderId,
-                        );
-
-                        // Update local grid
-                        const updated = grid.map((t) =>
-                          t?.tableNo === editTableData!.tableNo
-                            ? {
-                                ...t,
-                                isOccupied: true,
-                                orderID: String(orderId),
+                              // Clear the table's activeOrderID in the DB
+                              const dbTable = tablesFromDb.find(
+                                (t) => t.tableNo === editTableData!.tableNo,
+                              );
+                              if (dbTable && dbTable._id) {
+                                await Meteor.callAsync(
+                                  "tables.clearOrder",
+                                  dbTable._id,
+                                );
+                                // Also remove the order from OrdersCollection so it doesn't display in Kitchen Management
+                                if (dbTable.activeOrderID) {
+                                  await Meteor.callAsync(
+                                    "orders.removeOrder",
+                                    dbTable.activeOrderID,
+                                  );
+                                }
                               }
-                            : t,
-                        );
-                        setGrid(updated);
-                        setModalType(null);
-                        markChanged();
-                        goToOrder(editTableData!.tableNo);
-                      } catch (err) {
-                        console.error("Error adding order:", err);
-                        alert(
-                          "Failed to add order. Check console for details.",
-                        );
-                      }
-                    }}
-                    disabled={
-                      !!tablesFromDb.find(
-                        (t) =>
-                          t.tableNo === editTableData!.tableNo && t.orderID,
-                      )
-                    } // disable if table already has order
-                    style={{
-                      backgroundColor: tablesFromDb.find(
-                        (t) =>
-                          t.tableNo === editTableData!.tableNo && t.orderID,
-                      )
-                        ? "#ccc"
-                        : "#6f597b",
-                      color: "#fff",
-                      cursor: tablesFromDb.find(
-                        (t) =>
-                          t.tableNo === editTableData!.tableNo && t.orderID,
-                      )
-                        ? "not-allowed"
-                        : "pointer",
-                    }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
-                  >
-                    Add Order
-                  </button>
-
-                  {/* Occupied toggle */}
-                  <button
-                    onClick={() => {
-                      const newOccupied = !occupiedToggle;
-                      // if we're marking vacant and there's an existing order, confirm first
-                      const dbTable = tablesFromDb.find(
-                        (t) => t.tableNo === editTableData!.tableNo,
-                      );
-                      const hasOrder = !!(
-                        dbTable?.orderID ||
-                        editTableData?.orderID ||
-                        modalOriginalTable?.orderID
-                      );
-                      if (!newOccupied && hasOrder) {
-                        setConfirmMsg(
-                          "This will remove the linked order and mark the table as vacant. Continue?",
-                        );
-                        setConfirmAction(() => () => {
+                            });
+                            setConfirmOpen(true);
+                            return;
+                          }
                           setOccupiedToggle(false);
                           setOccupancyInput("");
-                          setClearOrderOnSave(true);
-                          setConfirmOpen(false);
-                        });
-                        setConfirmOpen(true);
-                        return;
-                      }
-                      setOccupiedToggle(newOccupied);
-                      if (!newOccupied) {
-                        // hide/clear occupancy input when marking vacant
-                        setOccupancyInput("");
-                        setClearOrderOnSave(false);
-                      } else if (!occupancyInput) {
-                        // default to 1 occupant when marking occupied and no value present
-                        setOccupancyInput("1");
-                        setClearOrderOnSave(false);
-                      }
-                    }}
-                    aria-pressed={occupiedToggle}
-                    aria-label={occupiedToggle ? "Set Vacant" : "Set Occupied"}
-                    style={{
-                      backgroundColor: occupiedToggle ? "#c97f97" : "#6f597b",
-                      color: "#fff",
-                      minWidth: 110,
-                    }}
-                    className="px-4 py-1 rounded"
-                  >
-                    {occupiedToggle ? "Occupied" : "Vacant"}
-                  </button>
+                        }
+                      }}
+                      className={`px-4 py-1 rounded font-semibold transition-colors duration-300 ${
+                        occupiedToggle
+                          ? "bg-press-up-purple text-white"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      }`}
+                      aria-pressed={occupiedToggle}
+                      aria-label={occupiedToggle ? "Occupied" : "Vacant"}
+                      style={{ minWidth: 110 }}
+                    >
+                      {occupiedToggle ? "Occupied" : "Vacant"}
+                    </button>
+                  </div>
                 </div>
+
+                {/* Move Order to Table */}
+                {editTableData?.activeOrderID && (
+                  <div className="mb-3">
+                    <hr></hr>
+                    <label className="block mt-2 font-semibold">
+                      Move Order to Table:
+                    </label>
+                    <div className="mb-3 flex flex-row items-center justify-between gap-2">
+                      <select
+                        value={selectedMoveTableNo ?? ""}
+                        onChange={(e) =>
+                          setSelectedMoveTableNo(Number(e.target.value))
+                        }
+                        className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none rounded-full px-4 py-2 shadow-md"
+                        style={{ minWidth: 160 }}
+                      >
+                        <option value="" className="bg-white text-gray-700">
+                          Select Table
+                        </option>
+                        {tablesFromDb
+                          .filter(
+                            (t) =>
+                              !t.isOccupied &&
+                              t.tableNo !== editTableData.tableNo,
+                          )
+                          .map((t) => (
+                            <option
+                              key={t.tableNo}
+                              value={t.tableNo}
+                              className="bg-white text-gray-700"
+                            >
+                              Table {t.tableNo}
+                            </option>
+                          ))}
+                      </select>
+                      <button
+                        className="px-4 py-1 rounded font-semibold bg-press-up-positive-button text-white shadow-md hover:bg-press-up-hover transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        disabled={!selectedMoveTableNo}
+                        onClick={async () => {
+                          const newTable = tablesFromDb.find(
+                            (t) => t.tableNo === selectedMoveTableNo,
+                          );
+                          if (!newTable || !editTableData.activeOrderID) return;
+                          // Clear old table
+                          await Meteor.callAsync(
+                            "tables.clearOrder",
+                            editTableData._id,
+                          );
+                          // Set new table
+                          await Meteor.callAsync(
+                            "tables.addOrder",
+                            newTable._id,
+                            editTableData.activeOrderID,
+                          );
+                          await Meteor.callAsync(
+                            "tables.setOccupied",
+                            newTable._id,
+                            true,
+                            1,
+                          );
+                          // Update order's tableNo
+                          await Meteor.callAsync(
+                            "orders.updateOrder",
+                            editTableData.activeOrderID,
+                            { tableNo: newTable.tableNo },
+                          );
+                          // Re-render by updating grid from DB
+                          const refreshedTables = TablesCollection.find(
+                            {},
+                            { sort: { tableNo: 1 } },
+                          ).fetch();
+                          const newGrid = Array(GRID_SIZE).fill(null);
+                          refreshedTables.forEach((table, idx) => {
+                            if (idx < GRID_SIZE) {
+                              newGrid[idx] = table;
+                            }
+                          });
+                          setGrid(newGrid);
+                          setModalType(null);
+                        }}
+                      >
+                        Move
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Bottom row: Cancel & Save */}
                 <div className="flex justify-end gap-2">
@@ -704,7 +814,7 @@ export const TablesPage = () => {
                         copy.isOccupied = false;
                         delete copy.noOccupants;
                         // also clear any local order link
-                        copy.orderID = null;
+                        copy.activeOrderID = null;
                         return copy;
                       });
                       setGrid(updated);
@@ -726,7 +836,7 @@ export const TablesPage = () => {
                         try {
                           if (!occupiedToggle) {
                             // We are marking vacant. If there is an order, clear it too.
-                            if (dbTable.orderID || clearOrderOnSave) {
+                            if (dbTable.activeOrderID || clearOrderOnSave) {
                               await Meteor.callAsync(
                                 "tables.clearOrder",
                                 dbTable._id,
@@ -819,6 +929,13 @@ export const TablesPage = () => {
                         (t) => t.tableNo === tableNo,
                       );
                       if (dbTable && dbTable._id) {
+                        // Clear order from kitchen management if table has an active order
+                        if (dbTable.activeOrderID) {
+                          await Meteor.callAsync(
+                            "orders.removeOrder",
+                            dbTable.activeOrderID,
+                          );
+                        }
                         await Meteor.callAsync(
                           "tables.removeTable",
                           dbTable._id,

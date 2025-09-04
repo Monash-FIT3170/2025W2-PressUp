@@ -168,47 +168,49 @@ export const OrderCard = ({ order }: OrderCardProps) => {
         />
 
         <div className="cursor-pointer" onClick={() => setOpen(true)}>
-          <h3 className="font-medium text-press-up-purple text-xl">
-            Order #{order.orderNo}
-          </h3>
-          <p className="font-bold text-lg text-press-up-purple">
-            {order.tableNo != null ? `Table ${order.tableNo}` : "Takeaway"}
-          </p>
-          <p className="text-sm text-press-up-purple">{order.createdAt}</p>
+          <div className="flex items-center justify-between gap-2 w-full">
+            <h3 className="font-medium text-press-up-purple text-xl flex-1 min-w-0 truncate">
+              Order #{order.orderNo}
+            </h3>
 
-          <div className="mt-1">
-            <Chip
-              size="small"
-              label={`Waiting ${waitText}`}
-              title={new Date(createdMs).toLocaleString()}
-              sx={{
-                backgroundColor: waitColor,
-                color: "#fff",
-                fontWeight: 600,
-              }}
-            />
+            <div className="mt-1">
+              <Chip
+                size="small"
+                label={`Waiting ${waitText}`}
+                title={new Date(createdMs).toLocaleString()}
+                sx={{
+                  backgroundColor: waitColor,
+                  color: "#fff",
+                  fontWeight: 600,
+                }}
+              />
+            </div>
           </div>
-        </div>
 
-        <div>
-          <p className="font-bold text-lg text-press-up-purple">
-            Table {order.tableNo}
-          </p>
-          <p className="text-sm text-press-up-purple">{order.createdAt}</p>
-          <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
-            {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
-              order.menuItems.map((item, index) => (
-                <li key={index}>
-                  <span className="ml-2 text-base font-semibold">
-                    {item.quantity} x{" "}
-                  </span>
-                  {item.name}
+          <div>
+            <p className="font-bold text-lg text-press-up-purple">
+              {order.tableNo != null
+                ? `Table No: ${order.tableNo}`
+                : "Takeaway"}
+            </p>
+            <p className="text-sm text-press-up-purple">{order.createdAt}</p>
+            <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
+              {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
+                order.menuItems.map((item, index) => (
+                  <li key={index}>
+                    <span className="ml-2 text-base font-semibold">
+                      {item.quantity} x{" "}
+                    </span>
+                    {item.name}
+                  </li>
+                ))
+              ) : (
+                <li className="italic text-sm text-press-up-purple">
+                  No items
                 </li>
-              ))
-            ) : (
-              <li className="italic text-sm text-press-up-purple">No items</li>
-            )}
-          </ul>
+              )}
+            </ul>
+          </div>
         </div>
       </div>
 
@@ -224,8 +226,11 @@ export const OrderCard = ({ order }: OrderCardProps) => {
             <strong>Order No:</strong> {order.orderNo}
           </p>
           <p>
-            <strong>Table:</strong>{" "}
-            {order.tableNo != null ? order.tableNo : "Takeaway"}
+            <strong>
+              {order.tableNo != null
+                ? `Table No: ${order.tableNo}`
+                : "Takeaway"}
+            </strong>
           </p>
           <p>
             <strong>Created At:</strong> {order.createdAt}
@@ -299,6 +304,7 @@ export const OrderCard = ({ order }: OrderCardProps) => {
             )}
           </List>
 
+          {/* Status Dropdown */}
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel>Status</InputLabel>
             <Select
@@ -309,6 +315,7 @@ export const OrderCard = ({ order }: OrderCardProps) => {
               <MenuItem value="pending">Pending</MenuItem>
               <MenuItem value="preparing">Preparing</MenuItem>
               <MenuItem value="ready">Ready</MenuItem>
+
               <MenuItem
                 value="served"
                 disabled={!(status === "ready" && allServed)}

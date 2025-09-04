@@ -33,6 +33,7 @@ type RowOrder = {
   createdAt: string;
   status: "pending" | "preparing" | "ready" | "served";
   items: string;
+  paid: boolean;
 };
 
 export const OrderHistoryPage = () => {
@@ -53,6 +54,7 @@ export const OrderHistoryPage = () => {
       items: (doc.menuItems ?? [])
         .map((mi) => `${mi.name} x${mi.quantity ?? 1}`)
         .join(", "),
+      paid: !!doc.paid,
     }));
   }, []);
 
@@ -165,6 +167,10 @@ export const OrderHistoryPage = () => {
                         },
                       }}
                       onClick={() => reopen(row._id, "ready")}
+                      disabled={
+                        // Prevent reopening if paid
+                        orders.find((o) => o._id === row._id)?.paid === true
+                      }
                     >
                       Reopen: Ready
                     </Button>
@@ -181,6 +187,10 @@ export const OrderHistoryPage = () => {
                         },
                       }}
                       onClick={() => reopen(row._id, "preparing")}
+                      disabled={
+                        // Prevent reopening if paid
+                        orders.find((o) => o._id === row._id)?.paid === true
+                      }
                     >
                       Reopen: Preparing
                     </Button>
