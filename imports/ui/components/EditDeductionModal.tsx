@@ -141,7 +141,7 @@ export const EditDeductionModal: React.FC<EditDeductionModalProps> = ({
                         dark:placeholder-purple-200 dark:text-white
                         dark:focus:ring-purple-400 dark:focus:border-purple-400"
                 required
-            />
+              />
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
