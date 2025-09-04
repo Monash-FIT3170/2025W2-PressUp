@@ -64,7 +64,7 @@ export const PosSideMenu = ({
       return null;
     }
     if (orderType === "takeaway" && selectedTakeawayId) {
-      return OrdersCollection.findOne(selectedTakeawayId as any) ?? null;
+      return OrdersCollection.findOne(selectedTakeawayId as string) ?? null;
     }
     return null;
   }, [orderType, selectedTable, selectedTakeawayId]);
@@ -128,7 +128,7 @@ export const PosSideMenu = ({
 
   useEffect(() => {
     onActiveOrderChange?.(order?._id ?? null);
-  }, [order?._id]);
+  }, [order?._id, onActiveOrderChange]);
 
   // Discount handlers
   const applyPercentDiscount = (percentage: number | string) => {
@@ -347,129 +347,132 @@ export const PosSideMenu = ({
       {/* Items + Footer (wrapped so we can overlay when locked) */}
       <div className="relative flex-1 flex flex-col">
         <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
-        {displayedItems.length > 0 ? (
-          displayedItems.map((item, idx) => {
-            const qty = item.quantity ?? 1;
-            const price = item.price;
-            return (
-              <div
-                key={idx}
-                className="bg-white p-4 rounded-md shadow-md space-y-2"
-              >
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-800">
-                    {item.name}
-                  </span>
-                  <span className="font-semibold text-gray-800">
-                    ${(price * qty).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => item._id && onDecrease(item._id)}
-                    className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
-                    disabled={Boolean(order?.isLocked)}
-                  >
-                    –
-                  </button>
-                  <span>{qty}</span>
-                  <button
-                    onClick={() => item._id && onIncrease(item._id)}
-                    className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
-                    disabled={Boolean(order?.isLocked)}
-                  >
-                    ＋
-                  </button>
-                  <button
-                    onClick={() => item._id && onDelete(item._id)}
-                    className="text-red-500 hover:text-red-700 text-lg font-bold"
-                    disabled={Boolean(order?.isLocked)}
-                  >
-                    🗑
-                  </button>
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          <div className="p-4 text-center text-gray-500">
-            {selectedTable != null &&
-            tables.find((t) => t.tableNo === selectedTable)?.isOccupied &&
-            !tables.find((t) => t.tableNo === selectedTable)?.activeOrderID ? (
-              /* dine-in empty: show "start new order for table" card (keep as-is) */
-              <div className="bg-yellow-100 p-4 rounded-md space-y-2">
-                <p className="font-bold text-gray-800 mb-2">
-                  No active orders for this table.
-                </p>
-                <button
-                  onClick={async () => {
-                    try {
-                      console.log("Creating order for table:", selectedTable);
-                      const dbTable = tables.find(
-                        (t) => t.tableNo === selectedTable,
-                      );
-                      if (!dbTable || !dbTable._id) {
-                        alert("Could not find table in database.");
-                        return;
-                      }
-
-                      const orderId = await Meteor.callAsync(
-                        "orders.addOrder",
-                        {
-                          tableNo: selectedTable,
-                          menuItems: [],
-                          totalPrice: 0,
-                          createdAt: new Date(),
-                          orderStatus: "pending",
-                          paid: false,
-                        },
-                      );
-
-                      await Meteor.callAsync(
-                        "tables.addOrder",
-                        dbTable._id,
-                        orderId,
-                      );
-
-                      console.log("Order created:", orderId);
-                    } catch (err) {
-                      console.error("Error adding order:", err);
-                      alert("Failed to add order. Check console for details.");
-                    }
-                  }}
-                  disabled={
-                    !!tables.find(
-                      (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
-                    )
-                  }
-                  className={`px-4 py-2 rounded font-bold text-white ${
-                    tables.find(
-                      (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
-                    )
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-press-up-positive-button hover:bg-press-up-hover"
-                  }`}
+          {displayedItems.length > 0 ? (
+            displayedItems.map((item, idx) => {
+              const qty = item.quantity ?? 1;
+              const price = item.price;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white p-4 rounded-md shadow-md space-y-2"
                 >
-                  Start a new order?
-                </button>
-              </div>
-            ) : orderType === "takeaway" && !selectedTakeawayId ? (
-              /* takeaway empty + no selected order: show helper */
-              <div className="bg-yellow-100 p-4 rounded-md space-y-2">
-                <p className="font-bold text-gray-800 mb-2">
-                  No active takeaway order.
-                </p>
-                <p className="text-sm text-gray-700">
-                  Use the button below to start.
-                </p>
-              </div>
-            ) : (
-              /* takeaway with an order selected but no items: show nothing (so the user can add from menu) */
-              <span className="sr-only">{/* keep area clean */}</span>
-            )}
-          </div>
-        )}
-      </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-gray-800">
+                      {item.name}
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      ${(price * qty).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => item._id && onDecrease(item._id)}
+                      className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
+                      disabled={Boolean(order?.isLocked)}
+                    >
+                      –
+                    </button>
+                    <span>{qty}</span>
+                    <button
+                      onClick={() => item._id && onIncrease(item._id)}
+                      className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
+                      disabled={Boolean(order?.isLocked)}
+                    >
+                      ＋
+                    </button>
+                    <button
+                      onClick={() => item._id && onDelete(item._id)}
+                      className="text-red-500 hover:text-red-700 text-lg font-bold"
+                      disabled={Boolean(order?.isLocked)}
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-4 text-center text-gray-500">
+              {selectedTable != null &&
+              tables.find((t) => t.tableNo === selectedTable)?.isOccupied &&
+              !tables.find((t) => t.tableNo === selectedTable)
+                ?.activeOrderID ? (
+                /* dine-in empty: show "start new order for table" card (keep as-is) */
+                <div className="bg-yellow-100 p-4 rounded-md space-y-2">
+                  <p className="font-bold text-gray-800 mb-2">
+                    No active orders for this table.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      try {
+                        console.log("Creating order for table:", selectedTable);
+                        const dbTable = tables.find(
+                          (t) => t.tableNo === selectedTable,
+                        );
+                        if (!dbTable || !dbTable._id) {
+                          alert("Could not find table in database.");
+                          return;
+                        }
+
+                        const orderId = await Meteor.callAsync(
+                          "orders.addOrder",
+                          {
+                            tableNo: selectedTable,
+                            menuItems: [],
+                            totalPrice: 0,
+                            createdAt: new Date(),
+                            orderStatus: "pending",
+                            paid: false,
+                          },
+                        );
+
+                        await Meteor.callAsync(
+                          "tables.addOrder",
+                          dbTable._id,
+                          orderId,
+                        );
+
+                        console.log("Order created:", orderId);
+                      } catch (err) {
+                        console.error("Error adding order:", err);
+                        alert(
+                          "Failed to add order. Check console for details.",
+                        );
+                      }
+                    }}
+                    disabled={
+                      !!tables.find(
+                        (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
+                      )
+                    }
+                    className={`px-4 py-2 rounded font-bold text-white ${
+                      tables.find(
+                        (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
+                      )
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-press-up-positive-button hover:bg-press-up-hover"
+                    }`}
+                  >
+                    Start a new order?
+                  </button>
+                </div>
+              ) : orderType === "takeaway" && !selectedTakeawayId ? (
+                /* takeaway empty + no selected order: show helper */
+                <div className="bg-yellow-100 p-4 rounded-md space-y-2">
+                  <p className="font-bold text-gray-800 mb-2">
+                    No active takeaway order.
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    Use the button below to start.
+                  </p>
+                </div>
+              ) : (
+                /* takeaway with an order selected but no items: show nothing (so the user can add from menu) */
+                <span className="sr-only">{/* keep area clean */}</span>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Footer */}
         <div className="bg-press-up-purple text-white p-4 flex-shrink-0">
@@ -514,34 +517,34 @@ export const PosSideMenu = ({
           >
             Discount
           </button>
-        {/* [ADD] Start new takeaway order (below Discount) */}
-        {orderType === "takeaway" && (
-          <button
-            // full width, sits right under Discount button
-            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-full mb-2"
-            onClick={async () => {
-              try {
-                // create a fresh takeaway order
-                const newId = await Meteor.callAsync("orders.addOrder", {
-                  orderType: "takeaway",
-                  tableNo: null,
-                  menuItems: [],
-                  totalPrice: 0,
-                  createdAt: new Date(),
-                  orderStatus: "pending",
-                  paid: false,
-                });
-                setSelectedTakeawayId(String(newId)); // select the new order immediately
-                onActiveOrderChange?.(String(newId));
-              } catch (e) {
-                console.error(e);
-                alert("Failed to create takeaway order.");
-              }
-            }}
-          >
-            Start new order
-          </button>
-        )}
+          {/* [ADD] Start new takeaway order (below Discount) */}
+          {orderType === "takeaway" && (
+            <button
+              // full width, sits right under Discount button
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-full mb-2"
+              onClick={async () => {
+                try {
+                  // create a fresh takeaway order
+                  const newId = await Meteor.callAsync("orders.addOrder", {
+                    orderType: "takeaway",
+                    tableNo: null,
+                    menuItems: [],
+                    totalPrice: 0,
+                    createdAt: new Date(),
+                    orderStatus: "pending",
+                    paid: false,
+                  });
+                  setSelectedTakeawayId(String(newId)); // select the new order immediately
+                  onActiveOrderChange?.(String(newId));
+                } catch (e) {
+                  console.error(e);
+                  alert("Failed to create takeaway order.");
+                }
+              }}
+            >
+              Start new order
+            </button>
+          )}
           {/* Discount Popup */}
           {openDiscountPopup && (
             <div>
@@ -736,11 +739,11 @@ export const PosSideMenu = ({
           {/* Pay button */}
           {order && (
             <PaymentModal
-            tableNo={
-              order.orderType === "dine-in" ? (order.tableNo ?? null) : null
-            }
-            order={order}
-          />
+              tableNo={
+                order.orderType === "dine-in" ? (order.tableNo ?? null) : null
+              }
+              order={order}
+            />
           )}
 
           {/* Locked overlay */}

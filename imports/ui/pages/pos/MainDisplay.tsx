@@ -36,7 +36,7 @@ export const MainDisplay = () => {
   // Fetch the current order for the selected table
   const order = useTracker(() => {
     if (activeOrderId) {
-      return OrdersCollection.findOne(activeOrderId as any) ?? null;
+      return OrdersCollection.findOne(activeOrderId as string) ?? null;
     }
     return selectedTable
       ? (OrdersCollection.find({

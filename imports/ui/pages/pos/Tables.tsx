@@ -349,7 +349,7 @@ export const TablesPage = () => {
                 </div>
               ) : (
                 <Hide hide={!canEditLayout}>
-                <button
+                  <button
                     onClick={enterEditMode}
                     style={{ backgroundColor: "#1e032e", color: "#fff" }}
                     className="px-4 py-1 rounded hover:bg-[#6f597b]"
@@ -357,7 +357,7 @@ export const TablesPage = () => {
                     Enter Edit Mode
                   </button>
                 </Hide>
-            ))}
+              ))}
             {/* Legend - always visible */}
             <div className="flex gap-4 ml-6">
               <div className="flex items-center gap-1">
