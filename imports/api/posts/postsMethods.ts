@@ -2,6 +2,7 @@ import { Meteor } from "meteor/meteor";
 import { Post, PostsCollection } from "./PostsCollection";
 import { check } from "meteor/check";
 import { requireLoginMethod } from "../accounts/wrappers";
+import { IdType } from "../database";
 
 Meteor.methods({
   "posts.create": requireLoginMethod(async function (post: Post) {
@@ -13,6 +14,13 @@ Meteor.methods({
     check(post.category, String);
     post.datePosted = new Date();
     return await PostsCollection.insertAsync(post);
+  }),
+
+  "posts.delete": requireLoginMethod(async function (postId: IdType) {
+    if (!postId)
+      throw new Meteor.Error("invalid-arguments", "Post ID is required");
+    Meteor.call("comments.deleteAll", postId);
+    return await PostsCollection.removeAsync(postId);
   }),
 
   "posts.getCategories": async function () {
