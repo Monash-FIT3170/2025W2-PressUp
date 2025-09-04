@@ -1,11 +1,23 @@
 import React, { useMemo } from "react";
 import { Order } from "/imports/api/orders/OrdersCollection";
-import { TimeFrame } from "../Analytics";
+import {
+  startOfToday,
+  startOfWeek,
+  startOfMonth,
+  startOfYear,
+  subDays,
+} from "date-fns";
 
 interface PeakHoursAnalysisProps {
   orders: Order[];
-  timeFrame: TimeFrame;
-  customDateRange?: { start: Date; end: Date } | null;
+  timeFrame:
+    | "all"
+    | "today"
+    | "thisWeek"
+    | "thisMonth"
+    | "thisYear"
+    | "past7Days"
+    | "past30Days";
 }
 
 interface HourlyData {
@@ -17,41 +29,51 @@ interface HourlyData {
 export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
   orders,
   timeFrame,
-  customDateRange,
 }) => {
-  const hourlyData = useMemo(() => {
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date = now;
 
-    if (timeFrame === "custom" && customDateRange) {
-      startDate = customDateRange.start;
-      endDate = customDateRange.end;
-    } else {
-      switch (timeFrame) {
-        case "day":
-          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          break;
-        case "week":
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          break;
-        case "month":
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-          break;
-        case "year":
-          startDate = new Date(now.getFullYear(), 0, 1);
-          break;
-        default:
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      }
+  const hourlyData = useMemo<HourlyData[]>(() => {
+    const now = new Date();
+    let startDate: Date | null = null;
+    let endDate: Date | null = now;
+
+    switch (timeFrame) {
+      case "today":
+        startDate = startOfToday();
+        break;
+      case "thisWeek":
+        startDate = startOfWeek(now, { weekStartsOn: 1 });
+        break;
+      case "thisMonth":
+        startDate = startOfMonth(now);
+        break;
+      case "thisYear":
+        startDate = startOfYear(now);
+        break;
+      case "past7Days":
+        startDate = subDays(now, 6);
+        break;
+      case "past30Days":
+        startDate = subDays(now, 29);
+        break;
+      case "all":
+      default:
+        startDate = null;
+        endDate = null;
     }
 
-    const filteredOrders = orders.filter(
-      (o) => {
-        const orderDate = new Date(o.createdAt);
+    const filteredOrders = orders.filter((o) => {
+      const orderDate = new Date(o.createdAt);
+
+      if (!o.paid){
+        return false;
+      } 
+
+      if (startDate && endDate){
         return orderDate >= startDate && orderDate <= endDate;
       }
-    );
+
+      return true; 
+    });
 
     // Initialize hourly data
     const hourlyMap = new Map<number, HourlyData>();
@@ -61,9 +83,11 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
 
     // Aggregate data by hour
     filteredOrders.forEach((order) => {
+
       const orderDate = new Date(order.createdAt);
       const hour = orderDate.getHours();
       const existing = hourlyMap.get(hour);
+
       if (existing) {
         existing.orderCount += 1;
         existing.totalRevenue += order.totalPrice;
@@ -71,15 +95,19 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
     });
 
     return Array.from(hourlyMap.values());
-  }, [orders, timeFrame, customDateRange]);
+
+  }, [orders, timeFrame]);
+
 
   const peakHour = useMemo(() => {
-    return hourlyData.reduce((peak, current) => 
-      current.orderCount > peak.orderCount ? current : peak
+    return hourlyData.reduce((peak, current) =>
+      current.orderCount > peak.orderCount ? current : peak,  { hour: 0, orderCount: 0, totalRevenue: 0 }
     );
   }, [hourlyData]);
 
+
   const maxOrders = Math.max(...hourlyData.map(d => d.orderCount), 1);
+
 
   const formatHour = (hour: number) => {
     if (hour === 0) return "12 AM";
@@ -88,16 +116,21 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
     return `${hour - 12} PM`;
   };
 
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold text-gray-800">Peak Hours Analysis</h2>
-      
+
       {/* Summary */}
       <div className="bg-orange-50 p-4 rounded-lg">
+        {peakHour.orderCount > 0 ? (
         <p className="text-sm text-orange-800">
-          <span className="font-semibold">Peak Hour:</span> {formatHour(peakHour.hour)} 
+          <span className="font-semibold">Peak Hour:</span> {formatHour(peakHour.hour)}
           ({peakHour.orderCount} orders)
         </p>
+        ) : (
+          <p className="text-sm text-orange-800">No peak hour data available</p>
+        )}
         <p className="text-xs text-orange-600 mt-1">
           This data supports staff scheduling decisions
         </p>
@@ -108,7 +141,7 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
         <h3 className="text-lg font-medium text-gray-700">
           Customer Traffic Patterns ({timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1)})
         </h3>
-        
+
         {hourlyData.some(d => d.orderCount > 0) ? (
           <div className="relative">
             {/* SVG Chart */}
@@ -234,8 +267,8 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
         <div className="bg-gray-50 p-4 rounded-lg">
           <h4 className="font-medium text-gray-800">Average Order Value</h4>
           <p className="text-2xl font-bold text-blue-600">
-            ${(hourlyData.reduce((sum, d) => sum + d.totalRevenue, 0) / 
-               Math.max(hourlyData.reduce((sum, d) => sum + d.orderCount, 0), 1)).toFixed(2)}
+            ${(hourlyData.reduce((sum, d) => sum + d.totalRevenue, 0) /
+              Math.max(hourlyData.reduce((sum, d) => sum + d.orderCount, 0), 1)).toFixed(2)}
           </p>
         </div>
       </div>

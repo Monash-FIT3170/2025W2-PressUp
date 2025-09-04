@@ -1,12 +1,10 @@
 import React, { useMemo } from "react";
-import { Transaction } from "/imports/api/transactions/TransactionsCollection";
-import { TimeFrame } from "../Analytics";
+import { Order } from "/imports/api/orders/OrdersCollection";
+
 
 interface SalesTrendsVisualizationProps {
-  transactions: Transaction[];
-  timeFrame: TimeFrame;
-  customDateRange?: { start: Date; end: Date } | null;
-}
+  orders: Order[];
+dateRangeBounds: { start: Date | null; end: Date | null } | null;}
 
 interface SalesDataPoint {
   period: string;
@@ -15,115 +13,74 @@ interface SalesDataPoint {
 }
 
 export const SalesTrendsVisualization: React.FC<SalesTrendsVisualizationProps> = ({
-  transactions,
-  timeFrame,
-  customDateRange,
+  orders,
+  dateRangeBounds,
 }) => {
-  const salesData = useMemo(() => {
-    const now = new Date();
-    let periods: string[] = [];
-    let startDate: Date;
-    let endDate: Date = now;
+const { start, end } = dateRangeBounds || { start: null, end: null };
 
-    if (timeFrame === "custom" && customDateRange) {
-      startDate = customDateRange.start;
-      endDate = customDateRange.end;
-      // For custom ranges, create daily periods
-      const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
-      periods = Array.from({ length: Math.min(daysDiff, 30) }, (_, i) => `Day ${i + 1}`);
+  const salesData = useMemo(() => {
+
+     if (!orders || orders.length === 0) return [];
+    let periods: string[] = [];
+
+    if (start && end) {
+      const daysDiff = Math.ceil(
+        (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)
+      );
+      periods = Array.from({ length: daysDiff + 1 }, (_, i) => {
+        const date = new Date(start);
+        date.setDate(start.getDate() + i);
+        return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      });
     } else {
-      switch (timeFrame) {
-        case "day":
-          // Last 24 hours in 4-hour blocks
-          startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-          periods = ["00-04", "04-08", "08-12", "12-16", "16-20", "20-24"];
-          break;
-        case "week":
-          // Last 7 days
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          periods = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-          break;
-        case "month":
-          // Last 4 weeks
-          startDate = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
-          periods = ["Week 1", "Week 2", "Week 3", "Week 4"];
-          break;
-        case "year":
-          // Last 12 months
-          startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-          periods = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-          break;
-        default:
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          periods = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-      }
+      const today = new Date();
+      periods = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date(today);
+        date.setDate(today.getDate() - (6 - i));
+        return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      });
     }
 
-    const filteredTransactions = transactions.filter(
-      (t) => {
-        const transactionDate = new Date(t.createdAt);
-        return transactionDate >= startDate && transactionDate <= endDate;
-      }
-    );
-
+    
     // Group transactions by period
     const periodMap = new Map<string, SalesDataPoint>();
-    periods.forEach(period => {
-      periodMap.set(period, { period, totalSales: 0, itemCount: 0 });
-    });
+    periods.forEach((period) =>
+      periodMap.set(period, { period, totalSales: 0, itemCount: 0 })
+    );
 
-    filteredTransactions.forEach((transaction) => {
-      const transactionDate = new Date(transaction.createdAt);
-      let period: string;
-      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    orders.forEach((order) => {
+      if (!order.paid) return;
 
-      if (timeFrame === "custom" && customDateRange) {
-        const dayDiff = Math.floor((transactionDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
-        period = `Day ${dayDiff + 1}`;
-      } else {
-        switch (timeFrame) {
-          case "day":
-            const hour = transactionDate.getHours();
-            if (hour < 4) period = "00-04";
-            else if (hour < 8) period = "04-08";
-            else if (hour < 12) period = "08-12";
-            else if (hour < 16) period = "12-16";
-            else if (hour < 20) period = "16-20";
-            else period = "20-24";
-            break;
-          case "week":
-            // const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-            period = days[transactionDate.getDay()];
-            break;
-          case "month":
-            const weekDiff = Math.floor((now.getTime() - transactionDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
-            period = `Week ${4 - weekDiff}`;
-            break;
-          case "year":
-            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            period = months[transactionDate.getMonth()];
-            break;
-          default:
-            period = days[transactionDate.getDay()];
-        }
-      }
+      const orderDate = new Date(order.createdAt);
+      if (
+        (start && orderDate < start) ||
+        (end && orderDate > end)
+      )
+        return;
 
-      const existing = periodMap.get(period);
+      const periodKey = periods.find((p) =>
+        orderDate.toLocaleDateString(undefined, { month: "short", day: "numeric" }) === p
+      );
+      if (!periodKey) return;
+
+      const existing = periodMap.get(periodKey);
       if (existing) {
-        existing.totalSales += transaction.quantity * transaction.price;
-        existing.itemCount += transaction.quantity;
+        existing.totalSales += order.totalPrice;
+        existing.itemCount += order.menuItems.reduce((sum, item) => sum + item.quantity, 0);
       }
     });
 
     return Array.from(periodMap.values());
-  }, [transactions, timeFrame, customDateRange]);
+
+  }, [orders, start, end]);
+
 
   const maxSales = Math.max(...salesData.map(d => d.totalSales), 1);
 
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold text-gray-800">Sales Trends</h2>
-      
+
       {/* Summary */}
       <div className="bg-green-50 p-4 rounded-lg">
         <p className="text-sm text-green-800">
@@ -137,9 +94,9 @@ export const SalesTrendsVisualization: React.FC<SalesTrendsVisualizationProps> =
       {/* Chart */}
       <div className="space-y-3">
         <h3 className="text-lg font-medium text-gray-700">
-          Sales Over Time ({timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1)})
+          Sales Over Time 
         </h3>
-        
+
         {salesData.some(d => d.totalSales > 0) ? (
           <div className="relative">
             {/* SVG Chart */}

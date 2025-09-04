@@ -6,7 +6,6 @@ import { PopularItemsAnalysis } from "./components/PopularItemsAnalysis";
 import { SalesTrendsVisualization } from "./components/SalesTrendsVisualization";
 import { PeakHoursAnalysis } from "./components/PeakHoursAnalysis";
 import { ExportButton } from "./components/ExportButton";
-import { DateRangeSelector } from "./components/DateRangeSelector";
 import { Meteor } from "meteor/meteor";
 import {
   format,
@@ -234,9 +233,8 @@ export const AnalyticsPage = () => {
               {/* Sales Trends Visualization */}
               <div className="bg-white rounded-lg shadow-md p-6">
                 <SalesTrendsVisualization
-                  transactions={ordersFiltered}
-                  timeFrame={dateRange}
-                  customDateRange={customDateRange}
+                  orders={ordersFiltered}
+                  dateRangeBounds={customDateRange}
                 />
               </div>
 
@@ -245,7 +243,6 @@ export const AnalyticsPage = () => {
                 <PeakHoursAnalysis
                   orders={ordersFiltered}
                   timeFrame={dateRange}
-                  customDateRange={customDateRange}
                 />
               </div>
             </div>
