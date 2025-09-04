@@ -248,7 +248,6 @@ export const TaxPage = () => {
     return income > 0 ? income : 0;
   }, [profitTotal, expensesTotal, deductionsTotal, payTotal]);
 
-
   const financialData: Record<string, FinancialDataField> = useMemo(
     () => ({
       incomeTax: {
