@@ -11,12 +11,12 @@ import {
 interface PopularItemsAnalysisProps {
   orders: Order[];
   timeFrame: "all"
-    | "today"
-    | "thisWeek"
-    | "thisMonth"
-    | "thisYear"
-    | "past7Days"
-    | "past30Days";
+  | "today"
+  | "thisWeek"
+  | "thisMonth"
+  | "thisYear"
+  | "past7Days"
+  | "past30Days";
   customDateRange?: { start: Date; end: Date } | null;
 }
 
@@ -37,49 +37,49 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
     let startDate: Date | null = null;
     let endDate: Date | null = today;
 
-      switch (timeFrame) {
-        case "today":
-          startDate = today;
-          break;
-        case "thisWeek":
-          startDate = startOfWeek(today, { weekStartsOn: 1 });
-          break;
-        case "thisMonth":
-          startDate = startOfMonth(today);
-          break;
-        case "thisYear":
-          startDate = startOfYear(today);
-          break;
-        case "past7Days":
-          startDate = subDays(today, 6);
-          break;
-        case "past30Days":
-          startDate = subDays(today, 29);
-          break;
-        case "all":
-        default:
-          startDate = null;
-          endDate = null;
-      }
-      
-    
+    switch (timeFrame) {
+      case "today":
+        startDate = today;
+        break;
+      case "thisWeek":
+        startDate = startOfWeek(today, { weekStartsOn: 1 });
+        break;
+      case "thisMonth":
+        startDate = startOfMonth(today);
+        break;
+      case "thisYear":
+        startDate = startOfYear(today);
+        break;
+      case "past7Days":
+        startDate = subDays(today, 6);
+        break;
+      case "past30Days":
+        startDate = subDays(today, 29);
+        break;
+      case "all":
+      default:
+        startDate = null;
+        endDate = null;
+    }
+
+
 
     const filteredorders = orders.filter((order) => {
-        const orderDate = new Date(order.createdAt);
+      const orderDate = new Date(order.createdAt);
 
-        if (!startDate || !endDate){
-          return true;
-        }
-
-        return orderDate >= startDate && orderDate <= endDate;
+      if (!startDate || !endDate) {
+        return true;
       }
+
+      return orderDate >= startDate && orderDate <= endDate;
+    }
     );
 
     const itemMap = new Map<string, ItemStats>();
 
     filteredorders.forEach((order) => {
 
-      if(!order.paid){
+      if (!order.paid) {
         return;
       }
       order.menuItems.forEach((menuItem: OrderMenuItem) => {
@@ -87,19 +87,18 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
         const revenue = menuItem.price * menuItem.quantity;
 
         if (existing) {
-        existing.totalQuantity += menuItem.quantity;
-        existing.totalRevenue += menuItem.quantity * menuItem.price;
-        existing.averagePrice = existing.totalRevenue / existing.totalQuantity;
-      } else {
-        itemMap.set(menuItem.name, {
-          name: menuItem.name,
-          totalQuantity: menuItem.quantity,
-          totalRevenue: revenue,
-          averagePrice: menuItem.price,
-        });
-      }
-
-      })  
+          existing.totalQuantity += menuItem.quantity;
+          existing.totalRevenue += menuItem.quantity * menuItem.price;
+          existing.averagePrice = existing.totalRevenue / existing.totalQuantity;
+        } else {
+          itemMap.set(menuItem.name, {
+            name: menuItem.name,
+            totalQuantity: menuItem.quantity,
+            totalRevenue: revenue,
+            averagePrice: menuItem.price,
+          });
+        }
+      })
     });
 
     return Array.from(itemMap.values())
@@ -107,30 +106,40 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
       .slice(0, 5);
   }, [orders, timeFrame, customDateRange]);
 
-  const overallMostPopular = useMemo(() => {
-    const itemMap = new Map<string, number>();
-    orders.forEach((t) => {
-      itemMap.set(t.name, (itemMap.get(t.name) || 0) + t.quantity);
+
+  const overallMostPopular = useMemo<{ name: string; quantity: number }>(() => {
+  const itemMap = new Map<string, number>();
+
+  orders.forEach((order) => { 
+    if (!order.paid) return;
+
+    order.menuItems.forEach((menuItem: OrderMenuItem) => {
+      itemMap.set(
+        menuItem.name,
+        (itemMap.get(menuItem.name) || 0) + menuItem.quantity
+      );
     });
-    
-    let mostPopular = { name: "", quantity: 0 };
-    itemMap.forEach((quantity, name) => {
-      if (quantity > mostPopular.quantity) {
-        mostPopular = { name, quantity };
-      }
-    });
-    
-    return mostPopular;
-  }, [orders]);
+  }); 
+
+  let mostPopular: { name: string; quantity: number } = { name: "", quantity: 0 };
+
+  itemMap.forEach((quantity, name) => {
+    if (quantity > mostPopular.quantity) {
+      mostPopular = { name, quantity };
+    }
+  });
+
+  return mostPopular;
+}, [orders]);
 
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold text-gray-800">Popular Items Analysis</h2>
-      
+
       {/* Summary */}
       <div className="bg-blue-50 p-4 rounded-lg">
         <p className="text-sm text-blue-800">
-          <span className="font-semibold">Overall Most Popular:</span> {overallMostPopular.name} 
+          <span className="font-semibold">Overall Most Popular:</span> {overallMostPopular.name}
           ({overallMostPopular.quantity} units sold)
         </p>
         <p className="text-xs text-blue-600 mt-1">
@@ -143,7 +152,7 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
         <h3 className="text-lg font-medium text-gray-700">
           Top Items ({timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1)})
         </h3>
-        
+
         {popularItems.length > 0 ? (
           <div className="space-y-2">
             {popularItems.map((item, index) => (

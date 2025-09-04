@@ -225,7 +225,7 @@ export const AnalyticsPage = () => {
               {/* Popular Items Analysis */}
               <div className="bg-white rounded-lg shadow-md p-6">
                 <PopularItemsAnalysis
-                  transactions={ordersFiltered}
+                  orders={ordersFiltered}
                   timeFrame={dateRange}
                   customDateRange={customDateRange}
                 />
