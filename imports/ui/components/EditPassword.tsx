@@ -10,6 +10,7 @@ type UserState = {
   role: string;
   oldPassword: string;
   password: string;
+  payRate: number;
 };
 
 type EditPasswordProps = {
