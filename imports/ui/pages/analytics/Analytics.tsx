@@ -44,18 +44,24 @@ export const AnalyticsPage = () => {
 
   useSubscribe("orders");
 
-  const getDateRangeText = (range: typeof dateRange): string => {
+  const getDateRangeText = (dateRange: string) => {
+    if (!dateRangeBounds.start || !dateRangeBounds.end) {
+      return "All Time";
+    }
+    return `${format(dateRangeBounds.start, "dd/MM/yy")} – ${format(dateRangeBounds.end, "dd/MM/yy")}`;
+  };
+
+  useEffect(() => {
     const today = startOfToday();
-    
     let start: Date | null = null;
     let end: Date | null = today;
 
-    switch (range) {
+    switch (dateRange) {
       case "today":
         start = today;
         break;
       case "thisWeek":
-        start = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+        start = startOfWeek(today, { weekStartsOn: 1 });
         break;
       case "thisMonth":
         start = startOfMonth(today);
@@ -64,7 +70,7 @@ export const AnalyticsPage = () => {
         start = startOfYear(today);
         break;
       case "past7Days":
-        start = subDays(today, 6); // 6 days ago + today = 7
+        start = subDays(today, 6);
         break;
       case "past30Days":
         start = subDays(today, 29);
@@ -76,12 +82,7 @@ export const AnalyticsPage = () => {
     }
 
     setDateRangeBounds({ start, end });
-
-    if (!start || !end) {
-      return "All Time";
-    }
-    return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
-  };
+  }, [dateRange]);
 
 
   useEffect(() => {
@@ -108,7 +109,7 @@ export const AnalyticsPage = () => {
     fetchOrders();
   }, [setPageTitle, dateRange]);
 
-const handleCustomRangeChange = (startDate: Date, endDate: Date) => {
+  const handleCustomRangeChange = (startDate: Date, endDate: Date) => {
     setCustomDateRange({ start: startDate, end: endDate });
     setDateRangeBounds({ start: startDate, end: endDate });   //sync with global state
   };
