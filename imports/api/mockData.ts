@@ -227,9 +227,16 @@ export const mockDataGenerator = async ({
   // Create tables first with no order assigned
   if ((await TablesCollection.countDocuments()) === 0) {
     for (let i = 1; i < tableCount + 1; ++i) {
-      const capacity = faker.number.int({ min: 1, max: 10 });
-      // Set 70% occupied, and 30% not occupied
-      const isOccupied = faker.datatype.boolean(0.7) ? true : false;
+      // const capacity = faker.number.int({ min: 1, max: 6 });
+      // // Set 70% occupied, and 30% not occupied
+      // const isOccupied = faker.datatype.boolean(0.7) ? true : false;
+      // // If occupied, set number of occupants from 1 to max capacity of table, otherwise, zero occupants
+      // const noOccupants = isOccupied
+      //   ? faker.number.int({ min: 1, max: capacity })
+      //   : 0;
+      const capacity = faker.number.int({ min: 1, max: 6 });
+      // Set every even table to be occupied
+      const isOccupied = i % 2 == 0 ? true : false;
       // If occupied, set number of occupants from 1 to max capacity of table, otherwise, zero occupants
       const noOccupants = isOccupied
         ? faker.number.int({ min: 1, max: capacity })
@@ -237,7 +244,8 @@ export const mockDataGenerator = async ({
 
       await TablesCollection.insertAsync({
         tableNo: i,
-        orderID: null,
+        activeOrderID: null,
+        orderIDs: [],
         capacity: capacity,
         isOccupied: isOccupied,
         noOccupants: noOccupants,
@@ -247,17 +255,21 @@ export const mockDataGenerator = async ({
 
   // Create orders: mix of dine-in (linked to tables) and takeaway (no table)
   if ((await OrdersCollection.countDocuments()) === 0) {
-    const allTables = await TablesCollection.find(
-      {},
+    // Only select tables that are occupied
+    const allOccupiedTables = await TablesCollection.find(
+      { isOccupied: true },
       { fields: { tableNo: 1 } },
     ).fetchAsync();
-    const availableTableNos = allTables.map((t) => t.tableNo);
+    const availableTableNos = allOccupiedTables.map((t) => t.tableNo);
 
     const dineInCount = Math.max(
       0,
       Math.min(orderCount!, availableTableNos.length),
     );
     const takeawayCount = Math.max(0, orderCount! - dineInCount);
+
+    // Start orderNo from 1001
+    let nextOrderNo = 1001;
 
     const genOrderMenuItems = async (): Promise<OrderMenuItem[]> => {
       const rawMenuItems = await MenuItemsCollection.rawCollection()
@@ -296,7 +308,7 @@ export const mockDataGenerator = async ({
       const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
 
       const orderID = await OrdersCollection.insertAsync({
-        orderNo: faker.number.int({ min: 1000, max: 9999 }),
+        orderNo: nextOrderNo,
         orderType: "dine-in",
         tableNo,
         menuItems: items,
@@ -305,12 +317,17 @@ export const mockDataGenerator = async ({
         orderStatus: status,
         createdAt: new Date(
           Date.now() - faker.number.int({ min: 0, max: 25 * 60 }) * 1000,
-        ), // within last 25 minutes
+        ),
       });
+      nextOrderNo++;
 
+      // Update the table with activeOrderID and push to orderIDs
       await TablesCollection.updateAsync(
         { tableNo },
-        { $set: { orderID: String(orderID) } },
+        {
+          $set: { activeOrderID: String(orderID) },
+          $push: { orderIDs: String(orderID) },
+        },
       );
     }
 
@@ -320,7 +337,7 @@ export const mockDataGenerator = async ({
       const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
 
       await OrdersCollection.insertAsync({
-        orderNo: faker.number.int({ min: 1000, max: 9999 }),
+        orderNo: nextOrderNo,
         orderType: "takeaway",
         tableNo: null,
         menuItems: items,
@@ -329,6 +346,7 @@ export const mockDataGenerator = async ({
         orderStatus: status,
         createdAt: faker.date.recent({ days: 7 }),
       });
+      nextOrderNo++;
     }
   }
 };
