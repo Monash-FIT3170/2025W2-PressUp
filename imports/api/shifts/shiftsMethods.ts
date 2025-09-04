@@ -135,4 +135,12 @@ Meteor.methods({
     // Return pay = hours × payRate
     return payRate * durationHours;
   }),
+
+  "shifts.getAll"() {
+    if (!this.userId) {
+      throw new Meteor.Error("Not authorized");
+    }
+
+    return ShiftsCollection.find().fetch();
+  },
 });
