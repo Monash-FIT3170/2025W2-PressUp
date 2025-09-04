@@ -1,37 +1,16 @@
 import { Meteor } from "meteor/meteor";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { TaxDateFilter } from "../../components/TaxDateFilter";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
 import { PurchaseOrdersCollection } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
-import { Deduction, DeductionsCollection } from "/imports/api/tax/DeductionsCollection";
+import { DeductionsCollection } from "/imports/api/tax/DeductionsCollection";
 import { ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
 import { EditDeductionModal } from "../../components/EditDeductionModal";
-import {
-  format,
-  startOfToday,
-  startOfMonth,
-  startOfYear,
-  endOfMonth,
-  endOfYear,
-  subMonths,
-  addMonths,
-  subYears,
-  addYears,
-} from "date-fns";
-
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Label,
-} from "recharts";
+import { format, startOfMonth, startOfYear, endOfMonth, endOfYear } from "date-fns";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Label } from "recharts";
 
 interface FinancialDataField {
   title: string;
@@ -76,16 +55,14 @@ export const TaxPage = () => {
     if (dateRange === "PAYG") return getQuarterRange(currentDate);
     return { start: new Date(0), end: new Date() };
   };
-
   const { start, end } = getDateRange();
-
   const getDateRangeText = () => {
     if (dateRange === "all") return "All Time";
     const { start, end } = getDateRange();
     return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
   };
 
-  // Fetch data
+  // Reactive data
   const { orders, purchaseOrders, allDeductions, shifts } = useTracker(() => ({
     orders: OrdersCollection.find().fetch(),
     purchaseOrders: PurchaseOrdersCollection.find().fetch(),
@@ -94,40 +71,42 @@ export const TaxPage = () => {
   }), [dateRange, currentDate]);
 
   // Filter data by date
-  const filteredOrders = orders.filter(o => new Date(o.createdAt) >= start && new Date(o.createdAt) <= end && o.paid);
-  const filteredPurchaseOrders = purchaseOrders.filter(p => (p.date instanceof Date ? p.date : new Date(p.date)) >= start && (p.date instanceof Date ? p.date : new Date(p.date)) <= end);
-  const filteredDeductions = allDeductions.filter(d => (d.date instanceof Date ? d.date : new Date(d.date)) >= start && (d.date instanceof Date ? d.date : new Date(d.date)) <= end);
-  const filteredShifts = shifts.filter(s => (s.date instanceof Date ? s.date : new Date(s.date)) >= start && (s.date instanceof Date ? s.date : new Date(s.date)) <= end);
+  const filteredOrders = useMemo(() => orders.filter(o => new Date(o.createdAt) >= start && new Date(o.createdAt) <= end && o.paid), [orders, start, end]);
+  const filteredPurchaseOrders = useMemo(() => purchaseOrders.filter(p => (p.date instanceof Date ? p.date : new Date(p.date)) >= start && (p.date instanceof Date ? p.date : new Date(p.date)) <= end), [purchaseOrders, start, end]);
+  const filteredDeductions = useMemo(() => allDeductions.filter(d => (d.date instanceof Date ? d.date : new Date(d.date)) >= start && (d.date instanceof Date ? d.date : new Date(d.date)) <= end), [allDeductions, start, end]);
+  const filteredShifts = useMemo(() => shifts.filter(s => (s.date instanceof Date ? s.date : new Date(s.date)) >= start && (s.date instanceof Date ? s.date : new Date(s.date)) <= end), [shifts, start, end]);
 
-  // GST calculations
-  let GSTTotal = 0, profitTotal = 0;
-  const GSTByDate: Record<string, number> = {};
-  filteredOrders.forEach(o => {
-    const dateKey = format(new Date(o.createdAt), dateRange === "year" ? "MMM" : "dd/MM");
-    o.menuItems.forEach(item => {
-      const amount = item.price * item.quantity;
-      const gst = amount / 11;
-      GSTTotal += gst;
-      profitTotal += amount;
-      GSTByDate[dateKey] = (GSTByDate[dateKey] || 0) + gst;
+  // GST
+  const { GSTItems, expenseItems, GSTTotal, GSTExpenses, profitTotal, expensesTotal } = useMemo(() => {
+    let GSTTotal = 0, profitTotal = 0, GSTExpenses = 0, expensesTotal = 0;
+    const GSTByDate: Record<string, number> = {};
+    filteredOrders.forEach(o => {
+      const dateKey = format(new Date(o.createdAt), dateRange === "year" ? "MMM" : "dd/MM");
+      o.menuItems.forEach(item => {
+        const amount = item.price * item.quantity;
+        const gst = amount / 11;
+        GSTTotal += gst;
+        profitTotal += amount;
+        GSTByDate[dateKey] = (GSTByDate[dateKey] || 0) + gst;
+      });
     });
-  });
-  const GSTItems = Object.entries(GSTByDate).map(([label, amount]) => ({ label, amount }));
+    const GSTItems = Object.entries(GSTByDate).map(([label, amount]) => ({ label, amount }));
 
-  let GSTexpenses = 0, expensesTotal = 0;
-  const expensesByDate: Record<string, number> = {};
-  filteredPurchaseOrders.forEach(p => {
-    const amount = p.totalCost;
-    const gst = amount / 11;
-    GSTexpenses += gst;
-    expensesTotal += amount;
-    const dateKey = format(p.date instanceof Date ? p.date : new Date(p.date), dateRange === "year" ? "MMM" : "dd/MM");
-    expensesByDate[dateKey] = (expensesByDate[dateKey] || 0) + gst;
-  });
-  const expenseItems = Object.entries(expensesByDate).map(([label, amount]) => ({ label, amount }));
+    const expensesByDate: Record<string, number> = {};
+    filteredPurchaseOrders.forEach(p => {
+      const amount = p.totalCost;
+      const gst = amount / 11;
+      GSTExpenses += gst;
+      expensesTotal += amount;
+      const dateKey = format(p.date instanceof Date ? p.date : new Date(p.date), dateRange === "year" ? "MMM" : "dd/MM");
+      expensesByDate[dateKey] = (expensesByDate[dateKey] || 0) + gst;
+    });
+    const expenseItems = Object.entries(expensesByDate).map(([label, amount]) => ({ label, amount }));
+    return { GSTItems, expenseItems, GSTTotal, GSTExpenses, profitTotal, expensesTotal };
+  }, [filteredOrders, filteredPurchaseOrders, dateRange]);
 
-  let deductionsTotal = 0;
-  filteredDeductions.forEach(d => deductionsTotal += Number(d.amount));
+  // Deductions
+  const deductionsTotal = useMemo(() => filteredDeductions.reduce((sum, d) => sum + Number(d.amount), 0), [filteredDeductions]);
 
   // Payroll tax and taxable income
   const [payrollTax, setPayrollTax] = useState(0);
@@ -135,51 +114,44 @@ export const TaxPage = () => {
   const [payrollItems, setPayrollItems] = useState<{ label: string; amount: number }[]>([]);
 
   useEffect(() => {
+    let mounted = true;
     (async () => {
-      let payTotal = 0;
       const payByDate: Record<string, number> = {};
+      let payTotal = 0;
       for (const s of filteredShifts) {
         const pay = Number(await Meteor.callAsync("shifts.getPayForShift", s._id) ?? 0);
-        const tax = pay * 0.0485;
         payTotal += pay;
         const dateKey = format(s.date instanceof Date ? s.date : new Date(s.date), dateRange === "year" ? "MMM" : "dd/MM");
-        payByDate[dateKey] = (payByDate[dateKey] || 0) + tax;
+        payByDate[dateKey] = (payByDate[dateKey] || 0) + pay * 0.0485;
       }
-      setPayrollTax(payTotal * 0.0485);
-      setPayrollItems(Object.entries(payByDate).map(([label, amount]) => ({ label, amount })));
-      const income = profitTotal - expensesTotal - deductionsTotal - payTotal;
-      setTaxableIncome(income > 0 ? income : 0);
+      if (mounted) {
+        setPayrollTax(payTotal * 0.0485);
+        setPayrollItems(Object.entries(payByDate).map(([label, amount]) => ({ label, amount })));
+        const income = profitTotal - expensesTotal - deductionsTotal - payTotal;
+        setTaxableIncome(income > 0 ? income : 0);
+      }
     })();
+    return () => { mounted = false; };
   }, [filteredShifts, profitTotal, expensesTotal, deductionsTotal, dateRange]);
 
-  const financialData: Record<string, FinancialDataField> = {
+  const financialData: Record<string, FinancialDataField> = useMemo(() => ({
     incomeTax: { title: "Taxable Income", description: "Profit minus business deductions", items: [], total: taxableIncome },
     payrollTax: { title: "Payroll Tax", description: "Tax collected on wages paid", items: payrollItems, total: payrollTax },
     GSTCollected: { title: "GST Collected", description: "Goods and Services Tax collected on orders", items: GSTItems, total: GSTTotal },
-    GSTPaid: { title: "GST Paid", description: "Goods and Services Tax paid on stock orders", items: expenseItems, total: GSTexpenses },
-  };
+    GSTPaid: { title: "GST Paid", description: "Goods and Services Tax paid on stock orders", items: expenseItems, total: GSTExpenses },
+  }), [taxableIncome, payrollItems, payrollTax, GSTItems, GSTTotal, expenseItems, GSTExpenses]);
 
-  useEffect(() => { setPageTitle("Finance - Tax Management"); }, [setPageTitle]);
-
-  const mainMetrics = [
-    { key: "incomeTax", title: "Taxable Income", amount: financialData.incomeTax.total },
-    { key: "payrollTax", title: "Payroll Tax", amount: financialData.payrollTax.total },
-    { key: "GSTCollected", title: "Total GST Collected", amount: financialData.GSTCollected.total },
-    { key: "GSTPaid", title: "Total GST Paid", amount: financialData.GSTPaid.total },
-  ] as const;
-
-  const currentData = financialData[selectedMetric];
-
-  const combinedItems = (() => {
+  // GST comparison
+  const combinedItems = useMemo(() => {
     const collectedMap = Object.fromEntries(financialData.GSTCollected.items.map(i => [i.label, i.amount]));
     const paidMap = Object.fromEntries(financialData.GSTPaid.items.map(i => [i.label, i.amount]));
     const allLabels = Array.from(new Set([...financialData.GSTCollected.items.map(i => i.label), ...financialData.GSTPaid.items.map(i => i.label)]));
     return allLabels.map(label => ({ label, collected: collectedMap[label] || 0, paid: paidMap[label] || 0 }));
-  })();
+  }, [financialData.GSTCollected.items, financialData.GSTPaid.items]);
 
-  const filteredDeductionList = filteredDeductions.filter(d =>
-    d.name.toLowerCase().includes(searchDeduction.toLowerCase())
-  );
+  useEffect(() => { setPageTitle("Finance - Tax Management"); }, [setPageTitle]);
+
+  const filteredDeductionList = useMemo(() => filteredDeductions.filter(d => d.name.toLowerCase().includes(searchDeduction.toLowerCase())), [filteredDeductions, searchDeduction]);
 
   const handleAddDeduction = (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,10 +164,30 @@ export const TaxPage = () => {
     setDeductionForm({ name: "", date: format(new Date(), "yyyy-MM-dd"), description: "", amount: "" });
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setIsModalOpen(false);
     setSelectedDeduction(null);
   };
+
+  // Memoized BarChart
+  const MemoBarChart = React.memo(({ data, dataKeys, colors }: { data: any[]; dataKeys: string[]; colors: string[] }) => (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="label" />
+        <YAxis />
+        <Tooltip isAnimationActive={false}/>
+        {dataKeys.map((key, idx) => <Bar key={key} dataKey={key} fill={colors[idx]} isAnimationActive={false} />)}
+      </BarChart>
+    </ResponsiveContainer>
+  ));
+
+  const mainMetrics = [
+    { key: "incomeTax", title: "Taxable Income", amount: financialData.incomeTax.total },
+    { key: "payrollTax", title: "Payroll Tax", amount: financialData.payrollTax.total },
+    { key: "GSTCollected", title: "Total GST Collected", amount: financialData.GSTCollected.total },
+    { key: "GSTPaid", title: "Total GST Paid", amount: financialData.GSTPaid.total },
+  ] as const;
 
   return (
     <div className="flex flex-col flex-1 overflow-y-auto max-h-screen pb-10">
@@ -225,7 +217,7 @@ export const TaxPage = () => {
           ))}
         </div>
 
-        {/* descriptions where needed */}
+        {/* Descriptions */}
         {selectedMetric === "incomeTax" && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
             <h3 className="text-l text-gray-900 mb-4">
@@ -246,13 +238,10 @@ export const TaxPage = () => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left: Deduction Form or GST Chart */}
+          {/* Left panel */}
           {selectedMetric === "incomeTax" && (
             <div className="bg-pink-100 rounded-xl shadow-lg p-6">
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Add Deduction</h2>
-                <p className="text-gray-600">Enter business operation related expenses as tax deductions</p>
-              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Add Deduction</h2>
               <form onSubmit={handleAddDeduction} className="space-y-4">
                 <input type="text" placeholder="Deduction Name" value={deductionForm.name}
                   onChange={e => setDeductionForm({ ...deductionForm, name: e.target.value })}
@@ -271,27 +260,26 @@ export const TaxPage = () => {
             </div>
           )}
 
-          {(selectedMetric === "GSTCollected" || selectedMetric === "GSTPaid" || selectedMetric === "payrollTax") && (
+          {(selectedMetric === "GSTCollected" || selectedMetric === "GSTPaid") && (
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">{financialData[selectedMetric].title}</h2>
-                <p className="text-gray-600">{financialData[selectedMetric].description}</p>
-              </div>
-              <div className="h-80 w-full">
-                <ResponsiveContainer>
-                  <BarChart data={financialData[selectedMetric].items}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="label"><Label value="Date" offset={-5} position="insideBottom" /></XAxis>
-                    <YAxis><Label value="Amount ($)" angle={-90} position="insideLeft" style={{ textAnchor: "middle" }} /></YAxis>
-                    <Tooltip />
-                    <Bar dataKey="amount" fill="#c6b6cf" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">{financialData[selectedMetric].title}</h2>
+              <p className="text-gray-600 mb-4">{financialData[selectedMetric].description}</p>
+              <MemoBarChart data={financialData[selectedMetric].items} dataKeys={["amount"]} colors={["#6f597b"]} />
             </div>
           )}
 
-          {/* Right: Deduction List or GST Comparison */}
+          {selectedMetric === "payrollTax" && (
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Payroll Tax</h2>
+              <p className="text-gray-600 mb-4">{financialData.payrollTax.description}</p>
+              <MemoBarChart
+                data={financialData.payrollTax.items}
+                dataKeys={["amount"]}
+                colors={["#6f597b"]}
+              />
+          </div>)}
+
+          {/* Right panel */}
           <div className="space-y-6">
             {selectedMetric === "incomeTax" && (
               <div className="w-full bg-pink-100 rounded-xl shadow-lg p-6">
@@ -304,11 +292,7 @@ export const TaxPage = () => {
                   ) : filteredDeductionList.map(d => (
                     <button
                       key={d._id}
-                      onClick={() => {
-                        setSelectedDeduction(d);
-                        setIsModalOpen(true);
-                      }
-                      }
+                      onClick={() => { setSelectedDeduction(d); setIsModalOpen(true); }}
                       className="w-full text-left p-3 bg-white rounded-lg border border-black flex justify-between hover:bg-gray-100"
                     >
                       <div>
@@ -320,10 +304,7 @@ export const TaxPage = () => {
                   ))}
                   <EditDeductionModal
                     isOpen={isModalOpen}
-                    onClose={() => {
-                      setIsModalOpen(false);
-                      setSelectedDeduction(null);
-                    }}
+                    onClose={() => { setIsModalOpen(false); setSelectedDeduction(null); }}
                     deduction={selectedDeduction}
                     onSave={handleSave}
                   />
@@ -333,22 +314,9 @@ export const TaxPage = () => {
 
             {(selectedMetric === "GSTCollected" || selectedMetric === "GSTPaid") && (
               <div className="bg-white rounded-xl shadow-lg p-6">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-1">GST Paid vs GST Collected</h2>
-                  <p className="text-gray-600">Comparison of Goods and Services Tax Collected and Paid</p>
-                </div>
-                <div className="h-80 w-full">
-                  <ResponsiveContainer>
-                    <BarChart data={combinedItems}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="label"><Label value="Date" offset={-5} position="insideBottom" /></XAxis>
-                      <YAxis><Label value="GST ($)" angle={-90} position="insideLeft" style={{ textAnchor: "middle" }} /></YAxis>
-                      <Tooltip />
-                      <Bar dataKey="collected" fill="#6f597b" name="GST Collected" />
-                      <Bar dataKey="paid" fill="#c6b6cf" name="GST Paid" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">GST Paid vs GST Collected</h2>
+                <p className="text-gray-600 mb-4">Comparison of Goods and Services Tax Collected and Paid</p>
+                <MemoBarChart data={combinedItems} dataKeys={["collected","paid"]} colors={["#6f597b","#c6b6cf"]} />
               </div>
             )}
           </div>
