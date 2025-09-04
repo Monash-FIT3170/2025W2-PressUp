@@ -87,7 +87,7 @@ function CommentsSection({ post }: CommentsSectionProps) {
             rows={2}
             onChange={(e) => setContent(e.target.value)}
           ></TextArea>
-          <div className="flex w-full">
+          <div className="flex w-full p-2">
             <Button
               variant="negative"
               onClick={() => {
