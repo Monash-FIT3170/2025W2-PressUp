@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { Pill } from "../Pill";
 import { ArrowLeft } from "../symbols/navigation/Arrows";
+import { Roles } from "meteor/alanning:roles";
+import { RoleEnum } from "/imports/api/accounts/roles";
 import {
   PencilIcon,
   StockIcon,
@@ -21,12 +23,18 @@ import {
   PenTool,
   Users,
 } from "lucide-react";
+import { Meteor } from "meteor/meteor";
 
 interface NavigationMenuProps {
   show: boolean;
 }
 
 export const NavigationMenu = ({ show }: NavigationMenuProps) => {
+  Meteor.subscribe("users.all");
+  Meteor.subscribe("users.roles");
+  const currentUserRole = Roles.getRolesForUser(Meteor.userId());
+  const isAdminOrManager = currentUserRole.includes(RoleEnum.ADMIN) || currentUserRole.includes(RoleEnum.MANAGER);
+
   return (
     <div
       className={`bg-press-up-purple min-h-full transition-all ease-in-out duration-300 ${
@@ -34,6 +42,7 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
       } overflow-hidden flex flex-col h-60`}
     >
       <div className="flex-1 overflow-y-auto p-6 text-lg">
+        { isAdminOrManager && (
         <NavigationEntry
           icon={<DollarSign />}
           name="Finance"
@@ -61,6 +70,7 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>
+        )}
 
         <NavigationEntry
           icon={<PencilIcon fill="var(--color-press-up-grey)" />}
