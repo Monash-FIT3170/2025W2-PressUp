@@ -25,6 +25,7 @@ export const MainDisplay = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const location = useLocation();
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
 
   useSubscribe("menuItems");
   useSubscribe("orders");
@@ -33,13 +34,17 @@ export const MainDisplay = () => {
   const tables = useTracker(() => TablesCollection.find().fetch());
   const posItems = useTracker(() => MenuItemsCollection.find().fetch());
   // Fetch the current order for the selected table
-  const order = useTracker(
-    () =>
-      selectedTable
-        ? OrdersCollection.find({ tableNo: selectedTable }).fetch()[0]
-        : null,
-    [selectedTable],
-  );
+  const order = useTracker(() => {
+    if (activeOrderId) {
+      return OrdersCollection.findOne(activeOrderId as any) ?? null;
+    }
+    return selectedTable
+      ? (OrdersCollection.find({
+          tableNo: selectedTable,
+          $or: [{ orderType: "dine-in" }, { orderType: { $exists: false } }],
+        }).fetch()[0] ?? null)
+      : null;
+  }, [activeOrderId, selectedTable]);
 
   const filteredItems = posItems.filter((item) => {
     const matchesName = item.name
@@ -303,6 +308,7 @@ export const MainDisplay = () => {
           onUpdateOrder={updateOrderInDb}
           selectedTable={selectedTable} // pass down
           setSelectedTable={setSelectedTable} // pass down
+          onActiveOrderChange={setActiveOrderId}
         />
       </div>
     </div>

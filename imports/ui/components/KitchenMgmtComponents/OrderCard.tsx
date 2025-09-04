@@ -189,7 +189,9 @@ export const OrderCard = ({ order }: OrderCardProps) => {
 
           <div>
             <p className="font-bold text-lg text-press-up-purple">
-              Table {order.tableNo}
+              {order.tableNo != null
+                ? `Table No: ${order.tableNo}`
+                : "Takeaway"}
             </p>
             <p className="text-sm text-press-up-purple">{order.createdAt}</p>
             <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
@@ -224,7 +226,11 @@ export const OrderCard = ({ order }: OrderCardProps) => {
             <strong>Order No:</strong> {order.orderNo}
           </p>
           <p>
-            <strong>Table No:</strong> {order.tableNo}
+            <strong>
+              {order.tableNo != null
+                ? `Table No: ${order.tableNo}`
+                : "Takeaway"}
+            </strong>
           </p>
           <p>
             <strong>Created At:</strong> {order.createdAt}
