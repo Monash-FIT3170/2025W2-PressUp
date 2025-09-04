@@ -238,6 +238,16 @@ export const TaxPage = () => {
           </div>
         )}
 
+        {selectedMetric === "payrollTax" && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h3 className="text-l text-gray-900 mb-4">
+              Monthly threshhold for payroll tax is $83,333.
+              Annual threshhold for payroll tax is $1,000,000.
+              If your business does not pay over that in wages then you do not have to pay payroll tax.
+            </h3>
+          </div>
+        )}
+
         {/* Left/Right Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left: Deduction Entry or GST Graph */}
