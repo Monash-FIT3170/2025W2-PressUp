@@ -201,55 +201,38 @@ export const AnalyticsPage = () => {
   }
 
   return (
-    <div className="h-screen overflow-y-auto">
-      <div className="flex flex-col space-y-6 p-6">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-baseline gap-4">
-            <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
-            <h2 className="ml-4 text-red-900">
-              <span className="font-bold">Viewing Period:</span>{" "}
-              <span className="font-normal">{getDateRangeText(dateRange)}</span>
-            </h2>
-          </div>
+    <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto scroll-smooth bg-gray-50 p-6">
+      {/* Filters */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+        <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
+        <h2 className="text-lg lg:text-xl font-semibold text-gray-700">
+          Viewing Period:{" "}
+          <span className="font-normal">{getDateRangeText(dateRange)}</span>
+        </h2>
+        <ExportButton onExport={handleExport} />
+      </div>
 
-          <ExportButton onExport={handleExport} />
+      {/* Analytics Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <PopularItemsAnalysis
+          orders={ordersFiltered}
+          timeFrame={dateRange}
+          customDateRange={customDateRange}
+        />
 
-        </div>
+        <SalesTrendsVisualization
+          orders={ordersFiltered}
+          dateRangeBounds={
+            customDateRange
+              ? { start: customDateRange.start, end: customDateRange.end }
+              : null
+          }
+        />
 
-
-        {/* Analytics Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {ordersFiltered.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Popular Items Analysis */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <PopularItemsAnalysis
-                  orders={ordersFiltered}
-                  timeFrame={dateRange}
-                  customDateRange={customDateRange}
-                />
-              </div>
-
-              {/* Sales Trends Visualization */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <SalesTrendsVisualization
-                  orders={ordersFiltered}
-                  dateRangeBounds={customDateRange}
-                />
-              </div>
-
-              {/* Peak Hours Analysis */}
-              <div className="bg-white rounded-lg shadow-md p-6 lg:col-span-2">
-                <PeakHoursAnalysis
-                  orders={ordersFiltered}
-                  timeFrame={dateRange}
-                />
-              </div>
-            </div>
-          ) : (
-            <div>Loading data...</div>
-          )}
-        </div>
+        <PeakHoursAnalysis
+          orders={ordersFiltered}
+          timeFrame={dateRange}
+        />
       </div>
     </div>
   );

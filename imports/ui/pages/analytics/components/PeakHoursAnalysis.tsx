@@ -11,13 +11,13 @@ import {
 interface PeakHoursAnalysisProps {
   orders: Order[];
   timeFrame:
-    | "all"
-    | "today"
-    | "thisWeek"
-    | "thisMonth"
-    | "thisYear"
-    | "past7Days"
-    | "past30Days";
+  | "all"
+  | "today"
+  | "thisWeek"
+  | "thisMonth"
+  | "thisYear"
+  | "past7Days"
+  | "past30Days";
 }
 
 interface HourlyData {
@@ -64,15 +64,15 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
     const filteredOrders = orders.filter((o) => {
       const orderDate = new Date(o.createdAt);
 
-      if (!o.paid){
+      if (!o.paid) {
         return false;
-      } 
+      }
 
-      if (startDate && endDate){
+      if (startDate && endDate) {
         return orderDate >= startDate && orderDate <= endDate;
       }
 
-      return true; 
+      return true;
     });
 
     // Initialize hourly data
@@ -101,7 +101,7 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
 
   const peakHour = useMemo(() => {
     return hourlyData.reduce((peak, current) =>
-      current.orderCount > peak.orderCount ? current : peak,  { hour: 0, orderCount: 0, totalRevenue: 0 }
+      current.orderCount > peak.orderCount ? current : peak, { hour: 0, orderCount: 0, totalRevenue: 0 }
     );
   }, [hourlyData]);
 
@@ -124,10 +124,10 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
       {/* Summary */}
       <div className="bg-orange-50 p-4 rounded-lg">
         {peakHour.orderCount > 0 ? (
-        <p className="text-sm text-orange-800">
-          <span className="font-semibold">Peak Hour:</span> {formatHour(peakHour.hour)}
-          ({peakHour.orderCount} orders)
-        </p>
+          <p className="text-sm text-orange-800">
+            <span className="font-semibold">Peak Hour:</span> {formatHour(peakHour.hour)}
+            ({peakHour.orderCount} orders)
+          </p>
         ) : (
           <p className="text-sm text-orange-800">No peak hour data available</p>
         )}

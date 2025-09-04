@@ -4,7 +4,8 @@ import { Order } from "/imports/api/orders/OrdersCollection";
 
 interface SalesTrendsVisualizationProps {
   orders: Order[];
-dateRangeBounds: { start: Date | null; end: Date | null } | null;}
+  dateRangeBounds: { start: Date | null; end: Date | null } | null;
+}
 
 interface SalesDataPoint {
   period: string;
@@ -16,11 +17,11 @@ export const SalesTrendsVisualization: React.FC<SalesTrendsVisualizationProps> =
   orders,
   dateRangeBounds,
 }) => {
-const { start, end } = dateRangeBounds || { start: null, end: null };
+  const { start, end } = dateRangeBounds || { start: null, end: null };
 
   const salesData = useMemo(() => {
 
-     if (!orders || orders.length === 0) return [];
+    if (!orders || orders.length === 0) return [];
     let periods: string[] = [];
 
     if (start && end) {
@@ -41,7 +42,7 @@ const { start, end } = dateRangeBounds || { start: null, end: null };
       });
     }
 
-    
+
     // Group transactions by period
     const periodMap = new Map<string, SalesDataPoint>();
     periods.forEach((period) =>
@@ -94,7 +95,7 @@ const { start, end } = dateRangeBounds || { start: null, end: null };
       {/* Chart */}
       <div className="space-y-3">
         <h3 className="text-lg font-medium text-gray-700">
-          Sales Over Time 
+          Sales Over Time
         </h3>
 
         {salesData.some(d => d.totalSales > 0) ? (

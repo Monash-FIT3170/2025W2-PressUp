@@ -108,29 +108,29 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
 
 
   const overallMostPopular = useMemo<{ name: string; quantity: number }>(() => {
-  const itemMap = new Map<string, number>();
+    const itemMap = new Map<string, number>();
 
-  orders.forEach((order) => { 
-    if (!order.paid) return;
+    orders.forEach((order) => {
+      if (!order.paid) return;
 
-    order.menuItems.forEach((menuItem: OrderMenuItem) => {
-      itemMap.set(
-        menuItem.name,
-        (itemMap.get(menuItem.name) || 0) + menuItem.quantity
-      );
+      order.menuItems.forEach((menuItem: OrderMenuItem) => {
+        itemMap.set(
+          menuItem.name,
+          (itemMap.get(menuItem.name) || 0) + menuItem.quantity
+        );
+      });
     });
-  }); 
 
-  let mostPopular: { name: string; quantity: number } = { name: "", quantity: 0 };
+    let mostPopular: { name: string; quantity: number } = { name: "", quantity: 0 };
 
-  itemMap.forEach((quantity, name) => {
-    if (quantity > mostPopular.quantity) {
-      mostPopular = { name, quantity };
-    }
-  });
+    itemMap.forEach((quantity, name) => {
+      if (quantity > mostPopular.quantity) {
+        mostPopular = { name, quantity };
+      }
+    });
 
-  return mostPopular;
-}, [orders]);
+    return mostPopular;
+  }, [orders]);
 
   return (
     <div className="space-y-4">
