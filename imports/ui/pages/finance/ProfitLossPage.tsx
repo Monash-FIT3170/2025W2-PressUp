@@ -192,24 +192,39 @@ export const ProfitLossPage = () => {
 
   // Calculates expenses
   const processPurchaseOrderData = useCallback(
-    (
+    async (
       purchaseOrders: PurchaseOrder[],
-    ): {
+    ): Promise<{
       expenses: number;
       expenseItems: { label: string; amount: number; percentage: number }[];
-    } => {
+    }> => {
       const expensesBySupplier: { [key: string]: number } = {};
       let totalExpenses = 0;
 
-      purchaseOrders.forEach((purchaseOrder) => {
+      // Get supplier names for all purchase orders
+      for (const purchaseOrder of purchaseOrders) {
         const orderCost = purchaseOrder.totalCost;
         totalExpenses += orderCost;
 
-        const supplierKey =
-          purchaseOrder.supplier?.toString() || "Unknown Supplier"; // replace toString with .name when ids and names correctly match in database
+        let supplierKey = "Unknown Supplier";
+        if (purchaseOrder.supplier) {
+          try {
+            supplierKey = await Meteor.callAsync(
+              "suppliers.getNameById",
+              purchaseOrder.supplier.toString(),
+            );
+          } catch (error) {
+            console.warn(
+              `Failed to get supplier name for ID ${purchaseOrder.supplier}:`,
+              error,
+            );
+            supplierKey = "Unknown Supplier";
+          }
+        }
+
         expensesBySupplier[supplierKey] =
           (expensesBySupplier[supplierKey] || 0) + orderCost;
-      });
+      }
 
       const expenseItems = Object.keys(expensesBySupplier).map((supplier) => ({
         label: supplier,
@@ -223,10 +238,13 @@ export const ProfitLossPage = () => {
   );
 
   const processFinancialData = useCallback(
-    (orders: Order[], purchaseOrders: PurchaseOrder[]): FinancialData => {
+    async (
+      orders: Order[],
+      purchaseOrders: PurchaseOrder[],
+    ): Promise<FinancialData> => {
       const { revenue: totalRevenue, revenueItems } = processOrderData(orders);
       const { expenses: totalExpenses, expenseItems } =
-        processPurchaseOrderData(purchaseOrders);
+        await processPurchaseOrderData(purchaseOrders);
 
       const netProfit = totalRevenue - totalExpenses;
 
@@ -275,7 +293,7 @@ export const ProfitLossPage = () => {
         });
 
         // Uses filetered data to process
-        const processedData = processFinancialData(
+        const processedData = await processFinancialData(
           filteredOrderData,
           filteredPurchaseOrderData,
         );
