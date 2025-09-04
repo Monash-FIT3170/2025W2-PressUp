@@ -6,6 +6,9 @@ import { TablesCollection } from "/imports/api/tables/TablesCollection";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useNavigate } from "react-router";
+import { Roles } from "meteor/alanning:roles";
+import { RoleEnum } from "/imports/api/accounts/roles";
+import { Hide } from "../../components/display/Hide";
 import { ConfirmModal } from "../../components/ConfirmModal";
 
 // -------- Seat positioning helper --------
@@ -181,6 +184,13 @@ export const TablesPage = () => {
     markChanged();
   };
 
+  const rolesLoaded = useSubscribe("users.roles")();
+  const rolesGraphLoaded = useSubscribe("users.rolesGraph")();
+  const canEditLayout = useTracker(
+    () => Roles.userIsInRole(Meteor.userId(), [RoleEnum.MANAGER]),
+    [rolesLoaded, rolesGraphLoaded],
+  );
+
   // -------- GridCell --------
   const GridCell = ({
     table,
@@ -253,6 +263,13 @@ export const TablesPage = () => {
 
   // -------- Edit mode handling --------
   const enterEditMode = () => {
+    if (!Roles.userIsInRole(Meteor.userId(), [RoleEnum.MANAGER])) {
+      throw new Meteor.Error(
+        "invalid-permissions",
+        "No permissions to edit table layout.",
+      );
+    }
+
     setOriginalGrid(JSON.parse(JSON.stringify(grid)));
     setEditMode(true);
     setHasChanges(false);
@@ -331,13 +348,15 @@ export const TablesPage = () => {
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={enterEditMode}
-                  style={{ backgroundColor: "#1e032e", color: "#fff" }}
-                  className="px-4 py-1 rounded hover:bg-[#6f597b]"
-                >
-                  Enter Edit Mode
-                </button>
+                <Hide hide={!canEditLayout}>
+                  <button
+                    onClick={enterEditMode}
+                    style={{ backgroundColor: "#1e032e", color: "#fff" }}
+                    className="px-4 py-1 rounded hover:bg-[#6f597b]"
+                  >
+                    Enter Edit Mode
+                  </button>
+                </Hide>
               ))}
             {/* Legend - always visible */}
             <div className="flex gap-4 ml-6">

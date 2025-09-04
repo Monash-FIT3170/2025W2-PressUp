@@ -6,6 +6,9 @@ import { PaymentModal } from "./PaymentModal";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Order, OrdersCollection, TablesCollection } from "/imports/api";
 import { IdType } from "/imports/api/database";
+import { Roles } from "meteor/alanning:roles";
+import { RoleEnum } from "/imports/api/accounts/roles";
+import { Hide } from "./display/Hide";
 import { useNavigate, useLocation } from "react-router";
 
 interface PosSideMenuProps {
@@ -61,7 +64,7 @@ export const PosSideMenu = ({
       return null;
     }
     if (orderType === "takeaway" && selectedTakeawayId) {
-      return OrdersCollection.findOne(selectedTakeawayId as any) ?? null;
+      return OrdersCollection.findOne(selectedTakeawayId as string) ?? null;
     }
     return null;
   }, [orderType, selectedTable, selectedTakeawayId]);
@@ -125,10 +128,11 @@ export const PosSideMenu = ({
 
   useEffect(() => {
     onActiveOrderChange?.(order?._id ?? null);
-  }, [order?._id]);
+  }, [order?._id, onActiveOrderChange]);
 
   // Discount handlers
   const applyPercentDiscount = (percentage: number | string) => {
+    if (order?.isLocked) return;
     const percent =
       typeof percentage === "string" ? parseInt(percentage, 10) : percentage;
     if (isNaN(percent) || percent < 1 || percent > 100) return;
@@ -147,6 +151,7 @@ export const PosSideMenu = ({
   };
 
   const applyFlatDiscount = (amount: number | string) => {
+    if (order?.isLocked) return;
     const amt = typeof amount === "string" ? parseFloat(amount) : amount;
     if (isNaN(amt) || amt <= 0) return;
     setDiscountAmount(amt);
@@ -191,6 +196,7 @@ export const PosSideMenu = ({
   };
 
   const removePercentDiscount = () => {
+    if (order?.isLocked) return;
     setDiscountPercent(0);
     setDiscountPercent2("");
     setOpenDiscountPopup(false);
@@ -206,6 +212,7 @@ export const PosSideMenu = ({
   };
 
   const removeFlatDiscount = () => {
+    if (order?.isLocked) return;
     setDiscountAmount(0);
     setDiscountAmount2("");
     setOpenDiscountPopup(false);
@@ -238,6 +245,13 @@ export const PosSideMenu = ({
     params.set("tableNo", String(selected));
     navigate(`${location.pathname}?${params.toString()}`);
   };
+
+  const rolesLoaded = useSubscribe("users.roles")();
+  const rolesGraphLoaded = useSubscribe("users.rolesGraph")();
+  const canLockOrder = useTracker(
+    () => Roles.userIsInRole(Meteor.userId(), [RoleEnum.MANAGER]),
+    [rolesLoaded, rolesGraphLoaded],
+  );
 
   return (
     <div className="w-64 h-[75vh] flex flex-col">
@@ -306,399 +320,445 @@ export const PosSideMenu = ({
               </select>
             </div>
           )}
-        </div>
-      </div>
-      {/* Items */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
-        {displayedItems.length > 0 ? (
-          displayedItems.map((item, idx) => {
-            const qty = item.quantity ?? 1;
-            const price = item.price;
-            return (
-              <div
-                key={idx}
-                className="bg-white p-4 rounded-md shadow-md space-y-2"
-              >
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-800">
-                    {item.name}
-                  </span>
-                  <span className="font-semibold text-gray-800">
-                    ${(price * qty).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => item._id && onDecrease(item._id)}
-                    className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
-                  >
-                    –
-                  </button>
-                  <span>{qty}</span>
-                  <button
-                    onClick={() => item._id && onIncrease(item._id)}
-                    className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
-                  >
-                    ＋
-                  </button>
-                  <button
-                    onClick={() => item._id && onDelete(item._id)}
-                    className="text-red-500 hover:text-red-700 text-lg font-bold"
-                  >
-                    🗑
-                  </button>
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          <div className="p-4 text-center text-gray-500">
-            {selectedTable != null &&
-            tables.find((t) => t.tableNo === selectedTable)?.isOccupied &&
-            !tables.find((t) => t.tableNo === selectedTable)?.activeOrderID ? (
-              /* dine-in empty: show "start new order for table" card (keep as-is) */
-              <div className="bg-yellow-100 p-4 rounded-md space-y-2">
-                <p className="font-bold text-gray-800 mb-2">
-                  No active orders for this table.
-                </p>
-                <button
-                  onClick={async () => {
-                    try {
-                      console.log("Creating order for table:", selectedTable);
-                      const dbTable = tables.find(
-                        (t) => t.tableNo === selectedTable,
-                      );
-                      if (!dbTable || !dbTable._id) {
-                        alert("Could not find table in database.");
-                        return;
-                      }
 
-                      const orderId = await Meteor.callAsync(
-                        "orders.addOrder",
-                        {
-                          tableNo: selectedTable,
-                          menuItems: [],
-                          totalPrice: 0,
-                          createdAt: new Date(),
-                          orderStatus: "pending",
-                          paid: false,
-                        },
-                      );
-
-                      await Meteor.callAsync(
-                        "tables.addOrder",
-                        dbTable._id,
-                        orderId,
-                      );
-
-                      console.log("Order created:", orderId);
-                    } catch (err) {
-                      console.error("Error adding order:", err);
-                      alert("Failed to add order. Check console for details.");
-                    }
-                  }}
-                  disabled={
-                    !!tables.find(
-                      (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
-                    )
-                  }
-                  className={`px-4 py-2 rounded font-bold text-white ${
-                    tables.find(
-                      (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
-                    )
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-press-up-positive-button hover:bg-press-up-hover"
-                  }`}
-                >
-                  Start a new order?
-                </button>
-              </div>
-            ) : orderType === "takeaway" && !selectedTakeawayId ? (
-              /* takeaway empty + no selected order: show helper */
-              <div className="bg-yellow-100 p-4 rounded-md space-y-2">
-                <p className="font-bold text-gray-800 mb-2">
-                  No active takeaway order.
-                </p>
-                <p className="text-sm text-gray-700">
-                  Use the button below to start.
-                </p>
-              </div>
-            ) : (
-              /* takeaway with an order selected but no items: show nothing (so the user can add from menu) */
-              <span className="sr-only">{/* keep area clean */}</span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div className="bg-press-up-purple text-white p-4 flex-shrink-0">
-        {/* Displaying total cost*/}
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-lg font-bold">Total</span>
-          <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span>
-        </div>
-
-        {/* Displaying discount infomation*/}
-        {discountPercent !== 0 && (
-          <div className="flex justify-between items-center mb-2 bg-blue-200 text-black text-sm rounded-lg p-1">
-            <span className="text-sm font-bold">
-              Percent Discount: {discountPercent}%
-            </span>
-          </div>
-        )}
-        {discountAmount !== 0 && (
-          <div className="flex justify-between items-center mb-2 bg-purple-200 text-black text-sm rounded-lg p-1">
-            <span className="text-sm font-bold">
-              Flat Discount: ${discountAmount}
-            </span>
-          </div>
-        )}
-        {savedAmount !== 0 && (
-          <div className="flex justify-between items-center mb-2 bg-yellow-200 text-black text-sm rounded-lg p-1">
-            <span className="text-sm font-bold">
-              Cost Saved: - ${savedAmount.toFixed(2)}
-            </span>
-          </div>
-        )}
-
-        {/* Discount button */}
-        <button
-          className="w-full bg-[#1e032e] hover:bg-press-up-hover text-[#f3ead0] font-bold py-2 px-4 rounded-full mb-2"
-          onClick={() => {
-            setOpenDiscountPopup(true);
-            setDiscountPopupScreen("menu");
-          }}
-        >
-          Discount
-        </button>
-        {/* [ADD] Start new takeaway order (below Discount) */}
-        {orderType === "takeaway" && (
-          <button
-            // full width, sits right under Discount button
-            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-full mb-2"
-            onClick={async () => {
-              try {
-                // create a fresh takeaway order
-                const newId = await Meteor.callAsync("orders.addOrder", {
-                  orderType: "takeaway",
-                  tableNo: null,
-                  menuItems: [],
-                  totalPrice: 0,
-                  createdAt: new Date(),
-                  orderStatus: "pending",
-                  paid: false,
+          {/* Lock button (managers only) */}
+          <Hide hide={!canLockOrder}>
+            <button
+              className="text-2xl font-bold absolute right-0"
+              onClick={async () => {
+                if (!order?._id) return;
+                await new Promise((resolve, reject) => {
+                  Meteor.call(
+                    "orders.setLocked",
+                    order._id,
+                    !order.isLocked,
+                    (err: unknown) =>
+                      err ? reject(err as Error) : resolve(undefined),
+                  );
                 });
-                setSelectedTakeawayId(String(newId)); // select the new order immediately
-                onActiveOrderChange?.(String(newId));
-              } catch (e) {
-                console.error(e);
-                alert("Failed to create takeaway order.");
-              }
-            }}
-          >
-            Start new order
-          </button>
-        )}
-        {/* Discount Popup */}
-        {openDiscountPopup && (
-          <div>
-            {/* Overlay for Popup */}
-            <div
-              className="fixed inset-0 bg-gray-700/40 z-40"
-              onClick={() => setOpenDiscountPopup(false)}
-            />
-            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-press-up-purple rounded-2xl z-50 shadow-2xl">
-              <div className="flex flex-row justify-between mx-5 my-5">
-                <h1 className="font-bold text-2xl text-gray-800">
-                  Apply Discount
-                </h1>
-                <button
-                  className="bg-red-700 rounded-2xl w-8"
-                  onClick={() => {
-                    setOpenDiscountPopup(false);
-                    setDiscountPopupScreen("menu");
-                  }}
+              }}
+              title={order?.isLocked ? "Unlock order" : "Lock order"}
+            >
+              {order?.isLocked ? "🔒" : "🔓"}
+            </button>
+          </Hide>
+        </div>
+      </div>
+      {/* Items + Footer (wrapped so we can overlay when locked) */}
+      <div className="relative flex-1 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
+          {displayedItems.length > 0 ? (
+            displayedItems.map((item, idx) => {
+              const qty = item.quantity ?? 1;
+              const price = item.price;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white p-4 rounded-md shadow-md space-y-2"
                 >
-                  X
-                </button>
-              </div>
-              {/* Discount Popup - Menu */}
-              {discountPopupScreen === "menu" && (
-                <div className="w-180 h-108 bg-purple-100 rounded-2xl mx-10 px-8 py-2 mb-10 shadow-md">
-                  <div className="px-2 py-4">
-                    <div className="flex flex-row justify-between">
-                      <span className="font-bold text-2xl text-gray-800 rounded-full py-2">
-                        Discount Options
-                      </span>
-                      {discountPercent !== 0 && (
-                        <div className="flex justify-between items-center mb-2 bg-blue-300 text-black text-sm rounded-lg p-2 px-4">
-                          <span className="text-sm font-bold">
-                            Percentage Discount (%): {discountPercent}%
-                          </span>
-                        </div>
-                      )}
-                      {discountAmount !== 0 && (
-                        <div className="flex justify-between items-center mb-2 bg-purple-300 text-black text-sm rounded-lg p-2">
-                          <span className="text-sm font-bold">
-                            Flat Discount ($): ${discountAmount}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-center mt-7">
-                      <button
-                        className="bg-blue-300 hover:bg-blue-200 font-bold text-gray-700 text-xl py-4 rounded text-center w-full my-4 rounded-full shadow-lg"
-                        onClick={() => setDiscountPopupScreen("percentage")}
-                      >
-                        Percentage Discount (%)
-                      </button>
-                      <button
-                        className="bg-purple-400 hover:bg-purple-300 font-bold text-gray-700 text-xl py-4 rounded text-center w-full my-4 rounded-full shadow-lg"
-                        onClick={() => setDiscountPopupScreen("flat")}
-                      >
-                        Flat Discount ($)
-                      </button>
-                      <div className="flex flex-row w-full justify-between">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-gray-800">
+                      {item.name}
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      ${(price * qty).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => item._id && onDecrease(item._id)}
+                      className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
+                      disabled={Boolean(order?.isLocked)}
+                    >
+                      –
+                    </button>
+                    <span>{qty}</span>
+                    <button
+                      onClick={() => item._id && onIncrease(item._id)}
+                      className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
+                      disabled={Boolean(order?.isLocked)}
+                    >
+                      ＋
+                    </button>
+                    <button
+                      onClick={() => item._id && onDelete(item._id)}
+                      className="text-red-500 hover:text-red-700 text-lg font-bold"
+                      disabled={Boolean(order?.isLocked)}
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-4 text-center text-gray-500">
+              {selectedTable != null &&
+              tables.find((t) => t.tableNo === selectedTable)?.isOccupied &&
+              !tables.find((t) => t.tableNo === selectedTable)
+                ?.activeOrderID ? (
+                /* dine-in empty: show "start new order for table" card (keep as-is) */
+                <div className="bg-yellow-100 p-4 rounded-md space-y-2">
+                  <p className="font-bold text-gray-800 mb-2">
+                    No active orders for this table.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      try {
+                        console.log("Creating order for table:", selectedTable);
+                        const dbTable = tables.find(
+                          (t) => t.tableNo === selectedTable,
+                        );
+                        if (!dbTable || !dbTable._id) {
+                          alert("Could not find table in database.");
+                          return;
+                        }
+
+                        const orderId = await Meteor.callAsync(
+                          "orders.addOrder",
+                          {
+                            tableNo: selectedTable,
+                            menuItems: [],
+                            totalPrice: 0,
+                            createdAt: new Date(),
+                            orderStatus: "pending",
+                            paid: false,
+                          },
+                        );
+
+                        await Meteor.callAsync(
+                          "tables.addOrder",
+                          dbTable._id,
+                          orderId,
+                        );
+
+                        console.log("Order created:", orderId);
+                      } catch (err) {
+                        console.error("Error adding order:", err);
+                        alert(
+                          "Failed to add order. Check console for details.",
+                        );
+                      }
+                    }}
+                    disabled={
+                      !!tables.find(
+                        (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
+                      )
+                    }
+                    className={`px-4 py-2 rounded font-bold text-white ${
+                      tables.find(
+                        (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
+                      )
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-press-up-positive-button hover:bg-press-up-hover"
+                    }`}
+                  >
+                    Start a new order?
+                  </button>
+                </div>
+              ) : orderType === "takeaway" && !selectedTakeawayId ? (
+                /* takeaway empty + no selected order: show helper */
+                <div className="bg-yellow-100 p-4 rounded-md space-y-2">
+                  <p className="font-bold text-gray-800 mb-2">
+                    No active takeaway order.
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    Use the button below to start.
+                  </p>
+                </div>
+              ) : (
+                /* takeaway with an order selected but no items: show nothing (so the user can add from menu) */
+                <span className="sr-only">{/* keep area clean */}</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="bg-press-up-purple text-white p-4 flex-shrink-0">
+          {/* Displaying total cost*/}
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-lg font-bold">Total</span>
+            <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span>
+          </div>
+
+          {/* Displaying discount infomation*/}
+          {discountPercent !== 0 && (
+            <div className="flex justify-between items-center mb-2 bg-blue-200 text-black text-sm rounded-lg p-1">
+              <span className="text-sm font-bold">
+                Percent Discount: {discountPercent}%
+              </span>
+            </div>
+          )}
+          {discountAmount !== 0 && (
+            <div className="flex justify-between items-center mb-2 bg-purple-200 text-black text-sm rounded-lg p-1">
+              <span className="text-sm font-bold">
+                Flat Discount: ${discountAmount}
+              </span>
+            </div>
+          )}
+          {savedAmount !== 0 && (
+            <div className="flex justify-between items-center mb-2 bg-yellow-200 text-black text-sm rounded-lg p-1">
+              <span className="text-sm font-bold">
+                Cost Saved: - ${savedAmount.toFixed(2)}
+              </span>
+            </div>
+          )}
+
+          {/* Discount button */}
+          <button
+            className="w-full bg-[#1e032e] hover:bg-press-up-hover text-[#f3ead0] font-bold py-2 px-4 rounded-full mb-2"
+            onClick={() => {
+              if (order?.isLocked) return;
+              setOpenDiscountPopup(true);
+              setDiscountPopupScreen("menu");
+            }}
+            disabled={Boolean(order?.isLocked)}
+          >
+            Discount
+          </button>
+          {/* [ADD] Start new takeaway order (below Discount) */}
+          {orderType === "takeaway" && (
+            <button
+              // full width, sits right under Discount button
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-full mb-2"
+              onClick={async () => {
+                try {
+                  // create a fresh takeaway order
+                  const newId = await Meteor.callAsync("orders.addOrder", {
+                    orderType: "takeaway",
+                    tableNo: null,
+                    menuItems: [],
+                    totalPrice: 0,
+                    createdAt: new Date(),
+                    orderStatus: "pending",
+                    paid: false,
+                  });
+                  setSelectedTakeawayId(String(newId)); // select the new order immediately
+                  onActiveOrderChange?.(String(newId));
+                } catch (e) {
+                  console.error(e);
+                  alert("Failed to create takeaway order.");
+                }
+              }}
+            >
+              Start new order
+            </button>
+          )}
+          {/* Discount Popup */}
+          {openDiscountPopup && (
+            <div>
+              {/* Overlay for Popup */}
+              <div
+                className="fixed inset-0 bg-gray-700/40 z-40"
+                onClick={() => setOpenDiscountPopup(false)}
+              />
+              <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-press-up-purple rounded-2xl z-50 shadow-2xl">
+                <div className="flex flex-row justify-between mx-5 my-5">
+                  <h1 className="font-bold text-2xl text-gray-800">
+                    Apply Discount
+                  </h1>
+                  <button
+                    className="bg-red-700 rounded-2xl w-8"
+                    onClick={() => {
+                      setOpenDiscountPopup(false);
+                      setDiscountPopupScreen("menu");
+                    }}
+                    disabled={Boolean(order?.isLocked)}
+                  >
+                    X
+                  </button>
+                </div>
+                {/* Discount Popup - Menu */}
+                {discountPopupScreen === "menu" && (
+                  <div className="w-180 h-108 bg-purple-100 rounded-2xl mx-10 px-8 py-2 mb-10 shadow-md">
+                    <div className="px-2 py-4">
+                      <div className="flex flex-row justify-between">
+                        <span className="font-bold text-2xl text-gray-800 rounded-full py-2">
+                          Discount Options
+                        </span>
+                        {discountPercent !== 0 && (
+                          <div className="flex justify-between items-center mb-2 bg-blue-300 text-black text-sm rounded-lg p-2 px-4">
+                            <span className="text-sm font-bold">
+                              Percentage Discount (%): {discountPercent}%
+                            </span>
+                          </div>
+                        )}
+                        {discountAmount !== 0 && (
+                          <div className="flex justify-between items-center mb-2 bg-purple-300 text-black text-sm rounded-lg p-2">
+                            <span className="text-sm font-bold">
+                              Flat Discount ($): ${discountAmount}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-center mt-7">
                         <button
-                          className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xl py-4 my-4 px-6 rounded-full shadow-lg"
-                          onClick={() => {
-                            removePercentDiscount();
-                          }}
+                          className="bg-blue-300 hover:bg-blue-200 font-bold text-gray-700 text-xl py-4 rounded text-center w-full my-4 rounded-full shadow-lg"
+                          onClick={() => setDiscountPopupScreen("percentage")}
                         >
-                          Reset Percentage Discount (%)
+                          Percentage Discount (%)
                         </button>
                         <button
-                          className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xl py-4 my-4 px-8 rounded-full shadow-lg"
-                          onClick={() => {
-                            removeFlatDiscount();
-                          }}
+                          className="bg-purple-400 hover:bg-purple-300 font-bold text-gray-700 text-xl py-4 rounded text-center w-full my-4 rounded-full shadow-lg"
+                          onClick={() => setDiscountPopupScreen("flat")}
                         >
-                          Reset Flat Discount ($)
+                          Flat Discount ($)
+                        </button>
+                        <div className="flex flex-row w-full justify-between">
+                          <button
+                            className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xl py-4 my-4 px-6 rounded-full shadow-lg"
+                            onClick={() => {
+                              removePercentDiscount();
+                            }}
+                          >
+                            Reset Percentage Discount (%)
+                          </button>
+                          <button
+                            className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xl py-4 my-4 px-8 rounded-full shadow-lg"
+                            onClick={() => {
+                              removeFlatDiscount();
+                            }}
+                          >
+                            Reset Flat Discount ($)
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Discount Popup - Percentage Discount */}
+                {discountPopupScreen === "percentage" && (
+                  <div className="w-180 h-108 bg-blue-100 rounded-2xl mx-10 px-8 py-8 mb-10 shadow-md">
+                    <div className="flex flex-row justify-between">
+                      <span className="font-bold text-2xl text-black rounded-full whitespace-nowrap">
+                        Apply Percentage Discount (%)
+                      </span>
+                      <button
+                        className="text-xl text-white font-bold rounded-full bg-press-up-purple hover:bg-purple-400 px-3 py-2 shadow-md"
+                        onClick={() => setDiscountPopupScreen("menu")}
+                      >
+                        ← Back
+                      </button>
+                    </div>
+                    <div className="mt-4">
+                      <span className="font-bold text-xl text-gray-700">
+                        Select Discount Percentage
+                      </span>
+                      <div className="grid grid-cols-4 gap-1 my-2">
+                        {[5, 10, 25, 50].map((d) => (
+                          <button
+                            key={d}
+                            className="bg-blue-700 hover:bg-blue-600 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full shadow-md"
+                            onClick={() => applyPercentDiscount(d)}
+                          >
+                            {d}%
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex flex-col my-8">
+                        <span className="mb-2 font-bold text-xl text-gray-700">
+                          Enter Discount Percentage (%)
+                        </span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={100}
+                          step={1}
+                          value={discountPercent2}
+                          onChange={handleDiscountPercent2Change}
+                          className="px-4 py-3 w-full text-xl h-12 w-64 bg-white border border-gray-300 text-black rounded focus:outline-none focus:ring-2 focus:ring-pink-300"
+                        />
+                        <button
+                          className="bg-blue-700 hover:bg-blue-600 font-bold text-white text-xl py-2 rounded text-center mr-130 my-4 rounded-full shadow-md"
+                          onClick={() => applyPercentDiscount(discountPercent2)}
+                        >
+                          Apply
                         </button>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Discount Popup - Percentage Discount */}
-              {discountPopupScreen === "percentage" && (
-                <div className="w-180 h-108 bg-blue-100 rounded-2xl mx-10 px-8 py-8 mb-10 shadow-md">
-                  <div className="flex flex-row justify-between">
-                    <span className="font-bold text-2xl text-black rounded-full whitespace-nowrap">
-                      Apply Percentage Discount (%)
-                    </span>
-                    <button
-                      className="text-xl text-white font-bold rounded-full bg-press-up-purple hover:bg-purple-400 px-3 py-2 shadow-md"
-                      onClick={() => setDiscountPopupScreen("menu")}
-                    >
-                      ← Back
-                    </button>
-                  </div>
-                  <div className="mt-4">
-                    <span className="font-bold text-xl text-gray-700">
-                      Select Discount Percentage
-                    </span>
-                    <div className="grid grid-cols-4 gap-1 my-2">
-                      {[5, 10, 25, 50].map((d) => (
-                        <button
-                          key={d}
-                          className="bg-blue-700 hover:bg-blue-600 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full shadow-md"
-                          onClick={() => applyPercentDiscount(d)}
-                        >
-                          {d}%
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex flex-col my-8">
-                      <span className="mb-2 font-bold text-xl text-gray-700">
-                        Enter Discount Percentage (%)
+                {/* Discount Popup - Flat Discount */}
+                {discountPopupScreen === "flat" && (
+                  <div className="w-180 h-108 bg-purple-200 rounded-2xl mx-10 px-8 py-8 mb-10 shadow-md">
+                    <div className="flex flex-row justify-between">
+                      <span className="font-bold text-2xl text-black rounded-full whitespace-nowrap">
+                        Apply Flat Discount ($)
                       </span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={100}
-                        step={1}
-                        value={discountPercent2}
-                        onChange={handleDiscountPercent2Change}
-                        className="px-4 py-3 w-full text-xl h-12 w-64 bg-white border border-gray-300 text-black rounded focus:outline-none focus:ring-2 focus:ring-pink-300"
-                      />
                       <button
-                        className="bg-blue-700 hover:bg-blue-600 font-bold text-white text-xl py-2 rounded text-center mr-130 my-4 rounded-full shadow-md"
-                        onClick={() => applyPercentDiscount(discountPercent2)}
+                        className="text-xl text-white font-bold rounded-full bg-press-up-purple hover:bg-purple-400 px-3 py-2 shadow-md"
+                        onClick={() => setDiscountPopupScreen("menu")}
                       >
-                        Apply
+                        ← Back
                       </button>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Discount Popup - Flat Discount */}
-              {discountPopupScreen === "flat" && (
-                <div className="w-180 h-108 bg-purple-200 rounded-2xl mx-10 px-8 py-8 mb-10 shadow-md">
-                  <div className="flex flex-row justify-between">
-                    <span className="font-bold text-2xl text-black rounded-full whitespace-nowrap">
-                      Apply Flat Discount ($)
-                    </span>
-                    <button
-                      className="text-xl text-white font-bold rounded-full bg-press-up-purple hover:bg-purple-400 px-3 py-2 shadow-md"
-                      onClick={() => setDiscountPopupScreen("menu")}
-                    >
-                      ← Back
-                    </button>
-                  </div>
-                  <div className="mt-4">
-                    <span className="font-bold text-xl text-gray-700">
-                      Select Discount Amount
-                    </span>
-                    <div className="grid grid-cols-4 gap-1 my-2">
-                      {[5, 10, 15, 20].map((d) => (
-                        <button
-                          key={d}
-                          className="bg-purple-700 hover:bg-purple-600 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full shadow-md"
-                          onClick={() => applyFlatDiscount(d)}
-                        >
-                          ${d}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex flex-col my-8">
-                      <span className="mb-2 font-bold text-xl text-gray-700">
-                        Enter Discount Amount ($)
+                    <div className="mt-4">
+                      <span className="font-bold text-xl text-gray-700">
+                        Select Discount Amount
                       </span>
-                      <input
-                        type="number"
-                        min={0.01}
-                        step={0.01}
-                        value={discountAmount2}
-                        onChange={handleDiscountAmount2Change}
-                        className="px-4 py-3 w-full text-xl h-12 w-64 bg-white border border-gray-300 text-black rounded focus:outline-none focus:ring-2 focus:ring-pink-300"
-                      />
-                      <button
-                        className="bg-purple-700 hover:bg-purple-600 font-bold text-white text-xl py-2 rounded text-center mr-130 my-4 rounded-full shadow-md"
-                        onClick={() => applyFlatDiscount(discountAmount2)}
-                      >
-                        Apply
-                      </button>
+                      <div className="grid grid-cols-4 gap-1 my-2">
+                        {[5, 10, 15, 20].map((d) => (
+                          <button
+                            key={d}
+                            className="bg-purple-700 hover:bg-purple-600 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full shadow-md"
+                            onClick={() => applyFlatDiscount(d)}
+                          >
+                            ${d}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex flex-col my-8">
+                        <span className="mb-2 font-bold text-xl text-gray-700">
+                          Enter Discount Amount ($)
+                        </span>
+                        <input
+                          type="number"
+                          min={0.01}
+                          step={0.01}
+                          value={discountAmount2}
+                          onChange={handleDiscountAmount2Change}
+                          className="px-4 py-3 w-full text-xl h-12 w-64 bg-white border border-gray-300 text-black rounded focus:outline-none focus:ring-2 focus:ring-pink-300"
+                        />
+                        <button
+                          className="bg-purple-700 hover:bg-purple-600 font-bold text-white text-xl py-2 rounded text-center mr-130 my-4 rounded-full shadow-md"
+                          onClick={() => applyFlatDiscount(discountAmount2)}
+                        >
+                          Apply
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Pay button */}
-        {order && (
-          <PaymentModal
-            tableNo={
-              order.orderType === "dine-in" ? (order.tableNo ?? null) : null
-            }
-            order={order}
-          />
-        )}
+          {/* Pay button */}
+          {order && (
+            <PaymentModal
+              tableNo={
+                order.orderType === "dine-in" ? (order.tableNo ?? null) : null
+              }
+              order={order}
+            />
+          )}
+
+          {/* Locked overlay */}
+          {order?.isLocked && (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/50 text-white p-4">
+              <div className="text-5xl">🔒</div>
+              <div className="mt-2 text-lg font-bold text-center">
+                Order locked: edits disabled
+              </div>
+              <div className="mt-1 text-sm opacity-90 text-center">
+                Only managers can unlock this order
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

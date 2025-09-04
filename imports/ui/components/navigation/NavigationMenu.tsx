@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { Pill } from "../Pill";
 import { ArrowLeft } from "../symbols/navigation/Arrows";
-import { Roles } from "meteor/alanning:roles";
-import { RoleEnum } from "/imports/api/accounts/roles";
 import {
   PencilIcon,
   StockIcon,
@@ -24,20 +22,12 @@ import {
   Users,
   ChartNoAxesCombined,
 } from "lucide-react";
-import { Meteor } from "meteor/meteor";
 
 interface NavigationMenuProps {
   show: boolean;
 }
 
 export const NavigationMenu = ({ show }: NavigationMenuProps) => {
-  Meteor.subscribe("users.all");
-  Meteor.subscribe("users.roles");
-  const currentUserRole = Roles.getRolesForUser(Meteor.userId());
-  const isAdminOrManager =
-    currentUserRole.includes(RoleEnum.ADMIN) ||
-    currentUserRole.includes(RoleEnum.MANAGER);
-
   return (
     <div
       className={`bg-press-up-purple min-h-full transition-all ease-in-out duration-300 ${
@@ -45,41 +35,39 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
       } overflow-hidden flex flex-col h-60`}
     >
       <div className="flex-1 overflow-y-auto p-6 text-lg">
-        {isAdminOrManager && (
+        <NavigationEntry
+          icon={<DollarSign />}
+          name="Finance"
+          path="/finance"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        >
           <NavigationEntry
-            icon={<DollarSign />}
-            name="Finance"
-            path="/finance"
-            selectionType={NavigationEntrySelection.HIGHLIGHT}
-          >
-            <NavigationEntry
-              icon={<Clipboard />}
-              name="P/L Reporting"
-              path="/finance/profit-loss"
-              selectionType={NavigationEntrySelection.ARROW}
-            />
+            icon={<Clipboard />}
+            name="P/L Reporting"
+            path="/finance/profit-loss"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
 
-            <NavigationEntry
-              icon={<PenTool />}
-              name="Tax Management"
-              path="/finance/tax"
-              selectionType={NavigationEntrySelection.ARROW}
-            />
+          <NavigationEntry
+            icon={<PenTool />}
+            name="Tax Management"
+            path="/finance/tax"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
 
-            <NavigationEntry
-              icon={<Folder />}
-              name="Expense Tracking"
-              path="/finance/Expenses"
-              selectionType={NavigationEntrySelection.ARROW}
-            />
-              <NavigationEntry
+          <NavigationEntry
+            icon={<Folder />}
+            name="Expense Tracking"
+            path="/finance/Expenses"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+          <NavigationEntry
             icon={<ChartNoAxesCombined />}
             name="Analytics & Reporting"
             path="/finance/analytics"
             selectionType={NavigationEntrySelection.ARROW}
           />
-          </NavigationEntry>
-        )}
+        </NavigationEntry>
         <NavigationEntry
           icon={<PencilIcon fill="var(--color-press-up-grey)" />}
           name="Inventory Management"
