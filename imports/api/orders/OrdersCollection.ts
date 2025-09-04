@@ -21,6 +21,7 @@ export interface Order extends DBEntry {
   orderStatus: OrderStatus;
   paid: boolean;
   seats?: number;
+  isLocked?: boolean;
 }
 
 export enum OrderStatus {

@@ -242,7 +242,7 @@ export const TablesPage = () => {
     if (!Roles.userIsInRole(Meteor.userId(), [RoleEnum.MANAGER])) {
       throw new Meteor.Error(
         "invalid-permissions",
-        "No permissions to edit table layour.",
+        "No permissions to edit table layout.",
       );
     }
 

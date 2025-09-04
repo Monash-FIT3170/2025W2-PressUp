@@ -4,6 +4,7 @@ import { OrderMenuItem } from "/imports/api/orders/OrdersCollection";
 import { PaymentModal } from "./PaymentModal";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Order, OrdersCollection } from "/imports/api";
+import { Meteor } from "meteor/meteor";
 import { IdType } from "/imports/api/database";
 
 interface PosSideMenuProps {
@@ -97,6 +98,7 @@ export const PosSideMenu = ({
 
   // Discount handlers
   const applyPercentDiscount = (percentage: number | string) => {
+  if (order?.isLocked) return;
     const percent =
       typeof percentage === "string" ? parseInt(percentage, 10) : percentage;
     if (isNaN(percent) || percent < 1 || percent > 100) return;
@@ -115,6 +117,7 @@ export const PosSideMenu = ({
   };
 
   const applyFlatDiscount = (amount: number | string) => {
+  if (order?.isLocked) return;
     const amt = typeof amount === "string" ? parseFloat(amount) : amount;
     if (isNaN(amt) || amt <= 0) return;
     setDiscountAmount(amt);
@@ -159,6 +162,7 @@ export const PosSideMenu = ({
   };
 
   const removePercentDiscount = () => {
+  if (order?.isLocked) return;
     setDiscountPercent(0);
     setDiscountPercent2("");
     setOpenDiscountPopup(false);
@@ -174,6 +178,7 @@ export const PosSideMenu = ({
   };
 
   const removeFlatDiscount = () => {
+  if (order?.isLocked) return;
     setDiscountAmount(0);
     setDiscountAmount2("");
     setOpenDiscountPopup(false);
@@ -259,8 +264,25 @@ export const PosSideMenu = ({
             <span className="text-lg font-semibold">Takeaway Order</span>
           )}
 
-          {/* Close button */}
-          <button className="text-2xl font-bold absolute right-0">×</button>
+          {/* Lock button (managers only) */}
+          
+            <button
+              className="text-2xl font-bold absolute right-0"
+              onClick={async () => {
+                if (!order?._id) return;
+                  await new Promise((resolve, reject) => {
+                    Meteor.call(
+                      "orders.setLocked",
+                      order._id,
+                      !order.isLocked,
+                      (err: any) => (err ? reject(err) : resolve(undefined)),
+                    );
+                  });
+              }}
+              title={order?.isLocked ? "Unlock order" : "Lock order"}
+            >
+              {order?.isLocked ? "🔒" : "🔓"}
+            </button>
         </div>
       </div>
       {/* Items */}
@@ -295,6 +317,7 @@ export const PosSideMenu = ({
                     onClick={() => itemId && onDecrease(itemId)}
                     className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
                     title="Decrease Item"
+                    disabled={Boolean(order?.isLocked)}
                   >
                     –
                   </button>
@@ -303,6 +326,7 @@ export const PosSideMenu = ({
                     onClick={() => itemId && onIncrease(itemId)}
                     className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
                     title="Increase Item"
+                    disabled={Boolean(order?.isLocked)}
                   >
                     ＋
                   </button>
@@ -311,6 +335,7 @@ export const PosSideMenu = ({
                     onClick={() => itemId && handleDelete(itemId)}
                     className="text-red-500 hover:text-red-700 text-lg font-bold"
                     title="Remove Item"
+                    disabled={Boolean(order?.isLocked)}
                   >
                     🗑
                   </button>
@@ -359,9 +384,11 @@ export const PosSideMenu = ({
         <button
           className="w-full bg-[#1e032e] hover:bg-press-up-hover text-[#f3ead0] font-bold py-2 px-4 rounded-full mb-2"
           onClick={() => {
+            if (order?.isLocked) return;
             setOpenDiscountPopup(true);
             setDiscountPopupScreen("menu");
           }}
+          disabled={Boolean(order?.isLocked)}
         >
           Discount
         </button>

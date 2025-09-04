@@ -45,6 +45,7 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
       <button
         onClick={openModal}
         className="w-full bg-press-up-positive-button hover:bg-press-up-hover text-white font-bold py-2 px-4 rounded-full"
+        disabled={Boolean(order?.isLocked)}
       >
         Pay
       </button>
