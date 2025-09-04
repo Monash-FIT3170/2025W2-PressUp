@@ -11,6 +11,7 @@ import { Input } from "./interaction/Input";
 import { ConfirmModal } from "./ConfirmModal";
 import PostHeader from "./PostHeader";
 import { TextArea } from "./interaction/TextArea";
+import CommentsSection from "./CommentsSection";
 
 export default function ForumPage() {
   useSubscribe("posts");
@@ -142,9 +143,10 @@ export default function ForumPage() {
         {selectedPost ? (
           <div>
             <PostHeader post={selectedPost}></PostHeader>
-            <p className="text-gray-700 whitespace-pre-wrap">
+            <p className="text-gray-700 whitespace-pre-wrap border-b-1 border-gray-300 pb-8">
               {selectedPost.content}
             </p>
+            <CommentsSection post={selectedPost}></CommentsSection>
           </div>
         ) : (
           <p className="text-gray-500 text-center p-10">
