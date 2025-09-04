@@ -285,7 +285,8 @@ export const PosSideMenu = ({
                     "orders.setLocked",
                     order._id,
                     !order.isLocked,
-                    (err: any) => (err ? reject(err) : resolve(undefined)),
+                    (err: unknown) =>
+                      err ? reject(err as Error) : resolve(undefined),
                   );
                 });
               }}

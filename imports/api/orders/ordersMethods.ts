@@ -3,6 +3,8 @@ import { Order, OrdersCollection } from "./OrdersCollection";
 import { check } from "meteor/check";
 import { requireLoginMethod } from "../accounts/wrappers";
 import { IdType } from "../database";
+import { Roles } from "meteor/alanning:roles";
+import { RoleEnum } from "../accounts/roles";
 
 Meteor.methods({
   "orders.updateOrder": requireLoginMethod(async function (
@@ -14,7 +16,25 @@ Meteor.methods({
         "invalid-arguments",
         "Order ID and update are required",
       );
-    await OrdersCollection.updateAsync(orderId, { $set: update });
+    // Fetch the existing order to check locked state
+    const existingOrder = await OrdersCollection.findOneAsync(
+      orderId as IdType,
+    );
+    if (!existingOrder) {
+      throw new Meteor.Error("order-not-found", "Order not found");
+    }
+
+    // If the order is locked, only managers may update it
+    if (existingOrder.isLocked) {
+      if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.MANAGER]))) {
+        throw new Meteor.Error(
+          "order-locked",
+          "Order is locked and cannot be edited",
+        );
+      }
+    }
+
+    return await OrdersCollection.updateAsync(orderId, { $set: update });
   }),
 
   "orders.addOrder": requireLoginMethod(async function (order: Order) {
@@ -58,8 +78,6 @@ Meteor.methods({
     check(orderId, String);
     check(locked, Boolean);
     // Only managers can change the locked state
-    const Roles = require("meteor/alanning:roles").Roles;
-    const { RoleEnum } = require("../accounts/roles");
     if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.MANAGER]))) {
       throw new Meteor.Error(
         "invalid-permissions",

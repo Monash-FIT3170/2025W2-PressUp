@@ -85,6 +85,7 @@ export const MainDisplay = () => {
 
   const handleIncrease = (itemId: IdType) => {
     if (!order) return;
+    if (order.isLocked) return; // respect locked state in UI
     const updatedItems = (order.menuItems as OrderMenuItem[]).map((i) =>
       i._id === itemId ? { ...i, quantity: i.quantity + 1 } : i,
     );
@@ -113,6 +114,7 @@ export const MainDisplay = () => {
 
   const handleDecrease = (itemId: IdType) => {
     if (!order) return;
+    if (order.isLocked) return; // respect locked state in UI
     const updatedItems = (order.menuItems as OrderMenuItem[])
       .map((i) => (i._id === itemId ? { ...i, quantity: i.quantity - 1 } : i))
       .filter((i) => i.quantity > 0);
@@ -139,6 +141,7 @@ export const MainDisplay = () => {
 
   const handleDelete = (itemId: IdType) => {
     if (!order) return;
+    if (order.isLocked) return; // respect locked state in UI
     const updatedItems = (order.menuItems as OrderMenuItem[]).filter(
       (i) => i._id !== itemId,
     );
@@ -173,6 +176,7 @@ export const MainDisplay = () => {
 
   const handleItemClick = (item: MenuItem) => {
     if (!order) return;
+    if (order.isLocked) return; // prevent adding items to locked orders
     const existing = (order.menuItems as OrderMenuItem[]).find(
       (i) => i._id === item._id,
     );
