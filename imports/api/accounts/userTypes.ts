@@ -5,12 +5,10 @@ export interface CreateUserData {
   username: string;
   password: string;
   role: string;
-  payRate?: number;
 }
 
 // Update users
 export interface UpdateUserProfileData {
   firstName?: string;
   lastName?: string;
-  payRate?: number;
 }

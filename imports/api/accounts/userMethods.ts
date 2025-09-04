@@ -18,7 +18,6 @@ Meteor.methods({
       username: String,
       password: String,
       role: String,
-      payRate: Number,
     });
 
     // check user level and authorisation
@@ -56,10 +55,6 @@ Meteor.methods({
       });
 
       await Roles.addUsersToRolesAsync(userId, [userData.role]);
-
-      await Meteor.users.updateAsync(userId, {
-        $set: { payRate: userData.payRate },
-      });
 
       console.log(
         `Created user '${userData.username}' with role '${userData.role}'`,
@@ -292,33 +287,4 @@ Meteor.methods({
 
     return user || null;
   },
-
-  "users.getPayRate": requireLoginMethod(async function (userId: string) {
-    check(userId, String);
-
-    // Optional: only allow admins/managers or the user themselves to fetch payRate
-    const isSelf = userId === this.userId;
-    const isAdminOrManager = await Roles.userIsInRoleAsync(this.userId, [
-      RoleEnum.ADMIN,
-      RoleEnum.MANAGER,
-    ]);
-
-    if (!isSelf && !isAdminOrManager) {
-      throw new Meteor.Error(
-        "unauthorized",
-        "You can only view your own pay rate or be an admin/manager",
-      );
-    }
-
-    const user = (await Meteor.users.findOneAsync(
-      { _id: userId },
-      { fields: { payRate: 1 } },
-    )) as { payRate?: number } | null;
-
-    if (!user) {
-      throw new Meteor.Error("user-not-found", "User not found");
-    }
-
-    return user?.payRate ?? null;
-  }),
 });
