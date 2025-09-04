@@ -34,33 +34,33 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
       } overflow-hidden flex flex-col h-60`}
     >
       <div className="flex-1 overflow-y-auto p-6 text-lg">
+        <NavigationEntry
+          icon={<DollarSign />}
+          name="Finance"
+          path="/finance"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        >
           <NavigationEntry
-            icon={<DollarSign />}
-            name="Finance"
-            path="/finance"
-            selectionType={NavigationEntrySelection.HIGHLIGHT}
-          >
-            <NavigationEntry
-              icon={<Clipboard />}
-              name="P/L Reporting"
-              path="/finance/profit-loss"
-              selectionType={NavigationEntrySelection.ARROW}
-            />
+            icon={<Clipboard />}
+            name="P/L Reporting"
+            path="/finance/profit-loss"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
 
-            <NavigationEntry
-              icon={<PenTool />}
-              name="Tax Management"
-              path="/finance/tax"
-              selectionType={NavigationEntrySelection.ARROW}
-            />
+          <NavigationEntry
+            icon={<PenTool />}
+            name="Tax Management"
+            path="/finance/tax"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
 
-            <NavigationEntry
-              icon={<Folder />}
-              name="Expense Tracking"
-              path="/finance/Expenses"
-              selectionType={NavigationEntrySelection.ARROW}
-            />
-          </NavigationEntry>
+          <NavigationEntry
+            icon={<Folder />}
+            name="Expense Tracking"
+            path="/finance/Expenses"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+        </NavigationEntry>
         <NavigationEntry
           icon={<PencilIcon fill="var(--color-press-up-grey)" />}
           name="Inventory Management"
