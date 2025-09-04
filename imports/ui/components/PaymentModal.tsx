@@ -17,6 +17,10 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
       alert("Cannot pay for an order with no items.");
       return;
     }
+    if (order.orderStatus !== OrderStatus.Served) {
+      alert("Only SERVED orders can be paid. Please mark as served first.");
+      return;
+    }
     setIsOpen(true);
   };
   const closeModal = () => setIsOpen(false);
@@ -24,7 +28,7 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
   const navigate = useNavigate();
 
   // Update order status
-  const updateOrderStatus = () => {
+  const finalizePayment = () => {
     if (!order || !order._id) {
       return;
     }
@@ -45,7 +49,7 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
   };
 
   const handleConfirm = () => {
-    updateOrderStatus();
+    finalizePayment();
     closeModal();
     navigate(`/receipt?orderNo=${order.orderNo}`);
   };
@@ -55,7 +59,11 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
       <button
         onClick={openModal}
         className="w-full bg-press-up-positive-button hover:bg-press-up-hover text-white font-bold py-2 px-4 rounded-full"
-        disabled={Boolean(order?.isLocked)}
+        disabled={
+          Boolean(order?.isLocked) ||
+          order.orderStatus !== OrderStatus.Served ||
+          order.menuItems.length === 0
+        }
       >
         Pay
       </button>
