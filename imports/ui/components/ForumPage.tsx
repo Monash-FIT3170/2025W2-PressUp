@@ -12,6 +12,10 @@ import { ConfirmModal } from "./ConfirmModal";
 import PostHeader from "./PostHeader";
 import { TextArea } from "./interaction/TextArea";
 import CommentsSection from "./CommentsSection";
+import { Roles } from "meteor/alanning:roles";
+import { RoleEnum } from "/imports/api/accounts/roles";
+import { Hide } from "./display/Hide";
+import { RiDeleteBinFill, RiDeleteBinLine } from "react-icons/ri";
 
 export default function ForumPage() {
   useSubscribe("posts");
@@ -21,6 +25,8 @@ export default function ForumPage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [postModalOpen, setPostModalOpen] = useState<boolean>(false);
   const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] =
+    useState<boolean>(false);
 
   const filteredPosts = posts
     .filter(
@@ -35,6 +41,14 @@ export default function ForumPage() {
   const [content, setContent] = useState<string>("");
   const [category, setCategory] = useState<string>("");
   const [categories, setCategories] = useState<string[]>([]);
+
+  const rolesLoaded = useSubscribe("users.roles")();
+  const rolesGraphLoaded = useSubscribe("users.rolesGraph")();
+  const canDeletePosts = useTracker(
+    () =>
+      Roles.userIsInRole(Meteor.userId(), [RoleEnum.MANAGER, RoleEnum.ADMIN]),
+    [rolesLoaded, rolesGraphLoaded],
+  );
 
   useEffect(() => {
     Meteor.call(
@@ -82,6 +96,12 @@ export default function ForumPage() {
     );
   };
 
+  const handleDeletePost = (postId: string) => {
+    Meteor.call("posts.delete", postId);
+    setShowDeleteConfirmation(false);
+    setSelectedPost(undefined);
+  };
+
   return (
     <div className="flex h-full">
       {/* LEFT PANEL */}
@@ -120,23 +140,50 @@ export default function ForumPage() {
             filteredPosts.map((post) => (
               <div
                 key={post._id}
-                className={`p-4 cursor-pointer border-b hover:bg-press-up-light-purple transition-all duration-200 ${
+                className={`flex items-start justify-between w-full p-4 border-b hover:bg-press-up-light-purple transition-all duration-200 ${
                   selectedPost?._id === post._id
                     ? "bg-press-up-light-purple"
-                    : ""
+                    : "cursor-pointer "
                 }`}
                 onClick={() => setSelectedPost(post)}
               >
-                <h3 className="font-semibold">{post.subject}</h3>
-                <p className="text-sm text-gray-600 line-clamp-1">
-                  <span className="font-bold mr-2">{post.category}</span>
-                  {post.content}
-                </p>
+                <div className="flex-1 pr-4">
+                  <h3 className="font-semibold">{post.subject}</h3>
+                  <p className="text-sm text-gray-600 line-clamp-1">
+                    <span className="font-bold mr-2">{post.category}</span>
+                    {post.content}
+                  </p>
+                </div>
+                <Hide hide={!canDeletePosts}>
+                  <div
+                    onClick={() => setShowDeleteConfirmation(true)}
+                    className="group cursor-pointer ml-auto shrink-0 duration-100 transition-all"
+                  >
+                    <RiDeleteBinLine
+                      size={20}
+                      className="text-press-up-negative-button group-hover:hidden"
+                    />
+                    <RiDeleteBinFill
+                      size={20}
+                      className="hidden text-press-up-negative-button group-hover:block"
+                    />
+                  </div>
+                </Hide>
               </div>
             ))
           )}
         </div>
       </div>
+      <ConfirmModal
+        open={showDeleteConfirmation}
+        message={"Are you sure you want to delete this post?"}
+        onConfirm={() => {
+          selectedPost
+            ? handleDeletePost(selectedPost._id)
+            : alert("No post selected");
+        }}
+        onCancel={() => setShowDeleteConfirmation(false)}
+      ></ConfirmModal>
 
       {/* RIGHT PANEL */}
       <div className="flex-1 px-12 py-6 overflow-y-auto">
