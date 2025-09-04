@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Meteor } from "meteor/meteor";
 import { Order } from "/imports/api";
+import { TablesCollection } from "/imports/api/tables/TablesCollection";
 import { OrderStatus } from "/imports/api/orders/OrdersCollection";
 
 interface PaymentModalProps {
-  tableNo: number;
+  tableNo?: number | null;
   order: Order;
 }
 
@@ -32,6 +33,15 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
       paid: true,
     };
     Meteor.call("orders.updateOrder", order._id, { ...fields });
+
+    // Clear the table's activeOrderID if this is a dine-in order
+    if (order.tableNo !== null && order.tableNo !== undefined) {
+      // Find the table by tableNo and clear its activeOrderID
+      Meteor.call(
+        "tables.clearOrder",
+        TablesCollection.findOne({ tableNo: order.tableNo })?._id,
+      );
+    }
   };
 
   const handleConfirm = () => {
@@ -45,6 +55,7 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
       <button
         onClick={openModal}
         className="w-full bg-press-up-positive-button hover:bg-press-up-hover text-white font-bold py-2 px-4 rounded-full"
+        disabled={Boolean(order?.isLocked)}
       >
         Pay
       </button>

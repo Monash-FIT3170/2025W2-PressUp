@@ -72,7 +72,11 @@ export const ReceiptPage = () => {
           <h2 className="text-center text-xl font-bold mb-4">Cafe</h2>
           <div className="flex justify-between mb-2">
             <p>Order No: {order.orderNo}</p>
-            <p>Table No: {order.tableNo}</p>
+            <p>
+              {order.tableNo != null
+                ? `Table No: ${order.tableNo}`
+                : "Takeaway"}
+            </p>
           </div>
           <p className="mb-2">Date: {new Date().toLocaleString()}</p>
 

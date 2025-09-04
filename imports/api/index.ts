@@ -22,3 +22,6 @@ export {
 
 // Tables
 export { Tables, TablesCollection } from "./tables/TablesCollection";
+
+// Deductions
+export { Deduction, DeductionsCollection } from "./tax/DeductionsCollection";

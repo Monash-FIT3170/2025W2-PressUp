@@ -25,6 +25,7 @@ export const MainDisplay = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const location = useLocation();
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
 
   useSubscribe("menuItems");
   useSubscribe("orders");
@@ -33,13 +34,17 @@ export const MainDisplay = () => {
   const tables = useTracker(() => TablesCollection.find().fetch());
   const posItems = useTracker(() => MenuItemsCollection.find().fetch());
   // Fetch the current order for the selected table
-  const order = useTracker(
-    () =>
-      selectedTable
-        ? OrdersCollection.find({ tableNo: selectedTable }).fetch()[0]
-        : null,
-    [selectedTable],
-  );
+  const order = useTracker(() => {
+    if (activeOrderId) {
+      return OrdersCollection.findOne(activeOrderId as string) ?? null;
+    }
+    return selectedTable
+      ? (OrdersCollection.find({
+          tableNo: selectedTable,
+          $or: [{ orderType: "dine-in" }, { orderType: { $exists: false } }],
+        }).fetch()[0] ?? null)
+      : null;
+  }, [activeOrderId, selectedTable]);
 
   const filteredItems = posItems.filter((item) => {
     const matchesName = item.name
@@ -94,6 +99,7 @@ export const MainDisplay = () => {
 
   const handleIncrease = (itemId: IdType) => {
     if (!order) return;
+    if (order.isLocked) return; // respect locked state in UI
     const updatedItems = (order.menuItems as OrderMenuItem[]).map((i) =>
       i._id === itemId ? { ...i, quantity: i.quantity + 1 } : i,
     );
@@ -122,6 +128,7 @@ export const MainDisplay = () => {
 
   const handleDecrease = (itemId: IdType) => {
     if (!order) return;
+    if (order.isLocked) return; // respect locked state in UI
     const updatedItems = (order.menuItems as OrderMenuItem[])
       .map((i) => (i._id === itemId ? { ...i, quantity: i.quantity - 1 } : i))
       .filter((i) => i.quantity > 0);
@@ -148,6 +155,7 @@ export const MainDisplay = () => {
 
   const handleDelete = (itemId: IdType) => {
     if (!order) return;
+    if (order.isLocked) return; // respect locked state in UI
     const updatedItems = (order.menuItems as OrderMenuItem[]).filter(
       (i) => i._id !== itemId,
     );
@@ -182,6 +190,7 @@ export const MainDisplay = () => {
 
   const handleItemClick = (item: MenuItem) => {
     if (!order) return;
+    if (order.isLocked) return; // prevent adding items to locked orders
     const existing = (order.menuItems as OrderMenuItem[]).find(
       (i) => i._id === item._id,
     );
@@ -303,6 +312,7 @@ export const MainDisplay = () => {
           onUpdateOrder={updateOrderInDb}
           selectedTable={selectedTable} // pass down
           setSelectedTable={setSelectedTable} // pass down
+          onActiveOrderChange={setActiveOrderId}
         />
       </div>
     </div>

@@ -61,7 +61,6 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>
-
         <NavigationEntry
           icon={<PencilIcon fill="var(--color-press-up-grey)" />}
           name="Inventory Management"
@@ -105,12 +104,6 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
         </NavigationEntry>
 
         <NavigationEntry
-          icon={<CoffeeIcon fill="var(--color-press-up-grey)" />}
-          name="Menu Management"
-          path="/menuManagement"
-          selectionType={NavigationEntrySelection.HIGHLIGHT}
-        />
-        <NavigationEntry
           icon={<Clock3Icon />}
           name="Kitchen Management"
           path="/kitchenManagement"
@@ -123,6 +116,14 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>
+
+        <NavigationEntry
+          icon={<CoffeeIcon fill="var(--color-press-up-grey)" />}
+          name="Menu Management"
+          path="/menuManagement"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        />
+
         <NavigationEntry
           icon={<SupplierIcon fill="var(--color-press-up-grey)" />}
           name="Accounts"

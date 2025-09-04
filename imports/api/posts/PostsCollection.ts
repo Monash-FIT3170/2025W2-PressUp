@@ -1,6 +1,5 @@
 import { Mongo } from "meteor/mongo";
 import { DBEntry, OmitDB } from "../database";
-
 export interface Post extends DBEntry {
   postedBy: string;
   datePosted: Date;

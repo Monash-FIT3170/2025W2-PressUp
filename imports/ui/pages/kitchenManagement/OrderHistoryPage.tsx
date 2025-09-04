@@ -29,10 +29,11 @@ import {
 type RowOrder = {
   _id: string;
   orderNo: number;
-  tableNo: number;
+  tableNo: number | null;
   createdAt: string;
   status: "pending" | "preparing" | "ready" | "served";
   items: string;
+  paid: boolean;
 };
 
 export const OrderHistoryPage = () => {
@@ -47,12 +48,13 @@ export const OrderHistoryPage = () => {
     return docs.map((doc: DBOrder) => ({
       _id: doc._id,
       orderNo: doc.orderNo,
-      tableNo: doc.tableNo,
+      tableNo: doc.tableNo ?? null,
       createdAt: new Date(doc.createdAt).toLocaleString(),
       status: doc.orderStatus,
       items: (doc.menuItems ?? [])
         .map((mi) => `${mi.name} x${mi.quantity ?? 1}`)
         .join(", "),
+      paid: !!doc.paid,
     }));
   }, []);
 
@@ -66,12 +68,15 @@ export const OrderHistoryPage = () => {
         : orders;
     if (!q.trim()) return base;
     const key = q.toLowerCase();
-    return base.filter(
-      (o) =>
+    return base.filter((o) => {
+      // EN: If no table number, treat it as "takeaway" for searching
+      const tableText = o.tableNo != null ? String(o.tableNo) : "takeaway";
+      return (
         String(o.orderNo).includes(key) ||
-        String(o.tableNo).includes(key) ||
-        o.items.toLowerCase().includes(key),
-    );
+        tableText.includes(key) ||
+        o.items.toLowerCase().includes(key)
+      );
+    });
   }, [orders, statusFilter, q]);
 
   const reopen = (id: string, to: RowOrder["status"]) => {
@@ -131,7 +136,9 @@ export const OrderHistoryPage = () => {
             {filtered.map((row) => (
               <TableRow key={row._id} hover>
                 <TableCell>{row.orderNo}</TableCell>
-                <TableCell>{row.tableNo}</TableCell>
+                <TableCell>
+                  {row.tableNo != null ? row.tableNo : "Takeaway"}
+                </TableCell>
                 <TableCell>{row.createdAt}</TableCell>
                 <TableCell>
                   <Chip label={row.status.toUpperCase()} size="small" />
@@ -160,6 +167,10 @@ export const OrderHistoryPage = () => {
                         },
                       }}
                       onClick={() => reopen(row._id, "ready")}
+                      disabled={
+                        // Prevent reopening if paid
+                        orders.find((o) => o._id === row._id)?.paid === true
+                      }
                     >
                       Reopen: Ready
                     </Button>
@@ -176,6 +187,10 @@ export const OrderHistoryPage = () => {
                         },
                       }}
                       onClick={() => reopen(row._id, "preparing")}
+                      disabled={
+                        // Prevent reopening if paid
+                        orders.find((o) => o._id === row._id)?.paid === true
+                      }
                     >
                       Reopen: Preparing
                     </Button>
