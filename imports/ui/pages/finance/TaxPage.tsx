@@ -6,8 +6,9 @@ import { TaxDateFilter } from "../../components/TaxDateFilter";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
 import { PurchaseOrdersCollection } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
-import { DeductionsCollection } from "/imports/api/tax/DeductionsCollection";
+import { Deduction, DeductionsCollection } from "/imports/api/tax/DeductionsCollection";
 import { ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
+import { EditDeductionModal } from "../../components/EditDeductionModal";
 import {
   format,
   startOfToday,
@@ -60,6 +61,8 @@ export const TaxPage = () => {
   const [searchDeduction, setSearchDeduction] = useState("");
   const [dateRange, setDateRange] = useState<"all" | "month" | "PAYG" | "year">("all");
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDeduction, setSelectedDeduction] = useState<any | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useSubscribe("orders");
   useSubscribe("purchaseOrders");
@@ -189,6 +192,11 @@ export const TaxPage = () => {
     setDeductionForm({ name: "", date: format(new Date(), "yyyy-MM-dd"), description: "", amount: "" });
   };
 
+  const handleSave = async () => {
+    setIsModalOpen(false);
+    setSelectedDeduction(null);
+  };
+
   return (
     <div className="flex flex-col flex-1 overflow-y-auto max-h-screen pb-10">
       <div className="w-full p-6 bg-gray-50 min-h-[100vh]">
@@ -294,14 +302,31 @@ export const TaxPage = () => {
                   {filteredDeductionList.length === 0 ? (
                     <p className="text-gray-600">No deductions found.</p>
                   ) : filteredDeductionList.map(d => (
-                    <div key={d.name + d.date.toString()} className="p-3 bg-white rounded-lg border border-black flex justify-between">
+                    <button
+                      key={d._id}
+                      onClick={() => {
+                        setSelectedDeduction(d);
+                        setIsModalOpen(true);
+                      }
+                      }
+                      className="w-full text-left p-3 bg-white rounded-lg border border-black flex justify-between hover:bg-gray-100"
+                    >
                       <div>
                         <p className="font-bold">{d.name} - {format(new Date(d.date), "dd/MM/yy")}</p>
                         <p className="text-sm text-gray-600">{d.description}</p>
                       </div>
                       <span className="font-semibold text-lg">${d.amount}</span>
-                    </div>
+                    </button>
                   ))}
+                  <EditDeductionModal
+                    isOpen={isModalOpen}
+                    onClose={() => {
+                      setIsModalOpen(false);
+                      setSelectedDeduction(null);
+                    }}
+                    deduction={selectedDeduction}
+                    onSave={handleSave}
+                  />
                 </div>
               </div>
             )}
