@@ -145,6 +145,9 @@ export const mockDataGenerator = async ({
   if ((await StockItemsCollection.countDocuments()) > 0) {
     await StockItemsCollection.dropCollectionAsync();
   }
+  if ((await PurchaseOrdersCollection.countDocuments()) > 0) {
+    await PurchaseOrdersCollection.dropCollectionAsync();
+  }
   if ((await TablesCollection.countDocuments()) > 0) {
     await TablesCollection.dropCollectionAsync();
   }
