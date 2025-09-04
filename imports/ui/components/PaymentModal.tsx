@@ -69,8 +69,12 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
         >
           {isServed ? (
             <>
-              <h2 className="text-xl text-gray-700 font-bold mb-4">Confirm Payment</h2>
-              <p className="mb-6 text-gray-700">Are you sure you want to proceed with the payment?</p>
+              <h2 className="text-xl text-gray-700 font-bold mb-4">
+                Confirm Payment
+              </h2>
+              <p className="mb-6 text-gray-700">
+                Are you sure you want to proceed with the payment?
+              </p>
               <div className="grid grid-cols-2 justify-items-center gap-2">
                 <button
                   onClick={closeModal}
@@ -88,7 +92,9 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
             </>
           ) : (
             <>
-              <h2 className="text-xl text-gray-700 font-bold mb-4">Order is not served</h2>
+              <h2 className="text-xl text-gray-700 font-bold mb-4">
+                Order is not served
+              </h2>
               <p className="mb-4 text-gray-700">
                 Only <b>SERVED</b> orders can be paid.
               </p>
