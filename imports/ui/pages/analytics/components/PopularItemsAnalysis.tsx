@@ -1,10 +1,22 @@
 import React, { useMemo } from "react";
-import { Transaction } from "/imports/api/transactions/TransactionsCollection";
-import { TimeFrame } from "../Analytics";
+import { Order, OrderMenuItem } from "/imports/api/orders/OrdersCollection";
+import {
+  startOfToday,
+  startOfWeek,
+  startOfMonth,
+  startOfYear,
+  subDays,
+} from "date-fns";
 
 interface PopularItemsAnalysisProps {
-  transactions: Transaction[];
-  timeFrame: TimeFrame;
+  orders: Order[];
+  timeFrame: "all"
+    | "today"
+    | "thisWeek"
+    | "thisMonth"
+    | "thisYear"
+    | "past7Days"
+    | "past30Days";
   customDateRange?: { start: Date; end: Date } | null;
 }
 
@@ -16,7 +28,7 @@ interface ItemStats {
 }
 
 export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
-  transactions,
+  orders,
   timeFrame,
   customDateRange,
 }) => {
@@ -47,7 +59,7 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
       }
     }
 
-    const filteredTransactions = transactions.filter(
+    const filteredorders = orders.filter(
       (t) => {
         const transactionDate = new Date(t.createdAt);
         return transactionDate >= startDate && transactionDate <= endDate;
@@ -56,7 +68,7 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
 
     const itemMap = new Map<string, ItemStats>();
 
-    filteredTransactions.forEach((transaction) => {
+    filteredorders.forEach((transaction) => {
       const existing = itemMap.get(transaction.name);
       if (existing) {
         existing.totalQuantity += transaction.quantity;
@@ -75,11 +87,11 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
     return Array.from(itemMap.values())
       .sort((a, b) => b.totalQuantity - a.totalQuantity)
       .slice(0, 5);
-  }, [transactions, timeFrame, customDateRange]);
+  }, [orders, timeFrame, customDateRange]);
 
   const overallMostPopular = useMemo(() => {
     const itemMap = new Map<string, number>();
-    transactions.forEach((t) => {
+    orders.forEach((t) => {
       itemMap.set(t.name, (itemMap.get(t.name) || 0) + t.quantity);
     });
     
@@ -91,7 +103,7 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
     });
     
     return mostPopular;
-  }, [transactions]);
+  }, [orders]);
 
   return (
     <div className="space-y-4">
