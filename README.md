@@ -1,3 +1,5 @@
+<img src="PressUp.png" alt="PressUp Logo" />
+
 # Team
 
 ## 🧠 System Architects
@@ -109,9 +111,9 @@ The `main` branch represents the current "production ready" state of the codebas
 Instead a [Trunk Based Development](https://www.atlassian.com/continuous-delivery/continuous-integration/trunk-based-development) approach is taken where features are developed on short lived feature branches, a PR is created for them once the feature is ready, the PR is reviewed and later approved by a maintainer that didn't develop the feature, and the branch is merged into `main`.
 
 Branches should be prefixed with an indicator for their purpose and descriptively named, for example:
-- feature/sign-in-page-uplift
-- refactor/user-abstraction
-- hotfix/home-page-header-issue
+- `feature/sign-in-page-uplift`
+- `refactor/user-abstraction`
+- `hotfix/home-page-header-issue`
 
 Commits should be short but descriptive. Limit to 50 characters and format as having the first letter capitalised but *don't* end with a period.
 
