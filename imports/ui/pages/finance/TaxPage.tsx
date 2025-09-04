@@ -24,7 +24,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  Label,
 } from "recharts";
 
 interface FinancialDataField {
@@ -364,6 +363,7 @@ export const TaxPage = () => {
       </ResponsiveContainer>
     ),
   );
+  MemoBarChart.displayName = "MemoBarChart";
 
   const mainMetrics = [
     {
