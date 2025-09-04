@@ -388,6 +388,14 @@ export const TaxPage = () => {
     },
   ] as const;
 
+  if (!financialData) {
+    return (
+      <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col flex-1 overflow-y-auto max-h-screen pb-10">
       <div className="w-full p-6 bg-gray-50 min-h-[100vh]">
