@@ -16,3 +16,5 @@ import "./shifts/shiftsMethods.ts";
 import "./shifts/shiftsPublishing.ts";
 import "./posts/postsMethods.ts";
 import "./posts/postsPublishing.ts";
+import "./posts/commentsMethods.ts";
+import "./posts/commentsPublishing.ts";
