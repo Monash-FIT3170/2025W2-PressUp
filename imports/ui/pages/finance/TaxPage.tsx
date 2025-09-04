@@ -20,6 +20,7 @@ import {
   endOfMonth,
   endOfYear,
 } from "date-fns";
+
 import {
   BarChart,
   Bar,
@@ -55,41 +56,19 @@ export const TaxPage = () => {
   useSubscribe("orders");
   useSubscribe("purchaseOrders");
   useSubscribe("deductions");
-  useSubscribe("shifts");
+  useSubscribe("shifts.all");
 
   const getDateRange = (range: typeof dateRange) => {
     const today = startOfToday();
     let start: Date, end: Date;
-
     switch (range) {
-      case "today":
-        start = today;
-        end = endOfToday();
-        break;
-      case "thisWeek":
-        start = startOfWeek(today, { weekStartsOn: 1 });
-        end = endOfWeek(today, { weekStartsOn: 1 });
-        break;
-      case "thisMonth":
-        start = startOfMonth(today);
-        end = endOfMonth(today);
-        break;
-      case "thisYear":
-        start = startOfYear(today);
-        end = endOfYear(today);
-        break;
-      case "past7Days":
-        start = subDays(today, 6);
-        end = endOfToday();
-        break;
-      case "past30Days":
-        start = subDays(today, 29);
-        end = endOfToday();
-        break;
-      case "all":
-      default:
-        start = new Date(0);
-        end = new Date();
+      case "today": start = today; end = endOfToday(); break;
+      case "thisWeek": start = startOfWeek(today, { weekStartsOn: 1 }); end = endOfWeek(today, { weekStartsOn: 1 }); break;
+      case "thisMonth": start = startOfMonth(today); end = endOfMonth(today); break;
+      case "thisYear": start = startOfYear(today); end = endOfYear(today); break;
+      case "past7Days": start = subDays(today, 6); end = endOfToday(); break;
+      case "past30Days": start = subDays(today, 29); end = endOfToday(); break;
+      case "all": default: start = new Date(0); end = new Date();
     }
     return { start, end };
   };
@@ -100,85 +79,89 @@ export const TaxPage = () => {
     return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
   };
 
-  const { financialData, deductions } = useTracker(() => {
-    const orders = OrdersCollection.find().fetch();
-    const purchaseOrders = PurchaseOrdersCollection.find().fetch();
-    const allDeductions = DeductionsCollection.find().fetch();
-    const shifts = ShiftsCollection.find().fetch();
-    const { start, end } = getDateRange(dateRange);
+  // fetching
+  const { orders, purchaseOrders, allDeductions, shifts } = useTracker(() => ({
+    orders: OrdersCollection.find().fetch(),
+    purchaseOrders: PurchaseOrdersCollection.find().fetch(),
+    allDeductions: DeductionsCollection.find().fetch(),
+    shifts: ShiftsCollection.find().fetch(),
+  }), [dateRange]);
 
-    const filteredOrders = orders.filter(
-      (o) => new Date(o.createdAt) >= start && new Date(o.createdAt) <= end && o.paid
-    );
-    const filteredPurchaseOrders = purchaseOrders.filter(
-      (p) => (p.date instanceof Date ? p.date : new Date(p.date)) >= start &&
-             (p.date instanceof Date ? p.date : new Date(p.date)) <= end
-    );
-    const filteredDeductions = allDeductions.filter(
-      (d) => (d.date instanceof Date ? d.date : new Date(d.date)) >= start &&
-             (d.date instanceof Date ? d.date : new Date(d.date)) <= end
-    );
-    const filteredShifts = shifts.filter(
-      (s) => (s.date instanceof Date ? s.date : new Date(s.date)) >= start &&
-             (s.date instanceof Date ? s.date : new Date(s.date)) <= end
-    );
+  const { start, end } = getDateRange(dateRange);
 
-    const formatDateKey = (date: Date) => {
-      switch (dateRange) {
-        case "thisYear": return format(date, "MMM");
-        case "all": return format(date, "dd/MM/yy");
-        default: return format(date, "dd/MM");
-      }
-    };
+  // filtered collections
+  const filteredOrders = orders.filter(
+    (o) => new Date(o.createdAt) >= start && new Date(o.createdAt) <= end && o.paid
+  );
+  const filteredPurchaseOrders = purchaseOrders.filter(
+    (p) => (p.date instanceof Date ? p.date : new Date(p.date)) >= start &&
+           (p.date instanceof Date ? p.date : new Date(p.date)) <= end
+  );
+  const filteredDeductions = allDeductions.filter(
+    (d) => (d.date instanceof Date ? d.date : new Date(d.date)) >= start &&
+           (d.date instanceof Date ? d.date : new Date(d.date)) <= end
+  );
+  const filteredShifts = shifts.filter(
+    (s) => (s.date instanceof Date ? s.date : new Date(s.date)) >= start &&
+           (s.date instanceof Date ? s.date : new Date(s.date)) <= end
+  );
 
-    let GSTTotal = 0, profitTotal = 0;
-    const GSTByDate: { [key: string]: number } = {};
-    filteredOrders.forEach((o) => {
-      const dateKey = formatDateKey(new Date(o.createdAt));
-      o.menuItems.forEach((item) => {
-        const amount = item.price * item.quantity;
-        const gst = amount / 11;
-        GSTTotal += gst;
-        profitTotal += amount;
-        GSTByDate[dateKey] = (GSTByDate[dateKey] || 0) + gst;
-      });
-    });
-    const GSTItems = Object.keys(GSTByDate).map((d) => ({ label: d, amount: GSTByDate[d] }));
-
-    let GSTexpenses = 0, expensesTotal = 0;
-    const expensesByDate: { [key: string]: number } = {};
-    filteredPurchaseOrders.forEach((p) => {
-      const amount = p.totalCost;
+  // GST totals
+  let GSTTotal = 0, profitTotal = 0;
+  const GSTByDate: { [key: string]: number } = {};
+  filteredOrders.forEach((o) => {
+    const dateKey = format(new Date(o.createdAt), dateRange === "thisYear" ? "MMM" : "dd/MM");
+    o.menuItems.forEach((item) => {
+      const amount = item.price * item.quantity;
       const gst = amount / 11;
-      GSTexpenses += gst;
-      expensesTotal += amount;
-      const dateKey = formatDateKey(p.date instanceof Date ? p.date : new Date(p.date));
-      expensesByDate[dateKey] = (expensesByDate[dateKey] || 0) + gst;
+      GSTTotal += gst;
+      profitTotal += amount;
+      GSTByDate[dateKey] = (GSTByDate[dateKey] || 0) + gst;
     });
-    const expenseItems = Object.keys(expensesByDate).map((d) => ({ label: d, amount: expensesByDate[d] }));
+  });
+  const GSTItems = Object.keys(GSTByDate).map((d) => ({ label: d, amount: GSTByDate[d] }));
 
-    let deductionsTotal = 0;
-    filteredDeductions.forEach((d) => { deductionsTotal += Number(d.amount); });
+  let GSTexpenses = 0, expensesTotal = 0;
+  const expensesByDate: { [key: string]: number } = {};
+  filteredPurchaseOrders.forEach((p) => {
+    const amount = p.totalCost;
+    const gst = amount / 11;
+    GSTexpenses += gst;
+    expensesTotal += amount;
+    const dateKey = format(p.date instanceof Date ? p.date : new Date(p.date), dateRange === "thisYear" ? "MMM" : "dd/MM");
+    expensesByDate[dateKey] = (expensesByDate[dateKey] || 0) + gst;
+  });
+  const expenseItems = Object.keys(expensesByDate).map((d) => ({ label: d, amount: expensesByDate[d] }));
 
-    let taxableIncome = 0;
-    const payrollTax = 0;
-    if ((profitTotal - expensesTotal - deductionsTotal) > 0) {
-      taxableIncome = profitTotal - expensesTotal - deductionsTotal;
-      filteredShifts.forEach((s) => {
-        //taxableIncome =- s.user.getPayRate();
-      });
-    };
+  let deductionsTotal = 0;
+  filteredDeductions.forEach((d) => { deductionsTotal += Number(d.amount); });
 
-    return {
-      financialData: {
-        incomeTax: { title: "Taxable Income", description: "Profit minus business deductions", items: [], total: taxableIncome },
-        payrollTax: { title: "Payroll Tax", description: "Tax collected on wages paid", items: [], total: payrollTax},
-        GSTCollected: { title: "GST Collected", description: "Goods and Services Tax collected on orders", items: GSTItems, total: GSTTotal },
-        GSTPaid: { title: "GST Paid", description: "Goods and Services Tax paid on stock orders", items: expenseItems, total: GSTexpenses },
-      },
-      deductions: filteredDeductions,
-    };
-  }, [dateRange]);
+  // payroll tax and taxable income
+  const [payrollTax, setPayrollTax] = useState(0);
+  const [taxableIncome, setTaxableIncome] = useState(0);
+
+  useEffect(() => {
+    (async () => {
+      let payTotal = 0;
+      for (const s of filteredShifts) {
+        const pay: number = await Meteor.callAsync("shifts.getPayForShift", s._id);
+        payTotal += pay;
+      }
+      const payrollTax = payTotal*(4.85/100);
+      setPayrollTax(payrollTax);
+
+      const income = profitTotal - expensesTotal - deductionsTotal + payTotal;
+      setTaxableIncome(income > 0 ? income : 0);
+    })();
+  }, [filteredShifts, profitTotal, expensesTotal, deductionsTotal]);
+
+  // finance data
+  const financialData = {
+    incomeTax: { title: "Taxable Income", description: "Profit minus business deductions", items: [], total: taxableIncome },
+    payrollTax: { title: "Payroll Tax", description: "Tax collected on wages paid", items: [], total: payrollTax },
+    GSTCollected: { title: "GST Collected", description: "Goods and Services Tax collected on orders", items: GSTItems, total: GSTTotal },
+    GSTPaid: { title: "GST Paid", description: "Goods and Services Tax paid on stock orders", items: expenseItems, total: GSTexpenses },
+  };
 
   useEffect(() => { setPageTitle("Finance - Tax Management"); }, [setPageTitle]);
 
@@ -206,7 +189,7 @@ export const TaxPage = () => {
   const chartTitle = selectedMetric ? currentData?.title : "GST Collected vs GST Paid";
   const chartDescription = selectedMetric ? currentData?.description : "Comparison of GST collected on sales and GST paid on expenses";
 
-  const filteredDeductionList = deductions.filter(d =>
+  const filteredDeductionList = filteredDeductions.filter(d =>
     d.name.toLowerCase().includes(searchDeduction.toLowerCase())
   );
 
@@ -244,14 +227,20 @@ export const TaxPage = () => {
             />
           ))}
         </div>
+
         {selectedMetric === "incomeTax" && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h3 className="text-l text-gray-900 mb-4">Taxable income is calculated by subtracting wages and deductions from profits. Wages are calculated from shifts logged in Staff Management - Roster. If there is no profit for the given time period, taxable income will display as $0.00</h3>
+            <h3 className="text-l text-gray-900 mb-4">
+              Taxable income is calculated by subtracting wages and deductions from profits.
+              Wages are calculated from shifts logged in Staff Management - Roster.
+              If there is no profit for the given time period, taxable income will display as $0.00
+            </h3>
           </div>
         )}
+
         {/* Left/Right Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left: Deduction Entry (only for incomeTax) or GST singular graph*/}
+          {/* Left: Deduction Entry or GST Graph */}
           {selectedMetric === "incomeTax" && (
             <div className="bg-pink-100 rounded-xl shadow-lg p-6">
               <div className="mb-6">
@@ -277,26 +266,26 @@ export const TaxPage = () => {
           )}
 
           {(selectedMetric === "GSTCollected" || selectedMetric === "GSTPaid") && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-1">{chartTitle}</h2>
-                  <p className="text-gray-600">{chartDescription}</p>
-                </div>
-                <div className="h-80 w-full">
-                  <ResponsiveContainer>
-                    <BarChart data={currentData.items}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="label"><Label value="Date" offset={-5} position="insideBottom" /></XAxis>
-                      <YAxis><Label value="GST ($)" angle={-90} position="insideLeft" style={{ textAnchor: "middle" }} /></YAxis>
-                      <Tooltip />
-                        <Bar dataKey="amount" fill="#c6b6cf" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">{chartTitle}</h2>
+                <p className="text-gray-600">{chartDescription}</p>
               </div>
-            )}
+              <div className="h-80 w-full">
+                <ResponsiveContainer>
+                  <BarChart data={currentData.items}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="label"><Label value="Date" offset={-5} position="insideBottom" /></XAxis>
+                    <YAxis><Label value="GST ($)" angle={-90} position="insideLeft" style={{ textAnchor: "middle" }} /></YAxis>
+                    <Tooltip />
+                    <Bar dataKey="amount" fill="#c6b6cf" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
 
-          {/* Right: Deductions list or GST Comparison Graph */}
+          {/* Right: Deduction List or GST Comparison */}
           <div className="space-y-6">
             {selectedMetric === "incomeTax" && (
               <div className="w-full bg-pink-100 rounded-xl shadow-lg p-6">
@@ -332,10 +321,10 @@ export const TaxPage = () => {
                       <XAxis dataKey="label"><Label value="Date" offset={-5} position="insideBottom" /></XAxis>
                       <YAxis><Label value="GST ($)" angle={-90} position="insideLeft" style={{ textAnchor: "middle" }} /></YAxis>
                       <Tooltip />
-                        <>
-                          <Bar dataKey="collected" fill="#6f597b" name="GST Collected" />
-                          <Bar dataKey="paid" fill="#c6b6cf" name="GST Paid" />
-                        </>
+                      <>
+                        <Bar dataKey="collected" fill="#6f597b" name="GST Collected" />
+                        <Bar dataKey="paid" fill="#c6b6cf" name="GST Paid" />
+                      </>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -347,4 +336,5 @@ export const TaxPage = () => {
     </div>
   );
 };
+
 
