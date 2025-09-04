@@ -298,8 +298,9 @@ export const PosSideMenu = ({
           </Hide>
         </div>
       </div>
-      {/* Items */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
+      {/* Items + Footer (wrapped so we can overlay when locked) */}
+      <div className="relative flex-1 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
         {items.length > 0 ? (
           items.map((item, idx) => {
             const qty = item.quantity ?? 1;
@@ -474,6 +475,7 @@ export const PosSideMenu = ({
                       setOpenDiscountPopup(false);
                       setDiscountPopupScreen("menu");
                     }}
+                    disabled={Boolean(order?.isLocked)}
                   >
                     X
                   </button>
@@ -664,5 +666,6 @@ export const PosSideMenu = ({
           )}
         </div>
       </div>
+    </div>
   );
 };
