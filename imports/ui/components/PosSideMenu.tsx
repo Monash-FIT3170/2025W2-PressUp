@@ -311,7 +311,7 @@ export const PosSideMenu = ({
                   onActiveOrderChange?.(v);
                 }}
               >
-                <option value="">Select Takeaway Order</option>
+                <option value="">Select Order</option>
                 {activeTakeawayOrders.map((o) => (
                   <option key={o._id} value={o._id}>
                     Order #{o.orderNo}
