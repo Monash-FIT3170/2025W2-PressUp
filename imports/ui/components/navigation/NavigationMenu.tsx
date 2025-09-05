@@ -20,6 +20,7 @@ import {
   MessageSquare,
   PenTool,
   Users,
+  ChartNoAxesCombined,
 } from "lucide-react";
 
 interface NavigationMenuProps {
@@ -58,6 +59,12 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             icon={<Folder />}
             name="Expense Tracking"
             path="/finance/Expenses"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+          <NavigationEntry
+            icon={<ChartNoAxesCombined />}
+            name="Analytics & Reporting"
+            path="/finance/analytics"
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>
