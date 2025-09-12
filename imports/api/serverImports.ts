@@ -14,15 +14,9 @@ import "./accounts/userMethods";
 import "./accounts/userPublishing";
 import "./accounts/roles";
 import "/imports/api/shifts/ShiftsPublishing";
-import "/imports/api/shifts/ShiftsMethods";
-
-
-
 import "./accounts/userPublishing";
 import "./accounts/userMethods.ts";
 import "./posts/commentsMethods.ts";
 import "./posts/commentsPublishing.ts";
 import "./tax/deductionsMethods";
 import "./tax/deductionsPublishing";
-
-
