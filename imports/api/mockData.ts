@@ -145,6 +145,9 @@ export const mockDataGenerator = async ({
   if ((await StockItemsCollection.countDocuments()) > 0) {
     await StockItemsCollection.dropCollectionAsync();
   }
+  if ((await PurchaseOrdersCollection.countDocuments()) > 0) {
+    await PurchaseOrdersCollection.dropCollectionAsync();
+  }
   if ((await TablesCollection.countDocuments()) > 0) {
     await TablesCollection.dropCollectionAsync();
   }
@@ -161,10 +164,6 @@ export const mockDataGenerator = async ({
         phone: faker.phone.number(),
         email: faker.internet.email(),
         address: faker.location.streetAddress(),
-        goods: Array.from(
-          { length: faker.number.int({ min: 1, max: 5 }) },
-          faker.commerce.product,
-        ),
       });
     }
   }
@@ -231,9 +230,16 @@ export const mockDataGenerator = async ({
   // Create tables first with no order assigned
   if ((await TablesCollection.countDocuments()) === 0) {
     for (let i = 1; i < tableCount + 1; ++i) {
-      const capacity = faker.number.int({ min: 1, max: 10 });
-      // Set 70% occupied, and 30% not occupied
-      const isOccupied = faker.datatype.boolean(0.7) ? true : false;
+      // const capacity = faker.number.int({ min: 1, max: 6 });
+      // // Set 70% occupied, and 30% not occupied
+      // const isOccupied = faker.datatype.boolean(0.7) ? true : false;
+      // // If occupied, set number of occupants from 1 to max capacity of table, otherwise, zero occupants
+      // const noOccupants = isOccupied
+      //   ? faker.number.int({ min: 1, max: capacity })
+      //   : 0;
+      const capacity = faker.number.int({ min: 1, max: 6 });
+      // Set every even table to be occupied
+      const isOccupied = i % 2 == 0 ? true : false;
       // If occupied, set number of occupants from 1 to max capacity of table, otherwise, zero occupants
       const noOccupants = isOccupied
         ? faker.number.int({ min: 1, max: capacity })
@@ -241,7 +247,8 @@ export const mockDataGenerator = async ({
 
       await TablesCollection.insertAsync({
         tableNo: i,
-        orderID: null,
+        activeOrderID: null,
+        orderIDs: [],
         capacity: capacity,
         isOccupied: isOccupied,
         noOccupants: noOccupants,
@@ -249,31 +256,32 @@ export const mockDataGenerator = async ({
     }
   }
 
-  // Create orders and assign to tableNos
+  // Create orders: mix of dine-in (linked to tables) and takeaway (no table)
   if ((await OrdersCollection.countDocuments()) === 0) {
-    // Fetch all existing table numbers
-    const allTables = await TablesCollection.find(
-      {},
+    // Only select tables that are occupied
+    const allOccupiedTables = await TablesCollection.find(
+      { isOccupied: true },
       { fields: { tableNo: 1 } },
     ).fetchAsync();
-    const availableTableNos = allTables.map((t) => t.tableNo);
+    const availableTableNos = allOccupiedTables.map((t) => t.tableNo);
 
-    // Shuffle table numbers and get up to orderCount amount
-    const shuffledTableNos = faker.helpers
-      .shuffle(availableTableNos)
-      .slice(0, orderCount);
+    const dineInCount = Math.max(
+      0,
+      Math.min(orderCount!, availableTableNos.length),
+    );
+    const takeawayCount = Math.max(0, orderCount! - dineInCount);
 
-    // Create orders using these table numbers
-    for (let i = 0; i < shuffledTableNos.length; ++i) {
-      const tableNo = shuffledTableNos[i];
+    // Start orderNo from 1001
+    let nextOrderNo = 1001;
 
+    const genOrderMenuItems = async (): Promise<OrderMenuItem[]> => {
       const rawMenuItems = await MenuItemsCollection.rawCollection()
         .aggregate([
           { $sample: { size: faker.number.int({ min: 0, max: 3 }) } },
         ])
         .toArray();
 
-      const orderMenuItems: OrderMenuItem[] = rawMenuItems.map((item) => ({
+      return rawMenuItems.map((item: any) => ({
         _id: faker.string.alpha(10),
         name: item.name,
         quantity: faker.number.int({ min: 1, max: 3 }),
@@ -283,38 +291,65 @@ export const mockDataGenerator = async ({
         category: item.category ?? [],
         image: item.image ?? "",
       }));
+    };
 
-      // Set orderStatus Pending if no items, otherwise 50% chance Preparing, 30% Ready and 20% Pending
-      let orderStatus: OrderStatus;
-      if (orderMenuItems.length === 0) {
-        orderStatus = OrderStatus.Pending;
-      } else {
-        orderStatus = faker.datatype.boolean(0.5)
-          ? OrderStatus.Preparing
-          : faker.datatype.boolean(0.3)
-            ? OrderStatus.Ready
-            : OrderStatus.Pending;
-      }
+    const decideStatus = (items: OrderMenuItem[]): OrderStatus => {
+      if (items.length === 0) return OrderStatus.Pending;
+      return faker.datatype.boolean(0.5)
+        ? OrderStatus.Preparing
+        : faker.datatype.boolean(0.3)
+          ? OrderStatus.Ready
+          : OrderStatus.Pending;
+    };
 
-      // Insert order and get its ID
+    const shuffledTableNos = faker.helpers
+      .shuffle(availableTableNos)
+      .slice(0, dineInCount);
+    for (const tableNo of shuffledTableNos) {
+      const items = await genOrderMenuItems();
+      const status = decideStatus(items);
+      const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
+
       const orderID = await OrdersCollection.insertAsync({
-        orderNo: faker.number.int({ min: 1000, max: 9999 }),
-        tableNo: tableNo,
-        menuItems: orderMenuItems,
-        totalPrice: orderMenuItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0,
-        ),
+        orderNo: nextOrderNo,
+        orderType: "dine-in",
+        tableNo,
+        menuItems: items,
+        totalPrice: total,
         paid: false,
-        orderStatus,
-        createdAt: faker.date.recent({ days: 7 }),
+        orderStatus: status,
+        createdAt: new Date(
+          Date.now() - faker.number.int({ min: 0, max: 25 * 60 }) * 1000,
+        ),
       });
+      nextOrderNo++;
 
-      // Update the table to reference this order ID
+      // Update the table with activeOrderID and push to orderIDs
       await TablesCollection.updateAsync(
         { tableNo },
-        { $set: { orderID: String(orderID) } },
+        {
+          $set: { activeOrderID: String(orderID) },
+          $push: { orderIDs: String(orderID) },
+        },
       );
+    }
+
+    for (let i = 0; i < takeawayCount; i++) {
+      const items = await genOrderMenuItems();
+      const status = decideStatus(items);
+      const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
+
+      await OrdersCollection.insertAsync({
+        orderNo: nextOrderNo,
+        orderType: "takeaway",
+        tableNo: null,
+        menuItems: items,
+        totalPrice: total,
+        paid: false,
+        orderStatus: status,
+        createdAt: faker.date.recent({ days: 7 }),
+      });
+      nextOrderNo++;
     }
   }
 };

@@ -11,7 +11,7 @@ import { PublishShiftForm } from "../../components/PublishShiftForm";
 import { RosterTable } from "../../components/RosterTable";
 <<<<<<< HEAD
 import { ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
-=======
+
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { Hide } from "../../components/display/Hide";
@@ -19,7 +19,7 @@ import { Roles } from "meteor/alanning:roles";
 import { Meteor } from "meteor/meteor";
 import { RoleEnum } from "/imports/api/accounts/roles";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
->>>>>>> 64cac7a5e19c32a4a58f5efe769f9f4c5198e0a0
+
 
 export const RosterPage = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -92,7 +92,6 @@ export const RosterPage = () => {
 
   return (
     <div className="flex flex-1 flex-col">
-<<<<<<< HEAD
       {/* Header section with buttons */}
       <div className="flex justify-between items-center mb-4">
         <Button onClick={() => setShiftModalOpen(true)}>
@@ -132,7 +131,7 @@ export const RosterPage = () => {
         onClose={() => setShowShiftModalCloseConfirmation(true)}
       >
         <PublishShiftForm onSuccess={() => setShiftModalOpen(false)} />
->>>>>>> 64cac7a5e19c32a4a58f5efe769f9f4c5198e0a0
+
       </Modal>
       <RosterTable
         PublishShiftButton={

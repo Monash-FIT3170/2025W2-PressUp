@@ -9,7 +9,6 @@ export interface Supplier extends DBEntry {
   email?: string;
   website?: string;
   address?: string;
-  goods: string[]; // TODO: This may need to be determined programmatically
 }
 
 export const SuppliersCollection = new Mongo.Collection<Supplier>("suppliers");

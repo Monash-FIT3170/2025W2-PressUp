@@ -6,29 +6,33 @@ import { IdType, OmitDB } from "../database";
 Meteor.methods({
   "tables.addOrder": requireLoginMethod(async function (
     tableID: IdType,
-    orderID: IdType,
+    orderIDs: IdType,
   ) {
-    if (!tableID || !orderID)
+    if (!tableID || !orderIDs)
       throw new Meteor.Error(
         "invalid-arguments",
         "Table ID and Order ID are required",
       );
+    // Push to orderIDs history and set activeOrderID
     return await TablesCollection.updateAsync(tableID, {
-      $set: { orderID: orderID, occupied: true },
+      $set: { activeOrderID: orderIDs, isOccupied: true },
+      $push: { orderIDs: orderIDs },
     });
   }),
 
   "tables.changeOrder": requireLoginMethod(async function (
     tableID: IdType,
-    orderID: IdType,
+    orderIDs: IdType,
   ) {
-    if (!tableID || !orderID)
+    if (!tableID || !orderIDs)
       throw new Meteor.Error(
         "invalid-arguments",
         "Table ID and Order ID are required",
       );
+    // Set new activeOrderID and push to history
     return await TablesCollection.updateAsync(tableID, {
-      $set: { orderID: orderID },
+      $set: { activeOrderID: orderIDs },
+      $push: { orderIDs: orderIDs },
     });
   }),
 
@@ -57,6 +61,46 @@ Meteor.methods({
       );
     return await TablesCollection.updateAsync(tableID, {
       $set: { isOccupied: true, noOccupants: occupants },
+    });
+  }),
+
+  "tables.setOccupied": requireLoginMethod(async function (
+    tableID: IdType,
+    isOccupied: boolean,
+    occupants: number,
+  ) {
+    if (!tableID || typeof isOccupied !== "boolean")
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Table ID and occupancy flag are required",
+      );
+    const updateOps: {
+      $set?: Partial<Tables>;
+      $unset?: { [k: string]: "" };
+    } = {};
+    if (isOccupied) {
+      updateOps.$set = { isOccupied };
+      if (typeof occupants === "number") {
+        updateOps.$set.noOccupants = occupants;
+      }
+    } else {
+      // set isOccupied false and remove noOccupants from DB
+      updateOps.$set = { isOccupied };
+      updateOps.$unset = { noOccupants: "" };
+    }
+
+    return await TablesCollection.updateAsync(tableID, updateOps);
+  }),
+
+  "tables.clearOrder": requireLoginMethod(async function (tableID: IdType) {
+    if (!tableID)
+      throw new Meteor.Error("invalid-arguments", "Table ID is required");
+    // clear activeOrderID, unset noOccupants and mark not occupied
+    await TablesCollection.updateAsync(tableID, {
+      $set: { activeOrderID: null, isOccupied: false },
+    });
+    return await TablesCollection.updateAsync(tableID, {
+      $unset: { noOccupants: "" },
     });
   }),
 

@@ -1,6 +1,5 @@
-import { FormEvent, useState, KeyboardEvent } from "react";
+import { FormEvent, useState } from "react";
 import { Meteor } from "meteor/meteor";
-import { X } from "lucide-react";
 
 export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [supplierName, setSupplierName] = useState("");
@@ -8,22 +7,6 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [phone, setPhone] = useState<string>("");
   const [website, setWebsite] = useState<string>("");
   const [address, setAddress] = useState<string>("");
-  const [goods, setGoods] = useState<string[]>([]);
-  const [inputValue, setInputValue] = useState("");
-
-  // Function to add a new good, when pressing enter, add the good.
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && inputValue.trim() !== "") {
-      e.preventDefault();
-      setGoods([...goods, inputValue.trim()]);
-      setInputValue("");
-    }
-  };
-
-  // Function to remove a good
-  const removeGood = (indexToRemove: number) => {
-    setGoods(goods.filter((_, index) => index !== indexToRemove));
-  };
 
   // Function to validate email
   const validateEmail = (email: string) => {
@@ -57,7 +40,6 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
         phone: phone,
         website: website,
         address: address,
-        goods: goods,
       },
       (error: Meteor.Error | undefined) => {
         if (error) {
@@ -68,8 +50,6 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
           setPhone("");
           setWebsite("");
           setAddress("");
-          setGoods([]);
-          setInputValue("");
           onSuccess();
         }
       },
@@ -144,37 +124,6 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
               placeholder="39 Innovation Walk Clayton VIC 3168"
               className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
-            />
-          </div>
-          <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Supplier Goods
-            </label>
-
-            <div className="flex flex-wrap gap-2 mb-2">
-              {goods.map((good, index) => (
-                <span
-                  key={index}
-                  className="bg-red-400 text-white px-3 py-1 rounded-md flex items-center"
-                >
-                  {good}
-                  <button
-                    onClick={() => removeGood(index)}
-                    className="ml-2 focus:outline-none"
-                    aria-label={`Remove ${good}`}
-                  >
-                    <X size={16} />
-                  </button>
-                </span>
-              ))}
-            </div>
-
-            <input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type and press Enter to add"
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
             />
           </div>
 

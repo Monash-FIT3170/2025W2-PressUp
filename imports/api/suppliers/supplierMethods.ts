@@ -15,8 +15,16 @@ Meteor.methods({
     check(supplier.email, String);
     check(supplier.website, String);
     check(supplier.address, String);
-    check(supplier.goods, Array);
 
     return await SuppliersCollection.insertAsync(supplier);
   }),
+
+  "suppliers.getNameById": async function (supplierId: string) {
+    check(supplierId, String);
+
+    const supplier = await SuppliersCollection.findOneAsync({
+      _id: supplierId,
+    });
+    return supplier?.name || "Unknown Supplier";
+  },
 });
