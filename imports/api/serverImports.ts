@@ -20,3 +20,4 @@ import "./posts/commentsMethods.ts";
 import "./posts/commentsPublishing.ts";
 import "./tax/deductionsMethods";
 import "./tax/deductionsPublishing";
+import "./debug/debugMethods";
