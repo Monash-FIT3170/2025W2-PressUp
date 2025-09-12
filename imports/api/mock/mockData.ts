@@ -7,6 +7,7 @@ import { mockOrders } from "../orders/mock";
 import { mockPosts, mockComments } from "../posts/mock";
 import { mockShifts } from "../shifts/mock";
 import { mockDeductions } from "../tax/mock";
+import { mockAccounts } from "../accounts/mock";
 
 export const mockDataGenerator = async ({
   supplierCount,
@@ -17,6 +18,7 @@ export const mockDataGenerator = async ({
   commentCount,
   shiftCount,
   deductionCount,
+  accountCount,
 }: {
   supplierCount?: number;
   orderCount?: number;
@@ -26,6 +28,7 @@ export const mockDataGenerator = async ({
   commentCount?: number;
   shiftCount?: number;
   deductionCount?: number;
+  accountCount?: number;
 }) => {
   supplierCount = supplierCount || 10;
   orderCount = orderCount || 5;
@@ -35,6 +38,9 @@ export const mockDataGenerator = async ({
   commentCount = commentCount || 10;
   shiftCount = shiftCount || 15;
   deductionCount = deductionCount || 8;
+  accountCount = accountCount || 8;
+
+  await mockAccounts(accountCount);
 
   await mockSuppliers(supplierCount);
   await mockMenuItems();
