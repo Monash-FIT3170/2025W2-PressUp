@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface ConfirmModalProps {
   open: boolean;
@@ -35,9 +35,9 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg text-sm font-medium
+            className="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer
               text-black bg-gray-300 hover:bg-gray-400
-              bg-neutral-600 hover:bg-neutral-700 text-white
+              dark:bg-neutral-600 dark:hover:bg-neutral-700 dark:text-white
               transition-colors"
           >
             Cancel
@@ -45,9 +45,9 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <button
             type="button"
             onClick={onConfirm}
-            className="px-4 py-2 rounded-lg text-sm font-medium
+            className="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer
               text-black bg-press-up-purple hover:bg-press-up-navy
-              bg-press-up-purple hover:bg-press-up-purple text-white
+              dark:hover:bg-press-up-purple dark:text-white
               transition-colors"
           >
             Confirm
@@ -57,4 +57,3 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     </div>
   );
 };
-

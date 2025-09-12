@@ -1,30 +1,110 @@
 import { Meteor } from "meteor/meteor";
 import { requireLoginMethod } from "../accounts/wrappers";
-import { TablesCollection } from "./TablesCollection";
-import { Mongo } from "meteor/mongo";
+import { Tables, TablesCollection } from "./TablesCollection";
+import { IdType, OmitDB } from "../database";
 
 Meteor.methods({
-  "tables.addOrder": requireLoginMethod(async function (tableID: Mongo.ObjectID, orderID: string) {
-    if (!tableID || !orderID) throw new Meteor.Error("invalid-arguments", "Table ID and Order ID are required");
-    return await TablesCollection.updateAsync(tableID, {$set: {orderID: orderID, occupied: true} } );
+  "tables.addOrder": requireLoginMethod(async function (
+    tableID: IdType,
+    orderIDs: IdType,
+  ) {
+    if (!tableID || !orderIDs)
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Table ID and Order ID are required",
+      );
+    // Push to orderIDs history and set activeOrderID
+    return await TablesCollection.updateAsync(tableID, {
+      $set: { activeOrderID: orderIDs, isOccupied: true },
+      $push: { orderIDs: orderIDs },
+    });
   }),
 
-  "tables.changeOrder": requireLoginMethod(async function (tableID: Mongo.ObjectID, orderID: string) {
-    if (!tableID || !orderID) throw new Meteor.Error("invalid-arguments", "Table ID and Order ID are required");
-    return await TablesCollection.updateAsync(tableID, {$set: {orderID: orderID} } );
+  "tables.changeOrder": requireLoginMethod(async function (
+    tableID: IdType,
+    orderIDs: IdType,
+  ) {
+    if (!tableID || !orderIDs)
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Table ID and Order ID are required",
+      );
+    // Set new activeOrderID and push to history
+    return await TablesCollection.updateAsync(tableID, {
+      $set: { activeOrderID: orderIDs },
+      $push: { orderIDs: orderIDs },
+    });
   }),
 
-  "tables.changeCapacity": requireLoginMethod(async function (tableID: Mongo.ObjectID, newCapacity: number) {
-    if (!tableID || !newCapacity) throw new Meteor.Error("invalid-arguments", "Table number and new capacity are required");
-    return await TablesCollection.updateAsync(tableID, { $set: {capacity: newCapacity} } );
+  "tables.changeCapacity": requireLoginMethod(async function (
+    tableID: IdType,
+    newCapacity: number,
+  ) {
+    if (!tableID || !newCapacity)
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Table number and new capacity are required",
+      );
+    return await TablesCollection.updateAsync(tableID, {
+      $set: { capacity: newCapacity },
+    });
   }),
 
-  "tables.updateOccupants": requireLoginMethod(async function (tableID: Mongo.ObjectID, occupants: number) {
-    if (!tableID || !occupants) throw new Meteor.Error("invalid-arguments", "Table number and number of occupants are required");
-    return await TablesCollection.updateAsync(tableID, { $set: {isOccupied: true, noOccupants: occupants} } );
+  "tables.updateOccupants": requireLoginMethod(async function (
+    tableID: IdType,
+    occupants: number,
+  ) {
+    if (!tableID || !occupants)
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Table number and number of occupants are required",
+      );
+    return await TablesCollection.updateAsync(tableID, {
+      $set: { isOccupied: true, noOccupants: occupants },
+    });
   }),
 
-  "tables.addTable": requireLoginMethod(async function (table: {tableNo: number; capacity: number; isOccupied: boolean; orderID: string | null; noOccupants: number; }) {
+  "tables.setOccupied": requireLoginMethod(async function (
+    tableID: IdType,
+    isOccupied: boolean,
+    occupants: number,
+  ) {
+    if (!tableID || typeof isOccupied !== "boolean")
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Table ID and occupancy flag are required",
+      );
+    const updateOps: {
+      $set?: Partial<Tables>;
+      $unset?: { [k: string]: "" };
+    } = {};
+    if (isOccupied) {
+      updateOps.$set = { isOccupied };
+      if (typeof occupants === "number") {
+        updateOps.$set.noOccupants = occupants;
+      }
+    } else {
+      // set isOccupied false and remove noOccupants from DB
+      updateOps.$set = { isOccupied };
+      updateOps.$unset = { noOccupants: "" };
+    }
+
+    return await TablesCollection.updateAsync(tableID, updateOps);
+  }),
+
+  "tables.clearOrder": requireLoginMethod(async function (tableID: IdType) {
+    if (!tableID)
+      throw new Meteor.Error("invalid-arguments", "Table ID is required");
+    // clear activeOrderID, unset noOccupants and mark not occupied
+    await TablesCollection.updateAsync(tableID, {
+      $set: { activeOrderID: null, isOccupied: false },
+    });
+    return await TablesCollection.updateAsync(tableID, {
+      $unset: { noOccupants: "" },
+    });
+  }),
+
+  "tables.addTable": requireLoginMethod(async function (table: OmitDB<Tables>) {
     if (
       typeof table.tableNo !== "number" ||
       typeof table.capacity !== "number" ||
@@ -36,9 +116,9 @@ Meteor.methods({
     return await TablesCollection.insertAsync(table);
   }),
 
-  "tables.removeTable": requireLoginMethod(async function (tableID: Mongo.ObjectID) {
-    if (!tableID) throw new Meteor.Error("invalid-arguments", "Table ID is required");
+  "tables.removeTable": requireLoginMethod(async function (tableID: IdType) {
+    if (!tableID)
+      throw new Meteor.Error("invalid-arguments", "Table ID is required");
     return await TablesCollection.removeAsync(tableID);
   }),
-
 });

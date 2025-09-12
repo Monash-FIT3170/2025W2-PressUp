@@ -4,17 +4,24 @@ import "./stockItems/stockItemsMethods";
 import "./stockItems/stockItemsPublishing";
 import "./suppliers/suppliersPublishing";
 import "./orders/ordersPublishing";
-import "./suppliers/SupplierMethods";
+import "./suppliers/supplierMethods";
 import "./purchaseOrders/purchaseOrdersMethods.ts";
 import "./purchaseOrders/purchaseOrdersPublishing.ts";
 import "./orders/ordersMethods";
 import "./tables/tablesMethods";
 import "./tables/tablesPublishing";
-import "./accounts/userMethods";
+
+
+
+
 import "./accounts/userPublishing";
-import "./accounts/roles";
-import "/imports/api/shifts/ShiftsPublishing";
-import "/imports/api/shifts/ShiftsMethods";
-
-
+import "./accounts/userMethods.ts";
+import "./shifts/shiftsMethods.ts";
+import "./shifts/shiftsPublishing.ts";
+import "./posts/postsMethods.ts";
+import "./posts/postsPublishing.ts";
+import "./posts/commentsMethods.ts";
+import "./posts/commentsPublishing.ts";
+import "./tax/deductionsMethods";
+import "./tax/deductionsPublishing";
 

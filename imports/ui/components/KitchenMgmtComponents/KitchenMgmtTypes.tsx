@@ -1,15 +1,18 @@
+import { IdType } from "/imports/api/database";
+
 export type OrderStatus = "pending" | "preparing" | "ready" | "served";
 
 export type UiOrder = {
-  _id: string; 
+  _id: IdType;
   orderNo: number;
   status: OrderStatus;
-  tableNo: number;
+  tableNo: number | null;
   createdAt: string;
+  createdAtMs: number;
   menuItems: Array<{
     name: string;
     quantity: number;
-    served?: boolean; 
+    served?: boolean;
   }>;
 };
 

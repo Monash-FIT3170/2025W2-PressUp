@@ -17,6 +17,7 @@ import { ReceiptPage } from "./pages/receipt/Receipt";
 import { LoginPage } from "./pages/Login";
 import { UserManagementPage } from "./pages/userManagement/userManagement";
 import { RosterPage } from "./pages/staff/Roster";
+import { CommunicationPage } from "./pages/staff/Communication";
 
 const router = createBrowserRouter([
   {
@@ -30,10 +31,13 @@ const router = createBrowserRouter([
       {
         path: "finance",
         children: [
-          { index: true, Component: () => <Navigate replace to={"profit-loss"} /> },
-          { path: "profit-loss", Component: ProfitLossPage},
-          { path: "tax", Component: TaxPage},
-          { path: "expenses", Component: ExpensesPage},
+          {
+            index: true,
+            Component: () => <Navigate replace to={"profit-loss"} />,
+          },
+          { path: "profit-loss", Component: ProfitLossPage },
+          { path: "tax", Component: TaxPage },
+          { path: "expenses", Component: ExpensesPage },
         ],
       },
       {
@@ -49,7 +53,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, Component: () => <Navigate replace to={"orders"} /> },
           { path: "orders", Component: MainDisplay },
-          { path: "tables", Component: TablesPage }
+          { path: "tables", Component: TablesPage },
         ],
       },
       {
@@ -59,8 +63,8 @@ const router = createBrowserRouter([
       {
         path: "kitchenManagement",
         children: [
-          { index: true, Component: KitchenManagement },    
-          { path: "history", Component: OrderHistoryPage }, 
+          { index: true, Component: KitchenManagement },
+          { path: "history", Component: OrderHistoryPage },
         ],
       },
       {
@@ -70,13 +74,14 @@ const router = createBrowserRouter([
       },
       {
         path: "accounts",
-        Component: UserManagementPage
+        Component: UserManagementPage,
       },
       {
         path: "staff",
         children: [
           { index: true, Component: () => <Navigate replace to={"roster"} /> },
           { path: "roster", Component: RosterPage },
+          { path: "communication", Component: CommunicationPage },
         ],
       },
     ],

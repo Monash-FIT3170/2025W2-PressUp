@@ -1,8 +1,7 @@
 import { Mongo } from "meteor/mongo";
-import { DBEntry } from "../database";
+import { DBEntry, OmitDB } from "../database";
 
 export interface MenuItem extends DBEntry {
-  _id: Mongo.ObjectID;
   name: string;
   quantity: number;
   ingredients: string[];
@@ -14,4 +13,7 @@ export interface MenuItem extends DBEntry {
   discount?: number;
 }
 
-export const MenuItemsCollection = new Mongo.Collection<MenuItem>("menuItems");
+export const MenuItemsCollection = new Mongo.Collection<
+  OmitDB<MenuItem>,
+  MenuItem
+>("menuItems");

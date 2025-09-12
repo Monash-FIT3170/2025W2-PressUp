@@ -12,7 +12,14 @@ const variantColours: Record<InputVaraint, string> = {
 interface InputProps
   extends Pick<
     React.InputHTMLAttributes<HTMLInputElement>,
-    "value" | "type" | "onChange" | "placeholder" | "autoComplete" | "required"
+    | "value"
+    | "type"
+    | "onChange"
+    | "placeholder"
+    | "autoComplete"
+    | "required"
+    | "onFocus"
+    | "list"
   > {
   variant?: InputVaraint;
 }
@@ -39,11 +46,16 @@ interface LabelProps {
 }
 
 export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
-  ({ children }) => {
+  ({ children }, ref) => {
     return (
-      <label className="text-sm mb-2 font-medium text-red-900 dark:text-white">
+      <label
+        className="text-sm mb-2 font-medium text-red-900 dark:text-white"
+        ref={ref}
+      >
         {children}
       </label>
     );
   },
 );
+
+Label.displayName = "Label";
