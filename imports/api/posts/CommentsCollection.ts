@@ -1,8 +1,8 @@
 import { Mongo } from "meteor/mongo";
-import { DBEntry, OmitDB } from "../database";
+import { DBEntry, IdType, OmitDB } from "../database";
 
 export interface Comment extends DBEntry {
-  postedBy: string;
+  postedBy: IdType;
   datePosted: Date;
   content: string;
   postId: string;
