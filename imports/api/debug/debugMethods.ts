@@ -103,7 +103,7 @@ Meteor.methods({
         "Only admins can perform debug operations",
       );
     }
-    await mockPosts();
+    await mockPosts(5);
   }),
 
   "debug.mockComments": requireLoginMethod(async function () {
@@ -113,7 +113,7 @@ Meteor.methods({
         "Only admins can perform debug operations",
       );
     }
-    await mockComments();
+    await mockComments(10);
   }),
 
   "debug.mockShifts": requireLoginMethod(async function () {
@@ -123,7 +123,7 @@ Meteor.methods({
         "Only admins can perform debug operations",
       );
     }
-    await mockShifts();
+    await mockShifts(15);
   }),
 
   "debug.mockDeductions": requireLoginMethod(async function () {
@@ -133,7 +133,7 @@ Meteor.methods({
         "Only admins can perform debug operations",
       );
     }
-    await mockDeductions();
+    await mockDeductions(8);
   }),
 
   // Collection dropping methods
