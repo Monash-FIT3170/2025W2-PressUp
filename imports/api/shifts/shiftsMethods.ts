@@ -1,103 +1,79 @@
-import { check, Match } from "meteor/check";
 import { Meteor } from "meteor/meteor";
-import { requireLoginMethod } from "../accounts/wrappers";
-import { ShiftsCollection, ShiftTime } from "./ShiftsCollection";
-import { Roles } from "meteor/alanning:roles";
-import { RoleEnum } from "../accounts/roles";
-
-const ShiftTimePattern = Match.Where((v: unknown): v is ShiftTime => {
-  const valid =
-    typeof v === "object" &&
-    v !== null &&
-    "hour" in v &&
-    "minute" in v &&
-    typeof (v as { hour: unknown }).hour === "number" &&
-    Number.isInteger((v as { hour: unknown }).hour) &&
-    (v as { hour: number }).hour >= 0 &&
-    (v as { hour: number }).hour <= 23 &&
-    typeof (v as { minute: unknown }).minute === "number" &&
-    Number.isInteger((v as { minute: unknown }).minute) &&
-    (v as { minute: number }).minute >= 0 &&
-    (v as { minute: number }).minute <= 59;
-
-  if (!valid) {
-    throw new Meteor.Error("invalid-shift-time", "Invalid hour/minute");
-  }
-  return true;
-});
+import { check } from "meteor/check";
+import { ShiftsCollection } from "./ShiftsCollection";
+import { requireLoginMethod } from "/imports/api/accounts/wrappers";
 
 Meteor.methods({
-  "shifts.new": requireLoginMethod(async function ({
-    userId,
-    date,
-    start,
-    end,
-  }: {
-    userId: string;
-    date: Date;
-    start: ShiftTime;
-    end: ShiftTime;
-  }) {
-    check(userId, String);
-    check(date, Date);
-    check(start, ShiftTimePattern);
-    check(end, ShiftTimePattern);
+  "shifts.clockIn": requireLoginMethod(async function() {
+    const userId = this.userId!;
+    let scheduledEnd: Date | undefined;
 
-    if (!(await Roles.userIsInRoleAsync(Meteor.userId(), [RoleEnum.MANAGER]))) {
-      throw new Meteor.Error(
-        "invalid-permissions",
-        "No permissions to publish a shift",
-      );
+    if (scheduledEnd !== undefined) {
+      check(scheduledEnd, Date);
     }
 
-    const userExists = !!(await Meteor.users.findOneAsync(
-      { _id: userId },
-      { fields: { _id: 1 } },
-    ));
-    if (!userExists) {
-      throw new Meteor.Error("invalid-user", "No user found with the given ID");
-    }
-
-    if (!(date instanceof Date) || isNaN(date.getTime())) {
-      throw new Meteor.Error("invalid-date", "Date is invalid");
-    }
-
-    if (
-      end.hour < start.hour ||
-      (end.hour === start.hour && end.minute <= start.minute)
-    ) {
-      throw new Meteor.Error(
-        "invalid-time-range",
-        "End time must be after start time",
-      );
-    }
-
-    // Check if user already has a shift on this date
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const existingShift = await ShiftsCollection.findOneAsync({
+    // if user is in active shift then refuse 
+    const existingActiveShift = await ShiftsCollection.findOneAsync({
       user: userId,
-      date: {
-        $gte: startOfDay,
-        $lte: endOfDay,
-      },
+      end: { $exists: false }
     });
 
-    if (existingShift) {
-      throw new Meteor.Error(
-        "shift-already-exists",
-        "User already has a shift scheduled for this day",
-      );
+    if (existingActiveShift) {
+      throw new Meteor.Error("already-clocked-in", "You are already clocked in");
     }
 
-    return await ShiftsCollection.insertAsync({
-      user: userId,
-      date,
-      start,
-      end,
-    });
+    try {
+      const shiftId = await ShiftsCollection.insertAsync({
+        user: userId,
+        start: new Date(),
+        end: new Date(Date.now() + 8 * 60 * 60 * 1000), 
+        ...(scheduledEnd ? { scheduledEnd } : {}),
+      });
+
+      console.log(`User ${userId} clocked in at ${new Date()}`);
+      return shiftId;
+    } catch (error) {
+      const errorMessage = (error instanceof Error) ? error.message : String(error);
+      throw new Meteor.Error("clock-in-failed", "Failed to clock in: " + errorMessage);
+    }
   }),
+
+  "shifts.clockOut": requireLoginMethod(async function(shiftId: string) {
+    check(shiftId, String);
+    
+    const userId = this.userId!;
+    
+    const shift = await ShiftsCollection.findOneAsync({
+      _id: shiftId,
+      user: userId,
+      end: { $exists: false }
+    });
+
+    if (!shift) {
+      throw new Meteor.Error("invalid-shift", "Active shift not found or doesn't belong to you");
+    }
+
+    try {
+      const result = await ShiftsCollection.updateAsync(shiftId, {
+        $set: {
+          end: new Date()
+        }
+      });
+
+      console.log(`User ${userId} clocked out at ${new Date()}`);
+      return result;
+    } catch (error) {
+      const errorMessage = (error instanceof Error) ? error.message : String(error);
+      throw new Meteor.Error("clock-out-failed", "Failed to clock out: " + errorMessage);
+    }
+  }),
+
+  "shifts.getCurrentShift": requireLoginMethod(async function() {
+    const userId = this.userId!;
+    
+    return await ShiftsCollection.findOneAsync({
+      user: userId,
+      end: { $exists: false }
+    });
+  })
 });
