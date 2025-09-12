@@ -1,17 +1,9 @@
-<<<<<<< HEAD
-import { useState } from "react";
-import { Meteor } from "meteor/meteor";
-import { useTracker } from "meteor/react-meteor-data";
-=======
 import { useEffect, useState } from "react";
->>>>>>> 64cac7a5e19c32a4a58f5efe769f9f4c5198e0a0
 import { Button } from "../../components/interaction/Button";
 import { Modal } from "../../components/Modal";
 import { PublishShiftForm } from "../../components/PublishShiftForm";
 import { RosterTable } from "../../components/RosterTable";
-<<<<<<< HEAD
 import { ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
-
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { Hide } from "../../components/display/Hide";
@@ -19,7 +11,6 @@ import { Roles } from "meteor/alanning:roles";
 import { Meteor } from "meteor/meteor";
 import { RoleEnum } from "/imports/api/accounts/roles";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-
 
 export const RosterPage = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -42,25 +33,24 @@ export const RosterPage = () => {
     [rolesLoaded, rolesGraphLoaded],
   );
 
-  const { user, activeShift, isLoading } = useTracker(() => {
+  const { user, activeShift } = useTracker(() => {
     const user = Meteor.user();
     const userId = Meteor.userId();
-    
+
     if (!userId) {
       return { user: null, activeShift: null, isLoading: false };
     }
 
-    const shiftsHandle = Meteor.subscribe('shifts.current');
-    
+    const shiftsHandle = Meteor.subscribe("shifts.current");
+
     const activeShift = ShiftsCollection.findOne({
       user: userId,
-      
     });
 
     return {
       user,
       activeShift,
-      isLoading: !shiftsHandle.ready()
+      isLoading: !shiftsHandle.ready(),
     };
   }, []);
 
@@ -68,53 +58,47 @@ export const RosterPage = () => {
 
   const handleClockIn = () => {
     if (!user) return;
-    
-    Meteor.call('shifts.clockIn', (error: Meteor.Error | undefined) => {
+
+    Meteor.call("shifts.clockIn", (error: Meteor.Error | undefined) => {
       if (error) {
-        console.error('Clock in failed:', error.message);
+        console.error("Clock in failed:", error.message);
       } else {
-        console.log('Successfully clocked in');
+        console.log("Successfully clocked in");
       }
     });
   };
 
   const handleClockOut = () => {
     if (!user || !activeShift) return;
-    
-    Meteor.call('shifts.clockOut', activeShift._id, (error: Meteor.Error | undefined) => {
-      if (error) {
-        console.error('Clock out failed:', error.message);
-      } else {
-        console.log('Successfully clocked out');
-      }
-    });
+
+    Meteor.call(
+      "shifts.clockOut",
+      activeShift._id,
+      (error: Meteor.Error | undefined) => {
+        if (error) {
+          console.error("Clock out failed:", error.message);
+        } else {
+          console.log("Successfully clocked out");
+        }
+      },
+    );
   };
 
   return (
     <div className="flex flex-1 flex-col">
       {/* Header section with buttons */}
       <div className="flex justify-between items-center mb-4">
-        <Button onClick={() => setShiftModalOpen(true)}>
-          Publish Shift
-        </Button>
-        
+        <Button onClick={() => setShiftModalOpen(true)}>Publish Shift</Button>
+
         <div className="flex gap-2">
           {user && (
             <>
               {isClockedIn ? (
-                <Button 
-                  variant="negative" 
-                  onClick={handleClockOut}
-
-                >
+                <Button variant="negative" onClick={handleClockOut}>
                   Clock Out
                 </Button>
               ) : (
-                <Button 
-                  variant="positive" 
-                  onClick={handleClockIn}
-
-                >
+                <Button variant="positive" onClick={handleClockIn}>
                   Clock In
                 </Button>
               )}
@@ -124,15 +108,9 @@ export const RosterPage = () => {
       </div>
 
       <Modal open={shiftModalOpen} onClose={() => setShiftModalOpen(false)}>
-        <PublishShiftForm />
-=======
-      <Modal
-        open={shiftModalOpen}
-        onClose={() => setShowShiftModalCloseConfirmation(true)}
-      >
         <PublishShiftForm onSuccess={() => setShiftModalOpen(false)} />
-
       </Modal>
+
       <RosterTable
         PublishShiftButton={
           <Hide hide={!canPublishShifts}>
