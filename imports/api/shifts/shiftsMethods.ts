@@ -50,7 +50,7 @@ Meteor.methods({
 
     const userId = this.userId!;
     const shift = await ShiftsCollection.findOneAsync({
-      _id: shiftId,
+      id: shiftId,
       user: userId,
       end: { $exists: false },
     });
