@@ -7,7 +7,6 @@ export interface Company extends DBEntry {
   phone?: string;
   email?: string;
   website?: string;
-  abn?: string;
 }
 
 export const CompanyCollection = new Mongo.Collection<OmitDB<Company>, Company>(

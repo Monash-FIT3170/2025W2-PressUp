@@ -17,6 +17,7 @@ import { UserManagementPage } from "./pages/userManagement/userManagement";
 import { RosterPage } from "./pages/staff/Roster";
 import { CommunicationPage } from "./pages/staff/Communication";
 import { DebugPage } from "./pages/debug/Debug";
+import { CompanySettings } from "./pages/company/CompanySettings";
 
 const router = createBrowserRouter([
   {
@@ -83,6 +84,10 @@ const router = createBrowserRouter([
           { path: "roster", Component: RosterPage },
           { path: "communication", Component: CommunicationPage },
         ],
+      },
+      {
+        path: "company",
+        Component: CompanySettings,
       },
       {
         path: "debug",

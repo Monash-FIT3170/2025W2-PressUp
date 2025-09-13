@@ -14,7 +14,4 @@ export { Tables, TablesCollection } from "./tables/TablesCollection";
 export { Deduction, DeductionsCollection } from "./tax/DeductionsCollection";
 
 // Company
-export {
-  Company,
-  CompanyCollection,
-} from "./company/CompanyCollection";
+export { Company, CompanyCollection } from "./company/CompanyCollection";
