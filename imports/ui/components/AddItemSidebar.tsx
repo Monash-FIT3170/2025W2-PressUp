@@ -141,18 +141,15 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-      <div className="bg-gray-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
-        <h2 className="text-xl font-bold mb-4" style={{ color: "#a43375" }}>
+      <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
+        <h2 className="text-xl font-bold mb-4 text-red-900 dark:text-white">
           Add New Menu Item
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: "#a43375" }}
-            >
+            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
               Name
             </label>
             <input
@@ -162,17 +159,14 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             />
           </div>
 
           {/* Price */}
           <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: "#a43375" }}
-            >
+            <label className="block text-sm font-medium mb-1 text-red-900 dark:text-white">
               Price ($)
             </label>
             <input
@@ -200,17 +194,14 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                   setFormData({ ...formData, price: 0 });
                 }
               }}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             />
           </div>
 
           {/* Quantity */}
           <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: "#a43375" }}
-            >
+            <label className="block text-sm font-medium mb-1 text-red-900 dark:text-white">
               Quantity
             </label>
             <input
@@ -224,7 +215,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                   quantity: parseInt(e.target.value) || 0,
                 })
               }
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             />
           </div>
@@ -298,10 +289,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
           {/* Category */}
           <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: "#a43375" }}
-            >
+            <label className="block text-sm font-medium mb-1 text-red-900 dark:text-white">
               Category
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -317,7 +305,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                   }`}
                   style={{
                     backgroundColor: formData.category.includes(cat)
-                      ? "#a43375"
+                      ? "#6f597b"
                       : "transparent",
                   }}
                 >
@@ -334,10 +322,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
           {/* Availability */}
           <div className="flex items-center space-x-3">
-            <label
-              className="block text-sm font-medium"
-              style={{ color: "#a43375" }}
-            >
+            <label className="block text-sm font-medium text-red-900 dark:text-white">
               Availability
             </label>
             <div className="flex items-center">
@@ -348,7 +333,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                   setFormData({ ...formData, available: e.target.checked })
                 }
                 className="w-4 h-4 rounded"
-                style={{ accentColor: "#a43375" }}
+                style={{ accentColor: "#6f597b" }}
               />
               <span className="ml-2 text-sm text-gray-700">
                 {formData.available ? "Available" : "Unavailable"}
@@ -358,10 +343,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
           {/* Image Selection */}
           <div>
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: "#a43375" }}
-            >
+            <label className="block text-sm font-medium mb-2 text-red-900 dark:text-white">
               Image
             </label>
 
@@ -378,7 +360,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                 style={{
                   backgroundColor:
                     selectedImageType === "predefined"
-                      ? "#a43375"
+                      ? "#6f597b"
                       : "transparent",
                 }}
               >
@@ -394,7 +376,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                 }`}
                 style={{
                   backgroundColor:
-                    selectedImageType === "upload" ? "#a43375" : "transparent",
+                    selectedImageType === "upload" ? "#6f597b" : "transparent",
                 }}
               >
                 Upload Custom
@@ -500,7 +482,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
             <button
               type="submit"
               className="px-6 py-2 text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: "#a43375" }}
+              style={{ backgroundColor: "#6f597b" }}
               disabled={isSubmitting}
             >
               {isSubmitting ? "Saving..." : "Save"}
@@ -527,7 +509,7 @@ const Sidebar: React.FC = () => {
         <button
           onClick={() => setIsModalOpen(true)}
           className="w-full py-2.5 px-4 rounded-lg mb-4 font-medium text-sm transition-all hover:opacity-90 hover:shadow-md"
-          style={{ backgroundColor: "#a43375", color: "white" }}
+          style={{ backgroundColor: "#6f597b", color: "white" }}
         >
           Add Item
         </button>

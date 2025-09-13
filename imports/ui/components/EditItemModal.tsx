@@ -133,7 +133,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
         }}
       >
         <div className="p-4 md:p-5 max-h-[80vh] overflow-y-auto w-full">
-          <h2 className="text-xl font-semibold text-press-up-purple dark:text-white">
+          <h2 className="text-xl font-semibold text-red-900 dark:text-white">
             Edit Item
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -251,7 +251,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             <div>
               <label
                 className="block text-sm font-medium mb-2"
-                style={{ color: "#a43375" }}
+                style={{ color: "#6f597b" }}
               >
                 Image
               </label>
