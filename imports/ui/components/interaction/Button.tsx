@@ -11,7 +11,7 @@ const variantColours: Record<ButtonVariant, string> = {
 interface Props
   extends Pick<
     React.ButtonHTMLAttributes<HTMLButtonElement>,
-    "type" | "onClick" | "children"
+    "type" | "onClick" | "children" | "disabled"
   > {
   variant?: ButtonVariant;
   width?: "full" | "fit";
