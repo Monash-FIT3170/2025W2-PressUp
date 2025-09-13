@@ -20,6 +20,7 @@ import {
   MessageSquare,
   PenTool,
   ReceiptText,
+  Settings,
   Users,
 } from "lucide-react";
 
@@ -156,6 +157,13 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>
+
+        <NavigationEntry
+          icon={<Settings />}
+          name="Company Settings"
+          path="/company"
+          selectionType={NavigationEntrySelection.HIGHLIGHT}
+        />
       </div>
     </div>
   );
