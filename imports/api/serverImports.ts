@@ -1,3 +1,4 @@
+import "./globalPublishing";
 import "./menuItems/menuItemsMethods";
 import "./menuItems/menuItemsPublishing";
 import "./stockItems/stockItemsMethods";

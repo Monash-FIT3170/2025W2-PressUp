@@ -21,7 +21,8 @@ export const CompanySettings = () => {
   const [website, setWebsite] = useState("");
   const [companyLoaded, setCompanyLoaded] = useState(false);
 
-  const isLoadingSubscription = useSubscribe("company");
+  const isLoadingCompany = useSubscribe("company");
+
   const company: Company | undefined = useTracker(() => {
     return CompanyCollection.find().fetch()[0];
   });
@@ -73,7 +74,7 @@ export const CompanySettings = () => {
     );
   };
 
-  if (isLoadingSubscription()) {
+  if (isLoadingCompany()) {
     return (
       <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
         Loading...
