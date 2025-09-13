@@ -22,7 +22,6 @@ export const CompanySettings = () => {
   const [companyLoaded, setCompanyLoaded] = useState(false);
 
   const isLoadingCompany = useSubscribe("company");
-
   const company: Company | undefined = useTracker(() => {
     return CompanyCollection.find().fetch()[0];
   });
