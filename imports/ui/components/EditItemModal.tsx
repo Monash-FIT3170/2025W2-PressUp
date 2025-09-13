@@ -269,7 +269,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                   style={{
                     backgroundColor:
                       selectedImageType === "predefined"
-                        ? "##6f597b"
+                        ? "#6f597b"
                         : "transparent",
                   }}
                 >
