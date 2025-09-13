@@ -10,6 +10,7 @@ import { Roles } from "meteor/alanning:roles";
 import { RoleEnum } from "/imports/api/accounts/roles";
 import { Hide } from "./display/Hide";
 import { useNavigate, useLocation } from "react-router";
+import { Button } from "./interaction/Button";
 
 interface PosSideMenuProps {
   tableNo: number | null;
@@ -402,7 +403,9 @@ export const PosSideMenu = ({
                   <p className="font-bold text-gray-800 mb-2">
                     No active orders for this table.
                   </p>
-                  <button
+                  <Button
+                    variant="positive"
+                    width="full"
                     onClick={async () => {
                       try {
                         console.log("Creating order for table:", selectedTable);
@@ -445,16 +448,9 @@ export const PosSideMenu = ({
                         (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
                       )
                     }
-                    className={`px-4 py-2 rounded font-bold text-white ${
-                      tables.find(
-                        (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
-                      )
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-press-up-positive-button hover:bg-press-up-hover"
-                    }`}
                   >
                     Start a new order?
-                  </button>
+                  </Button>
                 </div>
               ) : orderType === "takeaway" && !selectedTakeawayId ? (
                 /* takeaway empty + no selected order: show helper */
@@ -484,21 +480,21 @@ export const PosSideMenu = ({
 
           {/* Displaying discount infomation*/}
           {discountPercent !== 0 && (
-            <div className="flex justify-between items-center mb-2 bg-blue-200 text-black text-sm rounded-lg p-1">
+            <div className="flex justify-between items-center mb-2 bg-press-up-positive-button rounded-lg p-1">
               <span className="text-sm font-bold">
                 Percent Discount: {discountPercent}%
               </span>
             </div>
           )}
           {discountAmount !== 0 && (
-            <div className="flex justify-between items-center mb-2 bg-purple-200 text-black text-sm rounded-lg p-1">
+            <div className="flex justify-between items-center mb-2 bg-press-up-positive-button rounded-lg p-1">
               <span className="text-sm font-bold">
                 Flat Discount: ${discountAmount}
               </span>
             </div>
           )}
           {savedAmount !== 0 && (
-            <div className="flex justify-between items-center mb-2 bg-yellow-200 text-black text-sm rounded-lg p-1">
+            <div className="flex justify-between items-center mb-2 bg-press-up-positive-button rounded-lg p-1">
               <span className="text-sm font-bold">
                 Cost Saved: - ${savedAmount.toFixed(2)}
               </span>
@@ -506,22 +502,27 @@ export const PosSideMenu = ({
           )}
 
           {/* Discount button */}
-          <button
-            className="w-full bg-[#1e032e] hover:bg-press-up-hover text-[#f3ead0] font-bold py-2 px-4 rounded-full mb-2"
-            onClick={() => {
-              if (order?.isLocked) return;
-              setOpenDiscountPopup(true);
-              setDiscountPopupScreen("menu");
-            }}
-            disabled={Boolean(order?.isLocked)}
-          >
-            Discount
-          </button>
+          <div className="mb-4">
+            <Button
+              variant="negative"
+              width="full"
+              onClick={() => {
+                if (order?.isLocked) return;
+                setOpenDiscountPopup(true);
+                setDiscountPopupScreen("menu");
+              }}
+              disabled={Boolean(order?.isLocked)}
+            >
+              Discount
+            </Button>
+          </div>
           {/* [ADD] Start new takeaway order (below Discount) */}
           {orderType === "takeaway" && (
-            <button
+            <Button
               // full width, sits right under Discount button
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-full mb-2"
+              // className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-full mb-2"
+              variant="positive"
+              width="full"
               onClick={async () => {
                 try {
                   // create a fresh takeaway order
@@ -543,7 +544,7 @@ export const PosSideMenu = ({
               }}
             >
               Start new order
-            </button>
+            </Button>
           )}
           {/* Discount Popup */}
           {openDiscountPopup && (
@@ -578,50 +579,64 @@ export const PosSideMenu = ({
                           Discount Options
                         </span>
                         {discountPercent !== 0 && (
-                          <div className="flex justify-between items-center mb-2 bg-blue-300 text-black text-sm rounded-lg p-2 px-4">
+                          <div className="flex justify-between items-center mb-2 bg-press-up-positive-button text-black text-sm rounded-lg p-2 px-4">
                             <span className="text-sm font-bold">
                               Percentage Discount (%): {discountPercent}%
                             </span>
                           </div>
                         )}
                         {discountAmount !== 0 && (
-                          <div className="flex justify-between items-center mb-2 bg-purple-300 text-black text-sm rounded-lg p-2">
+                          <div className="flex justify-between items-center mb-2 bg-press-up-positive-button text-black text-sm rounded-lg p-2 px-4">
                             <span className="text-sm font-bold">
                               Flat Discount ($): ${discountAmount}
                             </span>
                           </div>
                         )}
                       </div>
-                      <div className="flex flex-col items-center mt-7">
-                        <button
-                          className="bg-blue-300 hover:bg-blue-200 font-bold text-gray-700 text-xl py-4 rounded text-center w-full my-4 rounded-full shadow-lg"
-                          onClick={() => setDiscountPopupScreen("percentage")}
-                        >
-                          Percentage Discount (%)
-                        </button>
-                        <button
-                          className="bg-purple-400 hover:bg-purple-300 font-bold text-gray-700 text-xl py-4 rounded text-center w-full my-4 rounded-full shadow-lg"
-                          onClick={() => setDiscountPopupScreen("flat")}
-                        >
-                          Flat Discount ($)
-                        </button>
+                      <div className="items-center">
+                        <div className="mb-8">
+                          <div className="w-full my-4 flex justify-center">
+                            <Button
+                              variant="negative"
+                              width="fit"
+                              onClick={() => setDiscountPopupScreen("percentage")}
+                            >
+                              Percentage Discount (%)
+                            </Button>
+                          </div>
+                          <div className="w-full my-4 flex justify-center">
+                            <Button
+                              variant="negative"
+                              width="fit"
+                              onClick={() => setDiscountPopupScreen("flat")}
+                            >
+                              Flat Discount ($)
+                            </Button>
+                          </div>                        
+                        </div>
                         <div className="flex flex-row w-full justify-between">
-                          <button
-                            className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xl py-4 my-4 px-6 rounded-full shadow-lg"
-                            onClick={() => {
-                              removePercentDiscount();
-                            }}
-                          >
-                            Reset Percentage Discount (%)
-                          </button>
-                          <button
-                            className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xl py-4 my-4 px-8 rounded-full shadow-lg"
-                            onClick={() => {
-                              removeFlatDiscount();
-                            }}
-                          >
-                            Reset Flat Discount ($)
-                          </button>
+                          <div className="mr-2">
+                            <Button
+                              variant="positive"
+                              width="fit"
+                              onClick={() => {
+                                removePercentDiscount();
+                              }}
+                            >
+                              Reset Percentage Discount (%)
+                            </Button>
+                          </div>
+                          <div className="ml-2">
+                            <Button
+                              variant="positive"
+                              width="fit"
+                              onClick={() => {
+                                removeFlatDiscount();
+                              }}
+                            >
+                              Reset Flat Discount ($)
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -635,12 +650,13 @@ export const PosSideMenu = ({
                       <span className="font-bold text-2xl text-black rounded-full whitespace-nowrap">
                         Apply Percentage Discount (%)
                       </span>
-                      <button
-                        className="text-xl text-white font-bold rounded-full bg-press-up-purple hover:bg-purple-400 px-3 py-2 shadow-md"
+                      <Button
+                        // className="text-xl text-white font-bold rounded-full bg-press-up-purple hover:bg-purple-400 px-3 py-2 shadow-md"
+                        variant="negative"
                         onClick={() => setDiscountPopupScreen("menu")}
                       >
                         ← Back
-                      </button>
+                      </Button>
                     </div>
                     <div className="mt-4">
                       <span className="font-bold text-xl text-gray-700">
@@ -648,13 +664,15 @@ export const PosSideMenu = ({
                       </span>
                       <div className="grid grid-cols-4 gap-1 my-2">
                         {[5, 10, 25, 50].map((d) => (
-                          <button
+                          <Button
                             key={d}
-                            className="bg-blue-700 hover:bg-blue-600 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full shadow-md"
+                            // className="bg-blue-700 hover:bg-blue-600 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full shadow-md"
+                            variant="positive"
+                            width="full"
                             onClick={() => applyPercentDiscount(d)}
                           >
                             {d}%
-                          </button>
+                          </Button>
                         ))}
                       </div>
                       <div className="flex flex-col my-8">
@@ -670,12 +688,16 @@ export const PosSideMenu = ({
                           onChange={handleDiscountPercent2Change}
                           className="px-4 py-3 w-full text-xl h-12 w-64 bg-white border border-gray-300 text-black rounded focus:outline-none focus:ring-2 focus:ring-pink-300"
                         />
-                        <button
-                          className="bg-blue-700 hover:bg-blue-600 font-bold text-white text-xl py-2 rounded text-center mr-130 my-4 rounded-full shadow-md"
-                          onClick={() => applyPercentDiscount(discountPercent2)}
-                        >
-                          Apply
-                        </button>
+                        <div className="mt-2">
+                          <Button
+                            variant="negative"
+                            onClick={() =>
+                              applyPercentDiscount(discountPercent2)
+                            }
+                          >
+                            Apply
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -688,12 +710,13 @@ export const PosSideMenu = ({
                       <span className="font-bold text-2xl text-black rounded-full whitespace-nowrap">
                         Apply Flat Discount ($)
                       </span>
-                      <button
-                        className="text-xl text-white font-bold rounded-full bg-press-up-purple hover:bg-purple-400 px-3 py-2 shadow-md"
+                      <Button
+                        // className="text-xl text-white font-bold rounded-full bg-press-up-purple hover:bg-purple-400 px-3 py-2 shadow-md"
+                        variant="negative"
                         onClick={() => setDiscountPopupScreen("menu")}
                       >
                         ← Back
-                      </button>
+                      </Button>
                     </div>
                     <div className="mt-4">
                       <span className="font-bold text-xl text-gray-700">
@@ -701,13 +724,15 @@ export const PosSideMenu = ({
                       </span>
                       <div className="grid grid-cols-4 gap-1 my-2">
                         {[5, 10, 15, 20].map((d) => (
-                          <button
+                          <Button
                             key={d}
-                            className="bg-purple-700 hover:bg-purple-600 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full shadow-md"
+                            // className="bg-purple-700 hover:bg-purple-600 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full shadow-md"
+                            variant="positive"
+                            width="full"
                             onClick={() => applyFlatDiscount(d)}
                           >
                             ${d}
-                          </button>
+                          </Button>
                         ))}
                       </div>
                       <div className="flex flex-col my-8">
@@ -722,12 +747,14 @@ export const PosSideMenu = ({
                           onChange={handleDiscountAmount2Change}
                           className="px-4 py-3 w-full text-xl h-12 w-64 bg-white border border-gray-300 text-black rounded focus:outline-none focus:ring-2 focus:ring-pink-300"
                         />
-                        <button
-                          className="bg-purple-700 hover:bg-purple-600 font-bold text-white text-xl py-2 rounded text-center mr-130 my-4 rounded-full shadow-md"
-                          onClick={() => applyFlatDiscount(discountAmount2)}
-                        >
-                          Apply
-                        </button>
+                        <div className="mt-2">
+                          <Button
+                            variant="positive"
+                            onClick={() => applyFlatDiscount(discountAmount2)}
+                          >
+                            Apply
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -738,12 +765,14 @@ export const PosSideMenu = ({
 
           {/* Pay button */}
           {order && (
-            <PaymentModal
-              tableNo={
-                order.orderType === "dine-in" ? (order.tableNo ?? null) : null
-              }
-              order={order}
-            />
+            <div className="my-4">
+              <PaymentModal
+                tableNo={
+                  order.orderType === "dine-in" ? (order.tableNo ?? null) : null
+                }
+                order={order}
+              />
+            </div>
           )}
 
           {/* Locked overlay */}
