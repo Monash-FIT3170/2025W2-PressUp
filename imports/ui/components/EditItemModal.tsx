@@ -133,7 +133,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
         }}
       >
         <div className="p-4 md:p-5 max-h-[80vh] overflow-y-auto w-full">
-          <h2 className="text-xl font-semibold text-black dark:text-white mb-4">
+          <h2 className="text-xl font-semibold text-press-up-purple dark:text-white">
             Edit Item
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -145,8 +145,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200 
-                dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white dark:focus:ring-purple-400 dark:focus:border-purple-400"
+                className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
                 required
               />
             </div>
@@ -165,8 +164,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                   setPrice(isNaN(val) ? 0 : val);
                 }}
                 onBlur={() => setPrice(parseFloat(price.toFixed(2)))}
-                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200 
-                dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white dark:focus:ring-purple-400 dark:focus:border-purple-400"
+                className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
                 required
               />
             </div>
@@ -185,8 +183,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                   const val = parseInt(e.target.value);
                   setDiscount(isNaN(val) ? 0 : Math.min(100, val));
                 }}
-                className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200 
-                dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white dark:focus:ring-purple-400 dark:focus:border-purple-400"
+                className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               />
             </div>
 
@@ -272,7 +269,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                   style={{
                     backgroundColor:
                       selectedImageType === "predefined"
-                        ? "#a43375"
+                        ? "##6f597b"
                         : "transparent",
                   }}
                 >
@@ -289,7 +286,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                   style={{
                     backgroundColor:
                       selectedImageType === "upload"
-                        ? "#a43375"
+                        ? "#6f597b"
                         : "transparent",
                   }}
                 >
@@ -338,7 +335,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-press-up-purple"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Upload a custom image (JPG, PNG, etc.)
