@@ -14,12 +14,34 @@ interface EditItemModalProps {
   onSave: (updatedItem: Partial<MenuItem>) => void;
 }
 
+// Import possible images from mockData
+const possibleImages = [
+  "/menu_items/cappuccino.png",
+  "/menu_items/cookie.png",
+  "/menu_items/croissant.png",
+  "/menu_items/flat white.png",
+  "/menu_items/iced latte.png",
+  "/menu_items/latte.png",
+  "/menu_items/macchiato.png",
+  "/menu_items/mocha.png",
+  "/menu_items/muffin.png",
+];
+
 export const EditItemModal: React.FC<EditItemModalProps> = ({
   isOpen,
   onClose,
   item,
   onSave,
 }) => {
+  const [formData, setFormData] = useState({
+      name: "",
+      quantity: 0,
+      ingredients: [] as string[],
+      available: true,
+      price: 0,
+      category: [] as string[],
+      image: "",
+    });
   const [name, setName] = useState("");
   const [price, setPrice] = useState(0);
   const [available, setAvailable] = useState(false);
@@ -29,6 +51,9 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   const [discount, setDiscount] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirm, setConfirm] = useState<"cancel" | "save" | null>(null);
+  const [selectedImageType, setSelectedImageType] = useState<
+      "predefined" | "upload"
+    >("predefined");
 
   useEffect(() => {
     if (item) {
@@ -39,6 +64,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
       setCategories(item.category || []);
       setAllergens(item.allergens || []);
       setDiscount(item.discount || 0);
+      setFormData((prev) => ({ ...prev, image: item.image || "" }));
     }
   }, [item]);
 
@@ -58,6 +84,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
         allergens,
         discount,
         available,
+        image: formData.image
       },
       (error: Meteor.Error | undefined) => {
         if (error) {
@@ -72,12 +99,29 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             allergens,
             discount,
             available,
+            image: formData.image
           });
           onClose();
         }
       },
     );
   };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        // Create a unique filename
+        const timestamp = Date.now();
+        const extension = file.name.split(".").pop();
+        const newFileName = `custom_${timestamp}.${extension}`;
+  
+        setFormData({ ...formData, image: `/menu_items/${newFileName}` });
+      }
+    };
+  
+    const selectPredefinedImage = (imagePath: string) => {
+      setFormData({ ...formData, image: imagePath });
+    };
 
   return (
     <>
@@ -206,15 +250,134 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
               </button>
             </div>
 
-            <div className="flex justify-start">
+            {/* Image Selection */}
+          <div>
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "#a43375" }}
+            >
+              Image
+            </label>
+
+            {/* Image Type Toggle */}
+            <div className="flex mb-3 bg-gray-200 rounded-lg p-1">
               <button
                 type="button"
-                onClick={() => {}}
-                className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg"
+                onClick={() => setSelectedImageType("predefined")}
+                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                  selectedImageType === "predefined"
+                    ? "text-white shadow-sm"
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+                style={{
+                  backgroundColor:
+                    selectedImageType === "predefined"
+                      ? "#a43375"
+                      : "transparent",
+                }}
               >
-                Add Image
+                Choose from Gallery
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedImageType("upload")}
+                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                  selectedImageType === "upload"
+                    ? "text-white shadow-sm"
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+                style={{
+                  backgroundColor:
+                    selectedImageType === "upload" ? "#a43375" : "transparent",
+                }}
+              >
+                Upload Custom
               </button>
             </div>
+
+            {/* Predefined Images Grid */}
+            {selectedImageType === "predefined" && (
+              <div className="grid grid-cols-3 gap-2 mb-3 max-h-48 overflow-y-auto border rounded-lg p-2">
+                {possibleImages.map((imagePath, index) => {
+                  const imageName =
+                    imagePath.split("/").pop()?.replace(".png", "") || "";
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => selectPredefinedImage(imagePath)}
+                      className={`cursor-pointer border-2 rounded-lg p-2 text-center transition-all hover:shadow-md ${
+                        formData.image === imagePath
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <img
+                        src={imagePath}
+                        alt={imageName}
+                        className="w-full h-12 object-cover rounded mb-1"
+                        onError={(e) => {
+                          // Fallback if image doesn't exist
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                      <span className="text-xs text-gray-600 capitalize">
+                        {imageName.replace(/[_-]/g, " ")}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Custom Upload */}
+            {selectedImageType === "upload" && (
+              <div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Upload a custom image (JPG, PNG, etc.)
+                </p>
+              </div>
+            )}
+
+            {/* Selected Image Preview */}
+            {formData.image && (
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <img
+                    src={formData.image}
+                    alt="Selected"
+                    className="w-12 h-12 object-cover rounded border"
+                    onError={(e) => {
+                      // Show placeholder if image fails to load
+                      e.currentTarget.src =
+                        'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="%23a43375" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>';
+                    }}
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">
+                      Selected Image:
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {formData.image.split("/").pop()}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, image: "" })}
+                    className="text-red-500 hover:text-red-700 text-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
 
             <div className="flex justify-end space-x-2 pt-4">
               <button
