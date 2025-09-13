@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Meteor } from "meteor/meteor";
+import { IngredientDropdown } from "./IngredientDropdown";
 
 // Import possible images from mockData
 const possibleImages = [
@@ -34,7 +35,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
     category: [] as string[],
     image: "",
   });
-  const [newIngredient, setNewIngredient] = useState("");
+  // const [newIngredient, setNewIngredient] = useState("");
   const [selectedImageType, setSelectedImageType] = useState<
     "predefined" | "upload"
   >("predefined");
@@ -88,26 +89,26 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
       category: [],
       image: "",
     });
-    setNewIngredient("");
+    // setNewIngredient("");
     setSelectedImageType("predefined");
   };
 
-  const addIngredient = () => {
-    if (newIngredient.trim()) {
-      setFormData({
-        ...formData,
-        ingredients: [...formData.ingredients, newIngredient.trim()],
-      });
-      setNewIngredient("");
-    }
-  };
+  // const addIngredient = () => {
+  //   if (newIngredient.trim()) {
+  //     setFormData({
+  //       ...formData,
+  //       ingredients: [...formData.ingredients, newIngredient.trim()],
+  //     });
+  //     setNewIngredient("");
+  //   }
+  // };
 
-  const removeIngredient = (index: number) => {
-    setFormData({
-      ...formData,
-      ingredients: formData.ingredients.filter((_, i) => i !== index),
-    });
-  };
+  // const removeIngredient = (index: number) => {
+  //   setFormData({
+  //     ...formData,
+  //     ingredients: formData.ingredients.filter((_, i) => i !== index),
+  //   });
+  // };
 
   const toggleCategory = (cat: string) => {
     setFormData({
@@ -229,7 +230,27 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
           </div>
 
           {/* Ingredients */}
-          <div>
+          <IngredientDropdown
+            selectedIngredients={formData.ingredients}
+            onChange={(newIngredients: string[]) =>
+              setFormData({ ...formData, ingredients: newIngredients })
+            }
+            initialIngredients={[
+              "Milk",
+              "Flour",
+              "Eggs",
+              "Bread",
+              "Butter",
+              "Strawberries",
+              "Avocado",
+              "Bacon",
+              "Olive Oil",
+              "Paprika",
+              "Jam",
+            ]}
+          />
+
+          {/* <div>
             <label
               className="block text-sm font-medium mb-1"
               style={{ color: "#a43375" }}
@@ -273,7 +294,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Category */}
           <div>
