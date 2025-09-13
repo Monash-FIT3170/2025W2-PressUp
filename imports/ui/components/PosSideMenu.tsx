@@ -255,7 +255,7 @@ export const PosSideMenu = ({
   );
 
   return (
-    <div className="w-64 h-[75vh] flex flex-col">
+    <div className="w-[20vw] h-[75vh] flex flex-col">
       {/* Header */}
       <div className="flex flex-col bg-press-up-purple text-white px-4 py-2 rounded-t-md">
         {/* Toggle buttons */}
