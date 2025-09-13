@@ -558,8 +558,8 @@ export const PosSideMenu = ({
                   <h1 className="font-bold text-2xl text-gray-800">
                     Apply Discount
                   </h1>
-                  <button
-                    className="bg-red-700 rounded-2xl w-8"
+                  < Button
+                    variant="negative"
                     onClick={() => {
                       setOpenDiscountPopup(false);
                       setDiscountPopupScreen("menu");
@@ -567,7 +567,7 @@ export const PosSideMenu = ({
                     disabled={Boolean(order?.isLocked)}
                   >
                     X
-                  </button>
+                  </Button>
                 </div>
                 {/* Discount Popup - Menu */}
                 {discountPopupScreen === "menu" && (
