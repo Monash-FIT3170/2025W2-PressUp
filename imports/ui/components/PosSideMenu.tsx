@@ -520,7 +520,6 @@ export const PosSideMenu = ({
           {orderType === "takeaway" && (
             <Button
               // full width, sits right under Discount button
-              // className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-full mb-2"
               variant="positive"
               width="full"
               onClick={async () => {
@@ -597,27 +596,29 @@ export const PosSideMenu = ({
                         <div className="mb-8">
                           <div className="w-full my-4 flex justify-center">
                             <Button
-                              variant="negative"
+                              variant="positive"
                               width="fit"
-                              onClick={() => setDiscountPopupScreen("percentage")}
+                              onClick={() =>
+                                setDiscountPopupScreen("percentage")
+                              }
                             >
                               Percentage Discount (%)
                             </Button>
                           </div>
                           <div className="w-full my-4 flex justify-center">
                             <Button
-                              variant="negative"
+                              variant="positive"
                               width="fit"
                               onClick={() => setDiscountPopupScreen("flat")}
                             >
                               Flat Discount ($)
                             </Button>
-                          </div>                        
+                          </div>
                         </div>
                         <div className="flex flex-row w-full justify-between">
                           <div className="mr-2">
                             <Button
-                              variant="positive"
+                              variant="negative"
                               width="fit"
                               onClick={() => {
                                 removePercentDiscount();
@@ -628,7 +629,7 @@ export const PosSideMenu = ({
                           </div>
                           <div className="ml-2">
                             <Button
-                              variant="positive"
+                              variant="negative"
                               width="fit"
                               onClick={() => {
                                 removeFlatDiscount();
@@ -651,7 +652,6 @@ export const PosSideMenu = ({
                         Apply Percentage Discount (%)
                       </span>
                       <Button
-                        // className="text-xl text-white font-bold rounded-full bg-press-up-purple hover:bg-purple-400 px-3 py-2 shadow-md"
                         variant="negative"
                         onClick={() => setDiscountPopupScreen("menu")}
                       >
@@ -666,7 +666,6 @@ export const PosSideMenu = ({
                         {[5, 10, 25, 50].map((d) => (
                           <Button
                             key={d}
-                            // className="bg-blue-700 hover:bg-blue-600 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full shadow-md"
                             variant="positive"
                             width="full"
                             onClick={() => applyPercentDiscount(d)}
@@ -711,7 +710,6 @@ export const PosSideMenu = ({
                         Apply Flat Discount ($)
                       </span>
                       <Button
-                        // className="text-xl text-white font-bold rounded-full bg-press-up-purple hover:bg-purple-400 px-3 py-2 shadow-md"
                         variant="negative"
                         onClick={() => setDiscountPopupScreen("menu")}
                       >
@@ -726,7 +724,6 @@ export const PosSideMenu = ({
                         {[5, 10, 15, 20].map((d) => (
                           <Button
                             key={d}
-                            // className="bg-purple-700 hover:bg-purple-600 font-bold text-white text-xl h-18 rounded text-center mx-4 my-2 rounded-full shadow-md"
                             variant="positive"
                             width="full"
                             onClick={() => applyFlatDiscount(d)}
