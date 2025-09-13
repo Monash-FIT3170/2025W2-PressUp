@@ -346,7 +346,7 @@ export const PosSideMenu = ({
         </div>
       </div>
       {/* Items + Footer (wrapped so we can overlay when locked) */}
-      <div className="relative flex-1 flex flex-col">
+      <div className="relative flex-1 flex flex-col overflow-y-auto ">
         <div className="flex-1 overflow-y-auto p-2 space-y-4 bg-gray-100 border-solid border-[#6f597b] border-4">
           {displayedItems.length > 0 ? (
             displayedItems.map((item, idx) => {
