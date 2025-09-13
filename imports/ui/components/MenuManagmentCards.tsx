@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { PosItemCard } from "./PosItemCard";
 import { MenuItem } from "/imports/api";
 import { ConfirmModal } from "./ConfirmModal";
 import { Meteor } from "meteor/meteor";
@@ -34,10 +35,7 @@ export const MenuManagementCard = ({ item, onClick }: Props) => {
   };
 
   return (
-    <div
-      className="rounded-2xl shadow-sm bg-white overflow-hidden w-full max-w-[160px] mx-auto cursor-pointer relative"
-      onClick={() => onClick(item)}
-    >
+    <div className="relative">
       {/* Trashcan icon in top right */}
       <div
         className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors z-10"
@@ -66,34 +64,7 @@ export const MenuManagementCard = ({ item, onClick }: Props) => {
         onConfirm={handleConfirm}
         onCancel={() => setShowConfirm(false)}
       />
-
-      {/* image */}
-      <img
-        src={item.image}
-        alt={item.name}
-        className="w-full h-28 object-contain bg-gray-50"
-      />
-
-      {/* item info */}
-      <div className="bg-press-up-light-purple text-center py-1 px-2">
-        <h3 className="text-sm font-semibold text-gray-900 truncate">
-          {item.name}
-        </h3>
-        {(item.discount ?? 0 > 0) ? (
-          <p className="text-sm">
-            <span className="line-through text-pink-700/50 mr-2 font-semibold">
-              ${item.price.toFixed(2)}
-            </span>
-            <span className="text-pink-700 font-bold">
-              ${(item.price * (1 - (item.discount ?? 0) / 100)).toFixed(2)}
-            </span>
-          </p>
-        ) : (
-          <p className="text-pink-700 font-bold text-sm">
-            ${item.price.toFixed(2)}
-          </p>
-        )}
-      </div>
+      <PosItemCard item={item} onClick={onClick} />
     </div>
   );
 };
