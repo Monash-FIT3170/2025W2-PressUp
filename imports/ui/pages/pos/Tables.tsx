@@ -333,25 +333,16 @@ export const TablesPage = () => {
             {userIsAdmin &&
               (editMode ? (
                 <div className="flex gap-2">
-                  <Button
-                    variant="negative"
-                    onClick={saveChanges}
-                  >
+                  <Button variant="negative" onClick={saveChanges}>
                     Save
                   </Button>
-                  <Button
-                    variant="positive"
-                    onClick={exitEditMode}
-                  >
+                  <Button variant="positive" onClick={exitEditMode}>
                     Exit Edit Mode
                   </Button>
                 </div>
               ) : (
                 <Hide hide={!canEditLayout}>
-                  <Button
-                    variant="positive"
-                    onClick={enterEditMode}
-                  >
+                  <Button variant="positive" onClick={enterEditMode}>
                     Enter Edit Mode
                   </Button>
                 </Hide>
@@ -470,10 +461,7 @@ export const TablesPage = () => {
                   >
                     Add
                   </Button>
-                  <Button
-                    variant="positive"
-                    onClick={() => setModalType(null)}
-                  >
+                  <Button variant="positive" onClick={() => setModalType(null)}>
                     Cancel
                   </Button>
                 </div>
@@ -651,11 +639,7 @@ export const TablesPage = () => {
                           setOccupancyInput("");
                         }
                       }}
-                      variant={`${
-                        occupiedToggle
-                          ? "negative"
-                          : "positive"
-                      }`}
+                      variant={`${occupiedToggle ? "negative" : "positive"}`}
                       aria-pressed={occupiedToggle}
                       aria-label={occupiedToggle ? "Occupied" : "Vacant"}
                     >
@@ -943,10 +927,7 @@ export const TablesPage = () => {
                   >
                     Delete
                   </Button>
-                  <Button
-                    variant="positive"
-                    onClick={() => setModalType(null)}
-                  >
+                  <Button variant="positive" onClick={() => setModalType(null)}>
                     Cancel
                   </Button>
                 </div>
@@ -971,16 +952,10 @@ export const TablesPage = () => {
                   >
                     Save & Exit
                   </Button>
-                  <Button
-                    variant="positive"
-                    onClick={discardChanges}
-                  >
+                  <Button variant="positive" onClick={discardChanges}>
                     Discard Changes
                   </Button>
-                  <Button
-                    variant="positive"
-                    onClick={() => setModalType(null)}
-                  >
+                  <Button variant="positive" onClick={() => setModalType(null)}>
                     Cancel
                   </Button>
                 </div>

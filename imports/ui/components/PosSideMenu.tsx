@@ -558,7 +558,7 @@ export const PosSideMenu = ({
                   <h1 className="font-bold text-2xl text-gray-800">
                     Apply Discount
                   </h1>
-                  < Button
+                  <Button
                     variant="negative"
                     onClick={() => {
                       setOpenDiscountPopup(false);

@@ -24,9 +24,7 @@ export const PosItemCard = ({ item, onClick }: Props) => {
         <h3 className="text-sm font-semibold text-gray-200 truncate">
           {item.name}
         </h3>
-        <p className="text-white font-bold text-sm">
-          ${item.price.toFixed(2)}
-        </p>
+        <p className="text-white font-bold text-sm">${item.price.toFixed(2)}</p>
       </div>
     </div>
   );
