@@ -101,24 +101,87 @@ Meteor.methods({
     });
   }),
 
-  "shifts.getPayForShift": requireLoginMethod(async function (shiftId: string) {
+  "shifts.update": requireLoginMethod(async function ({
+    shiftId,
+    start,
+    end,
+  }: {
+    shiftId: string;
+    start: ShiftTime;
+    end: ShiftTime;
+  }) {
     check(shiftId, String);
+    check(start, ShiftTimePattern);
+    check(end, ShiftTimePattern);
 
-    // Find the shift
     const shift = await ShiftsCollection.findOneAsync(shiftId);
     if (!shift) {
       throw new Meteor.Error("shift-not-found", "Shift not found");
     }
 
-    // Find the user linked to the shift
+    const isManager = await Roles.userIsInRoleAsync(this.userId, [
+      RoleEnum.MANAGER,
+    ]);
+    if (shift.user !== this.userId && !isManager) {
+      throw new Meteor.Error(
+        "invalid-permissions",
+        "No permissions to update this shift",
+      );
+    }
+
+    if (
+      end.hour < start.hour ||
+      (end.hour === start.hour && end.minute <= start.minute)
+    ) {
+      throw new Meteor.Error(
+        "invalid-time-range",
+        "End time must be after start time",
+      );
+    }
+
+    await ShiftsCollection.updateAsync(shiftId, {
+      $set: { start, end },
+    });
+
+    return true;
+  }),
+
+  "shifts.remove": requireLoginMethod(async function (shiftId: string) {
+    check(shiftId, String);
+
+    const shift = await ShiftsCollection.findOneAsync(shiftId);
+    if (!shift) {
+      throw new Meteor.Error("shift-not-found", "Shift not found");
+    }
+
+    // Only managers or the shift owner can delete
+    const isManager = await Roles.userIsInRoleAsync(this.userId, [
+      RoleEnum.MANAGER,
+    ]);
+    if (shift.user !== this.userId && !isManager) {
+      throw new Meteor.Error(
+        "invalid-permissions",
+        "No permissions to delete this shift",
+      );
+    }
+
+    await ShiftsCollection.removeAsync(shiftId);
+  }),
+
+  "shifts.getPayForShift": requireLoginMethod(async function (shiftId: string) {
+    check(shiftId, String);
+
+    const shift = await ShiftsCollection.findOneAsync(shiftId);
+    if (!shift) {
+      throw new Meteor.Error("shift-not-found", "Shift not found");
+    }
+
     const user = (await Meteor.users.findOneAsync(
       { _id: shift.user },
       { fields: { payRate: 1 } },
     )) as any;
 
     const payRate = user?.payRate ?? 0;
-
-    // Calculate shift duration in hours
     const startMinutes = shift.start.hour * 60 + shift.start.minute;
     const endMinutes = shift.end.hour * 60 + shift.end.minute;
     const durationMinutes = endMinutes - startMinutes;
@@ -130,17 +193,13 @@ Meteor.methods({
       );
     }
 
-    const durationHours = durationMinutes / 60;
-
-    // Return pay = hours × payRate
-    return payRate * durationHours;
+    return (durationMinutes / 60) * payRate;
   }),
 
   "shifts.getAll"() {
     if (!this.userId) {
       throw new Meteor.Error("Not authorized");
     }
-
     return ShiftsCollection.find().fetch();
   },
 });
