@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { IngredientDropdown } from "./IngredientDropdown";
+import { CategoryDropdown } from "./CategoryDropdown";
 
 // Import possible images from mockData
 const possibleImages = [
@@ -35,19 +36,10 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
     category: [] as string[],
     image: "",
   });
-  // const [newIngredient, setNewIngredient] = useState("");
   const [selectedImageType, setSelectedImageType] = useState<
     "predefined" | "upload"
   >("predefined");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const availableCategories = [
-    "Food",
-    "Drinks",
-    "Desserts",
-    "Appetizers",
-    "Main Course",
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,34 +81,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
       category: [],
       image: "",
     });
-    // setNewIngredient("");
     setSelectedImageType("predefined");
-  };
-
-  // const addIngredient = () => {
-  //   if (newIngredient.trim()) {
-  //     setFormData({
-  //       ...formData,
-  //       ingredients: [...formData.ingredients, newIngredient.trim()],
-  //     });
-  //     setNewIngredient("");
-  //   }
-  // };
-
-  // const removeIngredient = (index: number) => {
-  //   setFormData({
-  //     ...formData,
-  //     ingredients: formData.ingredients.filter((_, i) => i !== index),
-  //   });
-  // };
-
-  const toggleCategory = (cat: string) => {
-    setFormData({
-      ...formData,
-      category: formData.category.includes(cat)
-        ? formData.category.filter((c) => c !== cat)
-        : [...formData.category, cat],
-    });
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -241,84 +206,13 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
             ]}
           />
 
-          {/* <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: "#a43375" }}
-            >
-              Ingredients
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                placeholder="Add ingredient"
-                value={newIngredient}
-                onChange={(e) => setNewIngredient(e.target.value)}
-                className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
-                onKeyDown={(e) =>
-                  e.key === "Enter" && (e.preventDefault(), addIngredient())
-                }
-              />
-              <button
-                type="button"
-                onClick={addIngredient}
-                className="px-4 py-2 rounded-lg text-white hover:opacity-90 transition-all"
-                style={{ backgroundColor: "#a43375" }}
-              >
-                Add
-              </button>
-            </div>
-            <div className="space-y-1 max-h-32 overflow-y-auto">
-              {formData.ingredients.map((ingredient, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-2 bg-pink-100 rounded"
-                >
-                  <span className="text-sm">{ingredient}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeIngredient(index)}
-                    className="text-red-500 hover:text-red-700 font-bold"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div> */}
-
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-medium mb-1 text-red-900 dark:text-white">
-              Category
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {availableCategories.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => toggleCategory(cat)}
-                  className={`p-2 rounded-lg text-sm transition-all ${
-                    formData.category.includes(cat)
-                      ? "text-white"
-                      : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
-                  style={{
-                    backgroundColor: formData.category.includes(cat)
-                      ? "#6f597b"
-                      : "transparent",
-                  }}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-            {formData.category.length > 0 && (
-              <div className="mt-2 text-sm text-gray-600">
-                Selected: {formData.category.join(", ")}
-              </div>
-            )}
-          </div>
+          <CategoryDropdown
+            selectedCategories={formData.category}
+            onChange={(newCategories: string[]) =>
+              setFormData({ ...formData, category: newCategories })
+            }
+            initialCategories={["Food", "Drink", "Dessert"]}
+          />
 
           {/* Availability */}
           <div className="flex items-center space-x-3">
@@ -504,11 +398,11 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-      <div className="w-32 bg-gray-50 p-3 border-r border-gray-200 min-h-screen">
+      <div className="w-32 p-3 border-r border-gray-200 min-h-screen">
         {/* Add Item Button */}
         <button
           onClick={() => setIsModalOpen(true)}
-          className="w-full py-2.5 px-4 rounded-lg mb-4 font-medium text-sm transition-all hover:opacity-90 hover:shadow-md"
+          className="w-full py-2.5 px-4 rounded-lg mb-4 font-bold text-sm transition-all hover:opacity-90 hover:shadow-md"
           style={{ backgroundColor: "#6f597b", color: "white" }}
         >
           Add Item
