@@ -126,6 +126,7 @@ export const TablesPage = () => {
   const GRID_COLS = 5;
   const GRID_ROWS = Math.ceil(MAX_NO_TABLES / GRID_COLS);
   const GRID_SIZE = GRID_ROWS * GRID_COLS;
+  const MAX_TABLE_CAPACITY = 12;
 
   // Single grid state
   const [grid, setGrid] = useState<(Table | null)[]>(
@@ -375,16 +376,18 @@ export const TablesPage = () => {
         {/* Add Table & Delete Table Buttons */}
         {editMode && (
           <div className="mb-4 flex gap-2">
-            <button
-              onClick={() => {
-                setSelectedCellIndex(null);
-                setModalType("addTable");
-              }}
-              style={{ backgroundColor: "#6f597b", color: "#fff" }}
-              className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
-            >
-              + Add Table
-            </button>
+          <button
+            onClick={() => {
+              // open Add Table modal; do not add anything here
+              setSelectedCellIndex(null);
+              setCapacityInput("");
+              setModalType("addTable");
+            }}
+            style={{ backgroundColor: "#6f597b", color: "#fff" }}
+            className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
+          >
+            + Add Table
+          </button>
             <button
               onClick={() => {
                 setDeleteTableInput("");
@@ -427,54 +430,64 @@ export const TablesPage = () => {
                   className="w-full border rounded px-2 py-1 mb-4"
                   placeholder="Number of seats"
                   min={1}
+                  max={MAX_TABLE_CAPACITY}
                 />
                 <div className="flex justify-end gap-2">
-                  <button
-                    onClick={async () => {
-                      if (
-                        !capacityInput ||
-                        isNaN(Number(capacityInput)) ||
-                        Number(capacityInput) < 1
-                      ) {
-                        alert(
-                          "Please enter a valid number of seats (must be at least 1).",
-                        );
-                        return;
-                      }
-                      const updated = [...grid];
-                      let idx = selectedCellIndex;
-                      if (idx === null) {
-                        idx = updated.findIndex((cell) => cell === null);
-                      }
-                      if (idx !== -1) {
-                        // Find the smallest available table number
-                        const usedTableNos = grid
-                          .filter((t) => t !== null)
-                          .map((t) => t!.tableNo);
-                        let nextTableNo = 1;
-                        while (usedTableNos.includes(nextTableNo)) {
-                          nextTableNo++;
-                        }
-                        const newTable = {
-                          tableNo: nextTableNo,
-                          capacity: parseInt(capacityInput, 10),
-                          isOccupied: false,
-                          orderID: null,
-                          noOccupants: 0,
-                        };
-                        updated[idx] = newTable;
-                        setGrid(updated);
-                        setModalType(null);
-                        setCapacityInput("");
-                        markChanged();
-                        await Meteor.callAsync("tables.addTable", newTable);
-                      }
-                    }}
-                    style={{ backgroundColor: "#6f597b", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
-                  >
-                    Add
-                  </button>
+                <button
+                  onClick={async () => {
+                    // validate 1..MAX_TABLE_CAPACITY
+                    if (
+                      !capacityInput ||
+                      isNaN(Number(capacityInput)) ||
+                      Number(capacityInput) < 1 ||
+                      Number(capacityInput) > MAX_TABLE_CAPACITY   // <-- missing check
+                    ) {
+                      alert(`Please enter a valid number of seats (between 1 and ${MAX_TABLE_CAPACITY}).`);
+                      return;
+                    }
+
+                    // pick a cell index to place the new table
+                    const updated = [...grid];
+                    let idx = selectedCellIndex;
+                    if (idx === null) idx = updated.findIndex((cell) => cell === null);
+                    if (idx === -1) {
+                      alert("No empty slot available.");
+                      return;
+                    }
+
+                    // compute next available tableNo
+                    const usedTableNos = grid.filter(Boolean).map((t) => (t as Table).tableNo);
+                    let nextTableNo = 1;
+                    while (usedTableNos.includes(nextTableNo)) nextTableNo++;
+
+                    const newTable = {
+                      tableNo: nextTableNo,
+                      capacity: parseInt(capacityInput, 10),
+                      isOccupied: false,
+                      orderID: null,
+                      noOccupants: 0,
+                    };
+
+                    try {
+                      // 1) write to server first (server enforces 1..12 too)
+                      await Meteor.callAsync("tables.addTable", newTable);
+
+                      // 2) only if success, update UI
+                      updated[idx] = newTable;
+                      setGrid(updated);
+                      setModalType(null);
+                      setCapacityInput("");
+                      markChanged();
+                    } catch (err: any) {
+                      // If server rejects, do not change UI
+                      alert(err?.reason || err?.message || "Failed to add table.");
+                    }
+                  }}
+                  style={{ backgroundColor: "#6f597b", color: "#fff" }}
+                  className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
+                >
+                  Add
+                </button>
                   <button
                     onClick={() => setModalType(null)}
                     style={{

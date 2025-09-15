@@ -114,6 +114,7 @@ Meteor.methods({
   }),
 
   "tables.addTable": requireLoginMethod(async function (table: OmitDB<Tables>) {
+    // Basic type checks
     if (
       typeof table.tableNo !== "number" ||
       typeof table.capacity !== "number" ||
@@ -122,6 +123,18 @@ Meteor.methods({
     ) {
       throw new Meteor.Error("invalid-arguments", "Invalid table data");
     }
+
+    // --- capacity range guard (server-side) ---
+    // ensure capacity is within 1..12 even if client bypasses UI
+    if (table.capacity < 1 || table.capacity > 12) {
+      throw new Meteor.Error("invalid-capacity", "Capacity must be between 1 and 12");
+    }
+
+    // optional: also ensure noOccupants <= capacity
+    if (table.noOccupants < 0 || table.noOccupants > table.capacity) {
+      throw new Meteor.Error("invalid-occupants", "Occupants cannot exceed capacity");
+    }
+
     return await TablesCollection.insertAsync(table);
   }),
 
