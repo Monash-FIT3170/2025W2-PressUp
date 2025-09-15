@@ -9,8 +9,6 @@ Meteor.methods({
     supplier: OmitDB<Supplier>,
   ) {
     check(supplier.name, String);
-    //check(supplier.description, String);
-    //check(supplier.pastOrderQty, Number);
     check(supplier.phone, String);
     check(supplier.email, String);
     check(supplier.website, String);
@@ -22,9 +20,7 @@ Meteor.methods({
   "suppliers.getNameById": async function (supplierId: string) {
     check(supplierId, String);
 
-    const supplier = await SuppliersCollection.findOneAsync({
-      _id: supplierId,
-    });
+    const supplier = await SuppliersCollection.findOneAsync(supplierId);
     return supplier?.name || "Unknown Supplier";
   },
 });
