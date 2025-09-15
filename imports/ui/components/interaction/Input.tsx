@@ -5,7 +5,7 @@ type InputVaraint = "default" | "navy";
 
 const variantColours: Record<InputVaraint, string> = {
   default:
-    "bg-gray-50 border border-gray-300 text-red-900 focus:ring-red-900 focus:border-red-900 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white",
+    "bg-white border border-gray-300 text-red-900 focus:ring-red-900 focus:border-red-900 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white",
   navy: "bg-press-up-navy border border-press-up-light-purple text-white",
 };
 
