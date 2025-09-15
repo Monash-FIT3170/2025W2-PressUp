@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Meteor } from "meteor/meteor";
+import { IngredientDropdown } from "./IngredientDropdown";
+import { CategoryDropdown } from "./CategoryDropdown";
 
 // Import possible images from mockData
 const possibleImages = [
@@ -34,19 +36,10 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
     category: [] as string[],
     image: "",
   });
-  const [newIngredient, setNewIngredient] = useState("");
   const [selectedImageType, setSelectedImageType] = useState<
     "predefined" | "upload"
   >("predefined");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const availableCategories = [
-    "Food",
-    "Drinks",
-    "Desserts",
-    "Appetizers",
-    "Main Course",
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,34 +81,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
       category: [],
       image: "",
     });
-    setNewIngredient("");
     setSelectedImageType("predefined");
-  };
-
-  const addIngredient = () => {
-    if (newIngredient.trim()) {
-      setFormData({
-        ...formData,
-        ingredients: [...formData.ingredients, newIngredient.trim()],
-      });
-      setNewIngredient("");
-    }
-  };
-
-  const removeIngredient = (index: number) => {
-    setFormData({
-      ...formData,
-      ingredients: formData.ingredients.filter((_, i) => i !== index),
-    });
-  };
-
-  const toggleCategory = (cat: string) => {
-    setFormData({
-      ...formData,
-      category: formData.category.includes(cat)
-        ? formData.category.filter((c) => c !== cat)
-        : [...formData.category, cat],
-    });
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,18 +106,15 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-      <div className="bg-gray-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
-        <h2 className="text-xl font-bold mb-4" style={{ color: "#a43375" }}>
+      <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
+        <h2 className="text-xl font-bold mb-4 text-red-900 dark:text-white">
           Add New Menu Item
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: "#a43375" }}
-            >
+            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
               Name
             </label>
             <input
@@ -161,17 +124,14 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             />
           </div>
 
           {/* Price */}
           <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: "#a43375" }}
-            >
+            <label className="block text-sm font-medium mb-1 text-red-900 dark:text-white">
               Price ($)
             </label>
             <input
@@ -199,17 +159,14 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                   setFormData({ ...formData, price: 0 });
                 }
               }}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             />
           </div>
 
           {/* Quantity */}
           <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: "#a43375" }}
-            >
+            <label className="block text-sm font-medium mb-1 text-red-900 dark:text-white">
               Quantity
             </label>
             <input
@@ -223,100 +180,43 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                   quantity: parseInt(e.target.value) || 0,
                 })
               }
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             />
           </div>
 
           {/* Ingredients */}
-          <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: "#a43375" }}
-            >
-              Ingredients
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                placeholder="Add ingredient"
-                value={newIngredient}
-                onChange={(e) => setNewIngredient(e.target.value)}
-                className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
-                onKeyDown={(e) =>
-                  e.key === "Enter" && (e.preventDefault(), addIngredient())
-                }
-              />
-              <button
-                type="button"
-                onClick={addIngredient}
-                className="px-4 py-2 rounded-lg text-white hover:opacity-90 transition-all"
-                style={{ backgroundColor: "#a43375" }}
-              >
-                Add
-              </button>
-            </div>
-            <div className="space-y-1 max-h-32 overflow-y-auto">
-              {formData.ingredients.map((ingredient, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-2 bg-pink-100 rounded"
-                >
-                  <span className="text-sm">{ingredient}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeIngredient(index)}
-                    className="text-red-500 hover:text-red-700 font-bold"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
+          <IngredientDropdown
+            selectedIngredients={formData.ingredients}
+            onChange={(newIngredients: string[]) =>
+              setFormData({ ...formData, ingredients: newIngredients })
+            }
+            initialIngredients={[
+              "Milk",
+              "Flour",
+              "Eggs",
+              "Bread",
+              "Butter",
+              "Strawberries",
+              "Avocado",
+              "Bacon",
+              "Olive Oil",
+              "Paprika",
+              "Jam",
+            ]}
+          />
 
-          {/* Category */}
-          <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: "#a43375" }}
-            >
-              Category
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {availableCategories.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => toggleCategory(cat)}
-                  className={`p-2 rounded-lg text-sm transition-all ${
-                    formData.category.includes(cat)
-                      ? "text-white"
-                      : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
-                  style={{
-                    backgroundColor: formData.category.includes(cat)
-                      ? "#a43375"
-                      : "transparent",
-                  }}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-            {formData.category.length > 0 && (
-              <div className="mt-2 text-sm text-gray-600">
-                Selected: {formData.category.join(", ")}
-              </div>
-            )}
-          </div>
+          <CategoryDropdown
+            selectedCategories={formData.category}
+            onChange={(newCategories: string[]) =>
+              setFormData({ ...formData, category: newCategories })
+            }
+            initialCategories={["Food", "Drink", "Dessert"]}
+          />
 
           {/* Availability */}
           <div className="flex items-center space-x-3">
-            <label
-              className="block text-sm font-medium"
-              style={{ color: "#a43375" }}
-            >
+            <label className="block text-sm font-medium text-red-900 dark:text-white">
               Availability
             </label>
             <div className="flex items-center">
@@ -327,7 +227,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                   setFormData({ ...formData, available: e.target.checked })
                 }
                 className="w-4 h-4 rounded"
-                style={{ accentColor: "#a43375" }}
+                style={{ accentColor: "#6f597b" }}
               />
               <span className="ml-2 text-sm text-gray-700">
                 {formData.available ? "Available" : "Unavailable"}
@@ -337,10 +237,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
           {/* Image Selection */}
           <div>
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: "#a43375" }}
-            >
+            <label className="block text-sm font-medium mb-2 text-red-900 dark:text-white">
               Image
             </label>
 
@@ -357,7 +254,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                 style={{
                   backgroundColor:
                     selectedImageType === "predefined"
-                      ? "#a43375"
+                      ? "#6f597b"
                       : "transparent",
                 }}
               >
@@ -373,7 +270,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                 }`}
                 style={{
                   backgroundColor:
-                    selectedImageType === "upload" ? "#a43375" : "transparent",
+                    selectedImageType === "upload" ? "#6f597b" : "transparent",
                 }}
               >
                 Upload Custom
@@ -479,7 +376,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
             <button
               type="submit"
               className="px-6 py-2 text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: "#a43375" }}
+              style={{ backgroundColor: "#6f597b" }}
               disabled={isSubmitting}
             >
               {isSubmitting ? "Saving..." : "Save"}
@@ -492,11 +389,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 };
 
 const Sidebar: React.FC = () => {
-  const [category, setCategory] = useState("Category ▼");
-  const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const categories = ["Food", "Drinks", "All"];
 
   const handleAddItemSuccess = () => {
     // You can add any additional logic here, like refreshing a list
@@ -505,50 +398,15 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-      <div className="w-32 bg-gray-50 p-3 border-r border-gray-200 min-h-screen">
+      <div className="w-32 p-3 border-r border-gray-200 min-h-screen">
         {/* Add Item Button */}
         <button
           onClick={() => setIsModalOpen(true)}
-          className="w-full py-2.5 px-4 rounded-lg mb-4 font-medium text-sm transition-all hover:opacity-90 hover:shadow-md"
-          style={{ backgroundColor: "#a43375", color: "white" }}
+          className="w-full py-2.5 px-4 rounded-lg mb-4 font-bold text-sm transition-all hover:opacity-90 hover:shadow-md"
+          style={{ backgroundColor: "#6f597b", color: "white" }}
         >
           Add Item
         </button>
-
-        {/* Category Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="w-full py-2.5 px-4 rounded-lg flex items-center justify-center font-medium text-sm transition-all hover:opacity-90"
-            style={{ backgroundColor: "#a43375", color: "white" }}
-          >
-            {category}
-          </button>
-
-          {/* Dropdown Options */}
-          {isOpen && (
-            <div className="absolute top-full left-0 w-full mt-1 rounded-lg shadow-lg overflow-hidden z-10">
-              {categories.map((option, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setCategory(option);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full text-left py-2.5 px-4 transition-all ${
-                    category === option ? "opacity-100" : "opacity-90"
-                  }`}
-                  style={{
-                    backgroundColor: category === option ? "#f7aed9" : "white",
-                    color: "#a43375",
-                  }}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Add Item Modal */}

@@ -68,7 +68,7 @@ export const AllergenDropdown = ({
           type="text"
           value={searchAllergen}
           onChange={(e) => setSearchAllergen(e.target.value)}
-          className="bg-press-up-purple border-2 border-press-up-purple text-white text-sm rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 block w-full p-2.5 placeholder-purple-200 dark:bg-press-up-purple dark:border-press-up-purple dark:placeholder-purple-200 dark:text-white dark:focus:ring-purple-400 dark:focus:border-purple-400"
+          className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
           placeholder="--Search allergens--"
           onFocus={() => setShowDropdown(true)}
         />
