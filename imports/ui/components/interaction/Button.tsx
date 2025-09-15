@@ -18,9 +18,9 @@ export const Button = React.forwardRef<HTMLButtonElement, Props>(
     {
       variant = "positive",
       width = "fit",
-      className,           // Allow external className override/merge
-      children,            // Render children
-      disabled,            // Use for styling
+      className, // Allow external className override/merge
+      children, // Render children
+      disabled, // Use for styling
       ...rest
     },
     ref,

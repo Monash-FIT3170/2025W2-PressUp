@@ -47,7 +47,11 @@ Meteor.methods({
       );
 
     // --- validation: must be between 1 and 12 ---
-    if (typeof newCapacity !== "number" || newCapacity < 1 || newCapacity > 12) {
+    if (
+      typeof newCapacity !== "number" ||
+      newCapacity < 1 ||
+      newCapacity > 12
+    ) {
       throw new Meteor.Error(
         "invalid-capacity",
         "Capacity must be between 1 and 12",
@@ -127,12 +131,18 @@ Meteor.methods({
     // --- capacity range guard (server-side) ---
     // ensure capacity is within 1..12 even if client bypasses UI
     if (table.capacity < 1 || table.capacity > 12) {
-      throw new Meteor.Error("invalid-capacity", "Capacity must be between 1 and 12");
+      throw new Meteor.Error(
+        "invalid-capacity",
+        "Capacity must be between 1 and 12",
+      );
     }
 
     // optional: also ensure noOccupants <= capacity
     if (table.noOccupants < 0 || table.noOccupants > table.capacity) {
-      throw new Meteor.Error("invalid-occupants", "Occupants cannot exceed capacity");
+      throw new Meteor.Error(
+        "invalid-occupants",
+        "Occupants cannot exceed capacity",
+      );
     }
 
     return await TablesCollection.insertAsync(table);

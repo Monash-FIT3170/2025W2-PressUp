@@ -52,9 +52,10 @@ function formatWait(ms: number) {
 }
 
 export const OrderCard = ({ order }: OrderCardProps) => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: order._id,
-  });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: order._id,
+    });
 
   const dragStyle: React.CSSProperties = {
     transform: transform ? CSS.Translate.toString(transform) : undefined, // Apply transform
