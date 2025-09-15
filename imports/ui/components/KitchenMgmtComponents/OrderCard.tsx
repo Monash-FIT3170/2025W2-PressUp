@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { useState, useEffect } from "react";
 import { useDraggable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Dialog,
   DialogTitle,
@@ -51,9 +52,15 @@ function formatWait(ms: number) {
 }
 
 export const OrderCard = ({ order }: OrderCardProps) => {
-  const { attributes, listeners, setNodeRef } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: order._id,
   });
+
+  const dragStyle: React.CSSProperties = {
+    transform: transform ? CSS.Translate.toString(transform) : undefined, // Apply transform
+    transition: isDragging ? "transform 0s" : "transform 200ms ease", // Smooth return
+    zIndex: isDragging ? 1000 : "auto", // Ensure dragged card stays on top
+  };
 
   // Dialog state
   const [open, setOpen] = useState(false);
@@ -158,13 +165,15 @@ export const OrderCard = ({ order }: OrderCardProps) => {
       <div
         ref={setNodeRef}
         className="rounded-lg bg-white p-4 shadow-sm hover:shadow-md border-press-up-purple border-3"
-        style={{ border: "3px solid #8E44AD" }}
+        style={{ border: "3px solid #8E44AD", ...dragStyle }}
       >
         <div
           {...listeners}
           {...attributes}
           className="cursor-grab w-5 h-5 bg-gray-300 mb-2 rounded"
           title="Drag to move"
+          role="button"
+          aria-label="Drag order card"
         />
 
         <div className="cursor-pointer" onClick={() => setOpen(true)}>
