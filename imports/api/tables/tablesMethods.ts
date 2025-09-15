@@ -45,6 +45,15 @@ Meteor.methods({
         "invalid-arguments",
         "Table number and new capacity are required",
       );
+
+    // --- validation: must be between 1 and 12 ---
+    if (typeof newCapacity !== "number" || newCapacity < 1 || newCapacity > 12) {
+      throw new Meteor.Error(
+        "invalid-capacity",
+        "Capacity must be between 1 and 12",
+      );
+    }
+
     return await TablesCollection.updateAsync(tableID, {
       $set: { capacity: newCapacity },
     });

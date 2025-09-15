@@ -510,6 +510,7 @@ export const TablesPage = () => {
                   className="w-full border rounded px-2 py-1 mb-4"
                   placeholder="Number of seats"
                   min={1}
+                  max={12} 
                 />
                 {occupiedToggle && (
                   <>
@@ -801,19 +802,11 @@ export const TablesPage = () => {
                       if (
                         !capacityInput ||
                         isNaN(Number(capacityInput)) ||
-                        Number(capacityInput) < 1
+                        Number(capacityInput) < 1 ||
+                        Number(capacityInput) > 12 
                       ) {
-                        alert(
-                          "Please enter a valid number of seats (must be at least 1).",
-                        );
+                        alert("Please enter a valid number of seats (between 1 and 12).");
                         return;
-                      } else if (
-                        isNaN(Number(occupancyInput)) ||
-                        Number(occupancyInput) > Number(capacityInput)
-                      ) {
-                        alert(
-                          "Please enter a valid number of occupants (cannot exceed capacity).",
-                        );
                       }
                       const updated = grid.map((t) => {
                         if (t?.tableNo !== editTableData!.tableNo) return t;
