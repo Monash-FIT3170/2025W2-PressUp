@@ -10,6 +10,7 @@ import { Roles } from "meteor/alanning:roles";
 import { RoleEnum } from "/imports/api/accounts/roles";
 import { Hide } from "../../components/display/Hide";
 import { ConfirmModal } from "../../components/ConfirmModal";
+import { Button } from "../../components/interaction/Button";
 
 // -------- Seat positioning helper --------
 const getSeatPositions = (
@@ -333,30 +334,18 @@ export const TablesPage = () => {
             {userIsAdmin &&
               (editMode ? (
                 <div className="flex gap-2">
-                  <button
-                    onClick={saveChanges}
-                    style={{ backgroundColor: "#6f597b", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
-                  >
+                  <Button variant="negative" onClick={saveChanges}>
                     Save
-                  </button>
-                  <button
-                    onClick={exitEditMode}
-                    style={{ backgroundColor: "#c97f97", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:brightness-90"
-                  >
+                  </Button>
+                  <Button variant="positive" onClick={exitEditMode}>
                     Exit Edit Mode
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 <Hide hide={!canEditLayout}>
-                  <button
-                    onClick={enterEditMode}
-                    style={{ backgroundColor: "#1e032e", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:bg-[#6f597b]"
-                  >
+                  <Button variant="positive" onClick={enterEditMode}>
                     Enter Edit Mode
-                  </button>
+                  </Button>
                 </Hide>
               ))}
             {/* Legend - always visible */}
@@ -376,28 +365,26 @@ export const TablesPage = () => {
         {/* Add Table & Delete Table Buttons */}
         {editMode && (
           <div className="mb-4 flex gap-2">
-            <button
+            <Button
+              variant="negative"
               onClick={() => {
                 // open Add Table modal; do not add anything here
                 setSelectedCellIndex(null);
                 setCapacityInput("");
                 setModalType("addTable");
               }}
-              style={{ backgroundColor: "#6f597b", color: "#fff" }}
-              className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
             >
               + Add Table
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="positive"
               onClick={() => {
                 setDeleteTableInput("");
                 setModalType("deleteTable");
               }}
-              style={{ backgroundColor: "#c97f97", color: "#fff" }}
-              className="px-4 py-1 rounded hover:brightness-90"
             >
               - Delete Table
-            </button>
+            </Button>
           </div>
         )}
 
@@ -433,7 +420,8 @@ export const TablesPage = () => {
                   max={MAX_TABLE_CAPACITY}
                 />
                 <div className="flex justify-end gap-2">
-                  <button
+                  <Button
+                    variant="negative"
                     onClick={async () => {
                       // validate 1..MAX_TABLE_CAPACITY
                       if (
@@ -490,22 +478,12 @@ export const TablesPage = () => {
                         );
                       }
                     }}
-                    style={{ backgroundColor: "#6f597b", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
                   >
                     Add
-                  </button>
-                  <button
-                    onClick={() => setModalType(null)}
-                    style={{
-                      backgroundColor: "#fff",
-                      border: "1px solid #6f597b",
-                      color: "#6f597b",
-                    }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
-                  >
+                  </Button>
+                  <Button variant="positive" onClick={() => setModalType(null)}>
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
@@ -569,7 +547,8 @@ export const TablesPage = () => {
                       t.activeOrderID &&
                       t.isOccupied,
                   ) && (
-                    <button
+                    <Button
+                      variant="positive"
                       onClick={async () => {
                         try {
                           const dbTable = tablesFromDb.find(
@@ -623,20 +602,14 @@ export const TablesPage = () => {
                           );
                         }
                       }}
-                      style={{
-                        backgroundColor: "#6f597b",
-                        color: "#fff",
-                        cursor: "pointer",
-                      }}
-                      className="px-4 py-1 rounded font-semibold hover:bg-[#c4b5cf] hover:text-[#1e032e]"
                     >
                       Add Order
-                    </button>
+                    </Button>
                   )}
 
                   {/* Occupied/Vacant Toggle */}
                   <div className="flex gap-2">
-                    <button
+                    <Button
                       type="button"
                       onClick={() => {
                         if (!occupiedToggle) {
@@ -687,17 +660,12 @@ export const TablesPage = () => {
                           setOccupancyInput("");
                         }
                       }}
-                      className={`px-4 py-1 rounded font-semibold transition-colors duration-300 ${
-                        occupiedToggle
-                          ? "bg-press-up-purple text-white"
-                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
+                      variant={`${occupiedToggle ? "negative" : "positive"}`}
                       aria-pressed={occupiedToggle}
                       aria-label={occupiedToggle ? "Occupied" : "Vacant"}
-                      style={{ minWidth: 110 }}
                     >
                       {occupiedToggle ? "Occupied" : "Vacant"}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -714,7 +682,7 @@ export const TablesPage = () => {
                         onChange={(e) =>
                           setSelectedMoveTableNo(Number(e.target.value))
                         }
-                        className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none rounded-full px-4 py-2 shadow-md"
+                        className="text-lg font-semibold bg-press-up-negative-button text-white border-none outline-none rounded-full px-4 py-2 shadow-md"
                         style={{ minWidth: 160 }}
                       >
                         <option value="" className="bg-white text-gray-700">
@@ -736,8 +704,8 @@ export const TablesPage = () => {
                             </option>
                           ))}
                       </select>
-                      <button
-                        className="px-4 py-1 rounded font-semibold bg-press-up-positive-button text-white shadow-md hover:bg-press-up-hover transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      <Button
+                        variant="negative"
                         disabled={!selectedMoveTableNo}
                         onClick={async () => {
                           const newTable = tablesFromDb.find(
@@ -783,41 +751,15 @@ export const TablesPage = () => {
                         }}
                       >
                         Move
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
 
                 {/* Bottom row: Cancel & Save */}
                 <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => {
-                      // discard modal-local changes: restore snapshot
-                      setModalType(null);
-                      if (modalOriginalTable) {
-                        setCapacityInput(
-                          modalOriginalTable.capacity.toString(),
-                        );
-                        setOccupancyInput(
-                          modalOriginalTable.noOccupants?.toString() ?? "",
-                        );
-                        setOccupiedToggle(!!modalOriginalTable.isOccupied);
-                      } else {
-                        setCapacityInput("");
-                        setOccupancyInput("");
-                        setOccupiedToggle(false);
-                      }
-                    }}
-                    style={{
-                      backgroundColor: "#fff",
-                      border: "1px solid #6f597b",
-                      color: "#6f597b",
-                    }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
-                  >
-                    Cancel
-                  </button>
-                  <button
+                  <Button
+                    variant="negative"
                     onClick={async () => {
                       if (
                         !capacityInput ||
@@ -902,11 +844,31 @@ export const TablesPage = () => {
                         }
                       }
                     }}
-                    style={{ backgroundColor: "#1e032e", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:bg-[#6f597b]"
                   >
                     Save
-                  </button>
+                  </Button>
+                  <Button
+                    variant="positive"
+                    onClick={() => {
+                      // discard modal-local changes: restore snapshot
+                      setModalType(null);
+                      if (modalOriginalTable) {
+                        setCapacityInput(
+                          modalOriginalTable.capacity.toString(),
+                        );
+                        setOccupancyInput(
+                          modalOriginalTable.noOccupants?.toString() ?? "",
+                        );
+                        setOccupiedToggle(!!modalOriginalTable.isOccupied);
+                      } else {
+                        setCapacityInput("");
+                        setOccupancyInput("");
+                        setOccupiedToggle(false);
+                      }
+                    }}
+                  >
+                    Cancel
+                  </Button>
                 </div>
               </>
             )}
@@ -938,7 +900,8 @@ export const TablesPage = () => {
                   inputMode="numeric"
                 />
                 <div className="flex justify-end gap-2">
-                  <button
+                  <Button
+                    variant="negative"
                     onClick={async () => {
                       const tableNo = Number(deleteTableInput);
                       if (!deleteTableInput || isNaN(tableNo) || tableNo < 1) {
@@ -976,22 +939,12 @@ export const TablesPage = () => {
                         );
                       }
                     }}
-                    style={{ backgroundColor: "#c97f97", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:brightness-90"
                   >
                     Delete
-                  </button>
-                  <button
-                    onClick={() => setModalType(null)}
-                    style={{
-                      backgroundColor: "#fff",
-                      border: "1px solid #6f597b",
-                      color: "#6f597b",
-                    }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
-                  >
+                  </Button>
+                  <Button variant="positive" onClick={() => setModalType(null)}>
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
@@ -1005,34 +958,21 @@ export const TablesPage = () => {
                   exiting?
                 </p>
                 <div className="flex justify-end gap-2 mt-4">
-                  <button
+                  <Button
+                    variant="negative"
                     onClick={() => {
                       saveChanges();
                       setModalType(null);
                     }}
-                    style={{ backgroundColor: "#6f597b", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf] hover:text-[#1e032e]"
                   >
                     Save & Exit
-                  </button>
-                  <button
-                    onClick={discardChanges}
-                    style={{ backgroundColor: "#c97f97", color: "#fff" }}
-                    className="px-4 py-1 rounded hover:brightness-90"
-                  >
+                  </Button>
+                  <Button variant="positive" onClick={discardChanges}>
                     Discard Changes
-                  </button>
-                  <button
-                    onClick={() => setModalType(null)}
-                    style={{
-                      backgroundColor: "#fff",
-                      border: "1px solid #6f597b",
-                      color: "#6f597b",
-                    }}
-                    className="px-4 py-1 rounded hover:bg-[#c4b5cf]"
-                  >
+                  </Button>
+                  <Button variant="positive" onClick={() => setModalType(null)}>
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
