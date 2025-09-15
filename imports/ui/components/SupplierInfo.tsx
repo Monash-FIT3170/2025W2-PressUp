@@ -25,7 +25,6 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
   }, [supplier._id]);
 
   const isLoadingPurchaseOrders = useSubscribe("purchaseOrders");
-
   const purchaseOrders = useTracker(() => {
     if (isLoadingPurchaseOrders()) {
       return [];
@@ -213,7 +212,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                     className="text-left p-2 font-medium text-white"
                     style={{ backgroundColor: "#6f597b" }}
                   >
-                    Goods
+                    Stock Item
                   </th>
                   <th
                     className="text-left p-2 font-medium text-white"
