@@ -558,8 +558,8 @@ export const PosSideMenu = ({
                   <h1 className="font-bold text-2xl text-gray-800">
                     Apply Discount
                   </h1>
-                  <Button
-                    variant="negative"
+                  <button
+                    className="bg-press-up-negative-button text-white text-nowrap shadow-lg/20 hover:shadow-md ease-in-out transition-all duration-300 rounded-xl cursor-pointer inline-flex py-2 px-4 grow-0 text-sm font-medium items-center justify-center "
                     onClick={() => {
                       setOpenDiscountPopup(false);
                       setDiscountPopupScreen("menu");
@@ -567,7 +567,7 @@ export const PosSideMenu = ({
                     disabled={Boolean(order?.isLocked)}
                   >
                     X
-                  </Button>
+                  </button>
                 </div>
                 {/* Discount Popup - Menu */}
                 {discountPopupScreen === "menu" && (
@@ -595,24 +595,22 @@ export const PosSideMenu = ({
                       <div className="items-center">
                         <div className="mb-8">
                           <div className="w-full my-4 flex justify-center">
-                            <Button
-                              variant="positive"
-                              width="fit"
+                            <button
+                              className="bg-press-up-positive-button text-white text-nowrap shadow-lg/20 hover:shadow-md ease-in-out transition-all duration-300 rounded-xl cursor-pointer inline-flex p-2 grow-0 text-xl font-medium items-center justify-center w-full"
                               onClick={() =>
                                 setDiscountPopupScreen("percentage")
                               }
                             >
                               Percentage Discount (%)
-                            </Button>
+                            </button>
                           </div>
                           <div className="w-full my-4 flex justify-center">
-                            <Button
-                              variant="positive"
-                              width="fit"
+                            <button
+                              className="bg-press-up-positive-button text-white text-nowrap shadow-lg/20 hover:shadow-md ease-in-out transition-all duration-300 rounded-xl cursor-pointer inline-flex p-2 grow-0 text-xl font-medium items-center justify-center w-full"
                               onClick={() => setDiscountPopupScreen("flat")}
                             >
                               Flat Discount ($)
-                            </Button>
+                            </button>
                           </div>
                         </div>
                         <div className="flex flex-row w-full justify-between">
