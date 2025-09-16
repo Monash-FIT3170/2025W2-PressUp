@@ -35,13 +35,6 @@ export const UserManagementPage = () => {
     };
   }, []);
 
-  /* const canManageUsers = useTracker(() => {
-    return Roles.userIsInRoleAsync(Meteor.userId(), [
-      RoleEnum.ADMIN,
-      RoleEnum.MANAGER,
-    ]);
-  }, []); */
-
   const handleAddUser = (userData: CreateUserData) => {
     Meteor.call("users.create", userData, (error: Meteor.Error) => {
       if (error) {
@@ -68,7 +61,6 @@ export const UserManagementPage = () => {
     userId: string,
     updates: Partial<Meteor.User & { role: string }>,
   ) => {
-    // Update profile
     if (updates.profile) {
       Meteor.call(
         "users.updateProfile",
@@ -83,7 +75,6 @@ export const UserManagementPage = () => {
       );
     }
 
-    // Update role
     if (updates.role) {
       Meteor.call(
         "users.updateRole",
@@ -178,7 +169,6 @@ export const UserManagementPage = () => {
   return (
     <div className="min-h-screen w-full" style={{ backgroundColor: "#ffffff" }}>
       <div className="p-12 pb-4 w-full">
-        {/* Action Buttons */}
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => setShowAddUserModal(true)}
@@ -207,7 +197,6 @@ export const UserManagementPage = () => {
           </button>
         </div>
 
-        {/* Show entries dropdown */}
         <div className="mb-4 flex items-center gap-2">
           <span className="text-gray-700">Show</span>
           <select
@@ -224,7 +213,6 @@ export const UserManagementPage = () => {
         </div>
       </div>
 
-      {/* User Table Container */}
       <div className="px-6 pb-6">
         <div
           className="w-full rounded-lg shadow-xl overflow-hidden border-4"
@@ -232,27 +220,23 @@ export const UserManagementPage = () => {
         >
           {/* Table Header */}
           <div
-            className="grid grid-cols-6 gap-4 p-4 text-white font-semibold"
+            className="grid grid-cols-[0.7fr_2.5fr_2.5fr_1fr_1fr_0.7fr] gap-4 p-4 text-white font-semibold"
             style={{ backgroundColor: "#6f597b" }}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center">
               <Input
                 type="checkbox"
                 onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedUsers([...users]);
-                  } else {
-                    setSelectedUsers([]);
-                  }
+                  if (e.target.checked) setSelectedUsers([...users]);
+                  else setSelectedUsers([]);
                 }}
               />
-              <span>First Name</span>
             </div>
+            <div>First Name</div>
             <div>Last Name</div>
             <div>Group</div>
             <div>Active</div>
             <div>Actions</div>
-            <div></div>
           </div>
 
           {/* Table Body */}
@@ -263,31 +247,29 @@ export const UserManagementPage = () => {
               return (
                 <div
                   key={user._id}
-                  className={`grid grid-cols-6 gap-4 p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+                  className={`grid grid-cols-[0.7fr_2.5fr_2.5fr_1fr_1fr_0.7fr] gap-4 p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors ${
                     index % 2 === 0 ? "bg-white" : "bg-gray-50"
                   }`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center">
                     <Input
-                      // checked={isSelected}
                       type="checkbox"
                       onChange={(e) => {
-                        if (e.target.checked) {
+                        if (e.target.checked)
                           setSelectedUsers((prev) => [...prev, user]);
-                        } else {
+                        else
                           setSelectedUsers((prev) =>
                             prev.filter((u) => u._id !== user._id),
                           );
-                        }
                       }}
                     />
-                    <span className="font-medium text-gray-800">
-                      {user.profile?.firstName || "Unknown"}
-                    </span>
                   </div>
 
                   <div className="text-gray-800">
-                    {user.profile?.lastName || "User"}
+                    {user.profile?.firstName || "Unknown"}
+                  </div>
+                  <div className="text-gray-800">
+                    {user.profile?.lastName || "Unknown"}
                   </div>
 
                   <div className="text-gray-600">
@@ -303,18 +285,18 @@ export const UserManagementPage = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEditUser(user)}
-                      className="px-4 py-2 text-white rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
+                      className="px-3 py-1 text-white rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
                       style={{ backgroundColor: "#c97f97" }}
                     >
                       EDIT
                     </button>
                   </div>
 
-                  <div>
+                  <div className="flex justify-center">
                     {!isCurrentUser && (
                       <button
                         onClick={() => handleDeleteUser(user)}
-                        className="px-3 py-2 bg-red-500 text-white rounded-full text-sm font-medium hover:bg-red-600 transition-colors"
+                        className="px-2 py-1 bg-red-500 text-white rounded-full text-sm font-medium hover:bg-red-600 transition-colors"
                       >
                         DELETE
                       </button>
@@ -327,7 +309,6 @@ export const UserManagementPage = () => {
         </div>
       </div>
 
-      {/* Add User Modal */}
       {showAddUserModal && (
         <AddUserModal
           onClose={() => setShowAddUserModal(false)}
@@ -335,7 +316,6 @@ export const UserManagementPage = () => {
         />
       )}
 
-      {/* Edit User Modal */}
       {showEditUserModal && editingUser && (
         <EditUserModal
           user={editingUser}
