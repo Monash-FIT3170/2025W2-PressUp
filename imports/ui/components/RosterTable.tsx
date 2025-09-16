@@ -3,6 +3,7 @@ import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import React, { useEffect, useState, useMemo } from "react";
 import { Shift, ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
 import { RoleEnum, roleColors } from "/imports/api/accounts/roles";
+import { Modal } from "./Modal";
 
 // Helper to get the most recent Monday from a date
 function getMonday(d: Date) {
@@ -90,6 +91,25 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
 
   const [allRoles, setAllRoles] = useState<string[]>([]);
   const [roleFilter, setRoleFilter] = useState<string[]>([]);
+  const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
+  // Edit modal state for time inputs
+  const [editStart, setEditStart] = useState<{
+    hour: number;
+    minute: number;
+  } | null>(null);
+  const [editEnd, setEditEnd] = useState<{
+    hour: number;
+    minute: number;
+  } | null>(null);
+
+  // When modal opens, initialize edit state
+  useEffect(() => {
+    if (selectedShift) {
+      setEditStart({ ...selectedShift.start });
+      setEditEnd({ ...selectedShift.end });
+    }
+  }, [selectedShift]);
 
   useEffect(() => {
     // Use roles defined in roles.ts instead of dynamically generating from data
@@ -254,8 +274,12 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
                   >
                     {shift ? (
                       <div
+                        onClick={() => {
+                          setSelectedShift(shift);
+                          setIsShiftModalOpen(true);
+                        }}
                         style={{
-                          backgroundColor: roleColors[staff.role] || "#6b7280", // fallback gray
+                          backgroundColor: roleColors[staff.role] || "#6b7280",
                           color: "#fff",
                           borderRadius: "0.375rem",
                           padding: "0.25rem 0.5rem",
@@ -267,6 +291,7 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
                           width: "100%",
                           height: "100%",
                           minHeight: "60px",
+                          cursor: "pointer",
                         }}
                       >
                         <span
@@ -291,6 +316,100 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
           ))}
         </tbody>
       </table>
+      {/* Shift Edit/Delete Modal */}
+      {isShiftModalOpen && selectedShift && editStart && editEnd && (
+        <Modal
+          open={isShiftModalOpen}
+          onClose={() => setIsShiftModalOpen(false)}
+        >
+          <div className="p-4">
+            {}
+            <h2 className="text-lg font-bold mb-4">Edit Shift</h2>
+
+            <div className="mb-4">
+              <div>Date: {selectedShift.date.toLocaleDateString()}</div>
+              <div className="mb-2">
+                <label>
+                  Start:{" "}
+                  <input
+                    type="time"
+                    value={`${String(editStart.hour).padStart(2, "0")}:${String(editStart.minute).padStart(2, "0")}`}
+                    onChange={(e) => {
+                      const [h, m] = e.target.value.split(":").map(Number);
+                      setEditStart({ hour: h, minute: m });
+                    }}
+                  />
+                </label>
+              </div>
+              <div className="mb-2">
+                <label>
+                  End:{" "}
+                  <input
+                    type="time"
+                    value={`${String(editEnd.hour).padStart(2, "0")}:${String(editEnd.minute).padStart(2, "0")}`}
+                    onChange={(e) => {
+                      const [h, m] = e.target.value.split(":").map(Number);
+                      setEditEnd({ hour: h, minute: m });
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              {}
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+                onClick={() => {
+                  Meteor.call(
+                    "shifts.update",
+                    {
+                      shiftId: selectedShift._id,
+                      start: editStart,
+                      end: editEnd,
+                    },
+                    (err: any) => {
+                      if (err) {
+                        alert("Failed to update shift: " + err.reason);
+                      }
+                      setIsShiftModalOpen(false);
+                    },
+                  );
+                }}
+              >
+                Save
+              </button>
+
+              <button
+                className="bg-red-600 text-white px-4 py-2 rounded"
+                onClick={() => {
+                  if (confirm("Are you sure you want to delete this shift?")) {
+                    Meteor.call(
+                      "shifts.remove",
+                      selectedShift._id,
+                      (err: any) => {
+                        if (err) {
+                          alert("Failed to delete shift: " + err.reason);
+                        }
+                        setIsShiftModalOpen(false);
+                      },
+                    );
+                  }
+                }}
+              >
+                Delete
+              </button>
+
+              <button
+                className="bg-gray-300 text-black px-4 py-2 rounded"
+                onClick={() => setIsShiftModalOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
