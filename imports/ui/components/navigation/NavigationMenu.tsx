@@ -19,6 +19,7 @@ import {
   HistoryIcon,
   MessageSquare,
   PenTool,
+  ReceiptText,
   Users,
 } from "lucide-react";
 
@@ -109,6 +110,12 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
           path="/kitchenManagement"
           selectionType={NavigationEntrySelection.HIGHLIGHT}
         >
+          <NavigationEntry
+            icon={<ReceiptText />}
+            name="Current Tickets"
+            path="/kitchenManagement/tickets"
+            selectionType={NavigationEntrySelection.ARROW}
+          ></NavigationEntry>
           <NavigationEntry
             icon={<HistoryIcon />}
             name="Order History"
