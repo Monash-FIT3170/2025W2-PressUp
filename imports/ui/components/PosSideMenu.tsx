@@ -303,6 +303,32 @@ export const PosSideMenu = ({
             </select>
           ) : (
             <div className="flex items-center gap-2">
+              <div className="absolute left-0">
+                <button
+                  className="px-3 rounded-full font-semibold text-m transition-colors duration-200 bg-white text-press-up-purple hover:bg-gray-300"
+                  onClick={async () => {
+                    try {
+                      // create a fresh takeaway order
+                      const newId = await Meteor.callAsync("orders.addOrder", {
+                        orderType: "takeaway",
+                        tableNo: null,
+                        menuItems: [],
+                        totalPrice: 0,
+                        createdAt: new Date(),
+                        orderStatus: "pending",
+                        paid: false,
+                      });
+                      setSelectedTakeawayId(String(newId)); // select the new order immediately
+                      onActiveOrderChange?.(String(newId));
+                    } catch (e) {
+                      console.error(e);
+                      alert("Failed to create takeaway order.");
+                    }
+                  }}
+                >
+                  +
+                </button>
+              </div>
               <select
                 className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none"
                 value={selectedTakeawayId ?? ""}
@@ -516,35 +542,6 @@ export const PosSideMenu = ({
               Discount
             </Button>
           </div>
-          {/* [ADD] Start new takeaway order (below Discount) */}
-          {orderType === "takeaway" && (
-            <Button
-              // full width, sits right under Discount button
-              variant="positive"
-              width="full"
-              onClick={async () => {
-                try {
-                  // create a fresh takeaway order
-                  const newId = await Meteor.callAsync("orders.addOrder", {
-                    orderType: "takeaway",
-                    tableNo: null,
-                    menuItems: [],
-                    totalPrice: 0,
-                    createdAt: new Date(),
-                    orderStatus: "pending",
-                    paid: false,
-                  });
-                  setSelectedTakeawayId(String(newId)); // select the new order immediately
-                  onActiveOrderChange?.(String(newId));
-                } catch (e) {
-                  console.error(e);
-                  alert("Failed to create takeaway order.");
-                }
-              }}
-            >
-              Start new order
-            </Button>
-          )}
           {/* Discount Popup */}
           {openDiscountPopup && (
             <div>
