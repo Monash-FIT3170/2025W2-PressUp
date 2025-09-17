@@ -485,7 +485,7 @@ export const PosSideMenu = ({
                     No active takeaway order.
                   </p>
                   <p className="text-sm text-gray-700">
-                    Use the button below to start.
+                    Use the + button above to create a new order.
                   </p>
                 </div>
               ) : (
