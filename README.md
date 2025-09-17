@@ -53,6 +53,7 @@
 ## Tech Stack
 
 This project makes use of the following core technologies:
+
 1. [React](https://react.dev/) - Front-end library
 2. [Meteor.js v3](https://meteor.com/) - Full-stack framework
 3. [TypeScript](https://typescriptlang.org/) - Programming language of choice
@@ -62,23 +63,28 @@ This project makes use of the following core technologies:
 To work on this project you should at least familiarise yourself with each of these. An understanding of web fundamentals is also a pre-requisite, including HTML, JavaScript, and CSS knowledge. Recommended guides/documentation for the above technologies are:
 
 **React**
+
 - Quickstart: <https://react.dev/learn>
 
 **Meteor.js:**
+
 - Introduction: <https://docs.meteor.com/about/what-is.html>
 - Installation: <https://docs.meteor.com/about/install.html>
 - Quickstart Project: <https://docs.meteor.com/about/web-apps.html> and <https://docs.meteor.com/tutorials/react/index.html>
 
 **TypeScript:**
+
 - Follow the "Get Started" guide that best describes you: <https://www.typescriptlang.org/docs/>
 
 **MongoDB:**
+
 - What is MongoDB?: <https://www.mongodb.com/company/what-is-mongodb>
 
->[!NOTE]
->The MongoDB site primarily sells their cloud platform "Atlas". You will learn MongoDB best by using it in the project. The above should be read to gain a rough understanding of its philosophy.
+> [!NOTE]
+> The MongoDB site primarily sells their cloud platform "Atlas". You will learn MongoDB best by using it in the project. The above should be read to gain a rough understanding of its philosophy.
 
 **Docker:**
+
 - What is Docker?: <https://docs.docker.com/get-started/docker-overview/>
 - Introduction: <https://docs.docker.com/get-started/introduction/>
 
@@ -91,18 +97,19 @@ In order to run the project for development you should do the following:
 3. After ensuring that `meteor` is on your PATH run `meteor npm install`.
 4. Run `meteor npm start` to launch a local server to test against.
 
->[!WARNING]
->Initial builds can take a long time depending on the machine.
+> [!WARNING]
+> Initial builds can take a long time depending on the machine.
 
->[!TIP]
->Meteor can be fragile. If you find yourself in an unexpected state with many errors try to restart; if all else fails running the following works as a last resort fix (but clears local database, removes modules, and requires a rebuild afterwards):
->```bash
->rm -rf node_modules
->rm package-lock.json
->npm cache clean --force
->npm install
->meteor reset --db
->```
+> [!TIP]
+> Meteor can be fragile. If you find yourself in an unexpected state with many errors try to restart; if all else fails running the following works as a last resort fix (but clears local database, removes modules, and requires a rebuild afterwards):
+>
+> ```bash
+> rm -rf node_modules
+> rm package-lock.json
+> npm cache clean --force
+> npm install
+> meteor reset --db
+> ```
 
 ## Making Changes
 
@@ -111,11 +118,12 @@ The `main` branch represents the current "production ready" state of the codebas
 Instead a [Trunk Based Development](https://www.atlassian.com/continuous-delivery/continuous-integration/trunk-based-development) approach is taken where features are developed on short lived feature branches, a PR is created for them once the feature is ready, the PR is reviewed and later approved by a maintainer that didn't develop the feature, and the branch is merged into `main`.
 
 Branches should be prefixed with an indicator for their purpose and descriptively named, for example:
+
 - `feature/sign-in-page-uplift`
 - `refactor/user-abstraction`
 - `hotfix/home-page-header-issue`
 
-Commits should be short but descriptive. Limit to 50 characters and format as having the first letter capitalised but *don't* end with a period.
+Commits should be short but descriptive. Limit to 50 characters and format as having the first letter capitalised but _don't_ end with a period.
 
 ## Code Quality
 
