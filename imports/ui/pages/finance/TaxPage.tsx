@@ -21,6 +21,8 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import { Trash } from "lucide-react";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 interface FinancialDataField {
   title: string;
@@ -344,6 +346,33 @@ export const TaxPage = () => {
     });
   };
 
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deductionToDelete, setDeductionToDelete] = useState<string | null>(null);
+
+  // when bin icon is clicked
+  const handleDeleteDeduction = (
+    e: React.MouseEvent,
+    id: string
+  ) => {
+    e.stopPropagation();
+    setDeductionToDelete(id);
+    setShowConfirm(true);
+  };
+
+  // confirmation modal
+  const handleConfirm = () => {
+    if (!deductionToDelete) return;
+
+    Meteor.call("deductions.delete", deductionToDelete, (err: Meteor.Error | undefined) => {
+      if (err) {
+        alert(`Delete failed: ${err.reason}`);
+      }
+    });
+
+    setShowConfirm(false);
+    setDeductionToDelete(null);
+  };
+
   const handleSave = () => {
     setIsModalOpen(false);
     setSelectedDeduction(null);
@@ -551,7 +580,14 @@ export const TaxPage = () => {
                         </p>
                         <p className="text-sm text-gray-600">{d.description}</p>
                       </div>
+                      <div className="flex items-center gap-2">
                       <span className="font-semibold text-lg">${d.amount}</span>
+                      <Trash
+                        size={20}
+                        className="text-red-500 hover:text-red-700 cursor-pointer"
+                        onClick={(e) => handleDeleteDeduction(e, d._id)}
+                      />
+                      </div>
                     </button>
                   ))
                 )}
@@ -596,7 +632,7 @@ export const TaxPage = () => {
         </div>
       </div>
 
-      {/* Deduction Modal */}
+      {/* Modals */}
       <EditDeductionModal
         isOpen={isModalOpen}
         onClose={() => {
@@ -605,6 +641,13 @@ export const TaxPage = () => {
         }}
         deduction={selectedDeduction}
         onSave={handleSave}
+      />
+
+      <ConfirmModal
+        open={showConfirm}
+        message="Are you sure you want to delete this item?"
+        onConfirm={handleConfirm}
+        onCancel={() => setShowConfirm(false)}
       />
     </div>
   );

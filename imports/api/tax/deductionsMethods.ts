@@ -3,6 +3,7 @@ import { check } from "meteor/check";
 import { Deduction, DeductionsCollection } from "./DeductionsCollection";
 import { OmitDB } from "../database";
 import { requireLoginMethod } from "../accounts/wrappers";
+import { Mongo } from "meteor/mongo";
 
 Meteor.methods({
   "deductions.add"(deduction: {
@@ -68,4 +69,14 @@ Meteor.methods({
 
     return DeductionsCollection.find().fetch();
   },
+
+  "deductions.delete": requireLoginMethod(async function (deductionId: string) {
+    check(deductionId, String);
+
+    const result = await DeductionsCollection.removeAsync(deductionId);
+
+    if (result === 0) {
+      throw new Meteor.Error("not-found", "Deduction not found");
+    }
+  }),
 });
