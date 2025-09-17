@@ -6,10 +6,8 @@ import { Menu } from "./pages/menuManagement/Menu";
 import { ProfitLossPage } from "./pages/finance/ProfitLossPage";
 import { TaxPage } from "./pages/finance/TaxPage";
 import { ExpensesPage } from "./pages/finance/ExpensesPage";
-
 import { KitchenManagement } from "./pages/kitchenManagement/KitchenManagement";
 import { OrderHistoryPage } from "./pages/kitchenManagement/OrderHistoryPage";
-// pos system
 import { MainDisplay } from "./pages/pos/MainDisplay";
 import { TablesPage } from "./pages/pos/Tables";
 import { ReceiptIndex } from "./pages/receipt/Index";
@@ -18,6 +16,7 @@ import { LoginPage } from "./pages/Login";
 import { UserManagementPage } from "./pages/userManagement/userManagement";
 import { RosterPage } from "./pages/staff/Roster";
 import { CommunicationPage } from "./pages/staff/Communication";
+import { DebugPage } from "./pages/debug/Debug";
 
 const router = createBrowserRouter([
   {
@@ -83,6 +82,10 @@ const router = createBrowserRouter([
           { path: "roster", Component: RosterPage },
           { path: "communication", Component: CommunicationPage },
         ],
+      },
+      {
+        path: "debug",
+        Component: DebugPage,
       },
     ],
   },

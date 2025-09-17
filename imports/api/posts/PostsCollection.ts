@@ -1,11 +1,11 @@
 import { Mongo } from "meteor/mongo";
-import { DBEntry, OmitDB } from "../database";
+import { DBEntry, IdType, OmitDB } from "../database";
 export interface Post extends DBEntry {
-  postedBy: string;
+  postedBy: IdType;
   datePosted: Date;
   subject: string;
   content: string;
-  category: string; // TODO: 5.3 to implement this functionality
+  category: string;
 }
 
 export const PostsCollection = new Mongo.Collection<OmitDB<Post>, Post>(
