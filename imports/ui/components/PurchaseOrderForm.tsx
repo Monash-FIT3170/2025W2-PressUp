@@ -1,8 +1,10 @@
 import { Meteor } from "meteor/meteor";
-import { useTracker } from "meteor/react-meteor-data";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import {
+  Company,
+  CompanyCollection,
   PurchaseOrder,
   PurchaseOrdersCollection,
   StockItem,
@@ -77,6 +79,11 @@ export const PurchaseOrderForm = ({
     }
     return result;
   }, [purchaseOrder]);
+
+  const isLoadingCompany = useSubscribe("company");
+  const company: Company | undefined = useTracker(() => {
+    return CompanyCollection.find().fetch()[0];
+  });
 
   const costRegex = /^([1-9][0-9]*|0)?(\.[0-9]{0,2})?$/;
   const quantityRegex = /^[0-9]*$/;
@@ -174,13 +181,26 @@ export const PurchaseOrderForm = ({
     <div className="flex flex-col space-y-5 p-2 dark:text-white" ref={printRef}>
       <div className="grid grid-cols-2">
         <div>
-          {/* TODO: Information about company */}
-          <div className="font-bold pb-2">Example Company Name</div>
-          <div>123 Street Name</div>
-          <div>City Name, 3170</div>
-          <div>
-            <span className="font-bold">Phone:</span> +...
+          <div className="font-bold pb-2">
+            {isLoadingCompany()
+              ? "Loading..."
+              : company?.name || "No Company Name"}
           </div>
+          <div>
+            {isLoadingCompany()
+              ? "Loading..."
+              : company?.address || "No Address"}
+          </div>
+          {company?.phone && (
+            <div>
+              <span className="font-bold">Phone:</span> {company.phone}
+            </div>
+          )}
+          {company?.email && (
+            <div>
+              <span className="font-bold">Email:</span> {company.email}
+            </div>
+          )}
         </div>
         <div className="text-5xl text-nowrap text-right text-[#6F597B] print:hidden">
           New Purchase Order

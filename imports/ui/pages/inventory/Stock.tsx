@@ -40,9 +40,7 @@ export const StockPage = () => {
     for (const stockItem of stockItems) {
       let supplier: Supplier | null = null;
       if (stockItem.supplier != null) {
-        supplier = SuppliersCollection.find({
-          _id: stockItem.supplier,
-        }).fetch()[0];
+        supplier = SuppliersCollection.findOne(stockItem.supplier) || null;
       }
       result.push({ ...stockItem, supplier });
     }
