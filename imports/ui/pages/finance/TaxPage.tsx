@@ -23,7 +23,7 @@ import {
 } from "recharts";
 import { Trash } from "lucide-react";
 import { ConfirmModal } from "../../components/ConfirmModal";
-import { useTracker } from "meteor/react-meteor-data";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { DeductionsCollection } from "/imports/api/tax/DeductionsCollection";
 
 interface FinancialDataField {
@@ -51,9 +51,9 @@ const getQuarterRange = (date: Date) => {
 
 export const TaxPage = () => {
   const [_, setPageTitle] = usePageTitle();
-  const deductions = useTracker(() => {
-    return DeductionsCollection.find({}, { sort: { date: -1 } }).fetch();
-  }, []);
+  useSubscribe("deductions");
+  const deductions = useTracker(() => DeductionsCollection.find().fetch());
+
   const [selectedMetric, setSelectedMetric] = useState<
     "incomeTax" | "payrollTax" | "GSTCollected" | "GSTPaid"
   >("incomeTax");
