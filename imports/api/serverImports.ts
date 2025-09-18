@@ -24,6 +24,8 @@ import "./tax/deductionsPublishing";
 import "./company/companyMethods";
 import "./company/companyPublishing";
 import "./debug/debugMethods";
+import "./menuItems/itemCategoriesMethods";
+import "./menuItems/itemCategoriesPublishing";
 import "./menuItems/seedMenuItems";
 import "./training/trainingListsPublishing";
 import "./training/trainingMethods";
