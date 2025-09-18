@@ -54,13 +54,6 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             path="/finance/tax"
             selectionType={NavigationEntrySelection.ARROW}
           />
-
-          <NavigationEntry
-            icon={<Folder />}
-            name="Expense Tracking"
-            path="/finance/Expenses"
-            selectionType={NavigationEntrySelection.ARROW}
-          />
         </NavigationEntry>
         <NavigationEntry
           icon={<PencilIcon fill="var(--color-press-up-grey)" />}
