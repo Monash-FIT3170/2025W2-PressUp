@@ -4,12 +4,16 @@ import { TransactionsCollection } from "../transactions/TransactionsCollection";
 import { OrdersCollection } from "../orders/OrdersCollection";
 
 Meteor.methods({
-  'analytics.getPopularItems': requireLoginMethod(async function (timeFrame: string, startDate: Date, endDate: Date) {
+  'analytics.getPopularItems': requireLoginMethod(async function (
+    timeFrame: string,
+    startDate: Date,
+    endDate: Date
+  ) {
     const transactions = await TransactionsCollection.find({
       createdAt: {
         $gte: startDate,
-        $lte: endDate
-      }
+        $lte: endDate,
+      },
     }).fetch();
 
     const itemMap = new Map<string, { name: string; totalQuantity: number; totalRevenue: number; averagePrice: number }>();
@@ -30,20 +34,26 @@ Meteor.methods({
       }
     });
 
-    return Array.from(itemMap.values())
-      .sort((a, b) => b.totalQuantity - a.totalQuantity);
+    return Array.from(itemMap.values()).sort((a, b) => b.totalQuantity - a.totalQuantity);
   }),
 
-  'analytics.getSalesTrends': requireLoginMethod(async function (timeFrame: string, startDate: Date, endDate: Date) {
+  'analytics.getSalesTrends': requireLoginMethod(async function (
+    timeFrame: string,
+    startDate: Date, 
+    endDate: Date
+  ) {
     const transactions = await TransactionsCollection.find({
       createdAt: {
         $gte: startDate,
-        $lte: endDate
-      }
+        $lte: endDate,
+      },
     }).fetch();
 
     // Group by time periods based on timeFrame
-    const periodMap = new Map<string, { period: string; totalSales: number; itemCount: number }>();
+    const periodMap = new Map<
+      string,
+      { period: string; totalSales: number; itemCount: number }
+      >();
 
     transactions.forEach((transaction) => {
       const transactionDate = new Date(transaction.createdAt);
