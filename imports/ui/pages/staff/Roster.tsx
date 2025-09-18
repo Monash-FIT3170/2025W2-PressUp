@@ -3,7 +3,10 @@ import { Button } from "../../components/interaction/Button";
 import { Modal } from "../../components/Modal";
 import { PublishShiftForm } from "../../components/PublishShiftForm";
 import { RosterTable } from "../../components/RosterTable";
-import { ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
+import {
+  ShiftsCollection,
+  ShiftStatus,
+} from "/imports/api/shifts/ShiftsCollection";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { Hide } from "../../components/display/Hide";
@@ -43,8 +46,10 @@ export const RosterPage = () => {
 
     const shiftsHandle = Meteor.subscribe("shifts.current");
 
+    // Look for clocked-in shifts instead of just any active shift
     const activeShift = ShiftsCollection.findOne({
       user: userId,
+      status: ShiftStatus.CLOCKED_IN,
     });
 
     return {
@@ -62,6 +67,7 @@ export const RosterPage = () => {
     Meteor.call("shifts.clockIn", (error: Meteor.Error | undefined) => {
       if (error) {
         console.error("Clock in failed:", error.message);
+        alert(`Clock in failed: ${error.message}`);
       } else {
         console.log("Successfully clocked in");
       }
@@ -71,24 +77,21 @@ export const RosterPage = () => {
   const handleClockOut = () => {
     if (!user || !activeShift) return;
 
-    Meteor.call(
-      "shifts.clockOut",
-      activeShift._id,
-      (error: Meteor.Error | undefined) => {
-        if (error) {
-          console.error("Clock out failed:", error.message);
-        } else {
-          console.log("Successfully clocked out");
-        }
-      },
-    );
+    Meteor.call("shifts.clockOut", (error: Meteor.Error | undefined) => {
+      if (error) {
+        console.error("Clock out failed:", error.message);
+        alert(`Clock out failed: ${error.message}`);
+      } else {
+        console.log("Successfully clocked out");
+      }
+    });
   };
 
   return (
     <div className="flex flex-1 flex-col">
       {/* Header section with buttons */}
       <div className="flex justify-between items-center mb-4">
-        <Button onClick={() => setShiftModalOpen(true)}>Publish Shift</Button>
+        {/* <Button onClick={() => setShiftModalOpen(true)}>Publish Shift</Button> */}
 
         <div className="flex gap-2">
           {user && (

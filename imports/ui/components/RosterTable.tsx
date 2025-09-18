@@ -1,33 +1,29 @@
 import { Meteor } from "meteor/meteor";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import React, { useEffect, useState, useMemo } from "react";
-import { Shift, ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
+import {
+  Shift,
+  ShiftsCollection,
+  ShiftStatus,
+  shiftTimeUtils,
+} from "/imports/api/shifts/ShiftsCollection";
 import { RoleEnum, roleColors } from "/imports/api/accounts/roles";
 
-// Helper to get the most recent Monday from a date
 function getMonday(d: Date) {
   const date = new Date(d);
   const day = date.getDay();
-  const diff = (day === 0 ? -6 : 1) - day; // Monday as start, Sunday as end
+  const diff = (day === 0 ? -6 : 1) - day;
   date.setDate(date.getDate() + diff);
   date.setHours(0, 0, 0, 0);
   return date;
 }
 
-// Helper to format date as 'Apr 29, 2024'
 function formatDate(date: Date) {
   return date.toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
-}
-
-// Helper to format time as '08:00' or '08:30'
-function formatTime(hour: number, minute: number) {
-  return (
-    hour.toString().padStart(2, "0") + ":" + minute.toString().padStart(2, "0")
-  );
 }
 
 const daysOfWeek = [
@@ -50,6 +46,7 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
 
   const shiftsLoading = useSubscribe("shifts.all")();
   const usersLoading = useSubscribe("users.all")();
+
   const staffShifts = useTracker(() => {
     const staffMap = new Map<
       string,
@@ -92,7 +89,6 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
   const [roleFilter, setRoleFilter] = useState<string[]>([]);
 
   useEffect(() => {
-    // Use roles defined in roles.ts instead of dynamically generating from data
     const definedRoles = Object.values(RoleEnum);
     setAllRoles(definedRoles);
   }, []);
@@ -103,11 +99,9 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
     }
   }, [allRoles, roleFilter.length]);
 
-  // Start with the most recent Monday as the base week
-  const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, -1 = prev, +1 = next
+  const [weekOffset, setWeekOffset] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Calculate the start and end dates for the current week
   const weekStart = useMemo(() => {
     const start = new Date(baseMonday);
     start.setDate(start.getDate() + weekOffset * 7);
@@ -120,7 +114,6 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
     return end;
   }, [weekStart]);
 
-  // Get the date for each day in the week (Monday-Sunday)
   const weekDates = useMemo(() => {
     return Array.from({ length: 7 }).map((_, i) => {
       const d = new Date(weekStart);
@@ -139,25 +132,117 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
   ) => {
     const cellDate = weekDates[dayIndex];
     return (
-      staff.shifts.find(
-        (shift) => shift.date.toDateString() == cellDate.toDateString(),
-      ) || null
+      staff.shifts.find((shift) => {
+        const shiftDate = new Date(shift.date);
+        shiftDate.setHours(0, 0, 0, 0);
+        const compareDate = new Date(cellDate);
+        compareDate.setHours(0, 0, 0, 0);
+        return shiftDate.getTime() === compareDate.getTime();
+      }) || null
     );
   };
 
-  // Handle role filter change
   const handleRoleChange = (role: string) => {
     setRoleFilter((prev) =>
       prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
     );
   };
 
-  // Get display text for dropdown button
   const getDropdownText = () => {
     if (roleFilter.length === 0) return "All Roles";
     if (roleFilter.length === allRoles.length) return "All Roles";
     if (roleFilter.length === 1) return roleFilter[0];
     return `${roleFilter.length} roles selected`;
+  };
+
+  const renderShiftCell = (shift: Shift, staffRole: string) => {
+    const getShiftColor = () => {
+      switch (shift.status) {
+        case ShiftStatus.SCHEDULED:
+          return "#f3f4f6";
+        case ShiftStatus.CLOCKED_IN:
+          return "#10b981";
+        case ShiftStatus.COMPLETED:
+          return roleColors[staffRole] || "#6b7280";
+        default:
+          return "#6b7280";
+      }
+    };
+
+    const getTextColor = () => {
+      return shift.status === ShiftStatus.SCHEDULED ? "#374151" : "#fff";
+    };
+
+    const getStatusText = () => {
+      switch (shift.status) {
+        case ShiftStatus.SCHEDULED:
+          return "Scheduled";
+        case ShiftStatus.CLOCKED_IN:
+          return "Active";
+        case ShiftStatus.COMPLETED:
+          return staffRole;
+        default:
+          return "";
+      }
+    };
+
+    const formatTimeRange = () => {
+      const startTime = shiftTimeUtils.format(shift.start);
+      let endTime = "";
+
+      if (shift.status === ShiftStatus.CLOCKED_IN) {
+        endTime = shift.scheduledEnd
+          ? shiftTimeUtils.format(shift.scheduledEnd)
+          : "Open";
+      } else if (shift.end) {
+        endTime = shiftTimeUtils.format(shift.end);
+      } else if (shift.scheduledEnd) {
+        endTime = shiftTimeUtils.format(shift.scheduledEnd);
+      }
+
+      return endTime ? `${startTime} - ${endTime}` : startTime;
+    };
+
+    return (
+      <div
+        style={{
+          backgroundColor: getShiftColor(),
+          color: getTextColor(),
+          borderRadius: "0.375rem",
+          padding: "0.25rem 0.5rem",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "2px",
+          width: "100%",
+          height: "100%",
+          minHeight: "60px",
+          border:
+            shift.status === ShiftStatus.SCHEDULED
+              ? "2px dashed #9ca3af"
+              : "none",
+        }}
+      >
+        <span
+          className="font-mono text-sm text-center"
+          style={{ color: getTextColor() }}
+        >
+          {formatTimeRange()}
+        </span>
+        <span
+          className="text-xs text-center font-mono"
+          style={{
+            color:
+              shift.status === ShiftStatus.SCHEDULED
+                ? "#6b7280"
+                : "rgba(255,255,255,0.9)",
+          }}
+        >
+          {getStatusText()}
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -252,38 +337,7 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
                     className="border border-gray-300 p-0 align-top"
                     style={{ minHeight: "60px", position: "relative" }}
                   >
-                    {shift ? (
-                      <div
-                        style={{
-                          backgroundColor: roleColors[staff.role] || "#6b7280", // fallback gray
-                          color: "#fff",
-                          borderRadius: "0.375rem",
-                          padding: "0.25rem 0.5rem",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "2px",
-                          width: "100%",
-                          height: "100%",
-                          minHeight: "60px",
-                        }}
-                      >
-                        <span
-                          className="font-mono text-sm text-center"
-                          style={{ color: "#fff" }}
-                        >
-                          {formatTime(shift.start.hour, shift.start.minute)} -{" "}
-                          {formatTime(shift.end.hour, shift.end.minute)}
-                        </span>
-                        <span
-                          className="text-xs text-center font-mono"
-                          style={{ color: "rgba(255,255,255,0.9)" }}
-                        >
-                          {staff.role}
-                        </span>
-                      </div>
-                    ) : null}
+                    {shift ? renderShiftCell(shift, staff.role) : null}
                   </td>
                 );
               })}
@@ -291,6 +345,22 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
           ))}
         </tbody>
       </table>
+
+      {/* Legend */}
+      <div className="mt-4 flex gap-4 text-sm">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-gray-200 border-2 border-dashed border-gray-400 rounded"></div>
+          <span>Scheduled</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-green-500 rounded"></div>
+          <span>Active (Clocked In)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-red-600 rounded"></div>
+          <span>Completed</span>
+        </div>
+      </div>
     </div>
   );
 };

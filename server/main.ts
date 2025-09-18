@@ -3,6 +3,8 @@ import { mockDataGenerator } from "/imports/api/mockData";
 import { createDefaultUser } from "/imports/api/accounts/defaultUser";
 import "/imports/api/serverImports";
 import { setupRoles } from "/imports/api/accounts/roles";
+import "/imports/api/shifts/ShiftsMethods";
+import "/imports/api/shifts/ShiftsPublishing";
 
 Meteor.startup(async () => {
   await setupRoles();

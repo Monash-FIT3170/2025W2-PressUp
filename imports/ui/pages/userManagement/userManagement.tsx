@@ -436,6 +436,7 @@ const AddUserModal = ({
             <option value={RoleEnum.MANAGER}>Manager</option>
             <option value={RoleEnum.ADMIN}>Admin</option>
           </select>
+          <div className="text-sm text-gray-600">Pay Rate (optional)</div>
           {canEditPayRate && (
             <Input
               type="number"

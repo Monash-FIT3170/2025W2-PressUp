@@ -1,6 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import { Roles } from "meteor/alanning:roles";
-import { ShiftsCollection } from "./ShiftsCollection";
+import { ShiftsCollection, ShiftStatus } from "./ShiftsCollection";
 import { requireLoginPublish } from "/imports/api/accounts/wrappers";
 import { RoleEnum as PressUpRole } from "/imports/api/accounts/roles";
 
@@ -42,39 +42,17 @@ Meteor.publish(
     ) {
       return ShiftsCollection.find({
         user: this.userId,
-        $or: [
-          {
-            start: { $gte: startDate, $lte: endDate },
-          },
-          {
-            end: { $gte: startDate, $lte: endDate },
-          },
-          {
-            start: { $lte: startDate },
-            $or: [{ end: { $gte: endDate } }, { end: { $exists: false } }],
-          },
-        ],
+        date: { $gte: startDate, $lte: endDate },
       });
     }
 
     return ShiftsCollection.find({
-      $or: [
-        {
-          start: { $gte: startDate, $lte: endDate },
-        },
-        {
-          end: { $gte: startDate, $lte: endDate },
-        },
-        {
-          start: { $lte: startDate },
-          $or: [{ end: { $gte: endDate } }, { end: { $exists: false } }],
-        },
-      ],
+      date: { $gte: startDate, $lte: endDate },
     });
   }),
 );
 
-// publish active shifts
+// publish active shifts (clocked in)
 Meteor.publish(
   "shifts.active",
   requireLoginPublish(async function () {
@@ -86,13 +64,41 @@ Meteor.publish(
     ) {
       return ShiftsCollection.find({
         user: this.userId,
-        end: { $exists: false },
+        status: ShiftStatus.CLOCKED_IN,
       });
     }
 
     // for managers and admins to see all active shifts
     return ShiftsCollection.find({
-      end: { $exists: false },
+      status: ShiftStatus.CLOCKED_IN,
+    });
+  }),
+);
+
+// publish scheduled shifts for roster planning
+Meteor.publish(
+  "shifts.scheduled",
+  requireLoginPublish(async function (startDate?: Date, endDate?: Date) {
+    const dateFilter =
+      startDate && endDate ? { date: { $gte: startDate, $lte: endDate } } : {};
+
+    if (
+      !(await Roles.userIsInRoleAsync(this.userId, [
+        PressUpRole.ADMIN,
+        PressUpRole.MANAGER,
+      ]))
+    ) {
+      return ShiftsCollection.find({
+        user: this.userId,
+        status: ShiftStatus.SCHEDULED,
+        ...dateFilter,
+      });
+    }
+
+    // for managers and admins to see all scheduled shifts
+    return ShiftsCollection.find({
+      status: ShiftStatus.SCHEDULED,
+      ...dateFilter,
     });
   }),
 );
