@@ -5,7 +5,7 @@ type SelectVariant = "default";
 
 const variantColours: Record<SelectVariant, string> = {
   default:
-    "bg-gray-50 border border-gray-300 text-red-900 focus:ring-red-900 focus:border-red-900 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white",
+    "bg-white border border-gray-300 text-red-900 focus:ring-red-900 focus:border-red-900 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white",
 };
 
 interface SelectProps

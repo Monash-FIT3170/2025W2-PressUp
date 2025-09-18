@@ -62,7 +62,8 @@ const router = createBrowserRouter([
       {
         path: "kitchenManagement",
         children: [
-          { index: true, Component: KitchenManagement },
+          { index: true, Component: () => <Navigate replace to={"tickets"} /> },
+          { path: "tickets", Component: KitchenManagement },
           { path: "history", Component: OrderHistoryPage },
         ],
       },
