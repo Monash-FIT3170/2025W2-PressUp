@@ -11,11 +11,15 @@ export const CategoryDropdown: React.FC<CategoryProps> = ({
   onChange,
   initialCategories = [],
 }) => {
-  const [allCategories, setAllcategories] =
-    useState<string[]>(initialCategories);
+  const [allCategories, setAllcategories] = useState<string[]>(initialCategories);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchCategory, setSearchCategory] = useState("");
+
+  // ✅ keep local state in sync with props
+  useEffect(() => {
+    setAllcategories(initialCategories);
+  }, [initialCategories]);
 
   const updatecategories = (category: string) => {
     if (selectedCategories.includes(category)) {
