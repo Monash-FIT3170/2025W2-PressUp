@@ -60,4 +60,12 @@ Meteor.methods({
 
     return result;
   }),
+
+  "deductions.getAll"() {
+    if (!this.userId) {
+      throw new Meteor.Error("Not authorized");
+    }
+
+    return DeductionsCollection.find().fetch();
+  },
 });

@@ -4,6 +4,7 @@ import { Meteor } from "meteor/meteor";
 import { Order } from "/imports/api";
 import { TablesCollection } from "/imports/api/tables/TablesCollection";
 import { OrderStatus } from "/imports/api/orders/OrdersCollection";
+import { Button } from "./interaction/Button";
 
 interface PaymentModalProps {
   tableNo?: number | null;
@@ -12,6 +13,7 @@ interface PaymentModalProps {
 
 export const PaymentModal = ({ order }: PaymentModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const isServed = order.orderStatus === OrderStatus.Served;
   const openModal = () => {
     if (order.menuItems.length === 0) {
       alert("Cannot pay for an order with no items.");
@@ -24,19 +26,13 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
   const navigate = useNavigate();
 
   // Update order status
-  const updateOrderStatus = () => {
-    if (!order || !order._id) {
-      return;
-    }
-    const fields = {
-      orderStatus: OrderStatus.Served,
-      paid: true,
-    };
-    Meteor.call("orders.updateOrder", order._id, { ...fields });
+  const finalizePayment = () => {
+    if (!order || !order._id) return;
 
-    // Clear the table's activeOrderID if this is a dine-in order
+    Meteor.call("orders.updateOrder", order._id, { paid: true });
+
+    // Clear the table if dine-in
     if (order.tableNo !== null && order.tableNo !== undefined) {
-      // Find the table by tableNo and clear its activeOrderID
       Meteor.call(
         "tables.clearOrder",
         TablesCollection.findOne({ tableNo: order.tableNo })?._id,
@@ -45,20 +41,21 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
   };
 
   const handleConfirm = () => {
-    updateOrderStatus();
+    finalizePayment();
     closeModal();
     navigate(`/receipt?orderNo=${order.orderNo}`);
   };
 
   return (
     <div>
-      <button
+      <Button
         onClick={openModal}
-        className="w-full bg-press-up-positive-button hover:bg-press-up-hover text-white font-bold py-2 px-4 rounded-full"
-        disabled={Boolean(order?.isLocked)}
+        variant="positive"
+        width="full"
+        disabled={Boolean(order?.isLocked) || order.menuItems.length === 0}
       >
         Pay
-      </button>
+      </Button>
 
       {/* Fade In */}
       <div
@@ -72,27 +69,46 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
           className="bg-white p-6 rounded-2xl shadow-2xl w-80 transform transition-transform duration-300"
           onClick={(e) => e.stopPropagation()}
         >
-          <h2 className="text-xl text-gray-700 font-bold mb-4">
-            Confirm Payment
-          </h2>
-          <p className="mb-6 text-gray-700">
-            Are you sure you want to proceed with the payment?
-          </p>
-          <div className="grid grid-cols-2 justify-items-center gap-2">
-            <button
-              onClick={closeModal}
-              className="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg"
-            >
-              Cancel
-            </button>
-            {/* Link to receipt page */}
-            <button
-              onClick={handleConfirm}
-              className="px-4 py-2 bg-press-up-purple text-white font-semibold rounded-lg"
-            >
-              Confirm
-            </button>
-          </div>
+          {isServed ? (
+            <>
+              <h2 className="text-xl text-gray-700 font-bold mb-4">
+                Confirm Payment
+              </h2>
+              <p className="mb-6 text-gray-700">
+                Are you sure you want to proceed with the payment?
+              </p>
+              <div className="grid grid-cols-2 justify-items-center gap-2">
+                <Button onClick={closeModal} variant="negative" width="fit">
+                  Cancel
+                </Button>
+                <Button onClick={handleConfirm} variant="positive" width="fit">
+                  Confirm
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl text-gray-700 font-bold mb-4">
+                Order is not served
+              </h2>
+              <p className="mb-4 text-gray-700">
+                Only <b>SERVED</b> orders can be paid.
+              </p>
+              <div className="mb-4 text-sm text-gray-600">
+                <div className="mb-2">
+                  <span className="font-semibold">Current status:</span>{" "}
+                  <span className="inline-block px-2 py-1 rounded bg-gray-100 border">
+                    {String(order.orderStatus).toUpperCase()}
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <Button onClick={closeModal} variant="negative" width="fit">
+                  OK
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
