@@ -26,14 +26,9 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
     return StockItemsCollection.find({}, { sort: { name: 1 } }).fetch();
   }, []);
 
-  const isLoadingPurchaseOrders = useSubscribe("purchaseOrders");
-
   // Calculate purchase order counts for each supplier
+  useSubscribe("purchaseOrders");
   const purchaseOrderCounts = useTracker(() => {
-    if (isLoadingPurchaseOrders()) {
-      return new Map();
-    }
-
     const counts = new Map();
     suppliers.forEach((supplier) => {
       const count = PurchaseOrdersCollection.find({
@@ -42,7 +37,7 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
       counts.set(supplier._id, count);
     });
     return counts;
-  }, [suppliers, isLoadingPurchaseOrders]);
+  }, [suppliers]);
 
   const toggleExpanded = (supplierId: string) => {
     setExpandedSupplierId(

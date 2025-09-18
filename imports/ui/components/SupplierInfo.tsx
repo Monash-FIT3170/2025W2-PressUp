@@ -24,12 +24,8 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
     ).fetch();
   }, [supplier._id]);
 
-  const isLoadingPurchaseOrders = useSubscribe("purchaseOrders");
+  useSubscribe("purchaseOrders");
   const purchaseOrders = useTracker(() => {
-    if (isLoadingPurchaseOrders()) {
-      return [];
-    }
-
     const purchaseOrders = PurchaseOrdersCollection.find(
       { supplier: supplier._id },
       { sort: { date: -1 } },
@@ -55,7 +51,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
         };
       });
     });
-  }, [supplier._id, isLoadingPurchaseOrders]);
+  }, [supplier._id]);
 
   const removeItemFromSupplier = (itemId: IdType) => {
     if (
