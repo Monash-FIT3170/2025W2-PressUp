@@ -21,7 +21,7 @@ interface SupplierInfoProps {
 }
 
 export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
-  const [sortBy, setSortBy] = useState<"date-desc" | "date-asc">("date-desc");
+  // const [sortBy, setSortBy] = useState<"date-desc" | "date-asc">("date-desc");
 
   // Fetch stock items for this supplier
   const stockItems = useTracker(() => {
@@ -83,11 +83,11 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
     },
   ];
 
-  const sortedOrders = [...orderHistory].sort((a, b) => {
-    const dateA = new Date(a.date).getTime();
-    const dateB = new Date(b.date).getTime();
-    return sortBy === "date-desc" ? dateB - dateA : dateA - dateB;
-  });
+  // const sortedOrders = [...orderHistory].sort((a, b) => {
+  //   const dateA = new Date(a.date).getTime();
+  //   const dateB = new Date(b.date).getTime();
+  //   return sortBy === "date-desc" ? dateB - dateA : dateA - dateB;
+  // });
 
   if (!isExpanded) return null;
 
@@ -230,7 +230,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                 </tr>
               </thead>
               <tbody>
-                {sortedOrders.map((order, index) => (
+                {orderHistory.map((order, index) => (
                   <tr key={index} className="border-b border-gray-100">
                     <td className="p-2 text-gray-800">{order.no}</td>
                     <td className="p-2 text-gray-800">{order.date}</td>
