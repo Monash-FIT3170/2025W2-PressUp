@@ -176,7 +176,10 @@ export const UserManagementPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full" style={{ backgroundColor: "#ffffff" }}>
+    <div
+      className="max-h-screen w-full overflow-auto"
+      style={{ backgroundColor: "#ffffff" }}
+    >
       <div className="p-12 pb-4 w-full">
         {/* Action Buttons */}
         <div className="flex gap-4 mb-6">

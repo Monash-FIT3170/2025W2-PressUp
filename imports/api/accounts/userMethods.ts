@@ -103,6 +103,14 @@ Meteor.methods({
       throw new Meteor.Error("user-not-found", "User not found");
     }
 
+    // Prevent deleting admin user
+    if (userToDelete.username === "admin") {
+      throw new Meteor.Error(
+        "cannot-delete-admin",
+        "Cannot delete the admin user",
+      );
+    }
+
     try {
       const currentRoles = await Roles.getRolesForUserAsync(userId);
       if (currentRoles.length > 0) {
