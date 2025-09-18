@@ -51,7 +51,6 @@ const getQuarterRange = (date: Date) => {
 
 export const TaxPage = () => {
   const [_, setPageTitle] = usePageTitle();
-  const isDeductionsLoading = useSubscribe("deductions");
   const deductions = useTracker(() => {
     return DeductionsCollection.find({}, { sort: { date: -1 } }).fetch();
   }, []);
@@ -348,13 +347,12 @@ export const TaxPage = () => {
   };
 
   const [showConfirm, setShowConfirm] = useState(false);
-  const [deductionToDelete, setDeductionToDelete] = useState<string | null>(null);
+  const [deductionToDelete, setDeductionToDelete] = useState<string | null>(
+    null,
+  );
 
   // when bin icon is clicked
-  const handleDeleteDeduction = (
-    e: React.MouseEvent,
-    id: string
-  ) => {
+  const handleDeleteDeduction = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     setDeductionToDelete(id);
     setShowConfirm(true);
@@ -364,11 +362,15 @@ export const TaxPage = () => {
   const handleConfirm = () => {
     if (!deductionToDelete) return;
 
-    Meteor.call("deductions.delete", deductionToDelete, (err: Meteor.Error | undefined) => {
-      if (err) {
-        alert(`Delete failed: ${err.reason}`);
-      }
-    });
+    Meteor.call(
+      "deductions.delete",
+      deductionToDelete,
+      (err: Meteor.Error | undefined) => {
+        if (err) {
+          alert(`Delete failed: ${err.reason}`);
+        }
+      },
+    );
 
     setShowConfirm(false);
     setDeductionToDelete(null);
@@ -521,9 +523,7 @@ export const TaxPage = () => {
               <p className="text-gray-600 mb-4">{currentData.description}</p>
               <div className="h-80 w-full">
                 <ResponsiveContainer>
-                  <BarChart
-                    data={currentData.items}
-                  >
+                  <BarChart data={currentData.items}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="label" />
                     <YAxis />
@@ -569,12 +569,14 @@ export const TaxPage = () => {
                         <p className="text-sm text-gray-600">{d.description}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                      <span className="font-semibold text-lg">${d.amount}</span>
-                      <Trash
-                        size={20}
-                        className="text-red-500 hover:text-red-700 cursor-pointer"
-                        onClick={(e) => handleDeleteDeduction(e, d._id)}
-                      />
+                        <span className="font-semibold text-lg">
+                          ${d.amount}
+                        </span>
+                        <Trash
+                          size={20}
+                          className="text-red-500 hover:text-red-700 cursor-pointer"
+                          onClick={(e) => handleDeleteDeduction(e, d._id)}
+                        />
                       </div>
                     </button>
                   ))
@@ -598,7 +600,9 @@ export const TaxPage = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-1">
                 GST Collected vs GST Paid
               </h2>
-              <p className="text-gray-600 mb-4">Comparison of GST collected and paid</p>
+              <p className="text-gray-600 mb-4">
+                Comparison of GST collected and paid
+              </p>
               <div className="h-80 w-full">
                 <ResponsiveContainer>
                   <BarChart data={combinedItems}>

@@ -3,7 +3,6 @@ import { check } from "meteor/check";
 import { Deduction, DeductionsCollection } from "./DeductionsCollection";
 import { OmitDB } from "../database";
 import { requireLoginMethod } from "../accounts/wrappers";
-import { Mongo } from "meteor/mongo";
 
 Meteor.methods({
   "deductions.add"(deduction: {
