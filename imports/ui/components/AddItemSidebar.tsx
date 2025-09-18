@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { Meteor } from "meteor/meteor";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { ItemCategoriesCollection } from "/imports/api/menuItems/ItemCategoriesCollection";
 import { IngredientDropdown } from "./IngredientDropdown";
 import { CategoryDropdown } from "./CategoryDropdown";
+import { ConfirmModal } from "./ConfirmModal";
 
 // Import possible images from mockData
 const possibleImages = [
@@ -37,6 +40,9 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
     name: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  useSubscribe("itemCategories");
+  const categories = useTracker(() => ItemCategoriesCollection.find().fetch());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +80,27 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
     });
   };
 
+  const handleDelete = async (categoryName: string) => {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        Meteor.call("itemCategories.delete", categoryName, (error: Meteor.Error) => {
+          if (error) reject(error);
+          else resolve();
+        });
+      });
+      console.log("Category deleted:", categoryName);
+      onSuccess();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      alert(
+        "Error deleting category: " +
+          ((error as Meteor.Error).reason || (error as Error).message)
+      );
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -82,16 +109,14 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         <h2 className="text-xl font-bold mb-4 text-red-900 dark:text-white">
           Add New Menu Item Category
         </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name */}
+        <form onSubmit={handleSubmit} className="space-y-4 mb-6">
           <div>
             <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
               Name
             </label>
             <input
               type="text"
-              placeholder="Item Name"
+              placeholder="Category Name"
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
@@ -101,7 +126,6 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
             />
           </div>
 
-          {/* Action Buttons */}
           <div className="flex justify-between pt-4">
             <button
               type="button"
@@ -124,7 +148,56 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
             </button>
           </div>
         </form>
+
+        <h3 className="text-lg font-semibold mb-2 text-red-900 dark:text-white">
+          Existing Categories
+        </h3>
+        <ul className="space-y-2 max-h-48 overflow-y-auto">
+          {categories.map((cat) => (
+            <li
+              key={cat._id}
+              className="flex justify-between items-center bg-white rounded-lg px-3 py-2 shadow-sm"
+            >
+              <span className="text-red-900 dark:text-white">{cat.name}</span>
+              <button
+                type="button"
+                className="bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors"
+                title="Delete category"
+                onClick={() => setDeleteTarget(cat.name)}
+              >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-red-500"
+                >
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              </svg>
+              </button>
+            </li>
+          ))}
+          {categories.length === 0 && (
+            <li className="text-sm text-gray-500">No categories yet.</li>
+          )}
+        </ul>
       </div>
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        message="Are you sure you want to delete this category?"
+        onConfirm={() => {
+          if (deleteTarget) handleDelete(deleteTarget);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };
