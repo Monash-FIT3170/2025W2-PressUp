@@ -21,3 +21,5 @@ import "./posts/commentsPublishing.ts";
 import "./tax/deductionsMethods";
 import "./tax/deductionsPublishing";
 import "./debug/debugMethods";
+import "./menuItems/itemCategoriesMethods";
+import "./menuItems/itemCategoriesPublishing";

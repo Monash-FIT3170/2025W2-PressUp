@@ -12,3 +12,4 @@ export {
 } from "./purchaseOrders/PurchaseOrdersCollection";
 export { Tables, TablesCollection } from "./tables/TablesCollection";
 export { Deduction, DeductionsCollection } from "./tax/DeductionsCollection";
+export { ItemCategory, ItemCategoriesCollection } from "./menuItems/ItemCategoriesCollection";
