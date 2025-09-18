@@ -1,4 +1,5 @@
 import { MenuItemsCollection } from "./MenuItemsCollection";
+import { ItemCategoriesCollection } from "./ItemCategoriesCollection";
 
 export const fixedMenuItems = [
   {
@@ -100,5 +101,21 @@ export const mockMenuItems = async () => {
 
   for (const item of fixedMenuItems) {
     await MenuItemsCollection.insertAsync(item);
+  }
+};
+
+export const fixedItemCategories = [
+  { name: "Food", },
+  { name: "Drink", },
+  { name: "Dessert", },
+]
+
+export const mockItemCategories = async () => {
+  if ((await ItemCategoriesCollection.countDocuments()) > 0) {
+    await ItemCategoriesCollection.dropCollectionAsync();
+  }
+
+  for (const category of fixedItemCategories) {
+    await ItemCategoriesCollection.insertAsync(category);
   }
 };
