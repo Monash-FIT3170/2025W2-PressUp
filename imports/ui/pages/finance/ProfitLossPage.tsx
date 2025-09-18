@@ -78,6 +78,7 @@ DetailItem.displayName = "DetailItem";
 export const ProfitLossPage = () => {
   const [_, setPageTitle] = usePageTitle();
   const [selectedMetric, setSelectedMetric] = useState("netProfitLoss");
+  const [searchItem, setSearchItem] = useState("");
   const [financialData, setFinancialData] = useState<FinancialData | null>(
     null,
   );
@@ -314,6 +315,7 @@ export const ProfitLossPage = () => {
         title: "Revenue",
         description: "Detailed breakdown of revenue by category.",
         chartDescription: "Chart of revenue by category",
+        searchPlaceholder: "Search categories...",
         amount: financialData.revenue.total,
         items: financialData.revenue.items,
       },
@@ -322,6 +324,7 @@ export const ProfitLossPage = () => {
         title: "Expenses",
         description: "Detailed breakdown of expenses from purchase orders.",
         chartDescription: "Chart of expenses from purchase orders",
+        searchPlaceholder: "Search suppliers...",
         amount: financialData.expenses.total,
         items: financialData.expenses.items,
       },
@@ -330,6 +333,7 @@ export const ProfitLossPage = () => {
         title: "Net Profit/Loss",
         description: "Summary of financial performance.",
         chartDescription: "Chart summary of financial performance",
+        searchPlaceholder: "Search items...",
         amount:
           financialData.netProfitLoss.items.find(
             (i) => i.label === "Net Profit/Loss",
@@ -367,6 +371,13 @@ export const ProfitLossPage = () => {
     );
   }
 
+  const filteredItems = (selectedData.items || [])
+    .filter((item) =>
+      item.label.toLowerCase().includes(searchItem.toLowerCase()),
+    )
+    .slice()
+    .sort((a, b) => b.amount - a.amount);
+
   return (
     <div className="w-full p-6 bg-gray-50 max-h-screen overflow-y-auto">
       {/* Date Filter and Period Display */}
@@ -389,6 +400,17 @@ export const ProfitLossPage = () => {
             onClick={() => setSelectedMetric(metric.key)}
           />
         ))}
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchItem}
+          onChange={(e) => setSearchItem(e.target.value)}
+          placeholder={mainMetrics.find(m => m.key === selectedMetric)?.searchPlaceholder || "Search..."}
+          className="w-1/2 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -440,7 +462,7 @@ export const ProfitLossPage = () => {
           </div>
 
           <div className="space-y-3">
-            {selectedData?.items.map((item, index) => (
+            {filteredItems?.map((item, index) => (
               <DetailItem
                 key={index}
                 label={item.label}
