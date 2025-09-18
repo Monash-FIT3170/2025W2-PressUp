@@ -152,9 +152,9 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
             {stockItems.length > 0 ? (
               stockItems.map((item, index) => (
                 <li key={index} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>
-                    <span className="text-gray-800">{item.name}</span>
+                  <div className="flex items-center overflow-hidden w-full">
+                    <span className="w-2 h-2 bg-gray-400 rounded-full mr-3 shrink-0"></span>
+                    <span className="text-gray-800 truncate">{item.name}</span>
                   </div>
                   <button
                     onClick={() => removeItemFromSupplier(item._id)}
