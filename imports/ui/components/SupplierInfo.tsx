@@ -99,13 +99,13 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-6 gap-3">
         {/* Contact Information */}
-        <div className="bg-white p-4 rounded-lg shadow-sm">
+        <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-2">
           <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b border-gray-200 pb-2">
             Contact
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-2 text-sm text-left">
             <div>
               <span className="font-medium text-gray-600">Email:</span>
               <a
@@ -136,7 +136,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
               {supplier.address && (
                 <div>
                   <span className="font-medium text-gray-600">Address:</span>
-                  <div className="ml-2 text-gray-800">{supplier.address}</div>
+                  <span className="ml-2 text-gray-800">{supplier.address}</span>
                 </div>
               )}
             </div>
@@ -144,11 +144,11 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
         </div>
 
         {/* Supplier Goods */}
-        <div className="bg-white p-4 rounded-lg shadow-sm">
+        <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-1">
           <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b border-gray-200 pb-2 underline">
             Stock Items
           </h3>
-          <ul className="space-y-1">
+          <ul className="space-y-1 text-sm">
             {stockItems.length > 0 ? (
               stockItems.map((item, index) => (
                 <li key={index} className="flex items-center justify-between">
@@ -172,12 +172,12 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
         </div>
 
         {/* Order History */}
-        <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-1">
+        <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-3">
           <div className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
             <h3 className="text-lg font-semibold text-gray-700 underline">
               Order History
             </h3>
-            <div className="flex items-center space-x-2">
+            {/*<div className="flex items-center space-x-2">
               <span className="text-sm text-gray-600">Sort By:</span>
               <select
                 value={sortBy}
@@ -189,7 +189,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                 <option value="date-desc">Date (Descending)</option>
                 <option value="date-asc">Date (Ascending)</option>
               </select>
-            </div>
+            </div>*/}
           </div>
 
           <div className="overflow-x-auto">
@@ -239,7 +239,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                     <td className="p-2 text-gray-800">
                       ${order.totalCost.toFixed(2)}
                     </td>
-                    <td className="p-2">
+                    {/* <td className="p-2">
                       <button
                         className="text-white text-xs px-3 py-1 rounded transition-colors"
                         style={{
@@ -248,7 +248,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                       >
                         Repurchase
                       </button>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>
