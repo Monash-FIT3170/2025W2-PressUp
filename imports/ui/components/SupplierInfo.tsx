@@ -102,7 +102,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
       <div className="grid grid-cols-1 lg:grid-cols-6 gap-3">
         {/* Contact Information */}
         <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-2">
-          <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b border-gray-200 pb-2">
+          <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b border-gray-200 pb-2 underline">
             Contact
           </h3>
           <div className="space-y-2 text-sm text-left">
@@ -173,11 +173,11 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
 
         {/* Order History */}
         <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-3">
-          <div className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-            <h3 className="text-lg font-semibold text-gray-700 underline">
-              Order History
-            </h3>
-            {/*<div className="flex items-center space-x-2">
+          {/* <div className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2"> */}
+          <h3 className="text-lg font-semibold text-gray-700 underline border-b border-gray-200 mb-3 pb-2">
+            Order History
+          </h3>
+          {/*<div className="flex items-center space-x-2">
               <span className="text-sm text-gray-600">Sort By:</span>
               <select
                 value={sortBy}
@@ -190,7 +190,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                 <option value="date-asc">Date (Ascending)</option>
               </select>
             </div>*/}
-          </div>
+          {/* </div> */}
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
