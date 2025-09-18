@@ -15,7 +15,6 @@ import {
   Clipboard,
   Clock3Icon,
   DollarSign,
-  Folder,
   HistoryIcon,
   MessageSquare,
   PenTool,
