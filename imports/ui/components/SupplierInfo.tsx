@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Supplier } from "/imports/api/suppliers/SuppliersCollection";
 import { StockItemsCollection } from "/imports/api/stockItems/StockItemsCollection";
 import { PurchaseOrdersCollection } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
@@ -14,8 +14,6 @@ interface SupplierInfoProps {
 }
 
 export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
-  const [sortBy, setSortBy] = useState<"date-desc" | "date-asc">("date-desc");
-
   // Fetch stock items for this supplier
   const stockItems = useTracker(() => {
     return StockItemsCollection.find(
@@ -79,12 +77,6 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
   if (!supplier.address) supplier.address = "";
   if (!supplier.website) supplier.website = "";
 
-  const sortedOrders = [...purchaseOrders].sort((a, b) =>
-    sortBy === "date-desc"
-      ? b.date.getTime() - a.date.getTime()
-      : a.date.getTime() - b.date.getTime(),
-  );
-
   if (!isExpanded) return null;
 
   return (
@@ -95,13 +87,13 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-6 gap-3">
         {/* Contact Information */}
-        <div className="bg-white p-4 rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b border-gray-200 pb-2">
+        <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-2">
+          <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b border-gray-200 pb-2 underline">
             Contact
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-2 text-sm text-left">
             <div>
               <span className="font-medium text-gray-600">Email:</span>
               <a
@@ -132,7 +124,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
               {supplier.address && (
                 <div>
                   <span className="font-medium text-gray-600">Address:</span>
-                  <div className="ml-2 text-gray-800">{supplier.address}</div>
+                  <span className="ml-2 text-gray-800">{supplier.address}</span>
                 </div>
               )}
             </div>
@@ -140,17 +132,17 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
         </div>
 
         {/* Supplier Goods */}
-        <div className="bg-white p-4 rounded-lg shadow-sm">
+        <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-1">
           <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b border-gray-200 pb-2 underline">
             Stock Items
           </h3>
-          <ul className="space-y-1">
+          <ul className="space-y-1 text-sm">
             {stockItems.length > 0 ? (
               stockItems.map((item, index) => (
                 <li key={index} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>
-                    <span className="text-gray-800">{item.name}</span>
+                  <div className="flex items-center overflow-hidden w-full">
+                    <span className="w-2 h-2 bg-gray-400 rounded-full mr-3 shrink-0"></span>
+                    <span className="text-gray-800 truncate">{item.name}</span>
                   </div>
                   <button
                     onClick={() => removeItemFromSupplier(item._id)}
@@ -168,25 +160,10 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
         </div>
 
         {/* Order History */}
-        <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-1">
-          <div className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-            <h3 className="text-lg font-semibold text-gray-700 underline">
-              Order History
-            </h3>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">Sort By:</span>
-              <select
-                value={sortBy}
-                onChange={(e) =>
-                  setSortBy(e.target.value as "date-desc" | "date-asc")
-                }
-                className="text-sm text-blue-600 bg-transparent border-none cursor-pointer"
-              >
-                <option value="date-desc">Date (Descending)</option>
-                <option value="date-asc">Date (Ascending)</option>
-              </select>
-            </div>
-          </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-3">
+          <h3 className="text-lg font-semibold text-gray-700 underline border-b border-gray-200 mb-3 pb-2">
+            Order History
+          </h3>
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -226,8 +203,8 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                 </tr>
               </thead>
               <tbody>
-                {sortedOrders.length > 0 ? (
-                  sortedOrders.map((order, index) => (
+                {purchaseOrders.length > 0 ? (
+                  purchaseOrders.map((order, index) => (
                     <tr key={index} className="border-b border-gray-100">
                       <td className="p-2 text-gray-800">{order.number}</td>
                       <td className="p-2 text-gray-800">
