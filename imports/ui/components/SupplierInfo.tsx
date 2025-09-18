@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Supplier } from "/imports/api/suppliers/SuppliersCollection";
 import { StockItemsCollection } from "/imports/api/stockItems/StockItemsCollection";
 import { useTracker } from "meteor/react-meteor-data";
