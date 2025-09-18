@@ -521,30 +521,17 @@ export const TaxPage = () => {
               <div className="h-80 w-full">
                 <ResponsiveContainer>
                   <BarChart
-                    data={
-                      selectedMetric === "GSTCollected" ||
-                      selectedMetric === "GSTPaid"
-                        ? combinedItems
-                        : currentData.items
-                    }
+                    data={currentData.items}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="label" />
                     <YAxis />
                     <Tooltip />
-                    {selectedMetric === "GSTCollected" ||
-                    selectedMetric === "GSTPaid" ? (
-                      <>
-                        <Bar
-                          dataKey="collected"
-                          fill="#6f597b"
-                          name="GST Collected"
-                        />
-                        <Bar dataKey="paid" fill="#c6b6cf" name="GST Paid" />
-                      </>
-                    ) : (
-                      <Bar dataKey="amount" fill="#c6b6cf" />
-                    )}
+                    <Bar
+                      dataKey="amount"
+                      fill="#c6b6cf"
+                      name={currentData.title}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -608,9 +595,9 @@ export const TaxPage = () => {
             selectedMetric === "GSTPaid") && (
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                {currentData.title}
+                GST Collected vs GST Paid
               </h2>
-              <p className="text-gray-600 mb-4">{currentData.description}</p>
+              <p className="text-gray-600 mb-4">Comparison of GST collected and paid</p>
               <div className="h-80 w-full">
                 <ResponsiveContainer>
                   <BarChart data={combinedItems}>
