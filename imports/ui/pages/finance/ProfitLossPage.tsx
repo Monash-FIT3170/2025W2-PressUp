@@ -364,13 +364,13 @@ export const ProfitLossPage = () => {
     );
   }
 
-  const filteredItems = (selectedData.items || [])
+  const filteredItems = (selectedData?.items || [])
     .filter((item) =>
       item.label.toLowerCase().includes(searchItem.toLowerCase()),
     )
     .slice()
     .sort((a, b) => b.amount - a.amount);
-  
+
   const chartTitle = selectedData?.title + " Chart";
   const chartDescription = selectedData?.chartDescription;
   const chartData = filteredItems;
@@ -405,7 +405,10 @@ export const ProfitLossPage = () => {
           type="text"
           value={searchItem}
           onChange={(e) => setSearchItem(e.target.value)}
-          placeholder={mainMetrics.find(m => m.key === selectedMetric)?.searchPlaceholder || "Search..."}
+          placeholder={
+            mainMetrics.find((m) => m.key === selectedMetric)
+              ?.searchPlaceholder || "Search..."
+          }
           className="w-1/2 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
         />
       </div>
