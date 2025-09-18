@@ -1,5 +1,5 @@
-import { MenuItemsCollection, MenuItem } from "./MenuItemsCollection";
-import type { OmitDB } from "../database";
+import { MenuItemsCollection } from "./MenuItemsCollection";
+import { ItemCategoriesCollection } from "./ItemCategoriesCollection";
 
 export const fixedMenuItems: OmitDB<MenuItem>[] = [
   {
@@ -149,12 +149,27 @@ export const fixedMenuItems: OmitDB<MenuItem>[] = [
 ];
 
 export const mockMenuItems = async () => {
-  const col = MenuItemsCollection.rawCollection();
-  await col.createIndex({ name: 1 }, { unique: true }).catch(() => {});
+  if ((await MenuItemsCollection.countDocuments()) > 0) {
+    await MenuItemsCollection.dropCollectionAsync();
+  }
 
-  for (const raw of fixedMenuItems) {
-    const now = new Date();
-    const doc = { ...raw, updatedAt: now };
-    await col.replaceOne({ name: raw.name }, doc, { upsert: true });
+  for (const item of fixedMenuItems) {
+    await MenuItemsCollection.insertAsync(item);
+  }
+};
+
+export const fixedItemCategories = [
+  { name: "Food", },
+  { name: "Drink", },
+  { name: "Dessert", },
+]
+
+export const mockItemCategories = async () => {
+  if ((await ItemCategoriesCollection.countDocuments()) > 0) {
+    await ItemCategoriesCollection.dropCollectionAsync();
+  }
+
+  for (const category of fixedItemCategories) {
+    await ItemCategoriesCollection.insertAsync(category);
   }
 };
