@@ -22,6 +22,113 @@ interface AddItemModalProps {
   onSuccess: () => void;
 }
 
+interface AddCategoryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+}) => {
+  const [formData, setFormData] = useState({
+    name: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        Meteor.call("itemCategories.insert", formData, (error: Meteor.Error) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
+        });
+      });
+
+      console.log("Item category created successfully");
+      onSuccess();
+      onClose();
+      resetForm();
+    } catch (error) {
+      console.error("Error creating item category:", error);
+      alert(
+        "Error creating item category: " +
+          ((error as Meteor.Error).reason || (error as Error).message),
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+    });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-[9999]">
+      <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
+        <h2 className="text-xl font-bold mb-4 text-red-900 dark:text-white">
+          Add New Menu Item Category
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Name */}
+          <div>
+            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
+              Name
+            </label>
+            <input
+              type="text"
+              placeholder="Item Name"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+              required
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-between pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                resetForm();
+              }}
+              className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2 text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: "#6f597b" }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const AddItemModal: React.FC<AddItemModalProps> = ({
   isOpen,
   onClose,
@@ -390,10 +497,15 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
 const Sidebar: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   const handleAddItemSuccess = () => {
     // You can add any additional logic here, like refreshing a list
     console.log("Item added successfully!");
+  };
+
+  const handleAddCategorySuccess = () => {
+    console.log("Category added successfully!");
   };
 
   return (
@@ -407,6 +519,14 @@ const Sidebar: React.FC = () => {
         >
           Add Item
         </button>
+
+        <button
+          onClick={() => setIsCategoryModalOpen(true)}
+          className="w-full py-2.5 px-4 rounded-lg mb-4 font-bold text-sm transition-all hover:opacity-90 hover:shadow-md"
+          style={{ backgroundColor: "#6f597b", color: "white" }}
+        >
+          Add Category
+        </button>
       </div>
 
       {/* Add Item Modal */}
@@ -414,6 +534,13 @@ const Sidebar: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleAddItemSuccess}
+      />
+
+      {/* Add Category Modal */}
+      <AddCategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onSuccess={handleAddCategorySuccess}
       />
     </>
   );
