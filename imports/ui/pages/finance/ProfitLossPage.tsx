@@ -348,13 +348,6 @@ export const ProfitLossPage = () => {
     [mainMetrics, selectedMetric],
   );
 
-  const chartTitle = selectedData?.title + " Chart";
-  const chartDescription = selectedData?.chartDescription;
-  const chartData = useMemo(
-    () => [...(selectedData?.items ?? [])],
-    [selectedData],
-  );
-
   if (!selectedMetric) {
     return (
       <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
@@ -377,6 +370,10 @@ export const ProfitLossPage = () => {
     )
     .slice()
     .sort((a, b) => b.amount - a.amount);
+  
+  const chartTitle = selectedData?.title + " Chart";
+  const chartDescription = selectedData?.chartDescription;
+  const chartData = filteredItems;
 
   return (
     <div className="w-full p-6 bg-gray-50 max-h-screen overflow-y-auto">
