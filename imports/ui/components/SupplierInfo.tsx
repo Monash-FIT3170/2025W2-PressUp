@@ -21,8 +21,6 @@ interface SupplierInfoProps {
 }
 
 export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
-  // const [sortBy, setSortBy] = useState<"date-desc" | "date-asc">("date-desc");
-
   // Fetch stock items for this supplier
   const stockItems = useTracker(() => {
     return StockItemsCollection.find(
@@ -82,12 +80,6 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
       totalCost: 300.0,
     },
   ];
-
-  // const sortedOrders = [...orderHistory].sort((a, b) => {
-  //   const dateA = new Date(a.date).getTime();
-  //   const dateB = new Date(b.date).getTime();
-  //   return sortBy === "date-desc" ? dateB - dateA : dateA - dateB;
-  // });
 
   if (!isExpanded) return null;
 
@@ -173,24 +165,9 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
 
         {/* Order History */}
         <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-3">
-          {/* <div className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2"> */}
           <h3 className="text-lg font-semibold text-gray-700 underline border-b border-gray-200 mb-3 pb-2">
             Order History
           </h3>
-          {/*<div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">Sort By:</span>
-              <select
-                value={sortBy}
-                onChange={(e) =>
-                  setSortBy(e.target.value as "date-desc" | "date-asc")
-                }
-                className="text-sm text-blue-600 bg-transparent border-none cursor-pointer"
-              >
-                <option value="date-desc">Date (Descending)</option>
-                <option value="date-asc">Date (Ascending)</option>
-              </select>
-            </div>*/}
-          {/* </div> */}
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -239,16 +216,6 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                     <td className="p-2 text-gray-800">
                       ${order.totalCost.toFixed(2)}
                     </td>
-                    {/* <td className="p-2">
-                      <button
-                        className="text-white text-xs px-3 py-1 rounded transition-colors"
-                        style={{
-                          backgroundColor: "#6f597b",
-                        }}
-                      >
-                        Repurchase
-                      </button>
-                    </td> */}
                   </tr>
                 ))}
               </tbody>
