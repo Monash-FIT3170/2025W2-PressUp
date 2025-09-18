@@ -1,18 +1,11 @@
 import React from "react";
 import { Supplier } from "/imports/api/suppliers/SuppliersCollection";
 import { StockItemsCollection } from "/imports/api/stockItems/StockItemsCollection";
-import { useTracker } from "meteor/react-meteor-data";
+import { PurchaseOrdersCollection } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
+import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { IdType } from "/imports/api/database";
 import { Cross } from "./symbols/GeneralSymbols";
-
-interface Order {
-  no: number;
-  date: string;
-  goods: string;
-  quantity: number;
-  totalCost: number;
-}
 
 interface SupplierInfoProps {
   supplier: Supplier;
@@ -27,6 +20,35 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
       { supplier: supplier._id },
       { sort: { name: 1 } },
     ).fetch();
+  }, [supplier._id]);
+
+  useSubscribe("purchaseOrders");
+  const purchaseOrders = useTracker(() => {
+    const purchaseOrders = PurchaseOrdersCollection.find(
+      { supplier: supplier._id },
+      { sort: { date: -1 } },
+    ).fetch();
+
+    const stockItemsMap = new Map(
+      StockItemsCollection.find()
+        .fetch()
+        .map((item) => [item._id, item.name]),
+    );
+
+    return purchaseOrders.flatMap((purchaseOrder) => {
+      return purchaseOrder.stockItems.map((stockItemLine) => {
+        const stockItemName =
+          stockItemsMap.get(stockItemLine.stockItem) || "Unknown Item";
+
+        return {
+          number: purchaseOrder.number,
+          date: purchaseOrder.date,
+          stockItemName: stockItemName,
+          quantity: stockItemLine.quantity,
+          totalCost: stockItemLine.cost * stockItemLine.quantity,
+        };
+      });
+    });
   }, [supplier._id]);
 
   const removeItemFromSupplier = (itemId: IdType) => {
@@ -54,32 +76,6 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
   if (!supplier.phone) return null;
   if (!supplier.address) supplier.address = "";
   if (!supplier.website) supplier.website = "";
-
-  // Note: Mock data for orders for Sprint 3 UI ONLY.
-  // In sem 2, connect Data from Database, OrdersCollection..
-  const orderHistory: Order[] = [
-    {
-      no: 135,
-      date: "06/04/2025",
-      goods: "Coffee Beans- 1KG",
-      quantity: 20,
-      totalCost: 300.0,
-    },
-    {
-      no: 134,
-      date: "06/03/2025",
-      goods: "Coffee Beans- 1KG",
-      quantity: 20,
-      totalCost: 300.0,
-    },
-    {
-      no: 133,
-      date: "06/02/2025",
-      goods: "Coffee Beans- 1KG",
-      quantity: 20,
-      totalCost: 300.0,
-    },
-  ];
 
   if (!isExpanded) return null;
 
@@ -189,7 +185,7 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                     className="text-left p-2 font-medium text-white"
                     style={{ backgroundColor: "#6f597b" }}
                   >
-                    Goods
+                    Stock Item
                   </th>
                   <th
                     className="text-left p-2 font-medium text-white"
@@ -207,17 +203,42 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
                 </tr>
               </thead>
               <tbody>
-                {orderHistory.map((order, index) => (
-                  <tr key={index} className="border-b border-gray-100">
-                    <td className="p-2 text-gray-800">{order.no}</td>
-                    <td className="p-2 text-gray-800">{order.date}</td>
-                    <td className="p-2 text-gray-800">{order.goods}</td>
-                    <td className="p-2 text-gray-800">{order.quantity}</td>
-                    <td className="p-2 text-gray-800">
-                      ${order.totalCost.toFixed(2)}
+                {purchaseOrders.length > 0 ? (
+                  purchaseOrders.map((order, index) => (
+                    <tr key={index} className="border-b border-gray-100">
+                      <td className="p-2 text-gray-800">{order.number}</td>
+                      <td className="p-2 text-gray-800">
+                        {order.date.toLocaleDateString()}
+                      </td>
+                      <td className="p-2 text-gray-800">
+                        {order.stockItemName}
+                      </td>
+                      <td className="p-2 text-gray-800">{order.quantity}</td>
+                      <td className="p-2 text-gray-800">
+                        ${order.totalCost.toFixed(2)}
+                      </td>
+                      <td className="p-2">
+                        <button
+                          className="text-white text-xs px-3 py-1 rounded transition-colors"
+                          style={{
+                            backgroundColor: "#6f597b",
+                          }}
+                        >
+                          Repurchase
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="p-4 text-center text-gray-500 italic"
+                    >
+                      No purchase orders found for this supplier
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
