@@ -23,6 +23,8 @@ import {
 } from "recharts";
 import { Trash } from "lucide-react";
 import { ConfirmModal } from "../../components/ConfirmModal";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { DeductionsCollection } from "/imports/api/tax/DeductionsCollection";
 
 interface FinancialDataField {
   title: string;
@@ -49,6 +51,10 @@ const getQuarterRange = (date: Date) => {
 
 export const TaxPage = () => {
   const [_, setPageTitle] = usePageTitle();
+  const isDeductionsLoading = useSubscribe("deductions");
+  const deductions = useTracker(() => {
+    return DeductionsCollection.find({}, { sort: { date: -1 } }).fetch();
+  }, []);
   const [selectedMetric, setSelectedMetric] = useState<
     "incomeTax" | "payrollTax" | "GSTCollected" | "GSTPaid"
   >("incomeTax");
@@ -69,7 +75,6 @@ export const TaxPage = () => {
   // Fetch data once
   const [orders, setOrders] = useState<any[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<any[]>([]);
-  const [deductions, setDeductions] = useState<any[]>([]);
   const [shifts, setShifts] = useState<any[]>([]);
 
   useEffect(() => {
@@ -79,13 +84,9 @@ export const TaxPage = () => {
       const fetchedPOs = (await Meteor.callAsync(
         "purchaseOrders.getAll",
       )) as any[];
-      const fetchedDeductions = (await Meteor.callAsync(
-        "deductions.getAll",
-      )) as any[];
       const fetchedShifts = (await Meteor.callAsync("shifts.getAll")) as any[];
       setOrders(fetchedOrders);
       setPurchaseOrders(fetchedPOs);
-      setDeductions(fetchedDeductions);
       setShifts(fetchedShifts);
     };
     fetchData();
