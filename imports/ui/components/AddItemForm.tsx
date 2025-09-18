@@ -1,5 +1,5 @@
 import { Meteor } from "meteor/meteor";
-import { useFind, useSubscribe } from "meteor/react-meteor-data";
+import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { FormEvent, useEffect, useState } from "react";
 import { SuppliersCollection, StockItem } from "/imports/api";
 import { IdType } from "/imports/api/database";
@@ -12,7 +12,10 @@ interface Props {
 
 export const AddItemForm = ({ onSuccess, item }: Props) => {
   useSubscribe("suppliers");
-  const suppliers = useFind(() => SuppliersCollection.find());
+  const suppliers = useTracker(
+    () => SuppliersCollection.find({}, { sort: { name: 1 } }).fetch(),
+    [],
+  );
 
   const [itemName, setItemName] = useState(item?.name ?? "");
   const [quantity, setQuantity] = useState<string>(

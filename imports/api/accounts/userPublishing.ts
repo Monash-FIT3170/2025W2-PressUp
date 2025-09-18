@@ -40,21 +40,3 @@ Meteor.publish(
     });
   }),
 );
-
-Meteor.publish(
-  "users.roles",
-  requireLoginPublish(async function () {
-    return Meteor.roleAssignment.find({});
-  }),
-);
-
-// Used by the client to determine role hierarchy
-Meteor.publish(
-  "users.rolesGraph",
-  requireLoginPublish(async function () {
-    return Meteor.roles.find(
-      {},
-      { fields: { _id: 1, children: 1, parents: 1 } },
-    );
-  }),
-);
