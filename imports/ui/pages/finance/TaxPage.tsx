@@ -23,7 +23,7 @@ import {
 } from "recharts";
 import { Trash } from "lucide-react";
 import { ConfirmModal } from "../../components/ConfirmModal";
-import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { useTracker } from "meteor/react-meteor-data";
 import { DeductionsCollection } from "/imports/api/tax/DeductionsCollection";
 
 interface FinancialDataField {
