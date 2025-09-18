@@ -23,6 +23,7 @@ import {
   CartesianGrid,
   Label,
 } from "recharts";
+import { SearchBar } from "../../components/SearchBar";
 
 interface FinancialData {
   revenue: {
@@ -401,16 +402,7 @@ export const ProfitLossPage = () => {
 
       {/* Search Bar */}
       <div className="mb-4">
-        <input
-          type="text"
-          value={searchItem}
-          onChange={(e) => setSearchItem(e.target.value)}
-          placeholder={
-            mainMetrics.find((m) => m.key === selectedMetric)
-              ?.searchPlaceholder || "Search..."
-          }
-          className="w-1/2 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
-        />
+        <SearchBar onSearch={setSearchItem} initialSearchTerm={searchItem} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
