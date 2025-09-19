@@ -168,7 +168,7 @@ Meteor.methods({
     });
   }),
 
-  "shifts.clockOut": requireLoginMethod(async function (shiftId: string) {
+  "shifts.clockOut": requireLoginMethod(async function () {
     const userId = this.userId;
 
     if (!userId) {
@@ -209,7 +209,7 @@ Meteor.methods({
       },
     });
 
-    return active._id as string;
+    return active._id;
   }),
 
   "shifts.getPayForShift": requireLoginMethod(async function (shiftId: string) {

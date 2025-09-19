@@ -11,7 +11,6 @@ export enum ShiftStatus {
   SCHEDULED = "scheduled",
   CLOCKED_IN = "clocked_in",
   CLOCKED_OUT = "clocked_out",
-  COMPLETED = "completed",
 }
 
 export interface Shift extends DBEntry {

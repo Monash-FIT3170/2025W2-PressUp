@@ -35,17 +35,34 @@ export const RosterPage = () => {
   );
 
   useSubscribe("shifts.current");
-  const { user, activeShift } = useTracker(() => {
+  const { user, clockedIn, clockedOut } = useTracker(() => {
     const userId = Meteor.userId();
+    const now = new Date();
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const tomorrowStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+    );
+
+    const clockedOut = ShiftsCollection.find({
+      status: ShiftStatus.CLOCKED_OUT,
+      date: { $gte: todayStart, $lt: tomorrowStart },
+    }).fetch()[0];
 
     return {
       user: Meteor.user(),
-      activeShift: userId
+      clockedIn: userId
         ? ShiftsCollection.find({
             user: userId,
             status: ShiftStatus.CLOCKED_IN,
           }).fetch()[0]
         : null,
+      clockedOut: clockedOut ?? null,
     };
   }, []);
 
@@ -76,8 +93,8 @@ export const RosterPage = () => {
       <RosterTable
         controls={
           <>
-            <Hide hide={!user}>
-              {activeShift ? (
+            <Hide hide={!user || !!clockedOut}>
+              {clockedIn ? (
                 <Button variant="negative" onClick={handleClockOut}>
                   Clock Out
                 </Button>

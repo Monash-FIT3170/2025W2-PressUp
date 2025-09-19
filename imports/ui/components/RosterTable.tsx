@@ -166,7 +166,7 @@ export const RosterTable = ({ controls }: RosterTableProps) => {
           return "#f3f4f6";
         case ShiftStatus.CLOCKED_IN:
           return "#10b981";
-        case ShiftStatus.COMPLETED:
+        case ShiftStatus.CLOCKED_OUT:
           return roleColors[staffRole] || "#6b7280";
         default:
           return "#6b7280";
@@ -183,7 +183,7 @@ export const RosterTable = ({ controls }: RosterTableProps) => {
           return "Scheduled";
         case ShiftStatus.CLOCKED_IN:
           return "Active";
-        case ShiftStatus.COMPLETED:
+        case ShiftStatus.CLOCKED_OUT:
           return staffRole;
         default:
           return "";
@@ -294,7 +294,7 @@ export const RosterTable = ({ controls }: RosterTableProps) => {
             )}
           </div>
         </div>
-        <div className="px-4 ml-auto">{controls}</div>
+        <div className="px-4 ml-auto flex flex-row gap-2">{controls}</div>
       </div>
       <table className="min-w-full border border-gray-300">
         <thead>
@@ -338,22 +338,6 @@ export const RosterTable = ({ controls }: RosterTableProps) => {
           ))}
         </tbody>
       </table>
-
-      {/* Legend */}
-      <div className="mt-4 flex gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-200 border-2 border-dashed border-gray-400 rounded"></div>
-          <span>Scheduled</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-500 rounded"></div>
-          <span>Active (Clocked In)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-red-600 rounded"></div>
-          <span>Completed</span>
-        </div>
-      </div>
     </div>
   );
 };
