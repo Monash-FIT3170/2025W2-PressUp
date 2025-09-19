@@ -18,6 +18,8 @@ import { UserManagementPage } from "./pages/userManagement/userManagement";
 import { RosterPage } from "./pages/staff/Roster";
 import { CommunicationPage } from "./pages/staff/Communication";
 import { DebugPage } from "./pages/debug/Debug";
+import { CompanySettings } from "./pages/company/CompanySettings";
+import { GlobalProvider } from "./hooks/GlobalDataContext";
 
 const router = createBrowserRouter([
   {
@@ -87,6 +89,10 @@ const router = createBrowserRouter([
         ],
       },
       {
+        path: "company",
+        Component: CompanySettings,
+      },
+      {
         path: "debug",
         Component: DebugPage,
       },
@@ -96,8 +102,8 @@ const router = createBrowserRouter([
 
 export const App = () => {
   return (
-    <>
+    <GlobalProvider>
       <RouterProvider router={router} />
-    </>
+    </GlobalProvider>
   );
 };

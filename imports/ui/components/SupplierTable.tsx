@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Supplier } from "/imports/api/suppliers/SuppliersCollection";
 import { StockItemsCollection } from "/imports/api/stockItems/StockItemsCollection";
+import { PurchaseOrdersCollection } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
 import { InfoSymbol, Cross } from "./symbols/GeneralSymbols";
 import { SupplierInfo } from "./SupplierInfo";
 import { Modal } from "./Modal";
 import { PurchaseOrderForm } from "./PurchaseOrderForm";
 import { Meteor } from "meteor/meteor";
 import { IdType } from "/imports/api/database";
-import { useTracker } from "meteor/react-meteor-data";
+import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 
 interface SupplierTableProps {
   suppliers: Supplier[];
@@ -24,6 +25,19 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
   const stockItems = useTracker(() => {
     return StockItemsCollection.find({}, { sort: { name: 1 } }).fetch();
   }, []);
+
+  // Calculate purchase order counts for each supplier
+  useSubscribe("purchaseOrders");
+  const purchaseOrderCounts = useTracker(() => {
+    const counts = new Map();
+    suppliers.forEach((supplier) => {
+      const count = PurchaseOrdersCollection.find({
+        supplier: supplier._id,
+      }).count();
+      counts.set(supplier._id, count);
+    });
+    return counts;
+  }, [suppliers]);
 
   const toggleExpanded = (supplierId: string) => {
     setExpandedSupplierId(
@@ -148,7 +162,7 @@ export const SupplierTable = ({ suppliers }: SupplierTableProps) => {
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-8" />
               </div>
               <div className="col-span-2 relative py-1 px-2 flex items-center justify-center">
-                {supplier.pastOrderQty}
+                {purchaseOrderCounts.get(supplier._id) || 0}
                 <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
               </div>
               <div className="col-span-2 truncate py-1 px-2 flex items-center justify-center">

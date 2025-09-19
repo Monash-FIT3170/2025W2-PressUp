@@ -1,6 +1,10 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
+import { useTracker } from "meteor/react-meteor-data";
+import { Meteor } from "meteor/meteor";
+import { Roles } from "meteor/alanning:roles";
+import { RoleEnum } from "/imports/api/accounts/roles";
 import { Pill } from "../Pill";
 import { ArrowLeft } from "../symbols/navigation/Arrows";
 import {
@@ -15,11 +19,11 @@ import {
   Clipboard,
   Clock3Icon,
   DollarSign,
-  Folder,
   HistoryIcon,
   MessageSquare,
   PenTool,
   ReceiptText,
+  Settings,
   Users,
   ChartNoAxesCombined,
 } from "lucide-react";
@@ -29,6 +33,10 @@ interface NavigationMenuProps {
 }
 
 export const NavigationMenu = ({ show }: NavigationMenuProps) => {
+  const isAdmin = useTracker(() => {
+    return Roles.userIsInRole(Meteor.userId(), [RoleEnum.ADMIN]);
+  });
+
   return (
     <div
       className={`bg-press-up-purple min-h-full transition-all ease-in-out duration-300 ${
@@ -55,7 +63,6 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             path="/finance/tax"
             selectionType={NavigationEntrySelection.ARROW}
           />
-
           <NavigationEntry
             icon={<Folder />}
             name="Expense Tracking"
@@ -68,6 +75,7 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             path="/finance/analytics"
             selectionType={NavigationEntrySelection.ARROW}
           />
+          
         </NavigationEntry>
         <NavigationEntry
           icon={<PencilIcon fill="var(--color-press-up-grey)" />}
@@ -163,6 +171,15 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>
+
+        {isAdmin && (
+          <NavigationEntry
+            icon={<Settings />}
+            name="Company Settings"
+            path="/company"
+            selectionType={NavigationEntrySelection.HIGHLIGHT}
+          />
+        )}
       </div>
     </div>
   );
