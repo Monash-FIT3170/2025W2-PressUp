@@ -37,10 +37,10 @@ const daysOfWeek = [
 ];
 
 interface RosterTableProps {
-  PublishShiftButton: React.ReactNode;
+  controls: React.ReactNode;
 }
 
-export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
+export const RosterTable = ({ controls }: RosterTableProps) => {
   const today = new Date();
   const baseMonday = getMonday(today);
 
@@ -188,18 +188,7 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
 
     const formatTimeRange = () => {
       const startTime = shiftTimeUtils.format(shift.start);
-      let endTime = "";
-
-      if (shift.status === ShiftStatus.CLOCKED_IN) {
-        endTime = shift.scheduledEnd
-          ? shiftTimeUtils.format(shift.scheduledEnd)
-          : "Open";
-      } else if (shift.end) {
-        endTime = shiftTimeUtils.format(shift.end);
-      } else if (shift.scheduledEnd) {
-        endTime = shiftTimeUtils.format(shift.scheduledEnd);
-      }
-
+      const endTime = shift.end ? shiftTimeUtils.format(shift.end) : "Open";
       return endTime ? `${startTime} - ${endTime}` : startTime;
     };
 
@@ -301,7 +290,7 @@ export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
             )}
           </div>
         </div>
-        <div className="px-4 ml-auto">{PublishShiftButton}</div>
+        <div className="px-4 ml-auto">{controls}</div>
       </div>
       <table className="min-w-full border border-gray-300">
         <thead>

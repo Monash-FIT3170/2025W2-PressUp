@@ -314,7 +314,7 @@ export const UserManagementPage = () => {
                     {!isCurrentUser && (
                       <button
                         onClick={() => handleDeleteUser(user)}
-                        className="px-3 py-2 bg-red-400 text-white rounded-full text-sm font-medium hover:bg-red-600 transition-colors"
+                        className="px-3 py-2 bg-red-500 text-white rounded-full text-sm font-medium hover:bg-red-600 transition-colors"
                       >
                         DELETE
                       </button>
@@ -436,7 +436,6 @@ const AddUserModal = ({
             <option value={RoleEnum.MANAGER}>Manager</option>
             <option value={RoleEnum.ADMIN}>Admin</option>
           </select>
-          <div className="text-sm text-gray-600">Pay Rate (optional)</div>
           {canEditPayRate && (
             <Input
               type="number"

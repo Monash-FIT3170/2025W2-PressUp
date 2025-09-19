@@ -18,8 +18,7 @@ export interface Shift extends DBEntry {
   user: string;
   date: Date;
   start: ShiftTime;
-  end?: ShiftTime;
-  scheduledEnd?: ShiftTime;
+  end: ShiftTime | null;
   status: ShiftStatus;
 }
 
