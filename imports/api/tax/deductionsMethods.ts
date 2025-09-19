@@ -68,4 +68,14 @@ Meteor.methods({
 
     return DeductionsCollection.find().fetch();
   },
+
+  "deductions.delete": requireLoginMethod(async function (deductionId: string) {
+    check(deductionId, String);
+
+    const result = await DeductionsCollection.removeAsync(deductionId);
+
+    if (result === 0) {
+      throw new Meteor.Error("not-found", "Deduction not found");
+    }
+  }),
 });

@@ -8,23 +8,23 @@ const variantColours: Record<ButtonVariant, string> = {
   negative: "bg-press-up-negative-button text-white",
 };
 
-interface Props
-  extends Pick<
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
-    "type" | "onClick" | "children" | "disabled"
-  > {
+interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   width?: "full" | "fit";
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, Props>(
-  (props, ref) => {
-    const {
+  (
+    {
       variant = "positive",
       width = "fit",
-      disabled = false,
+      className, // Allow external className override/merge
+      children, // Render children
+      disabled, // Use for styling
       ...rest
-    } = props;
+    },
+    ref,
+  ) => {
     return (
       <button
         ref={ref}
@@ -34,9 +34,12 @@ export const Button = React.forwardRef<HTMLButtonElement, Props>(
           "text-nowrap shadow-lg/20 hover:shadow-md ease-in-out transition-all duration-300 rounded-xl cursor-pointer inline-flex p-2 grow-0 text-sm font-medium items-center justify-center",
           variantColours[variant],
           width === "full" ? "w-full" : "w-fit",
-          disabled && "opacity-50 cursor-not-allowed",
+          disabled && "opacity-50 cursor-not-allowed", // Add disabled styling
+          className, // Merge external className
         )}
-      />
+      >
+        {children} {/* Render children */}
+      </button>
     );
   },
 );

@@ -23,7 +23,7 @@ export const KitchenManagement = () => {
   // Set title
   const [_, setPageTitle] = usePageTitle();
   useEffect(() => {
-    setPageTitle("Kitchen Management");
+    setPageTitle("Kitchen Management - Current Tickets");
   }, [setPageTitle]);
 
   const orders: UiOrder[] = useTracker(() => {

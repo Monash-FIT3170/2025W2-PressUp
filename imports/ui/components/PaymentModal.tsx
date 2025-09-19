@@ -4,6 +4,7 @@ import { Meteor } from "meteor/meteor";
 import { Order } from "/imports/api";
 import { TablesCollection } from "/imports/api/tables/TablesCollection";
 import { OrderStatus } from "/imports/api/orders/OrdersCollection";
+import { Button } from "./interaction/Button";
 
 interface PaymentModalProps {
   tableNo?: number | null;
@@ -47,13 +48,14 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
 
   return (
     <div>
-      <button
+      <Button
         onClick={openModal}
-        className="w-full bg-press-up-positive-button hover:bg-press-up-hover text-white font-bold py-2 px-4 rounded-full"
+        variant="positive"
+        width="full"
         disabled={Boolean(order?.isLocked) || order.menuItems.length === 0}
       >
         Pay
-      </button>
+      </Button>
 
       {/* Fade In */}
       <div
@@ -76,18 +78,12 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
                 Are you sure you want to proceed with the payment?
               </p>
               <div className="grid grid-cols-2 justify-items-center gap-2">
-                <button
-                  onClick={closeModal}
-                  className="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg"
-                >
+                <Button onClick={closeModal} variant="negative" width="fit">
                   Cancel
-                </button>
-                <button
-                  onClick={handleConfirm}
-                  className="px-4 py-2 bg-press-up-purple text-white font-semibold rounded-lg"
-                >
+                </Button>
+                <Button onClick={handleConfirm} variant="positive" width="fit">
                   Confirm
-                </button>
+                </Button>
               </div>
             </>
           ) : (
@@ -107,12 +103,9 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
                 </div>
               </div>
               <div className="flex justify-center">
-                <button
-                  onClick={closeModal}
-                  className="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg"
-                >
+                <Button onClick={closeModal} variant="negative" width="fit">
                   OK
-                </button>
+                </Button>
               </div>
             </>
           )}

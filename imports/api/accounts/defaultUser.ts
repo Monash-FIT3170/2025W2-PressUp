@@ -3,11 +3,10 @@ import { Roles } from "meteor/alanning:roles";
 import { Meteor } from "meteor/meteor";
 import { RoleEnum } from "./roles";
 
+export const ADMIN_USERNAME = "admin";
+
 export const createDefaultUser = async () => {
-  const username =
-    process.env.DEFAULT_USERNAME ||
-    Meteor.settings?.private?.defaultUser?.username ||
-    "admin";
+  const username = ADMIN_USERNAME;
 
   const password =
     process.env.DEFAULT_PASS ||
