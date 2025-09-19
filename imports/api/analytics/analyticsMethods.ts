@@ -4,11 +4,11 @@ import { TransactionsCollection } from "../transactions/TransactionsCollection";
 import { OrdersCollection } from "../orders/OrdersCollection";
 
 Meteor.methods({
-  "analytics.getPopularItems": requireLoginMethod(async function (
+  "analytics.getPopularItems": requireLoginMethod(async function(
     timeFrame: string,
     startDate: Date,
     endDate: Date
-  ) {
+  ){
     const transactions = await TransactionsCollection.find({
       createdAt: {
         $gte: startDate,
@@ -17,12 +17,12 @@ Meteor.methods({
     }).fetch();
 
     const itemMap = new Map<
-      string, 
+      string,
       {
-       name: string;
-       totalQuantity: number; 
-       totalRevenue: number; 
-       averagePrice: number;
+        name: string;
+        totalQuantity: number;
+        totalRevenue: number;
+        averagePrice: number;
       }
       >();
 
@@ -42,7 +42,8 @@ Meteor.methods({
       }
     });
 
-    return Array.from(itemMap.values()).sort((a, b) => b.totalQuantity - a.totalQuantity);
+    return Array.from(itemMap.values()).sort(
+      (a, b) => b.totalQuantity - a.totalQuantity);
   }),
 
   "analytics.getSalesTrends": requireLoginMethod(async function (
@@ -88,12 +89,28 @@ Meteor.methods({
           break;
         }
         case "month":{
-          const weekDiff = Math.floor((Date.now() - transactionDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+          const weekDiff = Math.floor(
+            (Date.now() - transactionDate.getTime()) /
+            (7 * 24 * 60 * 60 * 1000)
+          );
           period = `Week ${4 - weekDiff}`;
           break;
         }
         case "year":{
-          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          const months = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"
+          ];
           period = months[transactionDate.getMonth()];
           break;
         }
@@ -118,11 +135,11 @@ Meteor.methods({
     return Array.from(periodMap.values());
   }),
 
-  "analytics.getPeakHours": requireLoginMethod(async function (
+  "analytics.getPeakHours": requireLoginMethod(async function(
     timeFrame: string,
     startDate: Date,
     endDate: Date
-  ) {
+  ){
     const orders = await OrdersCollection.find({
       createdAt: {
         $gte: startDate,
@@ -132,13 +149,13 @@ Meteor.methods({
 
     // Initialize hourly data
     const hourlyMap = new Map<
-      number, 
+      number,
       { 
-        hour: number; 
-        orderCount: number; 
-        totalRevenue: number 
+        hour: number;
+        orderCount: number;
+        totalRevenue: number
       }
-    >();
+      >();
     for (let hour = 0; hour < 24; hour++) {
       hourlyMap.set(hour, { hour, orderCount: 0, totalRevenue: 0 });
     }
@@ -157,12 +174,12 @@ Meteor.methods({
     return Array.from(hourlyMap.values());
   }),
 
-  "analytics.exportReport": requireLoginMethod(async function (
+  "analytics.exportReport": requireLoginMethod(async function(
     format: string,
     timeFrame: string,
     startDate: Date,
     endDate: Date
-  ) {
+  ){
     // This would implement actual export functionality
     // For now, return a summary of the data
     const transactions = await TransactionsCollection.find({
