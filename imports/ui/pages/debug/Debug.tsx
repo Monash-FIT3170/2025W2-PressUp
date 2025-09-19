@@ -30,9 +30,9 @@ export const DebugPage = () => {
   }
 
   const handleMethodCall = (methodName: string, successMessage: string) => {
-    Meteor.call(methodName, (error: any) => {
+    Meteor.call(methodName, (error: Meteor.Error) => {
       if (error) {
-        alert(`Failed: ${error.reason || error.message || "Unknown error"}`);
+        alert(`Failed: ${error.reason || "Unknown error"}`);
       } else {
         alert(`Success: ${successMessage}`);
       }

@@ -1,3 +1,4 @@
+import "./globalPublishing";
 import "./menuItems/menuItemsMethods";
 import "./menuItems/menuItemsPublishing";
 import "./stockItems/stockItemsMethods";
@@ -20,6 +21,8 @@ import "./posts/commentsMethods.ts";
 import "./posts/commentsPublishing.ts";
 import "./tax/deductionsMethods";
 import "./tax/deductionsPublishing";
+import "./company/companyMethods";
+import "./company/companyPublishing";
 import "./debug/debugMethods";
 import "./menuItems/itemCategoriesMethods";
 import "./menuItems/itemCategoriesPublishing";

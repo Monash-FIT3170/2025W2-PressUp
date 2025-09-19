@@ -17,11 +17,8 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
-    //const parsedQuantity = parseInt(quantity, 10);
     if (
       !supplierName ||
-      //!description ||
-      //!pastOrderQty ||
       !email ||
       !validateEmail(email) ||
       !phone ||

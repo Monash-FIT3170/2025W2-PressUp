@@ -5,7 +5,6 @@ import { SuppliersPage } from "./pages/inventory/Suppliers";
 import { Menu } from "./pages/menuManagement/Menu";
 import { ProfitLossPage } from "./pages/finance/ProfitLossPage";
 import { TaxPage } from "./pages/finance/TaxPage";
-import { ExpensesPage } from "./pages/finance/ExpensesPage";
 import { KitchenManagement } from "./pages/kitchenManagement/KitchenManagement";
 import { OrderHistoryPage } from "./pages/kitchenManagement/OrderHistoryPage";
 import { MainDisplay } from "./pages/pos/MainDisplay";
@@ -17,6 +16,8 @@ import { UserManagementPage } from "./pages/userManagement/userManagement";
 import { RosterPage } from "./pages/staff/Roster";
 import { CommunicationPage } from "./pages/staff/Communication";
 import { DebugPage } from "./pages/debug/Debug";
+import { CompanySettings } from "./pages/company/CompanySettings";
+import { GlobalProvider } from "./hooks/GlobalDataContext";
 
 const router = createBrowserRouter([
   {
@@ -36,7 +37,6 @@ const router = createBrowserRouter([
           },
           { path: "profit-loss", Component: ProfitLossPage },
           { path: "tax", Component: TaxPage },
-          { path: "expenses", Component: ExpensesPage },
         ],
       },
       {
@@ -85,6 +85,10 @@ const router = createBrowserRouter([
         ],
       },
       {
+        path: "company",
+        Component: CompanySettings,
+      },
+      {
         path: "debug",
         Component: DebugPage,
       },
@@ -94,8 +98,8 @@ const router = createBrowserRouter([
 
 export const App = () => {
   return (
-    <>
+    <GlobalProvider>
       <RouterProvider router={router} />
-    </>
+    </GlobalProvider>
   );
 };

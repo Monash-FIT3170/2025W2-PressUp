@@ -13,3 +13,6 @@ export {
 export { Tables, TablesCollection } from "./tables/TablesCollection";
 export { Deduction, DeductionsCollection } from "./tax/DeductionsCollection";
 export { ItemCategory, ItemCategoriesCollection } from "./menuItems/ItemCategoriesCollection";
+
+// Company
+export { Company, CompanyCollection } from "./company/CompanyCollection";
