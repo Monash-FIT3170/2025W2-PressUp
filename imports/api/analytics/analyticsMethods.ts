@@ -84,7 +84,15 @@ Meteor.methods({
           break;
         }
         case "week":{
-          const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          const days = [
+            "Sun",
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat"
+          ];
           period = days[transactionDate.getDay()];
           break;
         }
@@ -194,11 +202,17 @@ Meteor.methods({
         $gte: startDate,
         $lte: endDate,
       },
-    }).fetch();
+    },).fetch();
 
-    const totalRevenue = transactions.reduce((sum, t) => sum + (t.quantity * t.price), 0);
+    const totalRevenue = transactions.reduce(
+      (sum, t) => sum + (t.quantity * t.price),
+      0
+      );
     const totalOrders = orders.length;
-    const totalItems = transactions.reduce((sum, t) => sum + t.quantity, 0);
+    const totalItems = transactions.reduce(
+      (sum, t) => sum + t.quantity,
+      0
+    );
 
     return {
       format,
