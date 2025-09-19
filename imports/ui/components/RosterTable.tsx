@@ -5,7 +5,7 @@ import {
   Shift,
   ShiftsCollection,
   ShiftStatus,
-  shiftTimeUtils,
+  ShiftTime,
 } from "/imports/api/shifts/ShiftsCollection";
 import { RoleEnum, roleColors } from "/imports/api/accounts/roles";
 
@@ -24,6 +24,10 @@ function formatDate(date: Date) {
     month: "short",
     day: "numeric",
   });
+}
+
+function formatTime(shiftTime: ShiftTime): string {
+  return `${shiftTime.hour.toString().padStart(2, "0")}:${shiftTime.minute.toString().padStart(2, "0")}`;
 }
 
 const daysOfWeek = [
@@ -187,8 +191,8 @@ export const RosterTable = ({ controls }: RosterTableProps) => {
     };
 
     const formatTimeRange = () => {
-      const startTime = shiftTimeUtils.format(shift.start);
-      const endTime = shift.end ? shiftTimeUtils.format(shift.end) : "Open";
+      const startTime = formatTime(shift.start);
+      const endTime = shift.end ? formatTime(shift.end) : "Open";
       return endTime ? `${startTime} - ${endTime}` : startTime;
     };
 
