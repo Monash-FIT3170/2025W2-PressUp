@@ -10,13 +10,14 @@ import {
 
 interface PopularItemsAnalysisProps {
   orders: Order[];
-  timeFrame: "all"
-  | "today"
-  | "thisWeek"
-  | "thisMonth"
-  | "thisYear"
-  | "past7Days"
-  | "past30Days";
+  timeFrame:
+    | "all"
+    | "today"
+    | "thisWeek"
+    | "thisMonth"
+    | "thisYear"
+    | "past7Days"
+    | "past30Days";
   customDateRange?: { start: Date; end: Date } | null;
 }
 
@@ -62,8 +63,6 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
         endDate = null;
     }
 
-
-
     const filteredorders = orders.filter((order) => {
       const orderDate = new Date(order.createdAt);
 
@@ -72,13 +71,11 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
       }
 
       return orderDate >= startDate && orderDate <= endDate;
-    }
-    );
+    });
 
     const itemMap = new Map<string, ItemStats>();
 
     filteredorders.forEach((order) => {
-
       if (!order.paid) {
         return;
       }
@@ -89,7 +86,8 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
         if (existing) {
           existing.totalQuantity += menuItem.quantity;
           existing.totalRevenue += menuItem.quantity * menuItem.price;
-          existing.averagePrice = existing.totalRevenue / existing.totalQuantity;
+          existing.averagePrice =
+            existing.totalRevenue / existing.totalQuantity;
         } else {
           itemMap.set(menuItem.name, {
             name: menuItem.name,
@@ -98,14 +96,13 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
             averagePrice: menuItem.price,
           });
         }
-      })
+      });
     });
 
     return Array.from(itemMap.values())
       .sort((a, b) => b.totalQuantity - a.totalQuantity)
       .slice(0, 5);
   }, [orders, timeFrame, customDateRange]);
-
 
   const overallMostPopular = useMemo<{ name: string; quantity: number }>(() => {
     const itemMap = new Map<string, number>();
@@ -116,12 +113,15 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
       order.menuItems.forEach((menuItem: OrderMenuItem) => {
         itemMap.set(
           menuItem.name,
-          (itemMap.get(menuItem.name) || 0) + menuItem.quantity
+          (itemMap.get(menuItem.name) || 0) + menuItem.quantity,
         );
       });
     });
 
-    let mostPopular: { name: string; quantity: number } = { name: "", quantity: 0 };
+    let mostPopular: { name: string; quantity: number } = {
+      name: "",
+      quantity: 0,
+    };
 
     itemMap.forEach((quantity, name) => {
       if (quantity > mostPopular.quantity) {
@@ -134,13 +134,15 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-800">Popular Items Analysis</h2>
+      <h2 className="text-xl font-semibold text-gray-800">
+        Popular Items Analysis
+      </h2>
 
       {/* Summary */}
       <div className="bg-blue-50 p-4 rounded-lg">
         <p className="text-sm text-blue-800">
-          <span className="font-semibold">Overall Most Popular:</span> {overallMostPopular.name}
-          ({overallMostPopular.quantity} units sold)
+          <span className="font-semibold">Overall Most Popular:</span>{" "}
+          {overallMostPopular.name}({overallMostPopular.quantity} units sold)
         </p>
         <p className="text-xs text-blue-600 mt-1">
           This data helps with stock ordering decisions
@@ -172,7 +174,9 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-gray-800">{item.totalQuantity} sold</p>
+                  <p className="font-semibold text-gray-800">
+                    {item.totalQuantity} sold
+                  </p>
                   <p className="text-sm text-gray-500">
                     ${item.totalRevenue.toFixed(2)} revenue
                   </p>
@@ -181,9 +185,11 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-4">No data available for this time period</p>
+          <p className="text-gray-500 text-center py-4">
+            No data available for this time period
+          </p>
         )}
       </div>
     </div>
   );
-}; 
+};

@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { Order } from "/imports/api/orders/OrdersCollection";
 
-
 interface SalesTrendsVisualizationProps {
   orders: Order[];
   dateRangeBounds: { start: Date | null; end: Date | null } | null;
@@ -13,70 +12,74 @@ interface SalesDataPoint {
   itemCount: number;
 }
 
-export const SalesTrendsVisualization: React.FC<SalesTrendsVisualizationProps> = ({
-  orders,
-  dateRangeBounds,
-}) => {
+export const SalesTrendsVisualization: React.FC<
+  SalesTrendsVisualizationProps
+> = ({ orders, dateRangeBounds }) => {
   const { start, end } = dateRangeBounds || { start: null, end: null };
 
   const salesData = useMemo(() => {
-
     if (!orders || orders.length === 0) return [];
     let periods: string[] = [];
 
     if (start && end) {
       const daysDiff = Math.ceil(
-        (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)
+        (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000),
       );
       periods = Array.from({ length: daysDiff + 1 }, (_, i) => {
         const date = new Date(start);
         date.setDate(start.getDate() + i);
-        return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        return date.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        });
       });
     } else {
       const today = new Date();
       periods = Array.from({ length: 7 }, (_, i) => {
         const date = new Date(today);
         date.setDate(today.getDate() - (6 - i));
-        return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        return date.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        });
       });
     }
-
 
     // Group transactions by period
     const periodMap = new Map<string, SalesDataPoint>();
     periods.forEach((period) =>
-      periodMap.set(period, { period, totalSales: 0, itemCount: 0 })
+      periodMap.set(period, { period, totalSales: 0, itemCount: 0 }),
     );
 
     orders.forEach((order) => {
       if (!order.paid) return;
 
       const orderDate = new Date(order.createdAt);
-      if (
-        (start && orderDate < start) ||
-        (end && orderDate > end)
-      )
-        return;
+      if ((start && orderDate < start) || (end && orderDate > end)) return;
 
-      const periodKey = periods.find((p) =>
-        orderDate.toLocaleDateString(undefined, { month: "short", day: "numeric" }) === p
+      const periodKey = periods.find(
+        (p) =>
+          orderDate.toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+          }) === p,
       );
       if (!periodKey) return;
 
       const existing = periodMap.get(periodKey);
       if (existing) {
         existing.totalSales += order.totalPrice;
-        existing.itemCount += order.menuItems.reduce((sum, item) => sum + item.quantity, 0);
+        existing.itemCount += order.menuItems.reduce(
+          (sum, item) => sum + item.quantity,
+          0,
+        );
       }
     });
 
     return Array.from(periodMap.values());
-
   }, [orders, start, end]);
 
-
-  const maxSales = Math.max(...salesData.map(d => d.totalSales), 1);
+  const maxSales = Math.max(...salesData.map((d) => d.totalSales), 1);
 
   return (
     <div className="space-y-4">
@@ -85,7 +88,8 @@ export const SalesTrendsVisualization: React.FC<SalesTrendsVisualizationProps> =
       {/* Summary */}
       <div className="bg-green-50 p-4 rounded-lg">
         <p className="text-sm text-green-800">
-          <span className="font-semibold">Total Sales:</span> ${salesData.reduce((sum, d) => sum + d.totalSales, 0).toFixed(2)}
+          <span className="font-semibold">Total Sales:</span> $
+          {salesData.reduce((sum, d) => sum + d.totalSales, 0).toFixed(2)}
         </p>
         <p className="text-xs text-green-600 mt-1">
           This data supports inventory planning decisions
@@ -94,11 +98,9 @@ export const SalesTrendsVisualization: React.FC<SalesTrendsVisualizationProps> =
 
       {/* Chart */}
       <div className="space-y-3">
-        <h3 className="text-lg font-medium text-gray-700">
-          Sales Over Time
-        </h3>
+        <h3 className="text-lg font-medium text-gray-700">Sales Over Time</h3>
 
-        {salesData.some(d => d.totalSales > 0) ? (
+        {salesData.some((d) => d.totalSales > 0) ? (
           <div className="relative">
             {/* SVG Chart */}
             <svg
@@ -166,9 +168,11 @@ export const SalesTrendsVisualization: React.FC<SalesTrendsVisualizationProps> =
             </div>
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">No sales data available for this time period</p>
+          <p className="text-gray-500 text-center py-8">
+            No sales data available for this time period
+          </p>
         )}
       </div>
     </div>
   );
-}; 
+};

@@ -7,7 +7,7 @@ interface ExportButtonProps {
 
 export const ExportButton: React.FC<ExportButtonProps> = ({
   onExport,
-  disabled = false
+  disabled = false,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
 

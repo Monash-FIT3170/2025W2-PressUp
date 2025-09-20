@@ -11,13 +11,13 @@ import {
 interface PeakHoursAnalysisProps {
   orders: Order[];
   timeFrame:
-  | "all"
-  | "today"
-  | "thisWeek"
-  | "thisMonth"
-  | "thisYear"
-  | "past7Days"
-  | "past30Days";
+    | "all"
+    | "today"
+    | "thisWeek"
+    | "thisMonth"
+    | "thisYear"
+    | "past7Days"
+    | "past30Days";
 }
 
 interface HourlyData {
@@ -30,7 +30,6 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
   orders,
   timeFrame,
 }) => {
-
   const hourlyData = useMemo<HourlyData[]>(() => {
     const now = new Date();
     let startDate: Date | null = null;
@@ -83,7 +82,6 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
 
     // Aggregate data by hour
     filteredOrders.forEach((order) => {
-
       const orderDate = new Date(order.createdAt);
       const hour = orderDate.getHours();
       const existing = hourlyMap.get(hour);
@@ -95,19 +93,17 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
     });
 
     return Array.from(hourlyMap.values());
-
   }, [orders, timeFrame]);
 
-
   const peakHour = useMemo(() => {
-    return hourlyData.reduce((peak, current) =>
-      current.orderCount > peak.orderCount ? current : peak, { hour: 0, orderCount: 0, totalRevenue: 0 }
+    return hourlyData.reduce(
+      (peak, current) =>
+        current.orderCount > peak.orderCount ? current : peak,
+      { hour: 0, orderCount: 0, totalRevenue: 0 },
     );
   }, [hourlyData]);
 
-
-  const maxOrders = Math.max(...hourlyData.map(d => d.orderCount), 1);
-
+  const maxOrders = Math.max(...hourlyData.map((d) => d.orderCount), 1);
 
   const formatHour = (hour: number) => {
     if (hour === 0) return "12 AM";
@@ -116,17 +112,18 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
     return `${hour - 12} PM`;
   };
 
-
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-800">Peak Hours Analysis</h2>
+      <h2 className="text-xl font-semibold text-gray-800">
+        Peak Hours Analysis
+      </h2>
 
       {/* Summary */}
       <div className="bg-orange-50 p-4 rounded-lg">
         {peakHour.orderCount > 0 ? (
           <p className="text-sm text-orange-800">
-            <span className="font-semibold">Peak Hour:</span> {formatHour(peakHour.hour)}
-            ({peakHour.orderCount} orders)
+            <span className="font-semibold">Peak Hour:</span>{" "}
+            {formatHour(peakHour.hour)}({peakHour.orderCount} orders)
           </p>
         ) : (
           <p className="text-sm text-orange-800">No peak hour data available</p>
@@ -139,10 +136,11 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
       {/* Chart */}
       <div className="space-y-3">
         <h3 className="text-lg font-medium text-gray-700">
-          Customer Traffic Patterns ({timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1)})
+          Customer Traffic Patterns (
+          {timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1)})
         </h3>
 
-        {hourlyData.some(d => d.orderCount > 0) ? (
+        {hourlyData.some((d) => d.orderCount > 0) ? (
           <div className="relative">
             {/* SVG Chart */}
             <svg
@@ -181,11 +179,13 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
 
               {/* Line chart */}
               <polyline
-                points={hourlyData.map((dataPoint, index) => {
-                  const x = (index * 100) / 24;
-                  const y = 200 - (dataPoint.orderCount / maxOrders) * 180;
-                  return `${x}%,${y}`;
-                }).join(" ")}
+                points={hourlyData
+                  .map((dataPoint, index) => {
+                    const x = (index * 100) / 24;
+                    const y = 200 - (dataPoint.orderCount / maxOrders) * 180;
+                    return `${x}%,${y}`;
+                  })
+                  .join(" ")}
                 fill="none"
                 stroke="#8b5cf6"
                 strokeWidth="3"
@@ -246,7 +246,9 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
             </div>
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">No order data available for this time period</p>
+          <p className="text-gray-500 text-center py-8">
+            No order data available for this time period
+          </p>
         )}
       </div>
 
@@ -267,11 +269,17 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
         <div className="bg-gray-50 p-4 rounded-lg">
           <h4 className="font-medium text-gray-800">Average Order Value</h4>
           <p className="text-2xl font-bold text-blue-600">
-            ${(hourlyData.reduce((sum, d) => sum + d.totalRevenue, 0) /
-              Math.max(hourlyData.reduce((sum, d) => sum + d.orderCount, 0), 1)).toFixed(2)}
+            $
+            {(
+              hourlyData.reduce((sum, d) => sum + d.totalRevenue, 0) /
+              Math.max(
+                hourlyData.reduce((sum, d) => sum + d.orderCount, 0),
+                1,
+              )
+            ).toFixed(2)}
           </p>
         </div>
       </div>
     </div>
   );
-}; 
+};

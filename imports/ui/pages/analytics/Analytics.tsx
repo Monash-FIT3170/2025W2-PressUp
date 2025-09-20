@@ -30,7 +30,7 @@ export const AnalyticsPage = () => {
     | "past30Days"
   >("all");
 
-  const [customDateRange, setCustomDateRange] = useState<{
+  const [customDateRange] = useState<{
     start: Date;
     end: Date;
   } | null>(null);
@@ -46,13 +46,13 @@ export const AnalyticsPage = () => {
 
   useSubscribe("orders");
 
-  const getDateRangeText = (range: string) => {
+  const getDateRangeText = (_range: string) => {
     if (!dateRangeBounds.start || !dateRangeBounds.end) {
       return "All Time";
     }
     return `${format(dateRangeBounds.start, "dd/MM/yy")} – ${format(
       dateRangeBounds.end,
-      "dd/MM/yy"
+      "dd/MM/yy",
     )}`;
   };
 
@@ -105,7 +105,8 @@ export const AnalyticsPage = () => {
   }, [setPageTitle, dateRange]);
 
   const convertToCSV = (objArray: any) => {
-    const array = typeof objArray !== "object" ? JSON.parse(objArray) : objArray;
+    const array =
+      typeof objArray !== "object" ? JSON.parse(objArray) : objArray;
 
     const header = [
       "Order ID",
@@ -122,11 +123,16 @@ export const AnalyticsPage = () => {
         order._id || "",
         order.orderNo || "",
         order.menuItems
-          ? order.menuItems.reduce((sum: number, item: any) => sum + item.quantity, 0)
+          ? order.menuItems.reduce(
+              (sum: number, item: any) => sum + item.quantity,
+              0,
+            )
           : 0,
         order.paid ? "FALSE" : "TRUE",
         order.orderStatus || "",
-        order.createdAt ? format(new Date(order.createdAt), "yyyy-MM-dd HH:mm:ss") : "",
+        order.createdAt
+          ? format(new Date(order.createdAt), "yyyy-MM-dd HH:mm:ss")
+          : "",
       ];
       str += row.join(",") + "\r\n";
     }
@@ -155,7 +161,7 @@ export const AnalyticsPage = () => {
 
     downloadCSV(
       ordersFiltered,
-      `CSV_Analytics_PressUp_${formattedStart}_to_${formattedEnd}`
+      `CSV_Analytics_PressUp_${formattedStart}_to_${formattedEnd}`,
     );
   };
 
