@@ -8,6 +8,7 @@ import {
   ShiftTime,
 } from "/imports/api/shifts/ShiftsCollection";
 import { RoleEnum, roleColors } from "/imports/api/accounts/roles";
+import { getHighestRole } from "/imports/helpers/roles";
 
 function getMonday(d: Date) {
   const date = new Date(d);
@@ -54,7 +55,7 @@ export const RosterTable = ({ controls }: RosterTableProps) => {
   const staffShifts = useTracker(() => {
     const staffMap = new Map<
       string,
-      { name: string; role: string; shifts: Shift[] }
+      { name: string; role: string | null; shifts: Shift[] }
     >();
 
     Meteor.users
@@ -74,7 +75,7 @@ export const RosterTable = ({ controls }: RosterTableProps) => {
             `${user.profile?.firstName ?? ""} ${user.profile?.lastName ?? ""}`.trim() ||
             user.username ||
             "Unknown",
-          role: RoleEnum.CASUAL,
+          role: getHighestRole(user._id),
           shifts: [],
         });
       });
@@ -126,12 +127,13 @@ export const RosterTable = ({ controls }: RosterTableProps) => {
     });
   }, [weekStart]);
 
-  const filteredShifts = useMemo(() => {
-    return staffShifts.filter((s) => roleFilter.includes(s.role));
+  const filteredShifts = useTracker(() => {
+    console.log(staffShifts);
+    return staffShifts.filter((s) => roleFilter.includes(s.role ?? ""));
   }, [staffShifts, roleFilter]);
 
   const getShiftForStaffAndDay = (
-    staff: { shifts: Shift[]; role: string },
+    staff: { shifts: Shift[]; role: string | null },
     dayIndex: number,
   ) => {
     const cellDate = weekDates[dayIndex];
@@ -330,7 +332,7 @@ export const RosterTable = ({ controls }: RosterTableProps) => {
                     className="border border-gray-300 p-0 align-top"
                     style={{ minHeight: "60px", position: "relative" }}
                   >
-                    {shift ? renderShiftCell(shift, staff.role) : null}
+                    {shift ? renderShiftCell(shift, staff.role ?? "") : null}
                   </td>
                 );
               })}
