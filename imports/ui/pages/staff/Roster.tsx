@@ -49,20 +49,25 @@ export const RosterPage = () => {
       now.getDate() + 1,
     );
 
-    const clockedOut = ShiftsCollection.find({
-      status: ShiftStatus.CLOCKED_OUT,
-      date: { $gte: todayStart, $lt: tomorrowStart },
-    }).fetch()[0];
+    const clockedIn = userId
+      ? (ShiftsCollection.find({
+          user: userId,
+          status: ShiftStatus.CLOCKED_IN,
+        }).fetch()[0] ?? null)
+      : null;
+
+    const clockedOut = userId
+      ? (ShiftsCollection.find({
+          user: userId,
+          status: ShiftStatus.CLOCKED_OUT,
+          date: { $gte: todayStart, $lt: tomorrowStart },
+        }).fetch()[0] ?? null)
+      : null;
 
     return {
       user: Meteor.user(),
-      clockedIn: userId
-        ? ShiftsCollection.find({
-            user: userId,
-            status: ShiftStatus.CLOCKED_IN,
-          }).fetch()[0]
-        : null,
-      clockedOut: clockedOut ?? null,
+      clockedIn,
+      clockedOut,
     };
   }, []);
 
