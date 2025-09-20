@@ -3,12 +3,9 @@ import { createDefaultUser } from "/imports/api/accounts/defaultUser";
 import { createDefaultCompany } from "/imports/api/company/defaultCompany";
 import "/imports/api/serverImports";
 import { setupRoles } from "/imports/api/accounts/roles";
-import { mockDataGenerator } from "/imports/api/mock/mockData";
 
 Meteor.startup(async () => {
   await setupRoles();
   await createDefaultUser();
   await createDefaultCompany();
-
-  await mockDataGenerator({});
 });

@@ -38,7 +38,7 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
     const [endHour, endMinute] = endTime.split(":").map(Number);
 
     Meteor.call(
-      "shifts.new",
+      "shifts.schedule",
       {
         userId,
         date: shiftDate,

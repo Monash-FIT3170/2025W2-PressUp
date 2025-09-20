@@ -3,6 +3,10 @@ import { Button } from "../../components/interaction/Button";
 import { Modal } from "../../components/Modal";
 import { PublishShiftForm } from "../../components/PublishShiftForm";
 import { RosterTable } from "../../components/RosterTable";
+import {
+  ShiftsCollection,
+  ShiftStatus,
+} from "/imports/api/shifts/ShiftsCollection";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { Hide } from "../../components/display/Hide";
@@ -25,30 +29,97 @@ export const RosterPage = () => {
     setShowShiftModalCloseConfirmation(false);
   };
 
-  const rolesLoaded = useSubscribe("users.roles")();
-  const rolesGraphLoaded = useSubscribe("users.rolesGraph")();
   const canPublishShifts = useTracker(
     () => Roles.userIsInRole(Meteor.userId(), [RoleEnum.MANAGER]),
-    [rolesLoaded, rolesGraphLoaded],
+    [],
   );
+
+  useSubscribe("shifts.current");
+  const { user, clockedIn, clockedOut } = useTracker(() => {
+    const userId = Meteor.userId();
+    const now = new Date();
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const tomorrowStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+    );
+
+    const clockedIn = userId
+      ? (ShiftsCollection.find({
+          user: userId,
+          status: ShiftStatus.CLOCKED_IN,
+        }).fetch()[0] ?? null)
+      : null;
+
+    const clockedOut = userId
+      ? (ShiftsCollection.find({
+          user: userId,
+          status: ShiftStatus.CLOCKED_OUT,
+          date: { $gte: todayStart, $lt: tomorrowStart },
+        }).fetch()[0] ?? null)
+      : null;
+
+    return {
+      user: Meteor.user(),
+      clockedIn,
+      clockedOut,
+    };
+  }, []);
+
+  const handleClockIn = () => {
+    Meteor.call("shifts.clockIn", (error: Meteor.Error | undefined) => {
+      if (error) {
+        console.error("Clock in failed:", error.message);
+        alert(`Clock in failed: ${error.message}`);
+      } else {
+        console.log("Successfully clocked in");
+      }
+    });
+  };
+
+  const handleClockOut = () => {
+    Meteor.call("shifts.clockOut", (error: Meteor.Error | undefined) => {
+      if (error) {
+        console.error("Clock out failed:", error.message);
+        alert(`Clock out failed: ${error.message}`);
+      } else {
+        console.log("Successfully clocked out");
+      }
+    });
+  };
 
   return (
     <div className="flex flex-1 flex-col">
-      <Modal
-        open={shiftModalOpen}
-        onClose={() => setShowShiftModalCloseConfirmation(true)}
-      >
-        <PublishShiftForm onSuccess={() => setShiftModalOpen(false)} />
-      </Modal>
       <RosterTable
-        PublishShiftButton={
-          <Hide hide={!canPublishShifts}>
-            <Button onClick={() => setShiftModalOpen(true)}>
-              Publish Shift
-            </Button>
-          </Hide>
+        controls={
+          <>
+            <Hide hide={!user || !!clockedOut}>
+              {clockedIn ? (
+                <Button variant="negative" onClick={handleClockOut}>
+                  Clock Out
+                </Button>
+              ) : (
+                <Button variant="positive" onClick={handleClockIn}>
+                  Clock In
+                </Button>
+              )}
+            </Hide>
+            <Hide hide={!canPublishShifts}>
+              <Button onClick={() => setShiftModalOpen(true)}>
+                Publish Shift
+              </Button>
+            </Hide>
+          </>
         }
       />
+      <Modal open={shiftModalOpen} onClose={() => setShiftModalOpen(false)}>
+        <PublishShiftForm onSuccess={() => setShiftModalOpen(false)} />
+      </Modal>
       <ConfirmModal
         open={showShiftModalCloseConfirmation}
         message="Are you sure you want to discard your changes?"
