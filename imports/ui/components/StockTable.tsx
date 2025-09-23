@@ -2,6 +2,8 @@ import React from "react";
 import { StockItemWithSupplier, StockItem } from "../pages/inventory/types";
 import { Pill } from "./Pill";
 import { OutOfStock, InStock, LowInStock } from "./symbols/StatusSymbols";
+import { Table, TableColumn } from "./Table";
+import { Button } from "./interaction/Button";
 
 interface StockTableProps {
   stockItems: StockItemWithSupplier[];
@@ -14,126 +16,121 @@ export const StockTable = ({
   onEdit,
   onDelete,
 }: StockTableProps) => {
-  // TODO: Make this dynamic based on user choice
   const lowInStockThreshold = 10;
 
-  if (stockItems.length == 0)
-    return (
-      <h2 className="flex-1 text-center font-bold text-xl text-red-900">
-        No inventory items
-      </h2>
-    );
+  const columns: TableColumn<StockItemWithSupplier>[] = [
+    {
+      key: "name",
+      header: "Item Name",
+      gridCol: "minmax(0,2fr)",
+      align: "left",
+      render: (item) => <span className="truncate">{item.name}</span>,
+    },
+    {
+      key: "quantity",
+      header: "Quantity",
+      gridCol: "min-content",
+      align: "right",
+      render: (item) => {
+        const stockIcon =
+          item.quantity == 0 ? (
+            <OutOfStock />
+          ) : item.quantity <= lowInStockThreshold ? (
+            <LowInStock />
+          ) : (
+            <InStock />
+          );
+
+        return (
+          <div className="flex justify-end">
+            <span className="truncate max-w-full px-1">{item.quantity}</span>
+            <span className="flex-shrink-0 self-center">{stockIcon}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "location",
+      header: "Stock Room",
+      gridCol: "1fr",
+      render: (item) => <span className="truncate">{item.location}</span>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      gridCol: "min-content",
+      render: (item) => {
+        if (item.quantity == 0) {
+          return (
+            <Pill
+              bgColour="bg-red-700"
+              borderColour="border-red-700"
+              textColour="text-white"
+            >
+              Out of Stock
+            </Pill>
+          );
+        } else if (item.quantity <= lowInStockThreshold) {
+          return (
+            <Pill
+              bgColour="bg-sky-300"
+              borderColour="border-sky-300"
+              textColour="text-white"
+            >
+              Low in Stock
+            </Pill>
+          );
+        } else {
+          return (
+            <Pill
+              bgColour="bg-green-700"
+              borderColour="border-green-700"
+              textColour="text-white"
+            >
+              In Stock
+            </Pill>
+          );
+        }
+      },
+    },
+    {
+      key: "supplier",
+      header: "Supplier",
+      gridCol: "1fr",
+      render: (item) => <span className="truncate">{item.supplier?.name}</span>,
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      gridCol: "min-content",
+      render: (item) => (
+        <div className="flex gap-2 justify-center items-center">
+          <Button
+            variant="positive"
+            onClick={() =>
+              onEdit({ ...item, supplier: item.supplier?._id ?? null })
+            }
+          >
+            Edit
+          </Button>
+          <Button
+            variant="negative"
+            onClick={() =>
+              onDelete({ ...item, supplier: item.supplier?._id ?? null })
+            }
+          >
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div id="grid-container" className="overflow-auto flex-1">
-      <div className="grid gap-y-2 text-nowrap text-center grid-cols-[minmax(0,2fr)_min-content_1fr_min-content_1fr_min-content] text-red-900">
-        <div className="bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple rounded-l-lg sticky top-0 z-1 text-left">
-          Item Name
-          <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
-        </div>
-        <div className="bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple sticky top-0 z-1">
-          Quantity
-          <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
-        </div>
-        <div className="bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple sticky top-0 z-1">
-          Stock Room
-          <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
-        </div>
-        <div className="bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple sticky top-0 z-1">
-          Status
-          <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
-        </div>
-        <div className="bg-press-up-light-purple py-1 px-2 border-y-3 border-press-up-light-purple sticky top-0 z-1">
-          Supplier
-          <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
-        </div>
-        <div className="bg-press-up-light-purple py-1 px-4 border-y-3 border-press-up-light-purple rounded-r-lg sticky top-0 z-1">
-          Actions
-        </div>
-        {stockItems.map((item, i) => {
-          const statusPill =
-            item.quantity == 0 ? (
-              <Pill
-                bgColour="bg-red-700"
-                borderColour="border-red-700"
-                textColour="text-white"
-              >
-                Out of Stock
-              </Pill>
-            ) : item.quantity <= lowInStockThreshold ? (
-              <Pill
-                bgColour="bg-sky-300"
-                borderColour="border-sky-300"
-                textColour="text-white"
-              >
-                Low in Stock
-              </Pill>
-            ) : (
-              <Pill
-                bgColour="bg-green-700"
-                borderColour="border-green-700"
-                textColour="text-white"
-              >
-                In Stock
-              </Pill>
-            );
-
-          const stockIcon =
-            item.quantity == 0 ? (
-              <OutOfStock />
-            ) : item.quantity <= lowInStockThreshold ? (
-              <LowInStock />
-            ) : (
-              <InStock />
-            );
-
-          return (
-            <React.Fragment key={i}>
-              <div className="text-left truncate relative py-1 px-2">
-                {item.name}
-                <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
-              </div>
-              <div className="relative py-1 px-2 flex justify-end">
-                <span className="truncate max-w-full px-1">
-                  {item.quantity}
-                </span>
-                <span className="flex-shrink-0 self-center">{stockIcon}</span>
-                <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
-              </div>
-              <div className="truncate relative py-1 px-2">
-                {item.location}
-                <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
-              </div>
-              <div className="relative py-1 px-2">
-                {statusPill}
-                <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
-              </div>
-              <div className="relative not-first:truncate py-1 px-2">
-                {item.supplier?.name}
-                <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
-              </div>
-              <div className="relative truncate py-1 px-2 flex gap-2 justify-center items-center">
-                <button
-                  onClick={() =>
-                    onEdit({ ...item, supplier: item.supplier?._id ?? null })
-                  }
-                  className="bg-press-up-positive-button text-white py-1 px-3 rounded-lg text-sm font-medium transition-all hover:bg-press-up-blue focus:outline-none focus:ring-2 focus:ring-rose-600 focus:ring-offset-1"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() =>
-                    onDelete({ ...item, supplier: item.supplier?._id ?? null })
-                  }
-                  className="bg-press-up-purple text-white py-1 px-3 rounded-lg text-sm font-medium transition-all hover:bg-press-up-blue focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-1"
-                >
-                  Delete
-                </button>
-              </div>
-            </React.Fragment>
-          );
-        })}
-      </div>
-    </div>
+    <Table
+      columns={columns}
+      data={stockItems}
+      emptyMessage="No inventory items"
+    />
   );
 };
