@@ -37,7 +37,11 @@ export const PosSideMenu = ({
   useSubscribe("orders");
   useSubscribe("tables");
   const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+
+  // Use sessionStorage for activeOrderId
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(() => {
+    return sessionStorage.getItem("activeOrderId") || null;
+  });
 
   // List active orders for each type
   const activeDineInOrders = useTracker(
@@ -123,8 +127,37 @@ export const PosSideMenu = ({
   }, [originalPrice, discountPercent, discountAmount]);
 
   useEffect(() => {
+    if (order?._id) {
+      sessionStorage.setItem("activeOrderId", order._id);
+    } else {
+      sessionStorage.removeItem("activeOrderId");
+    }
     onActiveOrderChange?.(order?._id ?? null);
   }, [order?._id, onActiveOrderChange]);
+
+  // Set active order
+  const setActiveOrder = (orderId: string | null) => {
+    setSelectedOrderId(orderId);
+    if (orderId) {
+      sessionStorage.setItem("activeOrderId", orderId);
+    } else {
+      sessionStorage.removeItem("activeOrderId");
+    }
+    onActiveOrderChange?.(orderId);
+  };
+
+  // Function to get lowest unpaid order depending on the order type
+  const getLowestOrderId = (type: "dine-in" | "takeaway") => {
+    const orders = OrdersCollection.find(
+      type === "dine-in"
+        ? { orderType: "dine-in", paid: false }
+        : { orderType: "takeaway", paid: false },
+      type === "dine-in"
+        ? { sort: { orderNo: 1 } }
+        : { sort: { createdAt: -1 } },
+    ).fetch();
+    return orders.length > 0 ? orders[0]._id : null;
+  };
 
   // Discount handlers
   const applyPercentDiscount = (percentage: number | string) => {
@@ -238,7 +271,10 @@ export const PosSideMenu = ({
         {/* Toggle buttons */}
         <div className="flex justify-center gap-2 mb-2 relative">
           <button
-            onClick={() => setOrderType("dine-in")}
+            onClick={() => {
+              setOrderType("dine-in");
+              setActiveOrder(getLowestOrderId("dine-in"));
+            }}
             className={`px-3 py-1 rounded-full font-semibold ${
               orderType === "dine-in"
                 ? "bg-white text-press-up-purple"
@@ -248,7 +284,10 @@ export const PosSideMenu = ({
             Dine In
           </button>
           <button
-            onClick={() => setOrderType("takeaway")}
+            onClick={() => {
+              setOrderType("takeaway");
+              setActiveOrder(getLowestOrderId("takeaway"));
+            }}
             className={`px-3 py-1 rounded-full font-semibold ${
               orderType === "takeaway"
                 ? "bg-white text-press-up-purple"
@@ -293,6 +332,11 @@ export const PosSideMenu = ({
             onChange={(e) => {
               const v = e.target.value || null;
               setSelectedOrderId(v);
+              if (v) {
+                sessionStorage.setItem("activeOrderId", v);
+              } else {
+                sessionStorage.removeItem("activeOrderId");
+              }
               onActiveOrderChange?.(v);
             }}
           >

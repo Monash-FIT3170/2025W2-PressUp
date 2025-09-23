@@ -300,7 +300,10 @@ export const TablesPage = () => {
     }
   };
 
-  const goToOrder = () => {
+  const goToOrder = (orderId?: string) => {
+    if (orderId) {
+      sessionStorage.setItem("activeOrderId", orderId);
+    }
     navigate("/pos/orders");
   };
 
@@ -590,7 +593,7 @@ export const TablesPage = () => {
                           setGrid(updated);
                           setModalType(null);
                           markChanged();
-                          goToOrder();
+                          goToOrder(String(orderId));
                         } catch (err) {
                           console.error("Error adding order:", err);
                           alert(

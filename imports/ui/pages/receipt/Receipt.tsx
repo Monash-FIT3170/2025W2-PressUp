@@ -1,26 +1,38 @@
 import React from "react";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate } from "react-router";
 import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
 
 export const ReceiptPage = () => {
-  const navigate = useNavigate(); // For navigating between PaymentModal and Receipt
-
-  const location = useLocation(); // Get URL details
-  const searchParams = new URLSearchParams(location.search); // Get URL search parameters
-  const orderNumber = searchParams.get("orderNo"); // Get order number based on URL
-
+  const navigate = useNavigate();
   useSubscribe("orders");
 
+  // Get orderId from sessionStorage
+  const orderId = sessionStorage.getItem("activeOrderId");
+
+  // Find lowest unpaid dine-in order
+  const lowestDineInOrderId = useTracker(() => {
+    const orders = OrdersCollection.find(
+      { orderType: "dine-in", paid: false },
+      { sort: { orderNo: 1 } }
+    ).fetch();
+    return orders.length > 0 ? orders[0]._id : null;
+  }, []);
+
   const handleGoBack = () => {
+    if (lowestDineInOrderId) {
+      sessionStorage.setItem("activeOrderId", lowestDineInOrderId);
+    } else {
+      sessionStorage.removeItem("activeOrderId");
+    }
     navigate("/pos/orders");
   };
 
-  // Retrieve order based on order number in URL from PaymentModal
-  const parsedOrderNumber = Number(orderNumber);
+  // Retrieve order by _id
   const order = useTracker(() => {
-    return OrdersCollection.find({ orderNo: parsedOrderNumber }).fetch()[0];
-  }, [orderNumber]);
+    if (!orderId) return null;
+    return OrdersCollection.findOne(orderId) ?? null;
+  }, [orderId]);
 
   if (!order) {
     return (
