@@ -672,6 +672,8 @@ export const TablesPage = () => {
                           });
                           setGrid(newGrid);
                           setModalType(null);
+                          markChanged();
+                          goToOrder(String(selectedMoveOrderNo));
                         }}
                       >
                         Add Order
