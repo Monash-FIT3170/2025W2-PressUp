@@ -121,7 +121,7 @@ export const OrderHistoryPage = () => {
                 borderColour="border-gray-500"
                 textColour="text-white"
               >
-                PENDING
+                Pending
               </Pill>
             );
           case "preparing":
@@ -131,7 +131,7 @@ export const OrderHistoryPage = () => {
                 borderColour="border-blue-600"
                 textColour="text-white"
               >
-                PREPARING
+                Preparing
               </Pill>
             );
           case "ready":
@@ -141,7 +141,7 @@ export const OrderHistoryPage = () => {
                 borderColour="border-yellow-600"
                 textColour="text-white"
               >
-                READY
+                Ready
               </Pill>
             );
           case "served":
@@ -151,7 +151,7 @@ export const OrderHistoryPage = () => {
                 borderColour="border-green-600"
                 textColour="text-white"
               >
-                SERVED
+                Served
               </Pill>
             );
           case "paid":
@@ -161,7 +161,7 @@ export const OrderHistoryPage = () => {
                 borderColour="border-purple-700"
                 textColour="text-white"
               >
-                READY
+                Paid
               </Pill>
             );
           default:
@@ -228,9 +228,7 @@ export const OrderHistoryPage = () => {
     <div className="flex flex-1 flex-col">
       {/* Controls */}
       <div className="flex justify-between items-center p-4 gap-2">
-        <h1 className="text-2xl font-bold text-press-up-purple">
-          Order History
-        </h1>
+        <div></div>
         <div className="flex gap-3">
           <div className="w-60">
             <Select
