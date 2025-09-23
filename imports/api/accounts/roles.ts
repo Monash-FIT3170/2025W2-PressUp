@@ -21,3 +21,17 @@ export const setupRoles = async () => {
   await Roles.addRolesToParentAsync(RoleEnum.MANAGER, RoleEnum.ADMIN);
   await Roles.addRolesToParentAsync(RoleEnum.CASUAL, RoleEnum.MANAGER);
 };
+
+export const getHighestRole = (roles: string[]): string | null => {
+  if (!roles || roles.length === 0) return null;
+
+  const roleHierarchy = Object.values(RoleEnum);
+
+  for (const role of roleHierarchy) {
+    if (roles.includes(role)) {
+      return role;
+    }
+  }
+
+  return roles[0];
+};

@@ -117,7 +117,7 @@ export const OrderHistoryPage = () => {
               borderColour="border-green-700"
               textColour="text-white"
             >
-              SERVED
+              Served
             </Pill>
           );
         } else if (row.status === "ready") {
@@ -127,7 +127,7 @@ export const OrderHistoryPage = () => {
               borderColour="border-yellow-600"
               textColour="text-white"
             >
-              READY
+              Ready
             </Pill>
           );
         } else if (row.status === "preparing") {
@@ -137,7 +137,7 @@ export const OrderHistoryPage = () => {
               borderColour="border-blue-600"
               textColour="text-white"
             >
-              PREPARING
+              Preparing
             </Pill>
           );
         } else {
@@ -147,7 +147,7 @@ export const OrderHistoryPage = () => {
               borderColour="border-gray-600"
               textColour="text-white"
             >
-              PENDING
+              Pending
             </Pill>
           );
         }
@@ -203,9 +203,7 @@ export const OrderHistoryPage = () => {
     <div className="flex flex-1 flex-col">
       {/* Controls bar */}
       <div className="flex justify-between items-center p-4 gap-2">
-        <h1 className="text-2xl font-bold text-press-up-purple">
-          Order History
-        </h1>
+        <div></div>
         <div className="flex gap-3">
           <div className="w-60">
             <Select
