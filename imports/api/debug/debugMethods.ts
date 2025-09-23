@@ -74,7 +74,7 @@ Meteor.methods({
         "Only admins can perform debug operations",
       );
     }
-    await mockSuppliers(10);
+    await mockSuppliers(30);
   }),
 
   "debug.mockPurchaseOrders": requireLoginMethod(async function () {
@@ -84,7 +84,7 @@ Meteor.methods({
         "Only admins can perform debug operations",
       );
     }
-    await mockPurchaseOrders(10);
+    await mockPurchaseOrders(100);
   }),
 
   "debug.mockTables": requireLoginMethod(async function () {
