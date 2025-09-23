@@ -6,7 +6,9 @@ import { Modal } from "../../components/Modal";
 import { AddSupplierForm } from "../../components/AddSupplierForm";
 import { SearchBar } from "../../components/SearchBar";
 import { SupplierTable } from "../../components/SupplierTable";
+import { SupplierInfo } from "../../components/SupplierInfo";
 import { ConfirmModal } from "../../components/ConfirmModal";
+import { Button } from "../../components/interaction/Button";
 
 export const SuppliersPage = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -19,6 +21,9 @@ export const SuppliersPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirm, setConfirm] = useState<"cancel" | "delete" | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
+    null,
+  );
 
   const isLoadingSuppliers = useSubscribe("suppliers");
   const isLoadingStockItems = useSubscribe("stockItems.all");
@@ -40,28 +45,37 @@ export const SuppliersPage = () => {
 
   const handleSuccess = () => handleModalClose();
 
+  const handleSupplierClick = (supplier: Supplier) => {
+    setSelectedSupplier(supplier);
+  };
+
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col h-full">
       <div className="flex justify-between items-center p-4 gap-2">
         <div className="relative w-full">
           <SearchBar onSearch={setSearchTerm} initialSearchTerm={searchTerm} />
         </div>
-        <button
-          onClick={() => setOpen(true)}
-          className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-press-up-purple text-white cursor-pointer w-right-2 hover:bg-press-up-purple"
-        >
+        <Button variant="positive" onClick={() => setOpen(true)}>
           Add Supplier
-        </button>
+        </Button>
       </div>
 
-      <div
-        id="supplier-container"
-        className="flex flex-1 flex-col overflow-auto"
-      >
-        {isLoadingSuppliers() || isLoadingStockItems() ? (
-          <p className="text-gray-400 p-4">Loading suppliers...</p>
-        ) : (
-          <SupplierTable suppliers={filteredSuppliers} />
+      <div className="flex flex-1 flex-col min-h-0">
+        <div className={`min-h-0 ${selectedSupplier ? "flex-1" : "flex-1"}`}>
+          {isLoadingSuppliers() || isLoadingStockItems() ? (
+            <p className="text-gray-400 p-4">Loading suppliers...</p>
+          ) : (
+            <SupplierTable
+              suppliers={filteredSuppliers}
+              onSupplierClick={handleSupplierClick}
+            />
+          )}
+        </div>
+
+        {selectedSupplier && (
+          <div className="flex-1 border-t-2 border-gray-300 bg-white overflow-hidden">
+            <SupplierInfo supplier={selectedSupplier} />
+          </div>
         )}
       </div>
 
@@ -85,9 +99,6 @@ export const SuppliersPage = () => {
           if (confirm === "cancel") {
             handleModalClose();
           }
-          //  else if (confirm === "delete") {
-          //   handleDelete();
-          // }
           setShowConfirmation(false);
           setConfirm(null);
         }}
