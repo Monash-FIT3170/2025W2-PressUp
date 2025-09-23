@@ -300,12 +300,8 @@ export const TablesPage = () => {
     }
   };
 
-  const goToOrder = (tableNo?: number) => {
-    if (tableNo !== null) {
-      navigate(`/pos/orders?tableNo=${tableNo}`);
-    } else {
-      navigate("/pos/orders");
-    }
+  const goToOrder = () => {
+    navigate("/pos/orders");
   };
 
   // initialize modal-local fields from snapshot when opening edit modal
@@ -594,7 +590,7 @@ export const TablesPage = () => {
                           setGrid(updated);
                           setModalType(null);
                           markChanged();
-                          goToOrder(editTableData!.tableNo);
+                          goToOrder();
                         } catch (err) {
                           console.error("Error adding order:", err);
                           alert(
