@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { Supplier } from "/imports/api/suppliers/SuppliersCollection";
 import { StockItemsCollection } from "/imports/api/stockItems/StockItemsCollection";
 import { PurchaseOrdersCollection } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
-import { InfoSymbol, Cross } from "./symbols/GeneralSymbols";
+import { InfoSymbol } from "./symbols/GeneralSymbols";
 import { Modal } from "./Modal";
 import { PurchaseOrderForm } from "./PurchaseOrderForm";
 import { Table, TableColumn } from "./Table";
 import { Button } from "./interaction/Button";
+import { SmallPill } from "./SmallPill";
 import { Meteor } from "meteor/meteor";
 import { IdType } from "/imports/api/database";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
@@ -118,20 +119,13 @@ export const SupplierTable = ({
         return (
           <div className="flex flex-wrap gap-1">
             {supplierItems.map((item, itemIndex) => (
-              <span
+              <SmallPill
                 key={itemIndex}
-                className="bg-press-up-purple text-white rounded-sm text-xs px-2 py-1 inline-flex items-center"
+                onClose={() => removeItemFromSupplier(item._id)}
+                closeTitle="Remove from supplier"
               >
                 {item.name}
-                <button
-                  className="ml-2 cursor-pointer hover:bg-red-600 rounded-full p-1 transition-colors flex items-center justify-center"
-                  onClick={() => removeItemFromSupplier(item._id)}
-                  title="Remove from supplier"
-                  style={{ width: "16px", height: "16px" }}
-                >
-                  <Cross height="8px" width="8px" viewBox="0 0 14 14" />
-                </button>
-              </span>
+              </SmallPill>
             ))}
           </div>
         );
