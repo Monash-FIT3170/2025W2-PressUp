@@ -46,7 +46,7 @@ Meteor.methods({
         {},
         { sort: { orderNo: -1 }, limit: 1 },
       ).fetchAsync();
-      let nextOrderNo = 1;
+      let nextOrderNo = 1001;
       if (lastOrder.length > 0 && typeof lastOrder[0].orderNo === "number") {
         nextOrderNo = lastOrder[0].orderNo + 1;
       }
