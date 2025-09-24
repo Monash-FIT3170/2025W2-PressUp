@@ -42,6 +42,7 @@ export const KitchenManagement = () => {
         _id: doc._id,
         orderNo: doc.orderNo,
         tableNo: doc.tableNo ?? null,
+        orderType: doc.orderType,
         createdAt: new Date(doc.createdAt).toLocaleTimeString().toUpperCase(),
         createdAtMs: created.getTime(),
         status: doc.orderStatus,

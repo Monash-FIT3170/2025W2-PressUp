@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Meteor } from "meteor/meteor";
 import { MenuItem } from "/imports/api";
-import { OrderMenuItem } from "/imports/api/orders/OrdersCollection";
+import { OrderMenuItem, OrderType } from "/imports/api/orders/OrdersCollection";
 import { PaymentModal } from "./PaymentModal";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Order, OrdersCollection } from "/imports/api";
@@ -36,7 +36,9 @@ export const PosSideMenu = ({
   // Fetch the current order for this table
   useSubscribe("orders");
   useSubscribe("tables");
-  const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
+  const [orderType, setOrderType] = useState<
+    OrderType.DineIn | OrderType.Takeaway
+  >(OrderType.DineIn);
 
   // Use sessionStorage for activeOrderId
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(() => {
@@ -47,7 +49,7 @@ export const PosSideMenu = ({
   const activeDineInOrders = useTracker(
     () =>
       OrdersCollection.find(
-        { orderType: "dine-in", paid: false },
+        { orderType: OrderType.DineIn, paid: false },
         { sort: { orderNo: 1 } },
       ).fetch(),
     [],
@@ -55,7 +57,7 @@ export const PosSideMenu = ({
   const activeTakeawayOrders = useTracker(
     () =>
       OrdersCollection.find(
-        { orderType: "takeaway", paid: false },
+        { orderType: OrderType.Takeaway, paid: false },
         { sort: { createdAt: -1 } },
       ).fetch(),
     [],
@@ -147,11 +149,11 @@ export const PosSideMenu = ({
   };
 
   // Function to get lowest unpaid order depending on the order type
-  const getLowestOrderId = (type: "dine-in" | "takeaway") => {
+  const getLowestOrderId = (type: OrderType.DineIn | OrderType.Takeaway) => {
     const orders = OrdersCollection.find(
-      type === "dine-in"
-        ? { orderType: "dine-in", paid: false }
-        : { orderType: "takeaway", paid: false },
+      type === OrderType.DineIn
+        ? { orderType: OrderType.DineIn, paid: false }
+        : { orderType: OrderType.Takeaway, paid: false },
       type === "dine-in"
         ? { sort: { orderNo: 1 } }
         : { sort: { createdAt: -1 } },
@@ -272,8 +274,8 @@ export const PosSideMenu = ({
         <div className="flex justify-center gap-2 mb-2 relative">
           <button
             onClick={() => {
-              setOrderType("dine-in");
-              setActiveOrder(getLowestOrderId("dine-in"));
+              setOrderType(OrderType.DineIn);
+              setActiveOrder(getLowestOrderId(OrderType.DineIn));
             }}
             className={`px-3 py-1 rounded-full font-semibold ${
               orderType === "dine-in"
@@ -285,8 +287,8 @@ export const PosSideMenu = ({
           </button>
           <button
             onClick={() => {
-              setOrderType("takeaway");
-              setActiveOrder(getLowestOrderId("takeaway"));
+              setOrderType(OrderType.Takeaway);
+              setActiveOrder(getLowestOrderId(OrderType.Takeaway));
             }}
             className={`px-3 py-1 rounded-full font-semibold ${
               orderType === "takeaway"
@@ -341,7 +343,7 @@ export const PosSideMenu = ({
             }}
           >
             <option value="">Select Order</option>
-            {(orderType === "dine-in"
+            {(orderType === OrderType.DineIn
               ? activeDineInOrders
               : activeTakeawayOrders
             ).map((o) => (
@@ -703,7 +705,9 @@ export const PosSideMenu = ({
             <div className="my-4">
               <PaymentModal
                 tableNo={
-                  order.orderType === "dine-in" ? (order.tableNo ?? null) : null
+                  order.orderType === OrderType.DineIn
+                    ? (order.tableNo ?? null)
+                    : null
                 }
                 order={order}
               />
