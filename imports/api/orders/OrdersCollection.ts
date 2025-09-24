@@ -2,8 +2,6 @@ import { Mongo } from "meteor/mongo";
 import { DBEntry, OmitDB, IdType } from "../database";
 import { MenuItem } from "../menuItems/MenuItemsCollection";
 
-export type OrderType = "dine-in" | "takeaway";
-
 // OrderMenuItem reuses MenuItem shape but _id may be optional when created client-side
 export type OrderMenuItem = Omit<MenuItem, "_id"> & {
   _id?: IdType;
@@ -31,6 +29,11 @@ export enum OrderStatus {
   Preparing = "preparing",
   Ready = "ready",
   Served = "served",
+}
+
+export enum OrderType {
+  DineIn = "dine-in",
+  Takeaway = "takeaway",
 }
 
 export const OrdersCollection = new Mongo.Collection<OmitDB<Order>, Order>(

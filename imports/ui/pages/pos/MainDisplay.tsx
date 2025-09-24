@@ -47,7 +47,6 @@ export const MainDisplay = () => {
     return matchesName && matchesCategory && isAvailable;
   });
 
-
   // Update order status (accept partial updates)
   const updateOrderInDb = (updatedFields: Partial<Order>) => {
     if (!order || !order._id) return;

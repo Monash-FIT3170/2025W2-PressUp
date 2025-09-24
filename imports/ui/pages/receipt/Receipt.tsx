@@ -1,7 +1,10 @@
 import React from "react";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { useNavigate } from "react-router";
-import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
+import {
+  OrdersCollection,
+  OrderType,
+} from "/imports/api/orders/OrdersCollection";
 
 export const ReceiptPage = () => {
   const navigate = useNavigate();
@@ -13,8 +16,8 @@ export const ReceiptPage = () => {
   // Find lowest unpaid dine-in order
   const lowestDineInOrderId = useTracker(() => {
     const orders = OrdersCollection.find(
-      { orderType: "dine-in", paid: false },
-      { sort: { orderNo: 1 } }
+      { orderType: OrderType.DineIn, paid: false },
+      { sort: { orderNo: 1 } },
     ).fetch();
     return orders.length > 0 ? orders[0]._id : null;
   }, []);
@@ -70,8 +73,10 @@ export const ReceiptPage = () => {
           <div className="flex justify-between mb-2">
             <p>Order No: {order.orderNo}</p>
             <p>
-              {order.tableNo != null
-                ? `Table No: ${order.tableNo}`
+              {order.orderType == OrderType.DineIn
+                ? order.tableNo == null
+                  ? "Dine-In"
+                  : `Table No: ${order.tableNo}`
                 : "Takeaway"}
             </p>
           </div>

@@ -5,6 +5,7 @@ import {
   OrderMenuItem,
   OrdersCollection,
   OrderStatus,
+  OrderType,
 } from "./OrdersCollection";
 
 export const mockOrders = async (count: number) => {
@@ -62,7 +63,7 @@ export const mockOrders = async (count: number) => {
 
     const orderID = await OrdersCollection.insertAsync({
       orderNo: nextOrderNo,
-      orderType: "dine-in",
+      orderType: OrderType.DineIn,
       tableNo,
       menuItems: items,
       totalPrice: total,
@@ -91,7 +92,7 @@ export const mockOrders = async (count: number) => {
 
     await OrdersCollection.insertAsync({
       orderNo: nextOrderNo,
-      orderType: "takeaway",
+      orderType: OrderType.Takeaway,
       tableNo: null,
       menuItems: items,
       totalPrice: total,

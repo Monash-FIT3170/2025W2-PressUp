@@ -3,7 +3,10 @@ import React, { useEffect, useState } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { TablesCollection } from "/imports/api/tables/TablesCollection";
-import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
+import {
+  OrdersCollection,
+  OrderType,
+} from "/imports/api/orders/OrdersCollection";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useNavigate } from "react-router";
@@ -623,7 +626,7 @@ export const TablesPage = () => {
                           .filter(
                             (o) =>
                               !o.paid &&
-                              o.orderType === "dine-in" &&
+                              o.orderType === OrderType.DineIn &&
                               o.tableNo === null,
                           )
                           .map((o) => (
