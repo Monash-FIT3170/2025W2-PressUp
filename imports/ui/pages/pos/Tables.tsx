@@ -542,7 +542,38 @@ export const TablesPage = () => {
                   </>
                 )}
                 {/* Top row: Occupied toggle */}
-                <div className="flex items-center gap-2 mb-3 justify-end">
+                <div
+                  className={`flex items-center gap-2 mb-3 ${
+                    tablesFromDb.find(
+                      (t) =>
+                        t.tableNo === editTableData!.tableNo && t.activeOrderID,
+                    )
+                      ? "justify-between"
+                      : "justify-end"
+                  }`}
+                >
+                  {/* Go to Order button (only displays for Table which has an active order) */}
+                  {(() => {
+                    const order = editTableData?.activeOrderID
+                      ? orders.find(
+                          (o) => o._id === editTableData.activeOrderID,
+                        )
+                      : null;
+                    if (!order) return null;
+                    return (
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            goToOrder(String(editTableData?.activeOrderID));
+                          }}
+                          variant="positive"
+                        >
+                          {`Go to Order #${order.orderNo}`}
+                        </Button>
+                      </div>
+                    );
+                  })()}
                   {/* Occupied/Vacant Toggle */}
                   <div className="flex gap-2">
                     <Button
