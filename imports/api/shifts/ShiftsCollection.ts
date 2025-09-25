@@ -1,11 +1,5 @@
 import { Mongo } from "meteor/mongo";
 import { DBEntry, OmitDB } from "../database";
-import { NumbersToN } from "ts-number-range";
-
-export type ShiftTime = {
-  hour: NumbersToN<24>;
-  minute: NumbersToN<60>;
-};
 
 export enum ShiftStatus {
   SCHEDULED = "scheduled",

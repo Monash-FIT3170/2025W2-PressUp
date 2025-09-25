@@ -1,10 +1,9 @@
 import { check } from "meteor/check";
 import { Meteor } from "meteor/meteor";
 import { requireLoginMethod } from "../accounts/wrappers";
-import { ShiftsCollection, ShiftStatus, ShiftTime } from "./ShiftsCollection";
+import { ShiftsCollection, ShiftStatus } from "./ShiftsCollection";
 import { Roles } from "meteor/alanning:roles";
 import { RoleEnum } from "../accounts/roles";
-import { NumbersToN } from "ts-number-range";
 
 Meteor.methods({
   "shifts.schedule": requireLoginMethod(async function ({
@@ -134,45 +133,29 @@ Meteor.methods({
     }
 
     const now = new Date();
-    const todayStart = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
-    const tomorrowStart = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + 1,
-    );
 
-    const nowShiftTime: ShiftTime = {
-      hour: now.getHours() as NumbersToN<24>,
-      minute: now.getMinutes() as NumbersToN<60>,
-    };
-
-    const scheduled = await ShiftsCollection.findOneAsync({
+    // Update overlapping shift condition
+    const overlappingShift = await ShiftsCollection.findOneAsync({
       user: userId,
       status: ShiftStatus.SCHEDULED,
-      date: { $gte: todayStart, $lt: tomorrowStart },
+      start: { $lte: now },
+      end: { $gte: now },
     });
 
-    if (scheduled) {
-      return await ShiftsCollection.updateAsync(scheduled._id, {
-        start: nowShiftTime,
-        end: scheduled.end
-          ? scheduled.end.hour < nowShiftTime.hour &&
-            scheduled.end.minute < nowShiftTime.minute
+    if (overlappingShift) {
+      return await ShiftsCollection.updateAsync(overlappingShift._id, {
+        start: now,
+        end:
+          overlappingShift.end && overlappingShift.end <= now
             ? null
-            : scheduled.end
-          : scheduled.end,
+            : overlappingShift.end,
         status: ShiftStatus.CLOCKED_IN,
       });
     }
 
     return await ShiftsCollection.insertAsync({
       user: userId,
-      date: todayStart,
-      start: nowShiftTime,
+      start: now,
       end: null,
       status: ShiftStatus.CLOCKED_IN,
     });
@@ -197,24 +180,31 @@ Meteor.methods({
 
     const now = new Date();
 
-    const isToday =
-      active.date.getFullYear() === now.getFullYear() &&
-      active.date.getMonth() === now.getMonth() &&
-      active.date.getDate() === now.getDate();
+    // Remove overlapping shifts
+    const overlappingShifts = await ShiftsCollection.find({
+      user: userId,
+      $or: [
+        {
+          start: { $gte: active.start, $lte: now },
+        },
+        {
+          end: { $gte: active.start, $lte: now },
+        },
+        {
+          start: { $lte: active.start },
+          end: { $gte: now },
+        },
+      ],
+    }).fetchAsync();
 
-    const endTime: ShiftTime = isToday
-      ? {
-          hour: now.getHours() as NumbersToN<24>,
-          minute: now.getMinutes() as NumbersToN<60>,
-        }
-      : {
-          hour: 23 as NumbersToN<24>,
-          minute: 59 as NumbersToN<60>,
-        };
+    for (const shift of overlappingShifts.filter((s) => s._id !== active._id)) {
+      await ShiftsCollection.removeAsync(shift._id);
+    }
 
+    // Update active shift
     await ShiftsCollection.updateAsync(active._id, {
       $set: {
-        end: endTime,
+        end: now,
         status: ShiftStatus.CLOCKED_OUT,
       },
     });
