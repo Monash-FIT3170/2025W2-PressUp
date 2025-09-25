@@ -227,28 +227,25 @@ export const OrderHistoryPage = () => {
   return (
     <div className="flex flex-1 flex-col">
       {/* Controls */}
-      <div className="flex justify-between items-center p-4 gap-2">
-        <div></div>
-        <div className="flex gap-3">
-          <div className="w-60">
-            <Select
-              value={statusFilter}
-              onChange={(e) =>
-                setStatusFilter(e.target.value as "served" | "paid" | "all")
-              }
-            >
-              <option value="served">Served only</option>
-              <option value="paid">Paid only</option>
-              <option value="all">All statuses</option>
-            </Select>
-          </div>
-          <div className="w-80">
-            <Input
-              placeholder="Search (order/table/item)"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-          </div>
+      <div className="flex items-center p-4 gap-3">
+        <div className="w-60">
+          <Select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as "served" | "paid" | "all")
+            }
+          >
+            <option value="served">Served only</option>
+            <option value="paid">Paid only</option>
+            <option value="all">All statuses</option>
+          </Select>
+        </div>
+        <div className="flex-1">
+          <Input
+            placeholder="Search (order/table/item)"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
         </div>
       </div>
 
