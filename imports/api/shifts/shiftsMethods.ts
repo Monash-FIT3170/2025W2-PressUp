@@ -222,45 +222,6 @@ Meteor.methods({
     return active._id;
   }),
 
-  "shifts.getPayForShift": requireLoginMethod(async function (shiftId: string) {
-    check(shiftId, String);
-
-    // Find the shift
-    const shift = await ShiftsCollection.findOneAsync(shiftId);
-    if (!shift) {
-      throw new Meteor.Error("shift-not-found", "Shift not found");
-    }
-
-    if (!shift.end) {
-      return 0;
-    }
-
-    // Find the user linked to the shift
-    const user = (await Meteor.users.findOneAsync(
-      { _id: shift.user },
-      { fields: { payRate: 1 } },
-    )) as any;
-
-    const payRate = user?.payRate ?? 0;
-
-    // Calculate shift duration in hours
-    const startMinutes = shift.start.hour * 60 + shift.start.minute;
-    const endMinutes = shift.end.hour * 60 + shift.end.minute;
-    const durationMinutes = endMinutes - startMinutes;
-
-    if (durationMinutes <= 0) {
-      throw new Meteor.Error(
-        "invalid-shift-duration",
-        "Shift duration invalid",
-      );
-    }
-
-    const durationHours = durationMinutes / 60;
-
-    // Return pay = hours × payRate
-    return payRate * durationHours;
-  }),
-
   "shifts.getAll"() {
     if (!this.userId) {
       throw new Meteor.Error("Not authorized");
