@@ -1,4 +1,4 @@
-import { check, Match } from "meteor/check";
+import { check } from "meteor/check";
 import { Meteor } from "meteor/meteor";
 import { requireLoginMethod } from "../accounts/wrappers";
 import { ShiftsCollection, ShiftStatus, ShiftTime } from "./ShiftsCollection";
@@ -6,43 +6,19 @@ import { Roles } from "meteor/alanning:roles";
 import { RoleEnum } from "../accounts/roles";
 import { NumbersToN } from "ts-number-range";
 
-const ShiftTimePattern = Match.Where((v: unknown): v is ShiftTime => {
-  const valid =
-    typeof v === "object" &&
-    v !== null &&
-    "hour" in v &&
-    "minute" in v &&
-    typeof (v as { hour: unknown }).hour === "number" &&
-    Number.isInteger((v as { hour: unknown }).hour) &&
-    (v as { hour: number }).hour >= 0 &&
-    (v as { hour: number }).hour <= 23 &&
-    typeof (v as { minute: unknown }).minute === "number" &&
-    Number.isInteger((v as { minute: unknown }).minute) &&
-    (v as { minute: number }).minute >= 0 &&
-    (v as { minute: number }).minute <= 59;
-
-  if (!valid) {
-    throw new Meteor.Error("invalid-shift-time", "Invalid hour/minute");
-  }
-  return true;
-});
-
 Meteor.methods({
   "shifts.schedule": requireLoginMethod(async function ({
     userId,
-    date,
     start,
     end,
   }: {
     userId: string;
-    date: Date;
-    start: ShiftTime;
-    end: ShiftTime;
+    start: Date;
+    end: Date;
   }) {
     check(userId, String);
-    check(date, Date);
-    check(start, ShiftTimePattern);
-    check(end, ShiftTimePattern);
+    check(start, Date);
+    check(end, Date);
 
     if (!(await Roles.userIsInRoleAsync(Meteor.userId(), [RoleEnum.MANAGER]))) {
       throw new Meteor.Error(
@@ -59,44 +35,78 @@ Meteor.methods({
       throw new Meteor.Error("invalid-user", "No user found with the given ID");
     }
 
-    if (!(date instanceof Date) || isNaN(date.getTime())) {
-      throw new Meteor.Error("invalid-date", "Date is invalid");
-    }
-
-    if (
-      end.hour < start.hour ||
-      (end.hour === start.hour && end.minute <= start.minute)
-    ) {
+    if (end <= start) {
       throw new Meteor.Error(
         "invalid-time-range",
         "End time must be after start time",
       );
     }
 
-    // Check if user already has a shift on this date
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const existingShift = await ShiftsCollection.findOneAsync({
+    // Error if there is an overlapping shift with a non-schedule status
+    const trueOverlaps = await ShiftsCollection.find({
       user: userId,
-      date: {
-        $gte: startOfDay,
-        $lte: endOfDay,
-      },
-    });
+      start: { $lt: end },
+      end: { $gt: start },
+      status: { $ne: ShiftStatus.SCHEDULED },
+    }).fetchAsync();
 
-    if (existingShift) {
+    if (trueOverlaps.length > 0) {
       throw new Meteor.Error(
-        "shift-already-exists",
-        "User already has a shift scheduled for this day",
+        "shift-overlap-error",
+        "Cannot schedule shift that overlaps with non-scheduled shifts",
       );
+    }
+
+    // Find scheduled shifts that overlap (within 1 minute) for merging
+    const existingShifts = await ShiftsCollection.find({
+      user: userId,
+      status: ShiftStatus.SCHEDULED,
+      $or: [
+        // Real overlaps
+        {
+          start: { $lt: end },
+          end: { $gt: start },
+        },
+        // Within 1 minute
+        {
+          end: {
+            $gte: new Date(start.getTime() - 60000),
+            $lte: new Date(start.getTime() + 60000),
+          },
+        },
+        {
+          start: {
+            $gte: new Date(end.getTime() - 60000),
+            $lte: new Date(end.getTime() + 60000),
+          },
+        },
+      ],
+    }).fetchAsync();
+
+    // Merge overlapping shifts
+    if (existingShifts.length > 0) {
+      const allShifts = [...existingShifts, { start, end }];
+      const mergedStart = new Date(
+        Math.min(...allShifts.map((s) => s.start.getTime())),
+      );
+      const mergedEnd = new Date(
+        Math.max(...allShifts.map((s) => s.end!.getTime())),
+      );
+
+      for (const shift of existingShifts) {
+        await ShiftsCollection.removeAsync(shift._id);
+      }
+
+      return await ShiftsCollection.insertAsync({
+        user: userId,
+        start: mergedStart,
+        end: mergedEnd,
+        status: ShiftStatus.SCHEDULED,
+      });
     }
 
     return await ShiftsCollection.insertAsync({
       user: userId,
-      date,
       start,
       end,
       status: ShiftStatus.SCHEDULED,
