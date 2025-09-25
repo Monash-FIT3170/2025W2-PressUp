@@ -221,12 +221,4 @@ Meteor.methods({
 
     return active._id;
   }),
-
-  "shifts.getAll"() {
-    if (!this.userId) {
-      throw new Meteor.Error("Not authorized");
-    }
-
-    return ShiftsCollection.find().fetch();
-  },
 });
