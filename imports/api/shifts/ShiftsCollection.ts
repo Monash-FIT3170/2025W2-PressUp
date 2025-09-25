@@ -15,9 +15,8 @@ export enum ShiftStatus {
 
 export interface Shift extends DBEntry {
   user: string;
-  date: Date;
-  start: ShiftTime;
-  end: ShiftTime | null;
+  start: Date;
+  end: Date | null;
   status: ShiftStatus;
 }
 
