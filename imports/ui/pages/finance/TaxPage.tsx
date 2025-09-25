@@ -25,6 +25,7 @@ import { Trash } from "lucide-react";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { DeductionsCollection } from "/imports/api/tax/DeductionsCollection";
+import { ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
 import { calculateShiftPay } from "/imports/api/shifts/shiftsHelpers";
 
 interface FinancialDataField {
@@ -55,6 +56,9 @@ export const TaxPage = () => {
   useSubscribe("deductions");
   const deductions = useTracker(() => DeductionsCollection.find().fetch());
 
+  useSubscribe("shifts.all");
+  const shifts = useTracker(() => ShiftsCollection.find().fetch());
+
   const [selectedMetric, setSelectedMetric] = useState<
     "incomeTax" | "payrollTax" | "GSTCollected" | "GSTPaid"
   >("incomeTax");
@@ -75,7 +79,6 @@ export const TaxPage = () => {
   // Fetch data once
   const [orders, setOrders] = useState<any[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<any[]>([]);
-  const [shifts, setShifts] = useState<any[]>([]);
 
   useEffect(() => {
     setPageTitle("Finance - Tax Management");
@@ -84,10 +87,8 @@ export const TaxPage = () => {
       const fetchedPOs = (await Meteor.callAsync(
         "purchaseOrders.getAll",
       )) as any[];
-      const fetchedShifts = (await Meteor.callAsync("shifts.getAll")) as any[];
       setOrders(fetchedOrders);
       setPurchaseOrders(fetchedPOs);
-      setShifts(fetchedShifts);
     };
     fetchData();
   }, [setPageTitle]);
@@ -140,11 +141,16 @@ export const TaxPage = () => {
   );
   const filteredShifts = useMemo(
     () =>
-      shifts.filter(
-        (s) =>
-          (s.date instanceof Date ? s.date : new Date(s.date)) >= start &&
-          (s.date instanceof Date ? s.date : new Date(s.date)) <= end,
-      ),
+      shifts.filter((s) => {
+        const shiftStart =
+          s.start instanceof Date ? s.start : new Date(s.start);
+        const shiftEnd = s.end
+          ? s.end instanceof Date
+            ? s.end
+            : new Date(s.end)
+          : new Date();
+        return shiftStart <= end && shiftEnd >= start;
+      }),
     [shifts, start, end],
   );
 
