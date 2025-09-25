@@ -25,6 +25,7 @@ import { Trash } from "lucide-react";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { DeductionsCollection } from "/imports/api/tax/DeductionsCollection";
+import { calculateShiftPay } from "/imports/api/shifts/shiftsHelpers";
 
 interface FinancialDataField {
   title: string;
@@ -222,14 +223,23 @@ export const TaxPage = () => {
     (async () => {
       let payTotal = 0;
       const payByDate: Record<string, number> = {};
+
+      const users: Record<string, number> = {};
+      for (const userId of [...new Set(filteredShifts.map((s) => s.user))]) {
+        const user = (await Meteor.users.findOneAsync(
+          { _id: userId },
+          { fields: { payRate: 1 } },
+        )) as any;
+        users[userId] = user?.payRate ?? 0;
+      }
+
       for (const s of filteredShifts) {
-        const pay = Number(
-          (await Meteor.callAsync("shifts.getPayForShift", s._id)) ?? 0,
-        );
+        const payRate = users[s.user] ?? 0;
+        const pay = calculateShiftPay(s, payRate);
         const tax = pay * 0.0485;
         payTotal += pay;
         const dateKey = format(
-          s.date instanceof Date ? s.date : new Date(s.date),
+          s.start instanceof Date ? s.start : new Date(s.start),
           dateRange === "year" ? "MMM" : "dd/MM",
         );
         payByDate[dateKey] = (payByDate[dateKey] || 0) + tax;
