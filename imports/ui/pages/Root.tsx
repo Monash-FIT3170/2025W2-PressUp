@@ -18,11 +18,11 @@ export const RootPage = () => {
       <header>
         <Header onHamburgerClick={() => setMenuOpen(!menuOpen)} />
       </header>
-      <div className="flex-1 flex flex-rows overflow-hidden">
+      <div className="flex-1 flex flex-row overflow-hidden">
         <nav>
           <NavigationMenu show={menuOpen} />
         </nav>
-        <main className="flex flex-1 ps-8 pt-4">
+        <main className="flex flex-1 flex-col ps-8 pt-4">
           <Outlet />
         </main>
       </div>

@@ -2,9 +2,9 @@ import { Mongo } from "meteor/mongo";
 import { DBEntry, OmitDB } from "../database";
 
 export enum ShiftStatus {
-  SCHEDULED = "scheduled",
-  CLOCKED_IN = "clocked_in",
-  CLOCKED_OUT = "clocked_out",
+  SCHEDULED = "Scheduled",
+  CLOCKED_IN = "Clocked In",
+  CLOCKED_OUT = "Clocked Out",
 }
 
 export interface Shift extends DBEntry {
