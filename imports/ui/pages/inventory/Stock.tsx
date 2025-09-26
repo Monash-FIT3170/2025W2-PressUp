@@ -106,7 +106,7 @@ export const StockPage = () => {
           Add Item
         </button>
       </div>
-      <div id="stock" className="flex flex-1 flex-col overflow-auto">
+      <div id="stock" className="flex flex-1 flex-col min-h-0">
         {isLoadingStockItems() || isLoadingSuppliers() ? (
           <p className="text-gray-400 p-4">Loading inventory...</p>
         ) : (
