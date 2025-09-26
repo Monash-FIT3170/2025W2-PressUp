@@ -5,7 +5,7 @@ const Divider = () => (
   <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
 );
 
-export interface TableColumn<T = any> {
+export interface TableColumn<T> {
   key: string;
   header: React.ReactNode;
   gridCol: string;
@@ -13,7 +13,7 @@ export interface TableColumn<T = any> {
   render: (item: T, index: number) => React.ReactNode;
 }
 
-interface TableProps<T = any> {
+interface TableProps<T> {
   columns: TableColumn<T>[];
   data: T[];
   emptyMessage?: string;
