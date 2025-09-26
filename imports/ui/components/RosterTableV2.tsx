@@ -18,12 +18,12 @@ interface RosterTableProps {
 
 const statusColour = (status: ShiftStatus) => {
   switch (status) {
-    case ShiftStatus.CLOCKED_IN:
+    case ShiftStatus.SCHEDULED:
       return "bg-blue-100";
     case ShiftStatus.CLOCKED_IN:
-      return "bg-red-100";
-    case ShiftStatus.CLOCKED_OUT:
       return "bg-green-100";
+    case ShiftStatus.CLOCKED_OUT:
+      return "bg-red-100";
     default:
       return "bg-gray-300";
   }
@@ -123,13 +123,15 @@ export const RosterTableV2 = ({
   return (
     <div className="h-full flex flex-col">
       {/* Sticky header with day indicators */}
-      <div className="flex items-center shrink-0">
-        <div className="w-36 flex items-center justify-center">Staff</div>
-        <div className="flex-1 h-full relative">
+      <div className="flex shrink-0 sticky top-0 z-10">
+        <div className="w-36 bg-press-up-light-purple py-1 px-2 border-y-2 border-press-up-light-purple rounded-l-lg flex items-center justify-center font-bold text-red-900">
+          Staff
+        </div>
+        <div className="flex-1 relative bg-press-up-light-purple border-y-2 border-press-up-light-purple rounded-r-lg">
           {headerDays.map((day, index) => (
             <div
               key={index}
-              className="absolute flex items-center"
+              className="absolute flex items-center py-1 px-1 font-bold text-red-900 text-sm"
               style={{ left: `${day.leftPercent}%` }}
             >
               {day.label}
@@ -141,14 +143,20 @@ export const RosterTableV2 = ({
       {/* Staff rows */}
       <div className="flex-1 overflow-y-auto">
         {timelineData.map((staffMember) => (
-          <div key={staffMember.id} className="flex items-center shrink-0 h-16">
-            <div className="w-36 truncate">{staffMember.name}</div>
+          <div
+            key={staffMember.id}
+            className="flex items-center h-16 border-b border-gray-200"
+          >
+            <div className="w-36 px-4 py-1 font-medium text-red-900 relative flex items-center h-16">
+              <span className="truncate">{staffMember.name}</span>
+              <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
+            </div>
 
-            <div className="flex-1 h-full relative">
+            <div className="flex-1 h-full relative bg-gray-50">
               {headerDays.slice(1).map((marker, index) => (
                 <div
                   key={index}
-                  className="absolute h-full"
+                  className="absolute h-3/4 bg-amber-700/25 w-px bottom-1/8"
                   style={{ left: `${marker.leftPercent}%` }}
                 />
               ))}
@@ -158,7 +166,7 @@ export const RosterTableV2 = ({
                   <div
                     key={shiftIndex}
                     className={clsx(
-                      "absolute flex h-12 top-2",
+                      "absolute flex flex-col items-center justify-center h-12 top-2 rounded border text-[10px] font-medium overflow-hidden px-1",
                       statusColour(shift.status),
                     )}
                     style={{
@@ -168,9 +176,28 @@ export const RosterTableV2 = ({
                     }}
                     title={`${shift.status} - ${shift.start.toLocaleString()} to ${shift.end?.toLocaleString() ?? "Ongoing"}`}
                   >
-                    {shift.status === ShiftStatus.CLOCKED_IN && !shift.end
-                      ? "Active"
-                      : `${shift.start.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })} - ${shift.end?.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}`}
+                    {shift.widthPercent > 4 ? (
+                      shift.status === ShiftStatus.CLOCKED_IN && !shift.end ? (
+                        <span className="whitespace-nowrap overflow-hidden">
+                          Active
+                        </span>
+                      ) : (
+                        <>
+                          <span className="whitespace-nowrap overflow-hidden">
+                            {shift.start.toLocaleTimeString(locale, {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                          <span className="whitespace-nowrap overflow-hidden">
+                            {shift.end?.toLocaleTimeString(locale, {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </>
+                      )
+                    ) : null}
                   </div>
                 );
               })}
