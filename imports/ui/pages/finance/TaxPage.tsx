@@ -59,6 +59,9 @@ export const TaxPage = () => {
   useSubscribe("shifts.all");
   const shifts = useTracker(() => ShiftsCollection.find().fetch());
 
+  useSubscribe("users.all");
+  const users = useTracker(() => Meteor.users.find().fetch());
+
   const [selectedMetric, setSelectedMetric] = useState<
     "incomeTax" | "payrollTax" | "GSTCollected" | "GSTPaid"
   >("incomeTax");
@@ -225,43 +228,40 @@ export const TaxPage = () => {
   >([]);
 
   useEffect(() => {
-    let isMounted = true;
-    (async () => {
-      let payTotal = 0;
-      const payByDate: Record<string, number> = {};
+    let payTotal = 0;
+    const payByDate: Record<string, number> = {};
 
-      const users: Record<string, number> = {};
-      for (const userId of [...new Set(filteredShifts.map((s) => s.user))]) {
-        const user = (await Meteor.users.findOneAsync(
-          { _id: userId },
-          { fields: { payRate: 1 } },
-        )) as any;
-        users[userId] = user?.payRate ?? 0;
-      }
+    const userPayRates: Record<string, number> = {};
+    users.forEach((user: any) => {
+      userPayRates[user._id] = user.payRate ?? 0;
+    });
 
-      for (const s of filteredShifts) {
-        const payRate = users[s.user] ?? 0;
-        const pay = calculateShiftPay(s, payRate);
-        const tax = pay * 0.0485;
-        payTotal += pay;
-        const dateKey = format(
-          s.start instanceof Date ? s.start : new Date(s.start),
-          dateRange === "year" ? "MMM" : "dd/MM",
-        );
-        payByDate[dateKey] = (payByDate[dateKey] || 0) + tax;
-      }
-      if (!isMounted) return;
-      setPayrollTax(payTotal * 0.0485);
-      setPayrollItems(
-        Object.entries(payByDate).map(([label, amount]) => ({ label, amount })),
+    for (const s of filteredShifts) {
+      const payRate = userPayRates[s.user] ?? 0;
+      const pay = calculateShiftPay(s, payRate);
+      const tax = pay * 0.0485;
+      payTotal += pay;
+      const dateKey = format(
+        s.start instanceof Date ? s.start : new Date(s.start),
+        dateRange === "year" ? "MMM" : "dd/MM",
       );
-      const income = profitTotal - expensesTotal - deductionsTotal - payTotal;
-      setTaxableIncome(income > 0 ? income : 0);
-    })();
-    return () => {
-      isMounted = false;
-    };
-  }, [filteredShifts, profitTotal, expensesTotal, deductionsTotal, dateRange]);
+      payByDate[dateKey] = (payByDate[dateKey] || 0) + tax;
+    }
+
+    setPayrollTax(payTotal * 0.0485);
+    setPayrollItems(
+      Object.entries(payByDate).map(([label, amount]) => ({ label, amount })),
+    );
+    const income = profitTotal - expensesTotal - deductionsTotal - payTotal;
+    setTaxableIncome(income > 0 ? income : 0);
+  }, [
+    filteredShifts,
+    users,
+    profitTotal,
+    expensesTotal,
+    deductionsTotal,
+    dateRange,
+  ]);
 
   const financialData: Record<string, FinancialDataField> = {
     incomeTax: {
