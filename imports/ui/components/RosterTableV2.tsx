@@ -124,7 +124,7 @@ export const RosterTableV2 = ({
     <div className="h-full flex flex-col">
       {/* Sticky header with day indicators */}
       <div className="flex items-center shrink-0">
-        <div className="flex items-center justify-center">Staff</div>
+        <div className="w-36 flex items-center justify-center">Staff</div>
         <div className="flex-1 h-full relative">
           {headerDays.map((day, index) => (
             <div
@@ -142,7 +142,7 @@ export const RosterTableV2 = ({
       <div className="flex-1 overflow-y-auto">
         {timelineData.map((staffMember) => (
           <div key={staffMember.id} className="flex items-center shrink-0 h-16">
-            <div className="">{staffMember.name}</div>
+            <div className="w-36 truncate">{staffMember.name}</div>
 
             <div className="flex-1 h-full relative">
               {headerDays.slice(1).map((marker, index) => (
