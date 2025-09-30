@@ -134,7 +134,7 @@ Meteor.methods({
         "Only admins can perform debug operations",
       );
     }
-    await mockShifts(15);
+    await mockShifts();
   }),
 
   "debug.mockDeductions": requireLoginMethod(async function () {
