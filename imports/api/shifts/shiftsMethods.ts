@@ -1,48 +1,23 @@
-import { check, Match } from "meteor/check";
+import { check } from "meteor/check";
 import { Meteor } from "meteor/meteor";
 import { requireLoginMethod } from "../accounts/wrappers";
-import { ShiftsCollection, ShiftStatus, ShiftTime } from "./ShiftsCollection";
+import { ShiftsCollection, ShiftStatus } from "./ShiftsCollection";
 import { Roles } from "meteor/alanning:roles";
 import { RoleEnum } from "../accounts/roles";
-import { NumbersToN } from "ts-number-range";
-
-const ShiftTimePattern = Match.Where((v: unknown): v is ShiftTime => {
-  const valid =
-    typeof v === "object" &&
-    v !== null &&
-    "hour" in v &&
-    "minute" in v &&
-    typeof (v as { hour: unknown }).hour === "number" &&
-    Number.isInteger((v as { hour: unknown }).hour) &&
-    (v as { hour: number }).hour >= 0 &&
-    (v as { hour: number }).hour <= 23 &&
-    typeof (v as { minute: unknown }).minute === "number" &&
-    Number.isInteger((v as { minute: unknown }).minute) &&
-    (v as { minute: number }).minute >= 0 &&
-    (v as { minute: number }).minute <= 59;
-
-  if (!valid) {
-    throw new Meteor.Error("invalid-shift-time", "Invalid hour/minute");
-  }
-  return true;
-});
 
 Meteor.methods({
   "shifts.schedule": requireLoginMethod(async function ({
     userId,
-    date,
     start,
     end,
   }: {
     userId: string;
-    date: Date;
-    start: ShiftTime;
-    end: ShiftTime;
+    start: Date;
+    end: Date;
   }) {
     check(userId, String);
-    check(date, Date);
-    check(start, ShiftTimePattern);
-    check(end, ShiftTimePattern);
+    check(start, Date);
+    check(end, Date);
 
     if (!(await Roles.userIsInRoleAsync(Meteor.userId(), [RoleEnum.MANAGER]))) {
       throw new Meteor.Error(
@@ -59,44 +34,78 @@ Meteor.methods({
       throw new Meteor.Error("invalid-user", "No user found with the given ID");
     }
 
-    if (!(date instanceof Date) || isNaN(date.getTime())) {
-      throw new Meteor.Error("invalid-date", "Date is invalid");
-    }
-
-    if (
-      end.hour < start.hour ||
-      (end.hour === start.hour && end.minute <= start.minute)
-    ) {
+    if (end <= start) {
       throw new Meteor.Error(
         "invalid-time-range",
         "End time must be after start time",
       );
     }
 
-    // Check if user already has a shift on this date
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const existingShift = await ShiftsCollection.findOneAsync({
+    // Error if there is an overlapping shift with a non-schedule status
+    const trueOverlaps = await ShiftsCollection.find({
       user: userId,
-      date: {
-        $gte: startOfDay,
-        $lte: endOfDay,
-      },
-    });
+      start: { $lt: end },
+      end: { $gt: start },
+      status: { $ne: ShiftStatus.SCHEDULED },
+    }).fetchAsync();
 
-    if (existingShift) {
+    if (trueOverlaps.length > 0) {
       throw new Meteor.Error(
-        "shift-already-exists",
-        "User already has a shift scheduled for this day",
+        "shift-overlap-error",
+        "Cannot schedule shift that overlaps with non-scheduled shifts",
       );
+    }
+
+    // Find scheduled shifts that overlap (within 1 minute) for merging
+    const existingShifts = await ShiftsCollection.find({
+      user: userId,
+      status: ShiftStatus.SCHEDULED,
+      $or: [
+        // Real overlaps
+        {
+          start: { $lt: end },
+          end: { $gt: start },
+        },
+        // Within 1 minute
+        {
+          end: {
+            $gte: new Date(start.getTime() - 60000),
+            $lte: new Date(start.getTime() + 60000),
+          },
+        },
+        {
+          start: {
+            $gte: new Date(end.getTime() - 60000),
+            $lte: new Date(end.getTime() + 60000),
+          },
+        },
+      ],
+    }).fetchAsync();
+
+    // Merge overlapping shifts
+    if (existingShifts.length > 0) {
+      const allShifts = [...existingShifts, { start, end }];
+      const mergedStart = new Date(
+        Math.min(...allShifts.map((s) => s.start.getTime())),
+      );
+      const mergedEnd = new Date(
+        Math.max(...allShifts.map((s) => s.end!.getTime())),
+      );
+
+      for (const shift of existingShifts) {
+        await ShiftsCollection.removeAsync(shift._id);
+      }
+
+      return await ShiftsCollection.insertAsync({
+        user: userId,
+        start: mergedStart,
+        end: mergedEnd,
+        status: ShiftStatus.SCHEDULED,
+      });
     }
 
     return await ShiftsCollection.insertAsync({
       user: userId,
-      date,
       start,
       end,
       status: ShiftStatus.SCHEDULED,
@@ -124,45 +133,29 @@ Meteor.methods({
     }
 
     const now = new Date();
-    const todayStart = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
-    const tomorrowStart = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + 1,
-    );
 
-    const nowShiftTime: ShiftTime = {
-      hour: now.getHours() as NumbersToN<24>,
-      minute: now.getMinutes() as NumbersToN<60>,
-    };
-
-    const scheduled = await ShiftsCollection.findOneAsync({
+    // Update overlapping shift condition
+    const overlappingShift = await ShiftsCollection.findOneAsync({
       user: userId,
       status: ShiftStatus.SCHEDULED,
-      date: { $gte: todayStart, $lt: tomorrowStart },
+      start: { $lte: now },
+      end: { $gte: now },
     });
 
-    if (scheduled) {
-      return await ShiftsCollection.updateAsync(scheduled._id, {
-        start: nowShiftTime,
-        end: scheduled.end
-          ? scheduled.end.hour < nowShiftTime.hour &&
-            scheduled.end.minute < nowShiftTime.minute
+    if (overlappingShift) {
+      return await ShiftsCollection.updateAsync(overlappingShift._id, {
+        start: now,
+        end:
+          overlappingShift.end && overlappingShift.end <= now
             ? null
-            : scheduled.end
-          : scheduled.end,
+            : overlappingShift.end,
         status: ShiftStatus.CLOCKED_IN,
       });
     }
 
     return await ShiftsCollection.insertAsync({
       user: userId,
-      date: todayStart,
-      start: nowShiftTime,
+      start: now,
       end: null,
       status: ShiftStatus.CLOCKED_IN,
     });
@@ -187,75 +180,35 @@ Meteor.methods({
 
     const now = new Date();
 
-    const isToday =
-      active.date.getFullYear() === now.getFullYear() &&
-      active.date.getMonth() === now.getMonth() &&
-      active.date.getDate() === now.getDate();
+    // Remove overlapping shifts
+    const overlappingShifts = await ShiftsCollection.find({
+      user: userId,
+      $or: [
+        {
+          start: { $gte: active.start, $lte: now },
+        },
+        {
+          end: { $gte: active.start, $lte: now },
+        },
+        {
+          start: { $lte: active.start },
+          end: { $gte: now },
+        },
+      ],
+    }).fetchAsync();
 
-    const endTime: ShiftTime = isToday
-      ? {
-          hour: now.getHours() as NumbersToN<24>,
-          minute: now.getMinutes() as NumbersToN<60>,
-        }
-      : {
-          hour: 23 as NumbersToN<24>,
-          minute: 59 as NumbersToN<60>,
-        };
+    for (const shift of overlappingShifts.filter((s) => s._id !== active._id)) {
+      await ShiftsCollection.removeAsync(shift._id);
+    }
 
+    // Update active shift
     await ShiftsCollection.updateAsync(active._id, {
       $set: {
-        end: endTime,
+        end: now,
         status: ShiftStatus.CLOCKED_OUT,
       },
     });
 
     return active._id;
   }),
-
-  "shifts.getPayForShift": requireLoginMethod(async function (shiftId: string) {
-    check(shiftId, String);
-
-    // Find the shift
-    const shift = await ShiftsCollection.findOneAsync(shiftId);
-    if (!shift) {
-      throw new Meteor.Error("shift-not-found", "Shift not found");
-    }
-
-    if (!shift.end) {
-      return 0;
-    }
-
-    // Find the user linked to the shift
-    const user = (await Meteor.users.findOneAsync(
-      { _id: shift.user },
-      { fields: { payRate: 1 } },
-    )) as any;
-
-    const payRate = user?.payRate ?? 0;
-
-    // Calculate shift duration in hours
-    const startMinutes = shift.start.hour * 60 + shift.start.minute;
-    const endMinutes = shift.end.hour * 60 + shift.end.minute;
-    const durationMinutes = endMinutes - startMinutes;
-
-    if (durationMinutes <= 0) {
-      throw new Meteor.Error(
-        "invalid-shift-duration",
-        "Shift duration invalid",
-      );
-    }
-
-    const durationHours = durationMinutes / 60;
-
-    // Return pay = hours × payRate
-    return payRate * durationHours;
-  }),
-
-  "shifts.getAll"() {
-    if (!this.userId) {
-      throw new Meteor.Error("Not authorized");
-    }
-
-    return ShiftsCollection.find().fetch();
-  },
 });
