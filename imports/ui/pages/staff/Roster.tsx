@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "../../components/interaction/Button";
 import { Modal } from "../../components/Modal";
 import { PublishShiftForm } from "../../components/PublishShiftForm";
-import { RosterTableV2, RosterStaff } from "../../components/RosterTableV2";
+import { RosterTable, RosterStaff } from "../../components/RosterTable";
 import {
   ShiftsCollection,
   ShiftStatus,
@@ -156,7 +156,7 @@ export const RosterPage = () => {
 
       {/* Roster Table */}
       <div className="flex-1 min-h-0 px-5 pb-5">
-        <RosterTableV2 staff={staff} start={weekStart} end={weekEnd} />
+        <RosterTable staff={staff} start={weekStart} end={weekEnd} />
       </div>
 
       <Modal open={shiftModalOpen} onClose={() => setShiftModalOpen(false)}>
