@@ -1,5 +1,3 @@
-// imports/ui/pages/kitchen/OrderHistoryPage.tsx
-
 import { useEffect, useMemo, useState } from "react";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
@@ -9,7 +7,6 @@ import {
   Order as DBOrder,
 } from "../../../api/orders/OrdersCollection";
 
-// Use shared UI components (Roster style)
 import { Button } from "../../components/interaction/Button";
 import { Select } from "../../components/interaction/Select";
 import { Input } from "../../components/interaction/Input";
@@ -19,19 +16,17 @@ type RowOrder = {
   orderNo: number;
   tableNo: number | null;
   createdAt: string;
-  status: "pending" | "preparing" | "ready" | "served";
+  status: "pending" | "preparing" | "ready" | "served" | "paid";
   items: string;
   paid: boolean;
 };
 
 export const OrderHistoryPage = () => {
-  // Page title (same pattern as RosterPage)
   const [_, setPageTitle] = usePageTitle();
   useEffect(() => {
     setPageTitle("Kitchen Management - Order History");
   }, [setPageTitle]);
 
-  // Subscribe + map DB docs to flat rows for display
   const orders: RowOrder[] = useTracker(() => {
     const sub = Meteor.subscribe("orders");
     if (!sub.ready()) return [];
@@ -41,7 +36,7 @@ export const OrderHistoryPage = () => {
       orderNo: doc.orderNo,
       tableNo: doc.tableNo ?? null,
       createdAt: new Date(doc.createdAt).toLocaleString(),
-      status: doc.orderStatus,
+      status: doc.orderStatus as RowOrder["status"],
       items: (doc.menuItems ?? [])
         .map((mi) => `${mi.name} x${mi.quantity ?? 1}`)
         .join(", "),
@@ -49,22 +44,22 @@ export const OrderHistoryPage = () => {
     }));
   }, []);
 
-  // ---- Controls state ----
-  const [statusFilter, setStatusFilter] = useState<"served" | "all">("served");
+  const [statusFilter, setStatusFilter] =
+    useState<"served" | "paid" | "all">("served");
   const [q, setQ] = useState("");
 
-  // ---- Filtering ----
   const filtered = useMemo(() => {
-    const base =
+    let base =
       statusFilter === "served"
         ? orders.filter((o) => o.status === "served")
-        : orders;
+        : statusFilter === "paid"
+          ? orders.filter((o) => o.status === "paid")
+          : orders;
 
     if (!q.trim()) return base;
 
     const key = q.toLowerCase();
     return base.filter((o) => {
-      // EN: If no table number, treat it as "takeaway" for searching
       const tableText = o.tableNo != null ? String(o.tableNo) : "takeaway";
       return (
         String(o.orderNo).includes(key) ||
@@ -74,7 +69,6 @@ export const OrderHistoryPage = () => {
     });
   }, [orders, statusFilter, q]);
 
-  // ---- Actions ----
   const reopen = (id: string, to: RowOrder["status"]) => {
     Meteor.call(
       "orders.updateOrder",
@@ -89,33 +83,25 @@ export const OrderHistoryPage = () => {
     );
   };
 
-  // ---- Render ----
   return (
     <div className="flex flex-1 flex-col p-6 gap-4 overflow-hidden">
-      {/* Page heading (Roster style) */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-press-up-purple">
-          Order History
-        </h1>
+        <h1 className="text-2xl font-bold text-press-up-purple">Order History</h1>
       </div>
 
-      {/* Controls bar */}
+      {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
-        {/* Filter dropdown (shared Select) */}
         <div className="w-full sm:w-60">
-          {/* EN: Controlled Select, integrates with statusFilter */}
           <Select
             value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(e.target.value as "served" | "all")
-            }
+            onChange={(e) => setStatusFilter(e.target.value as "served" | "paid" | "all")}
           >
             <option value="served">Served only</option>
+            <option value="paid">Paid only</option>
             <option value="all">All statuses</option>
           </Select>
         </div>
 
-        {/* Search input (shared Input) */}
         <div className="w-full sm:flex-1">
           <Input
             placeholder="Search (order/table/item)"
@@ -125,7 +111,7 @@ export const OrderHistoryPage = () => {
         </div>
       </div>
 
-      {/* Table container */}
+      {/* Table */}
       <div className="overflow-auto flex-1 rounded-lg border border-gray-200 bg-white">
         <table className="min-w-full text-left">
           <thead className="sticky top-0 z-10">
@@ -141,12 +127,15 @@ export const OrderHistoryPage = () => {
 
           <tbody className="divide-y divide-gray-100">
             {filtered.map((row) => {
-              const isPaid =
-                orders.find((o) => o._id === row._id)?.paid === true;
+              const isPaid = orders.find((o) => o._id === row._id)?.paid === true;
 
-              // EN: Simple badge for status
+              // ✅ Status badge: PAID 추가
               const statusBadge =
-                row.status === "served" ? (
+                row.status === "paid" ? (
+                  <span className="inline-block px-2 py-0.5 rounded-md text-xs font-bold bg-purple-700 text-white">
+                    PAID
+                  </span>
+                ) : row.status === "served" ? (
                   <span className="inline-block px-2 py-0.5 rounded-md text-xs font-bold bg-green-600 text-white">
                     {row.status.toUpperCase()}
                   </span>
@@ -180,7 +169,6 @@ export const OrderHistoryPage = () => {
                   </td>
                   <td className="py-2 px-3">
                     <div className="flex justify-end gap-2">
-                      {/* EN: Reopen to Ready */}
                       <Button
                         disabled={isPaid}
                         onClick={() => reopen(row._id, "ready")}
@@ -189,7 +177,6 @@ export const OrderHistoryPage = () => {
                         Reopen: Ready
                       </Button>
 
-                      {/* EN: Reopen to Preparing */}
                       <Button
                         disabled={isPaid}
                         onClick={() => reopen(row._id, "preparing")}
@@ -205,9 +192,7 @@ export const OrderHistoryPage = () => {
 
             {filtered.length === 0 && (
               <tr className="grid grid-cols-1">
-                <td className="py-8 text-center text-gray-500">
-                  No orders found.
-                </td>
+                <td className="py-8 text-center text-gray-500">No orders found.</td>
               </tr>
             )}
           </tbody>
