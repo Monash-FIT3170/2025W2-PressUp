@@ -10,14 +10,14 @@ import { useTracker } from "meteor/react-meteor-data";
 import {
   OrdersCollection,
   Order as DBOrder,
-  OrderStatus
+  OrderStatus,
 } from "../../../api/orders/OrdersCollection";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 
 const COLUMNS: ColumnType[] = [
-  { id: OrderStatus.Pending,   title: "Pending" },
+  { id: OrderStatus.Pending, title: "Pending" },
   { id: OrderStatus.Preparing, title: "Preparing" },
-  { id: OrderStatus.Ready,     title: "Ready" },
+  { id: OrderStatus.Ready, title: "Ready" },
 ];
 
 export const KitchenManagement = () => {

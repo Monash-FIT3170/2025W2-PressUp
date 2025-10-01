@@ -44,17 +44,18 @@ export const OrderHistoryPage = () => {
     }));
   }, []);
 
-  const [statusFilter, setStatusFilter] =
-    useState<"served" | "paid" | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<"served" | "paid" | "all">(
+    "all",
+  );
   const [q, setQ] = useState("");
 
   const filtered = useMemo(() => {
-    let base =
+    const base =
       statusFilter === "served"
         ? orders.filter((o) => o.status === "served")
         : statusFilter === "paid"
-        ? orders.filter((o) => o.status === "paid")
-        : orders;
+          ? orders.filter((o) => o.status === "paid")
+          : orders;
 
     if (!q.trim()) return base;
 
@@ -86,7 +87,9 @@ export const OrderHistoryPage = () => {
   return (
     <div className="flex flex-1 flex-col p-6 gap-4 overflow-hidden">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-press-up-purple">Order History</h1>
+        <h1 className="text-2xl font-bold text-press-up-purple">
+          Order History
+        </h1>
       </div>
 
       {/* Controls */}
@@ -94,7 +97,9 @@ export const OrderHistoryPage = () => {
         <div className="w-full sm:w-60">
           <Select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as "served" | "paid" | "all")}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as "served" | "paid" | "all")
+            }
           >
             <option value="served">Served only</option>
             <option value="paid">Paid only</option>
@@ -127,7 +132,8 @@ export const OrderHistoryPage = () => {
 
           <tbody className="divide-y divide-gray-100">
             {filtered.map((row) => {
-              const isPaid = orders.find((o) => o._id === row._id)?.paid === true;
+              const isPaid =
+                orders.find((o) => o._id === row._id)?.paid === true;
 
               // Unified badge for all statuses
               const statusBadge = (() => {
@@ -135,17 +141,31 @@ export const OrderHistoryPage = () => {
                   "inline-block px-2 py-0.5 rounded-md text-xs font-bold text-white";
                 switch (row.status) {
                   case "pending":
-                    return <span className={`${base} bg-gray-500`}>PENDING</span>;
+                    return (
+                      <span className={`${base} bg-gray-500`}>PENDING</span>
+                    );
                   case "preparing":
-                    return <span className={`${base} bg-blue-600`}>PREPARING</span>;
+                    return (
+                      <span className={`${base} bg-blue-600`}>PREPARING</span>
+                    );
                   case "ready":
-                    return <span className={`${base} bg-yellow-600`}>READY</span>;
+                    return (
+                      <span className={`${base} bg-yellow-600`}>READY</span>
+                    );
                   case "served":
-                    return <span className={`${base} bg-green-600`}>SERVED</span>;
+                    return (
+                      <span className={`${base} bg-green-600`}>SERVED</span>
+                    );
                   case "paid":
-                    return <span className={`${base} bg-purple-700`}>PAID</span>;
+                    return (
+                      <span className={`${base} bg-purple-700`}>PAID</span>
+                    );
                   default:
-                    return <span className={`${base} bg-gray-600`}>{(row.status as string).toUpperCase()}</span>;
+                    return (
+                      <span className={`${base} bg-gray-600`}>
+                        {(row.status as string).toUpperCase()}
+                      </span>
+                    );
                 }
               })();
 
@@ -190,7 +210,9 @@ export const OrderHistoryPage = () => {
 
             {filtered.length === 0 && (
               <tr className="grid grid-cols-1">
-                <td className="py-8 text-center text-gray-500">No orders found.</td>
+                <td className="py-8 text-center text-gray-500">
+                  No orders found.
+                </td>
               </tr>
             )}
           </tbody>
