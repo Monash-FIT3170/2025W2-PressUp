@@ -50,13 +50,17 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
 
     try {
       await new Promise<void>((resolve, reject) => {
-        Meteor.call("itemCategories.insert", formData, (error: Meteor.Error) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve();
-          }
-        });
+        Meteor.call(
+          "itemCategories.insert",
+          formData,
+          (error: Meteor.Error) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve();
+            }
+          },
+        );
       });
 
       console.log("Item category created successfully");
@@ -83,10 +87,14 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   const handleDelete = async (categoryName: string) => {
     try {
       await new Promise<void>((resolve, reject) => {
-        Meteor.call("itemCategories.delete", categoryName, (error: Meteor.Error) => {
-          if (error) reject(error);
-          else resolve();
-        });
+        Meteor.call(
+          "itemCategories.delete",
+          categoryName,
+          (error: Meteor.Error) => {
+            if (error) reject(error);
+            else resolve();
+          },
+        );
       });
       console.log("Category deleted:", categoryName);
       onSuccess();
@@ -94,7 +102,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
       console.error("Error deleting category:", error);
       alert(
         "Error deleting category: " +
-          ((error as Meteor.Error).reason || (error as Error).message)
+          ((error as Meteor.Error).reason || (error as Error).message),
       );
     } finally {
       setDeleteTarget(null);
@@ -165,22 +173,22 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                 title="Delete category"
                 onClick={() => setDeleteTarget(cat.name)}
               >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-red-500"
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-red-500"
                 >
-              <path d="M3 6h18"></path>
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-              </svg>
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                </svg>
               </button>
             </li>
           ))}

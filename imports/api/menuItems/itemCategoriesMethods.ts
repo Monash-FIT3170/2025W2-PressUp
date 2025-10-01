@@ -1,6 +1,9 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
-import { ItemCategory, ItemCategoriesCollection } from "./ItemCategoriesCollection";
+import {
+  ItemCategory,
+  ItemCategoriesCollection,
+} from "./ItemCategoriesCollection";
 import { requireLoginMethod } from "../accounts/wrappers";
 import { OmitDB } from "../database";
 
@@ -34,7 +37,9 @@ Meteor.methods({
       throw new Meteor.Error("invalid-name", "Category name is required");
     }
 
-    const result = await ItemCategoriesCollection.removeAsync({ name: catName });
+    const result = await ItemCategoriesCollection.removeAsync({
+      name: catName,
+    });
     if (result === 0) {
       throw new Meteor.Error("not-found", "Category not found");
     }
@@ -45,5 +50,4 @@ Meteor.methods({
   "itemCatgeories.getAll": requireLoginMethod(async function () {
     return ItemCategoriesCollection.find().fetch();
   }),
-
 });

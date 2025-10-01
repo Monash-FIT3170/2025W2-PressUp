@@ -35,9 +35,10 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   item,
   onSave,
 }) => {
-
   const isLoading = useSubscribe("itemCategories");
-  const categoriesCollection = useTracker(() => ItemCategoriesCollection.find().fetch());
+  const categoriesCollection = useTracker(() =>
+    ItemCategoriesCollection.find().fetch(),
+  );
   const categoryNames = categoriesCollection.map((c) => c.name);
 
   const [formData, setFormData] = useState({
@@ -134,9 +135,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     setCategories(newCategories);
 
     // Detect newly added categories
-    const newOnes = newCategories.filter(
-      (cat) => !categoryNames.includes(cat)
-    );
+    const newOnes = newCategories.filter((cat) => !categoryNames.includes(cat));
 
     newOnes.forEach((cat) => {
       Meteor.call("itemCategories.insert", { name: cat }, (error: any) => {
