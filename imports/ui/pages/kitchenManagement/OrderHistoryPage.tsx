@@ -189,13 +189,13 @@ export const OrderHistoryPage = () => {
                     {row.status === "served" && !isPaid && (
                       <div className="flex justify-end gap-2">
                         <Button
-                          variant="ghost"
+                          variant="positive"
                           onClick={() => reopen(row._id, "ready")}
                         >
                           Reopen: Ready
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="positive"
                           onClick={() => reopen(row._id, "preparing")}
                         >
                           Reopen: Preparing

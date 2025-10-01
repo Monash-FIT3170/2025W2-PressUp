@@ -1,14 +1,11 @@
 import clsx from "clsx";
 import React from "react";
 
-type ButtonVariant = "positive" | "negative" | "ghost";
+type ButtonVariant = "positive" | "negative";
 
 const variantColours: Record<ButtonVariant, string> = {
   positive: "bg-press-up-positive-button text-white",
   negative: "bg-press-up-negative-button text-white",
-  // New outline/ghost style used in OrderHistoryPage
-  ghost:
-    "bg-transparent text-press-up-purple border border-press-up-purple hover:bg-press-up-purple/10",
 };
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
