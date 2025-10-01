@@ -45,7 +45,7 @@ export const OrderHistoryPage = () => {
   }, []);
 
   const [statusFilter, setStatusFilter] =
-    useState<"served" | "paid" | "all">("served");
+    useState<"served" | "paid" | "all">("all");
   const [q, setQ] = useState("");
 
   const filtered = useMemo(() => {
@@ -53,8 +53,8 @@ export const OrderHistoryPage = () => {
       statusFilter === "served"
         ? orders.filter((o) => o.status === "served")
         : statusFilter === "paid"
-          ? orders.filter((o) => o.status === "paid")
-          : orders;
+        ? orders.filter((o) => o.status === "paid")
+        : orders;
 
     if (!q.trim()) return base;
 
@@ -129,29 +129,25 @@ export const OrderHistoryPage = () => {
             {filtered.map((row) => {
               const isPaid = orders.find((o) => o._id === row._id)?.paid === true;
 
-              // ✅ Status badge: PAID 추가
-              const statusBadge =
-                row.status === "paid" ? (
-                  <span className="inline-block px-2 py-0.5 rounded-md text-xs font-bold bg-purple-700 text-white">
-                    PAID
-                  </span>
-                ) : row.status === "served" ? (
-                  <span className="inline-block px-2 py-0.5 rounded-md text-xs font-bold bg-green-600 text-white">
-                    {row.status.toUpperCase()}
-                  </span>
-                ) : row.status === "ready" ? (
-                  <span className="inline-block px-2 py-0.5 rounded-md text-xs font-bold bg-yellow-600 text-white">
-                    {row.status.toUpperCase()}
-                  </span>
-                ) : row.status === "preparing" ? (
-                  <span className="inline-block px-2 py-0.5 rounded-md text-xs font-bold bg-blue-600 text-white">
-                    {row.status.toUpperCase()}
-                  </span>
-                ) : (
-                  <span className="inline-block px-2 py-0.5 rounded-md text-xs font-bold bg-gray-600 text-white">
-                    {row.status.toUpperCase()}
-                  </span>
-                );
+              // Unified badge for all statuses
+              const statusBadge = (() => {
+                const base =
+                  "inline-block px-2 py-0.5 rounded-md text-xs font-bold text-white";
+                switch (row.status) {
+                  case "pending":
+                    return <span className={`${base} bg-gray-500`}>PENDING</span>;
+                  case "preparing":
+                    return <span className={`${base} bg-blue-600`}>PREPARING</span>;
+                  case "ready":
+                    return <span className={`${base} bg-yellow-600`}>READY</span>;
+                  case "served":
+                    return <span className={`${base} bg-green-600`}>SERVED</span>;
+                  case "paid":
+                    return <span className={`${base} bg-purple-700`}>PAID</span>;
+                  default:
+                    return <span className={`${base} bg-gray-600`}>{(row.status as string).toUpperCase()}</span>;
+                }
+              })();
 
               return (
                 <tr
@@ -167,24 +163,26 @@ export const OrderHistoryPage = () => {
                   <td className="py-2 px-3 truncate" title={row.items}>
                     {row.items || <em className="text-gray-500">No items</em>}
                   </td>
-                  <td className="py-2 px-3">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        disabled={isPaid}
-                        onClick={() => reopen(row._id, "ready")}
-                        className="!bg-transparent !text-press-up-purple !border !border-press-up-purple hover:!bg-press-up-purple/10 disabled:opacity-50"
-                      >
-                        Reopen: Ready
-                      </Button>
 
-                      <Button
-                        disabled={isPaid}
-                        onClick={() => reopen(row._id, "preparing")}
-                        className="!bg-transparent !text-press-up-purple !border !border-press-up-purple hover:!bg-press-up-purple/10 disabled:opacity-50"
-                      >
-                        Reopen: Preparing
-                      </Button>
-                    </div>
+                  {/* Only show actions for SERVED & not paid */}
+                  <td className="py-2 px-3">
+                    {row.status === "served" && !isPaid && (
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          onClick={() => reopen(row._id, "ready")}
+                          className="!bg-transparent !text-press-up-purple !border !border-press-up-purple hover:!bg-press-up-purple/10"
+                        >
+                          Reopen: Ready
+                        </Button>
+
+                        <Button
+                          onClick={() => reopen(row._id, "preparing")}
+                          className="!bg-transparent !text-press-up-purple !border !border-press-up-purple hover:!bg-press-up-purple/10"
+                        >
+                          Reopen: Preparing
+                        </Button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               );
