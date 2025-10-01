@@ -1,7 +1,5 @@
 import { IdType } from "/imports/api/database";
-import { OrderType } from "/imports/api/orders/OrdersCollection";
-
-export type OrderStatus = "pending" | "preparing" | "ready" | "served";
+import { OrderType, OrderStatus } from "/imports/api/orders/OrdersCollection";
 
 export type UiOrder = {
   _id: IdType;
