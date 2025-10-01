@@ -35,7 +35,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   item,
   onSave,
 }) => {
-  const isLoading = useSubscribe("itemCategories");
   const categoriesCollection = useTracker(() =>
     ItemCategoriesCollection.find().fetch(),
   );
