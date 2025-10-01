@@ -105,10 +105,10 @@ export const mockMenuItems = async () => {
 };
 
 export const fixedItemCategories = [
-  { name: "Food", },
-  { name: "Drink", },
-  { name: "Dessert", },
-]
+  { name: "Food" },
+  { name: "Drink" },
+  { name: "Dessert" },
+];
 
 export const mockItemCategories = async () => {
   if ((await ItemCategoriesCollection.countDocuments()) > 0) {
