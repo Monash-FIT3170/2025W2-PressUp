@@ -43,7 +43,10 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
   const handleConfirm = () => {
     finalizePayment();
     closeModal();
-    navigate(`/receipt?orderNo=${order.orderNo}`);
+    if (order._id) {
+      sessionStorage.setItem("activeOrderId", order._id);
+    }
+    navigate("/receipt");
   };
 
   return (

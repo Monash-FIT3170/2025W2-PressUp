@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { ShiftsCollection, ShiftTime } from "./ShiftsCollection";
+import { ShiftsCollection, ShiftStatus, ShiftTime } from "./ShiftsCollection";
 
 export const mockShifts = async (count: number = 15) => {
   if ((await ShiftsCollection.countDocuments()) > 0) {
@@ -29,6 +29,7 @@ export const mockShifts = async (count: number = 15) => {
       date: shiftDate,
       start: generateShiftTime(pattern.start.hour, pattern.start.minute),
       end: generateShiftTime(pattern.end.hour, pattern.end.minute),
+      status: ShiftStatus.SCHEDULED,
     });
   }
 };
