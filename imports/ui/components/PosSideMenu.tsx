@@ -11,6 +11,10 @@ import { RoleEnum } from "/imports/api/accounts/roles";
 import { Hide } from "./display/Hide";
 import { Button } from "./interaction/Button";
 
+import MenuItemIngredientsDialog from "./MenuItemIngredientsDialog";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { IconButton as MuiIconButton } from "@mui/material";
+
 interface PosSideMenuProps {
   tableNo: number | null;
   items: (MenuItem | OrderMenuItem)[];
@@ -266,6 +270,20 @@ export const PosSideMenu = ({
     [rolesLoaded, rolesGraphLoaded],
   );
 
+  // Ingredient dialog state
+  const [ingredientDialog, setIngredientDialog] = useState<{
+    open: boolean;
+    item: (MenuItem | OrderMenuItem) | null;
+  }>({ open: false, item: null });
+
+  const openIngredientDialog = (item: MenuItem | OrderMenuItem) => {
+    setIngredientDialog({ open: true, item });
+  };
+
+  const closeIngredientDialog = () => {
+    setIngredientDialog({ open: false, item: null });
+  };
+
   return (
     <div className="w-[20vw] h-[75vh] flex flex-col">
       {/* Header */}
@@ -418,6 +436,16 @@ export const PosSideMenu = ({
                     >
                       🗑
                     </button>
+
+                    {/* New: View ingredients button */}
+                    <MuiIconButton
+                      size="small"
+                      onClick={() => openIngredientDialog(item)}
+                      disabled={Boolean(order?.isLocked)}
+                      aria-label="View ingredients"
+                    >
+                      <MoreVertIcon fontSize="small" />
+                    </MuiIconButton>
                   </div>
                 </div>
               );
@@ -728,6 +756,11 @@ export const PosSideMenu = ({
           )}
         </div>
       </div>
+      <MenuItemIngredientsDialog
+        open={ingredientDialog.open}
+        item={ingredientDialog.item}
+        onClose={closeIngredientDialog}
+      />
     </div>
   );
 };
