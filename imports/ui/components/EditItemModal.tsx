@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FormEvent } from "react";
 import { Meteor } from "meteor/meteor";
-import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { useTracker } from "meteor/react-meteor-data";
 import { ItemCategoriesCollection } from "/imports/api/menuItems/ItemCategoriesCollection";
 import { Modal } from "./Modal";
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
