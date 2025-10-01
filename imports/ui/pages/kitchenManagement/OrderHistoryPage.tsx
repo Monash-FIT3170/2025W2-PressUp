@@ -188,10 +188,16 @@ export const OrderHistoryPage = () => {
                   <td className="py-2 px-3">
                     {row.status === "served" && !isPaid && (
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" onClick={() => reopen(row._id, "ready")}>
+                        <Button
+                          variant="ghost"
+                          onClick={() => reopen(row._id, "ready")}
+                        >
                           Reopen: Ready
                         </Button>
-                        <Button variant="ghost" onClick={() => reopen(row._id, "preparing")}>
+                        <Button
+                          variant="ghost"
+                          onClick={() => reopen(row._id, "preparing")}
+                        >
                           Reopen: Preparing
                         </Button>
                       </div>

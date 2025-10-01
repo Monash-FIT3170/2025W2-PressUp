@@ -17,7 +17,18 @@ interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, Props>(
-  ({ variant = "positive", width = "fit", className, children, disabled, type, ...rest }, ref) => {
+  (
+    {
+      variant = "positive",
+      width = "fit",
+      className,
+      children,
+      disabled,
+      type,
+      ...rest
+    },
+    ref,
+  ) => {
     return (
       <button
         ref={ref}
