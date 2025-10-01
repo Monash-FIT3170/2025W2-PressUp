@@ -12,6 +12,7 @@ import {
 } from "/imports/api/orders/OrdersCollection";
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { IdType } from "/imports/api/database";
+import { ItemCategoriesCollection } from "/imports/api/menuItems/ItemCategoriesCollection";
 
 export const MainDisplay = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -25,6 +26,8 @@ export const MainDisplay = () => {
 
   useSubscribe("menuItems");
   useSubscribe("orders");
+  useSubscribe("itemCategories");
+  const categories = useTracker(() => ItemCategoriesCollection.find().fetch());
 
   const posItems = useTracker(() => MenuItemsCollection.find().fetch());
   // Only use activeOrderId for order selection
@@ -153,6 +156,20 @@ export const MainDisplay = () => {
     }
   };
 
+  const categoryButtons = categories.map((cat) => (
+    <button
+      key={cat._id}
+      onClick={() => toggleCategory(cat.name)}
+      className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors duration-200 ${
+        selectedCategories.includes(cat.name)
+          ? "bg-[#6f597b] text-white"
+          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+      }`}
+    >
+      {cat.name}
+    </button>
+  ));
+
   const handleItemClick = (item: MenuItem) => {
     if (!order) return;
     if (order.isLocked) return; // prevent adding items to locked orders
@@ -234,21 +251,7 @@ export const MainDisplay = () => {
           </div>
 
           {/* Category Filter Buttons */}
-          <div className="flex space-x-4">
-            {["Food", "Drink", "Dessert"].map((cat) => (
-              <button
-                key={cat}
-                onClick={() => toggleCategory(cat)}
-                className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors duration-200 ${
-                  selectedCategories.includes(cat)
-                    ? "bg-[#6f597b] text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          <div className="flex space-x-4">{categoryButtons}</div>
         </div>
 
         {/* POS Cards */}
