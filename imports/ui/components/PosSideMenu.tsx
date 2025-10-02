@@ -41,7 +41,7 @@ export const PosSideMenu = ({
   // Fetch the current order for this table
   useSubscribe("orders");
   useSubscribe("tables");
-  const isMenuItemsLoading = useSubscribe("menuItems");
+  const isMenuItemsLoading = useSubscribe("menuItems")(); // Immediately call to get boolean
   const [orderType, setOrderType] = useState<OrderType>(OrderType.DineIn);
 
   // Use sessionStorage for activeOrderId
@@ -444,7 +444,7 @@ export const PosSideMenu = ({
                     <MuiIconButton
                       size="small"
                       onClick={() => openIngredientDialog(item)}
-                      disabled={isMenuItemsLoading()} 
+                      disabled={isMenuItemsLoading || Boolean(order?.isLocked)} // Updated condition
                       aria-label="View ingredients"
                     >
                       <MoreVertIcon fontSize="small" />

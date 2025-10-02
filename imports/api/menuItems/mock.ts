@@ -141,15 +141,16 @@ export const fixedMenuItems: OmitDB<MenuItem>[] = [
 ];
 
 export const mockMenuItems = async () => {
-  // Use upsert instead of drop to safely update or insert items
+  const col = MenuItemsCollection.rawCollection();
+  await col.createIndex({ name: 1 }, { unique: true }).catch(() => {});
+
   for (const raw of fixedMenuItems) {
     const now = new Date();
-    await MenuItemsCollection.upsertAsync(
+    const doc = { ...raw, updatedAt: now };
+    await col.replaceOne(
       { name: raw.name },
-      {
-        $set: { ...raw, updatedAt: now },
-        $setOnInsert: { createdAt: now },
-      },
+      doc,
+      { upsert: true }
     );
   }
 };

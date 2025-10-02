@@ -1,5 +1,5 @@
 import React from "react";
-import { useTracker } from "meteor/react-meteor-data";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import {
   Dialog as MuiDialog,
   DialogTitle as MuiDialogTitle,
@@ -13,9 +13,7 @@ import {
   Divider as MuiDivider,
 } from "@mui/material";
 
-import {
-  MenuItemsCollection,
-} from "/imports/api/menuItems/MenuItemsCollection";
+import { MenuItemsCollection } from "/imports/api/menuItems/MenuItemsCollection";
 import { MenuItem } from "/imports/api";
 import { OrderMenuItem } from "/imports/api/orders/OrdersCollection";
 
@@ -54,45 +52,37 @@ type Props = {
 };
 
 const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => {
-  // 메뉴 원본 도큐먼트 가져오기 (주문 스냅샷이 아닌, MenuItemsCollection에서)
+  // useSubscribe is renamed to isMenuItemsLoading for clarity
+  const isMenuItemsLoading = useSubscribe("menuItems")();
+
+  // Guard the findOne call to ensure it only executes when not loading
   const canonical = useTracker<CanonicalMenuItem | null>(() => {
-    if (!item) return null;
-    const anyItem = item as any;
-    const key = anyItem.menuItemId || anyItem._id; // 주문 라인에 menuItemId가 있다면 우선
-    if (key) {
-      return (MenuItemsCollection.findOne(key) as CanonicalMenuItem) ?? null;
-    }
-    if (item.name) {
-      return (MenuItemsCollection.findOne({ name: item.name }) as CanonicalMenuItem) ?? null;
-    }
-    return null;
-  }, [item?._id, (item as any)?.menuItemId, item?.name]);
+    if (isMenuItemsLoading || !item?.name) return null;
+    return (
+      (MenuItemsCollection.findOne({ name: item.name }) as CanonicalMenuItem) ??
+      null
+    );
+  }, [isMenuItemsLoading, item?.name]);
 
-  // 새 구조 우선, 없으면 레거시 ingredients 사용
-  const baseIngredients: BaseIngredient[] =
-    (canonical?.baseIngredients as BaseIngredient[]) ??
-    ((item as any)?.baseIngredients as BaseIngredient[]) ??
-    [];
-
-  const optionGroups: OptionGroup[] =
-    (canonical?.optionGroups as OptionGroup[]) ??
-    ((item as any)?.optionGroups as OptionGroup[]) ??
-    [];
-
+  const baseIngredients: BaseIngredient[] = canonical?.baseIngredients ?? [];
+  const optionGroups: OptionGroup[] = canonical?.optionGroups ?? [];
   const legacyIngredients: string[] =
-    (canonical?.ingredients as string[]) ??
-    (Array.isArray(item?.ingredients) ? (item!.ingredients as string[]) : []) ??
-    [];
+    canonical?.ingredients ??
+    (Array.isArray(item?.ingredients) ? (item!.ingredients as string[]) : []);
 
-  const hasNew = (baseIngredients?.length ?? 0) > 0 || (optionGroups?.length ?? 0) > 0;
+  const hasNew = baseIngredients.length > 0 || optionGroups.length > 0;
 
   return (
     <MuiDialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <MuiDialogTitle>{item?.name ?? "Ingredients"}</MuiDialogTitle>
       <MuiDialogContent dividers>
-        {hasNew ? (
+        {isMenuItemsLoading ? ( // Use isMenuItemsLoading directly in rendering logic
+          <MuiTypography variant="body2" color="text.secondary">
+            Loading…
+          </MuiTypography>
+        ) : hasNew ? (
           <>
-            {/* Base / 기본 재료 */}
+            {/* Base Ingredients */}
             {baseIngredients.length > 0 && (
               <>
                 <MuiTypography variant="subtitle2" sx={{ mb: 1 }}>
@@ -120,7 +110,7 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => 
               </>
             )}
 
-            {/* 옵션 그룹 */}
+            {/* Options */}
             {optionGroups.length > 0 && (
               <>
                 {baseIngredients.length > 0 && <MuiDivider sx={{ my: 1.5 }} />}
@@ -132,7 +122,8 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => 
                   return (
                     <div key={g.id} style={{ marginBottom: 8 }}>
                       <MuiTypography variant="body2" sx={{ fontWeight: 600 }}>
-                        {g.label} {g.required ? "(required)" : ""} {g.type === "multiple" ? "[multi]" : "[single]"}
+                        {g.label} {g.required ? "(required)" : ""}{" "}
+                        {g.type === "multiple" ? "[multi]" : "[single]"}
                       </MuiTypography>
                       <MuiList dense>
                         {(defaults.length > 0 ? defaults : g.options).map((o) => (
