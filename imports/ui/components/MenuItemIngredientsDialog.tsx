@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { Meteor } from "meteor/meteor";
 import {
   Dialog as MuiDialog,
   DialogTitle as MuiDialogTitle,
@@ -71,12 +72,14 @@ const Money: React.FC<{ delta?: number }> = ({ delta }) => {
 };
 
 const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => {
-    const isLoading = useSubscribe("menuItems")();
-    // Fetch the canonical MenuItem from the database
-    const canonical = useTracker<CanonicalMenuItem | null>(() => {
-      if (isLoading || !item?.name) return null;
-      return (MenuItemsCollection.findOne({ name: item.name }) as CanonicalMenuItem) ?? null;
-    }, [isLoading, item?.name]);
+  // Use the function signature for useSubscribe to ensure stability
+  const isLoading = useSubscribe("menuItems")();
+
+  // Fetch the canonical MenuItem from the database
+  const canonical = useTracker<CanonicalMenuItem | null>(() => {
+    if (isLoading || !item?.name) return null;
+    return (MenuItemsCollection.findOne({ name: item.name }) as CanonicalMenuItem) ?? null;
+  }, [isLoading, item?.name]);
 
   const baseIngredients: BaseIngredient[] = canonical?.baseIngredients ?? [];
   const optionGroups: OptionGroup[] = canonical?.optionGroups ?? [];
@@ -175,8 +178,10 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => 
       <MuiDialogTitle>{item?.name ?? "Ingredients"}</MuiDialogTitle>
       <MuiDialogContent dividers>
         {isLoading ? (
-            <MuiTypography variant="body2" color="text.secondary">Loading…</MuiTypography>
-            ) : hasNew ? (
+          <MuiTypography variant="body2" color="text.secondary">
+            Loading…
+          </MuiTypography>
+        ) : hasNew ? (
           <>
             {/* Base Ingredients */}
             {baseIngredients.map((b) => (
@@ -207,7 +212,7 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => 
                     </MuiTypography>
                     {g.type === "single" ? (
                       <RadioGroup
-                        value={(selectedOptions[g.id] as string) ?? ""} 
+                        value={(selectedOptions[g.id] as string) ?? ""}
                         onChange={(e) => handleSingleChange(g.id, e.target.value)}
                       >
                         {g.options.map((o) => (
@@ -231,8 +236,8 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => 
                             <FormControlLabel
                               control={
                                 <Checkbox
-                                    checked={((selectedOptions[g.id] as Set<string>) ?? new Set()).has(o.key)} 
-                                    onChange={() => handleMultiToggle(g.id, o.key)}
+                                  checked={((selectedOptions[g.id] as Set<string>) ?? new Set()).has(o.key)}
+                                  onChange={() => handleMultiToggle(g.id, o.key)}
                                   size="small"
                                 />
                               }
