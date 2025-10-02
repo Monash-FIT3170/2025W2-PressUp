@@ -22,7 +22,7 @@ export const fixedMenuItems: OmitDB<MenuItem>[] = [
       {
         id: "doneness",
         label: "Patty Doneness",
-        type: "single" as const, // ← 유니온 리터럴로 고정
+        type: "single" as const,
         options: [
           { key: "m",  label: "Medium",      default: true },
           { key: "mw", label: "Medium Well" },
@@ -47,7 +47,7 @@ export const fixedMenuItems: OmitDB<MenuItem>[] = [
       {
         id: "milk-type",
         label: "Milk type",
-        type: "single" as const,   // ← 여기서도 as const
+        type: "single" as const, 
         required: true,
         options: [
           { key: "full",   label: "Full cream", default: true },
@@ -56,7 +56,7 @@ export const fixedMenuItems: OmitDB<MenuItem>[] = [
         ],
       },
     ],
-  }, // ← 여기 콤마가 반드시 필요!
+  }, 
   {
     name: "Cookie",
     ingredients: ["flour", "sugar", "chocolate chips", "butter"],
