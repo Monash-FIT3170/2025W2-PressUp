@@ -50,4 +50,21 @@ Meteor.methods({
   "itemCatgeories.getAll": requireLoginMethod(async function () {
     return ItemCategoriesCollection.find().fetch();
   }),
+
+  "itemCategories.insertInitial": requireLoginMethod(async function () {
+    const categories: OmitDB<ItemCategory>[] = [
+      { name: "Food" },
+      { name: "Drink" },
+      { name: "Dessert" },
+    ];
+
+    // Insert them if they don't already exist
+    for (const category of categories) {
+      const existing = await ItemCategoriesCollection.findOneAsync({ name: category.name });
+      if (!existing) {
+        await ItemCategoriesCollection.insertAsync(category);
+      }
+    }
+  }),
+
 });
