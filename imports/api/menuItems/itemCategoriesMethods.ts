@@ -60,11 +60,12 @@ Meteor.methods({
 
     // Insert them if they don't already exist
     for (const category of categories) {
-      const existing = await ItemCategoriesCollection.findOneAsync({ name: category.name });
+      const existing = await ItemCategoriesCollection.findOneAsync({
+        name: category.name,
+      });
       if (!existing) {
         await ItemCategoriesCollection.insertAsync(category);
       }
     }
   }),
-
 });
