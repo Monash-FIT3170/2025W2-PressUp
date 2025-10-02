@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-import { Meteor } from "meteor/meteor";
+
 import {
   Dialog as MuiDialog,
   DialogTitle as MuiDialogTitle,
@@ -8,7 +8,7 @@ import {
   DialogActions as MuiDialogActions,
   List as MuiList,
   ListItem as MuiListItem,
-  ListItemText as MuiListItemText,
+//   ListItemText as MuiListItemText,
   Typography as MuiTypography,
   Button as MuiButton,
   Divider as MuiDivider,
@@ -83,9 +83,9 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => 
 
   const baseIngredients: BaseIngredient[] = canonical?.baseIngredients ?? [];
   const optionGroups: OptionGroup[] = canonical?.optionGroups ?? [];
-  const legacyIngredients: string[] =
-    canonical?.ingredients ??
-    (Array.isArray(item?.ingredients) ? (item!.ingredients as string[]) : []);
+//   const legacyIngredients: string[] =
+//     canonical?.ingredients ??
+//     (Array.isArray(item?.ingredients) ? (item!.ingredients as string[]) : []);
 
   const hasNew = baseIngredients.length > 0 || optionGroups.length > 0;
 
