@@ -81,11 +81,14 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => 
     return (MenuItemsCollection.findOne({ name: item.name }) as CanonicalMenuItem) ?? null;
   }, [isLoading, item?.name]);
 
-  const baseIngredients: BaseIngredient[] = canonical?.baseIngredients ?? [];
-  const optionGroups: OptionGroup[] = canonical?.optionGroups ?? [];
-//   const legacyIngredients: string[] =
-//     canonical?.ingredients ??
-//     (Array.isArray(item?.ingredients) ? (item!.ingredients as string[]) : []);
+  const baseIngredients = useMemo(
+    () => (canonical?.baseIngredients ?? []) as BaseIngredient[],
+    [canonical?._id]
+  );
+  const optionGroups = useMemo(
+    () => (canonical?.optionGroups ?? []) as OptionGroup[],
+    [canonical?._id]
+  );
 
   const hasNew = baseIngredients.length > 0 || optionGroups.length > 0;
 
@@ -94,7 +97,11 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | Set<string>>>({});
 
   // Initialize state
+
+  // 2) Initialization effect: Only when the document changes or the dialog opens
   useEffect(() => {
+    if (!open || !canonical?._id) return;
+
     const baseInit: Record<string, boolean> = {};
     baseIngredients.forEach((b) => {
       baseInit[b.key] = b.removable === false ? true : !!b.default;
@@ -102,17 +109,39 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => 
 
     const optInit: Record<string, string | Set<string>> = {};
     optionGroups.forEach((g) => {
-      const defaults = g.options.filter((o) => o.default).map((o) => o.key);
-      if (g.type === "single") {
-        optInit[g.id] = defaults[0] ?? (g.required && g.options.length > 0 ? g.options[0].key : "");
-      } else {
-        optInit[g.id] = new Set(defaults);
-      }
+      const defaults = g.options.filter(o => o.default).map(o => o.key);
+      optInit[g.id] =
+        g.type === "single"
+          ? (defaults[0] ?? (g.required && g.options[0] ? g.options[0].key : ""))
+          : new Set(defaults);
     });
 
-    setIncludedBase(baseInit);
-    setSelectedOptions(optInit);
-  }, [canonical?._id, baseIngredients, optionGroups]);
+    // 3) Only set state when the value actually changes (prevent unnecessary renders)
+    setIncludedBase(prev => {
+      const sameLen = Object.keys(prev).length === Object.keys(baseInit).length;
+      const same =
+        sameLen && Object.keys(baseInit).every(k => prev[k] === baseInit[k]);
+      return same ? prev : baseInit;
+    });
+
+    setSelectedOptions(prev => {
+      const keysA = Object.keys(prev);
+      const keysB = Object.keys(optInit);
+      const sameLen = keysA.length === keysB.length;
+      const same =
+        sameLen &&
+        keysB.every(k => {
+          const a = optInit[k], b = prev[k];
+          if (a instanceof Set && b instanceof Set) {
+            if (a.size !== b.size) return false;
+            for (const v of a) if (!b.has(v)) return false;
+            return true;
+          }
+          return a === b;
+        });
+      return same ? prev : optInit;
+    });
+  }, [open, canonical?._id]); // ⬅️ Dependency array removed!
 
   // Group options by base ingredient key
   const groupsByBaseKey = useMemo(() => {

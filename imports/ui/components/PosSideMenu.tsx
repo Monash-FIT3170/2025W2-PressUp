@@ -32,8 +32,6 @@ export const PosSideMenu = ({
   items: _items,
   total,
   orderId,
-  onIncrease,
-  onDecrease,
   onDelete,
   onUpdateOrder,
   onActiveOrderChange,
@@ -51,21 +49,41 @@ export const PosSideMenu = ({
 
   // List active orders for each type
   const activeDineInOrders = useTracker(
-    () =>
-      OrdersCollection.find(
-        { orderType: OrderType.DineIn, paid: false },
-        { sort: { orderNo: 1 } },
-      ).fetch(),
+    () => OrdersCollection.find({ orderType: OrderType.DineIn, paid: false }, { sort: { orderNo: 1 } }).fetch(),
     [],
   );
   const activeTakeawayOrders = useTracker(
-    () =>
-      OrdersCollection.find(
-        { orderType: OrderType.Takeaway, paid: false },
-        { sort: { createdAt: -1 } },
-      ).fetch(),
+    () => OrdersCollection.find({ orderType: OrderType.Takeaway, paid: false }, { sort: { createdAt: -1 } }).fetch(),
     [],
   );
+
+  // Clear invalid selectedOrderId if it doesn't exist in the current active list
+  useEffect(() => {
+    if (!selectedOrderId) return;
+    const list = orderType === OrderType.DineIn ? activeDineInOrders : activeTakeawayOrders;
+    const stillExists = list.some(o => o._id === selectedOrderId);
+    if (!stillExists) {
+      setSelectedOrderId(null);
+      sessionStorage.removeItem("activeOrderId");
+      onActiveOrderChange?.(null);
+    }
+  }, [
+    orderType,
+    selectedOrderId,
+    activeDineInOrders.length,
+    activeTakeawayOrders.length,
+  ]);
+
+  // Clear selectedOrderId if the order type changes and the selected order is invalid
+  useEffect(() => {
+    if (!selectedOrderId) return;
+    const cur = OrdersCollection.findOne(selectedOrderId);
+    if (!cur || cur.orderType !== orderType || cur.paid) {
+      setSelectedOrderId(null);
+      sessionStorage.removeItem("activeOrderId");
+      onActiveOrderChange?.(null);
+    }
+  }, [orderType]);
 
   // Select order by id
   const order = useTracker(() => {
@@ -166,6 +184,13 @@ export const PosSideMenu = ({
     const orders = OrdersCollection.find(selector, { sort }).fetch();
     return orders[0]?._id ?? null;
   };
+
+  const keyForQty = (it: any): string | null =>
+    (it?.lineId as string) ?? (it?.menuItemId as string) ?? (it?._id as string) ?? null;
+
+  const canDeleteByLineId = (it: any): it is { lineId: string } =>
+    typeof it?.lineId === "string" && it.lineId.length > 0;
+
 
   // Discount handlers
   const applyPercentDiscount = (percentage: number | string) => {
@@ -403,11 +428,17 @@ export const PosSideMenu = ({
             displayedItems.map((item, idx) => {
               const qty = item.quantity ?? 1;
               const price = item.price;
+              const rowKey =
+                (item as any)?.lineId
+                  ? (item as any).lineId          
+                  : (item as any)?._id
+                    ? `${(item as any)._id}:${idx}`                 
+                    : `${order?._id ?? "order"}:${idx}`;            
               return (
-                <div
-                  key={idx}
-                  className="bg-white p-4 rounded-md shadow-md space-y-2"
-                >
+                  <div
+                    key={rowKey}
+                    className="bg-white p-4 rounded-md shadow-md space-y-2"
+                  >
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-gray-800">
                       {item.name}
@@ -417,8 +448,18 @@ export const PosSideMenu = ({
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => item._id && onDecrease(item._id)}
+                  <button
+                      onClick={() => {
+                        if (order?.isLocked) return;
+                        const key = keyForQty(item);
+                        if (!key || !order?._id) return;
+                        Meteor.call("orders.decQtyByKey", order._id, String(key), (err: any) => {
+                          if (err) {
+                            console.error(err);
+                            alert("Failed to decrease quantity.");
+                          }
+                        });
+                      }}
                       className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
                       disabled={Boolean(order?.isLocked)}
                     >
@@ -426,19 +467,53 @@ export const PosSideMenu = ({
                     </button>
                     <span>{qty}</span>
                     <button
-                      onClick={() => item._id && onIncrease(item._id)}
+                      onClick={() => {
+                        if (order?.isLocked) return;
+                        const key = keyForQty(item);
+                        if (!key || !order?._id) return;
+                        Meteor.call("orders.incQtyByKey", order._id, String(key), (err: any) => {
+                          if (err) {
+                            console.error(err);
+                            alert("Failed to increase quantity.");
+                          }
+                        });
+                      }}
                       className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
                       disabled={Boolean(order?.isLocked)}
                     >
                       ＋
                     </button>
                     <button
-                      onClick={() => item._id && onDelete(item._id)}
-                      className="text-red-500 hover:text-red-700 text-lg font-bold"
-                      disabled={Boolean(order?.isLocked)}
-                    >
-                      🗑
-                    </button>
+                    onClick={() => {
+                      if (order?.isLocked) return;
+                      if (!order?._id) return;
+
+                      if (canDeleteByLineId(item)) {
+                        Meteor.call(
+                          "orders.removeMenuItemByLineId",
+                          order._id,
+                          item.lineId,
+                          (err: any) => {
+                            if (err) {
+                              console.error(err);
+                              alert("Failed to remove item.");
+                            }
+                          }
+                        );
+                      } else {
+                        Meteor.call("orders.removeMenuItemAt", order._id, idx, (err: any) => {
+                          if (err) {
+                            console.error(err);
+                            alert("Failed to remove item.");
+                          }
+                        });
+                      }
+                    }}
+                    className="text-red-500 hover:text-red-700 text-lg font-bold"
+                    disabled={Boolean(order?.isLocked)}
+                  >
+                    🗑
+                  </button>
 
                     {/* New: View ingredients button */}
                     <MuiIconButton
