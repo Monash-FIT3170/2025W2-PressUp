@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import {
   Dialog as MuiDialog,
@@ -11,6 +11,12 @@ import {
   Typography as MuiTypography,
   Button as MuiButton,
   Divider as MuiDivider,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  Checkbox,
+  Chip,
+  Box,
 } from "@mui/material";
 
 import { MenuItemsCollection } from "/imports/api/menuItems/MenuItemsCollection";
@@ -51,18 +57,26 @@ type Props = {
   onClose: () => void;
 };
 
-const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => {
-  // useSubscribe is renamed to isMenuItemsLoading for clarity
-  const isMenuItemsLoading = useSubscribe("menuItems")();
+const Money: React.FC<{ delta?: number }> = ({ delta }) => {
+  if (typeof delta !== "number" || delta === 0) return null;
+  const sign = delta > 0 ? "+" : "";
+  return (
+    <Chip
+      variant="outlined"
+      size="small"
+      label={`${sign}$${Math.abs(delta).toFixed(2)}`}
+      sx={{ ml: 1 }}
+    />
+  );
+};
 
-  // Guard the findOne call to ensure it only executes when not loading
-  const canonical = useTracker<CanonicalMenuItem | null>(() => {
-    if (isMenuItemsLoading || !item?.name) return null;
-    return (
-      (MenuItemsCollection.findOne({ name: item.name }) as CanonicalMenuItem) ??
-      null
-    );
-  }, [isMenuItemsLoading, item?.name]);
+const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => {
+    const isLoading = useSubscribe("menuItems")();
+    // Fetch the canonical MenuItem from the database
+    const canonical = useTracker<CanonicalMenuItem | null>(() => {
+      if (isLoading || !item?.name) return null;
+      return (MenuItemsCollection.findOne({ name: item.name }) as CanonicalMenuItem) ?? null;
+    }, [isLoading, item?.name]);
 
   const baseIngredients: BaseIngredient[] = canonical?.baseIngredients ?? [];
   const optionGroups: OptionGroup[] = canonical?.optionGroups ?? [];
@@ -72,90 +86,180 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => 
 
   const hasNew = baseIngredients.length > 0 || optionGroups.length > 0;
 
+  // State for managing selections
+  const [includedBase, setIncludedBase] = useState<Record<string, boolean>>({});
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string | Set<string>>>({});
+
+  // Initialize state
+  useEffect(() => {
+    const baseInit: Record<string, boolean> = {};
+    baseIngredients.forEach((b) => {
+      baseInit[b.key] = b.removable === false ? true : !!b.default;
+    });
+
+    const optInit: Record<string, string | Set<string>> = {};
+    optionGroups.forEach((g) => {
+      const defaults = g.options.filter((o) => o.default).map((o) => o.key);
+      if (g.type === "single") {
+        optInit[g.id] = defaults[0] ?? (g.required && g.options.length > 0 ? g.options[0].key : "");
+      } else {
+        optInit[g.id] = new Set(defaults);
+      }
+    });
+
+    setIncludedBase(baseInit);
+    setSelectedOptions(optInit);
+  }, [canonical?._id, baseIngredients, optionGroups]);
+
+  // Group options by base ingredient key
+  const groupsByBaseKey = useMemo(() => {
+    const map: Record<string, OptionGroup[]> = {};
+    const baseKeys = new Set(baseIngredients.map((b) => b.key));
+    optionGroups.forEach((g) => {
+      const baseKey = g.id.split("-")[0];
+      if (baseKeys.has(baseKey)) {
+        (map[baseKey] ||= []).push(g);
+      } else {
+        (map["_ungrouped"] ||= []).push(g);
+      }
+    });
+    return map;
+  }, [baseIngredients, optionGroups]);
+
+  // Handlers
+  const toggleBase = (b: BaseIngredient) => {
+    if (b.removable === false) return;
+    setIncludedBase((prev) => ({ ...prev, [b.key]: !prev[b.key] }));
+  };
+
+  const handleSingleChange = (groupId: string, value: string) => {
+    setSelectedOptions((prev) => ({ ...prev, [groupId]: value }));
+  };
+
+  const handleMultiToggle = (groupId: string, key: string) => {
+    setSelectedOptions((prev) => {
+      const cur = prev[groupId] as Set<string>;
+      const next = new Set(cur ?? []);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return { ...prev, [groupId]: next };
+    });
+  };
+
+  // Calculate total price delta
+  const totalDelta = useMemo(() => {
+    let sum = 0;
+    baseIngredients.forEach((b) => {
+      if (includedBase[b.key] && typeof b.priceDelta === "number") {
+        sum += b.priceDelta;
+      }
+    });
+    optionGroups.forEach((g) => {
+      if (g.type === "single") {
+        const sel = selectedOptions[g.id] as string;
+        const opt = g.options.find((o) => o.key === sel);
+        if (opt?.priceDelta) sum += opt.priceDelta;
+      } else {
+        const set = selectedOptions[g.id] as Set<string>;
+        (set ? Array.from(set) : []).forEach((k) => {
+          const opt = g.options.find((o) => o.key === k);
+          if (opt?.priceDelta) sum += opt.priceDelta;
+        });
+      }
+    });
+    return sum;
+  }, [baseIngredients, optionGroups, includedBase, selectedOptions]);
+
   return (
     <MuiDialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <MuiDialogTitle>{item?.name ?? "Ingredients"}</MuiDialogTitle>
       <MuiDialogContent dividers>
-        {isMenuItemsLoading ? ( // Use isMenuItemsLoading directly in rendering logic
-          <MuiTypography variant="body2" color="text.secondary">
-            Loading…
-          </MuiTypography>
-        ) : hasNew ? (
+        {isLoading ? (
+            <MuiTypography variant="body2" color="text.secondary">Loading…</MuiTypography>
+            ) : hasNew ? (
           <>
             {/* Base Ingredients */}
-            {baseIngredients.length > 0 && (
-              <>
-                <MuiTypography variant="subtitle2" sx={{ mb: 1 }}>
-                  Base Ingredients
-                </MuiTypography>
-                <MuiList dense>
-                  {baseIngredients.map((b, idx) => (
-                    <MuiListItem key={`${b.key}-${idx}`} disableGutters>
-                      <MuiListItemText
-                        primary={
-                          <>
-                            {b.label}
-                            {b.removable === false && " (fixed)"}
-                            {b.removable === true && " (removable)"}
-                            {typeof b.priceDelta === "number" && b.priceDelta !== 0
-                              ? ` (${b.priceDelta > 0 ? "+" : ""}$${b.priceDelta.toFixed(2)})`
-                              : ""}
-                          </>
-                        }
-                        secondary={b.default ? "default" : undefined}
+            {baseIngredients.map((b) => (
+              <Box key={b.key}>
+                <MuiListItem disableGutters>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={!!includedBase[b.key]}
+                        onChange={() => toggleBase(b)}
+                        disabled={b.removable === false}
+                        size="small"
                       />
-                    </MuiListItem>
-                  ))}
-                </MuiList>
-              </>
-            )}
-
-            {/* Options */}
-            {optionGroups.length > 0 && (
-              <>
-                {baseIngredients.length > 0 && <MuiDivider sx={{ my: 1.5 }} />}
-                <MuiTypography variant="subtitle2" sx={{ mb: 1 }}>
-                  Options
-                </MuiTypography>
-                {optionGroups.map((g) => {
-                  const defaults = g.options.filter((o) => o.default);
-                  return (
-                    <div key={g.id} style={{ marginBottom: 8 }}>
-                      <MuiTypography variant="body2" sx={{ fontWeight: 600 }}>
-                        {g.label} {g.required ? "(required)" : ""}{" "}
-                        {g.type === "multiple" ? "[multi]" : "[single]"}
-                      </MuiTypography>
+                    }
+                    label={
+                      <Box display="flex" alignItems="center">
+                        <MuiTypography variant="body2">{b.label}</MuiTypography>
+                        <Money delta={b.priceDelta} />
+                      </Box>
+                    }
+                  />
+                </MuiListItem>
+                {/* Nested options */}
+                {(groupsByBaseKey[b.key] || []).map((g) => (
+                  <Box key={g.id} sx={{ pl: 4 }}>
+                    <MuiTypography variant="body2" sx={{ fontWeight: 600 }}>
+                      {g.label}
+                    </MuiTypography>
+                    {g.type === "single" ? (
+                      <RadioGroup
+                        value={(selectedOptions[g.id] as string) ?? ""} 
+                        onChange={(e) => handleSingleChange(g.id, e.target.value)}
+                      >
+                        {g.options.map((o) => (
+                          <FormControlLabel
+                            key={o.key}
+                            value={o.key}
+                            control={<Radio size="small" />}
+                            label={
+                              <Box display="flex" alignItems="center">
+                                <MuiTypography variant="body2">{o.label}</MuiTypography>
+                                <Money delta={o.priceDelta} />
+                              </Box>
+                            }
+                          />
+                        ))}
+                      </RadioGroup>
+                    ) : (
                       <MuiList dense>
-                        {(defaults.length > 0 ? defaults : g.options).map((o) => (
-                          <MuiListItem key={`${g.id}-${o.key}`} disableGutters>
-                            <MuiListItemText
-                              primary={
-                                <>
-                                  {o.label}
-                                  {typeof o.priceDelta === "number" && o.priceDelta !== 0
-                                    ? ` (${o.priceDelta > 0 ? "+" : ""}$${o.priceDelta.toFixed(2)})`
-                                    : ""}
-                                </>
+                        {g.options.map((o) => (
+                          <MuiListItem key={o.key} disableGutters>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                    checked={((selectedOptions[g.id] as Set<string>) ?? new Set()).has(o.key)} 
+                                    onChange={() => handleMultiToggle(g.id, o.key)}
+                                  size="small"
+                                />
                               }
-                              secondary={o.default ? "default" : undefined}
+                              label={
+                                <Box display="flex" alignItems="center">
+                                  <MuiTypography variant="body2">{o.label}</MuiTypography>
+                                  <Money delta={o.priceDelta} />
+                                </Box>
+                              }
                             />
                           </MuiListItem>
                         ))}
                       </MuiList>
-                    </div>
-                  );
-                })}
-              </>
-            )}
-          </>
-        ) : legacyIngredients.length > 0 ? (
-          <MuiList dense>
-            {legacyIngredients.map((ing, idx) => (
-              <MuiListItem key={`${ing}-${idx}`} disableGutters>
-                <MuiListItemText primary={ing} />
-              </MuiListItem>
+                    )}
+                  </Box>
+                ))}
+              </Box>
             ))}
-          </MuiList>
+            {/* Total price delta */}
+            <MuiDivider sx={{ my: 2 }} />
+            <Box display="flex" justifyContent="space-between">
+              <MuiTypography variant="body2">Options subtotal</MuiTypography>
+              <MuiTypography variant="body2" fontWeight="bold">
+                {totalDelta >= 0 ? "+" : "-"}${Math.abs(totalDelta).toFixed(2)}
+              </MuiTypography>
+            </Box>
+          </>
         ) : (
           <MuiTypography variant="body2" color="text.secondary">
             No ingredients listed.
