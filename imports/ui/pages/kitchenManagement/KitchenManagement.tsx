@@ -10,13 +10,14 @@ import { useTracker } from "meteor/react-meteor-data";
 import {
   OrdersCollection,
   Order as DBOrder,
+  OrderStatus,
 } from "../../../api/orders/OrdersCollection";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 
 const COLUMNS: ColumnType[] = [
-  { id: "pending", title: "Pending" },
-  { id: "preparing", title: "Preparing" },
-  { id: "ready", title: "Ready" },
+  { id: OrderStatus.Pending, title: "Pending" },
+  { id: OrderStatus.Preparing, title: "Preparing" },
+  { id: OrderStatus.Ready, title: "Ready" },
 ];
 
 export const KitchenManagement = () => {
@@ -59,12 +60,12 @@ export const KitchenManagement = () => {
     if (!over) return;
 
     const orderId = String(active.id);
-    const newStatus = over.id;
+    const next = String(over.id) as OrderStatus;
 
     Meteor.call(
       "orders.updateOrder",
       orderId,
-      { orderStatus: newStatus },
+      { orderStatus: next },
       (err: Meteor.Error | undefined) => {
         if (err) {
           console.error(err);

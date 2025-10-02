@@ -29,6 +29,7 @@ export enum OrderStatus {
   Preparing = "preparing",
   Ready = "ready",
   Served = "served",
+  Paid = "paid",
 }
 
 export enum OrderType {
