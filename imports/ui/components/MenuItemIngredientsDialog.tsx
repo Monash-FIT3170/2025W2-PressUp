@@ -110,55 +110,68 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
   const existingSelections =
   (item as OrderMenuItem)?.optionSelections ?? {};
 
+  const savedBaseKeys = (item as OrderMenuItem)?.baseIncludedKeys; // undefined | string[]
+  const hasSavedBase = Array.isArray(savedBaseKeys);
+
   // 2) Initialization effect: Only when the document changes or the dialog opens
   useEffect(() => {
     if (!open || !canonical?._id) return;
 
     const baseInit: Record<string, boolean> = {};
     baseIngredients.forEach((b) => {
-        baseInit[b.key] = b.removable === false ? true : !!b.default;
+    if (b.removable === false) {
+        baseInit[b.key] = true; // 강제 포함
+    } else if (hasSavedBase) {
+        // 저장된 값이 있으면 그 값을 "그대로" 사용 (비어있는 배열도 존중)
+        baseInit[b.key] = (savedBaseKeys as string[]).includes(b.key);
+    } else {
+        // 저장된 값이 없을 때만 default 사용
+        baseInit[b.key] = !!b.default;
+    }
     });
 
     const optInit: Record<string, string | Set<string>> = {};
     optionGroups.forEach((g) => {
         const defaults = g.options.filter(o => o.default).map(o => o.key);
-        const saved = existingSelections[g.id]; 
+        const saved = (item as OrderMenuItem)?.optionSelections?.[g.id];
+
         if (g.type === "single") {
         const savedOne = Array.isArray(saved) ? saved[0] : undefined;
         optInit[g.id] =
-            savedOne ??
-            (defaults[0] ?? (g.required && g.options[0] ? g.options[0].key : ""));
+            savedOne ?? (defaults[0] ?? (g.required && g.options[0] ? g.options[0].key : ""));
         } else {
-        const savedMany =
-            Array.isArray(saved) ? saved : undefined;
+        const savedMany = Array.isArray(saved) ? saved : undefined;
         optInit[g.id] = new Set(savedMany ?? defaults);
         }
     });
-    // 3) Only set state when the value actually changes (prevent unnecessary renders)
-    setIncludedBase(prev => {
-      const sameLen = Object.keys(prev).length === Object.keys(baseInit).length;
-      const same =
-        sameLen && Object.keys(baseInit).every(k => prev[k] === baseInit[k]);
-      return same ? prev : baseInit;
-    });
 
-    setSelectedOptions(prev => {
-      const keysA = Object.keys(prev);
-      const keysB = Object.keys(optInit);
-      const sameLen = keysA.length === keysB.length;
-      const same =
-        sameLen &&
-        keysB.every(k => {
-          const a = optInit[k], b = prev[k];
-          if (a instanceof Set && b instanceof Set) {
-            if (a.size !== b.size) return false;
-            for (const v of a) if (!b.has(v)) return false;
-            return true;
-          }
-          return a === b;
-        });
-      return same ? prev : optInit;
-    });
+    setIncludedBase(baseInit);
+    setSelectedOptions(optInit);
+    // 3) Only set state when the value actually changes (prevent unnecessary renders)
+    // setIncludedBase(prev => {
+    //   const sameLen = Object.keys(prev).length === Object.keys(baseInit).length;
+    //   const same =
+    //     sameLen && Object.keys(baseInit).every(k => prev[k] === baseInit[k]);
+    //   return same ? prev : baseInit;
+    // });
+
+    // setSelectedOptions(prev => {
+    //   const keysA = Object.keys(prev);
+    //   const keysB = Object.keys(optInit);
+    //   const sameLen = keysA.length === keysB.length;
+    //   const same =
+    //     sameLen &&
+    //     keysB.every(k => {
+    //       const a = optInit[k], b = prev[k];
+    //       if (a instanceof Set && b instanceof Set) {
+    //         if (a.size !== b.size) return false;
+    //         for (const v of a) if (!b.has(v)) return false;
+    //         return true;
+    //       }
+    //       return a === b;
+    //     });
+    //   return same ? prev : optInit;
+    // });
   }, [open, canonical?._id, itemIndex]); // ⬅️ Dependency array removed!
 
   // Group options by base ingredient key
@@ -179,43 +192,42 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
     const buildSelections = (): Record<string, string[]> => {
         const sel: Record<string, string[]> = {};
         for (const g of optionGroups) {
-          const v = selectedOptions[g.id];
-          if (g.type === "single") {
-            sel[g.id] = typeof v === "string" && v ? [v] : [];
-          } else {
-            sel[g.id] = Array.from((v as Set<string>) ?? []);
-          }
+            const v = selectedOptions[g.id];
+            sel[g.id] = g.type === "single"
+            ? (typeof v === "string" && v ? [v] : [])
+            : Array.from((v as Set<string>) ?? []);
         }
         return sel;
-      };
+        };
     
       const [saving, setSaving] = useState(false);
     
-
-      const handleSave = () => {
-        if (!orderId || itemIndex == null || locked) {
-          onClose();
-          return;
-        }
-        setSaving(true);
-    
-        const selections = buildSelections();
-        Meteor.call(
-          "orders.updateMenuItemSelections",
-          orderId,
-          itemIndex,
-          selections,
-          (err: any) => {
-            setSaving(false);
-            if (err) {
-              console.error(err);
-              alert("Failed to save options.");
-              return;
-            }
-            onClose();
-          }
-        );
+      const buildBaseIncludedKeys = (): string[] => {
+        return baseIngredients
+          .filter(b => (b.removable === false) ? true : !!includedBase[b.key])
+          .map(b => b.key);
       };
+
+        const handleSave = () => {
+        if (!orderId || itemIndex == null || locked) { onClose(); return; }
+        setSaving(true);
+
+        const selections = buildSelections();
+        const baseIncludedKeys = buildBaseIncludedKeys();        
+
+        Meteor.call(
+            "orders.updateMenuItemSelections",
+            orderId,
+            itemIndex,
+            selections,
+            baseIncludedKeys,                                
+            (err: any) => {
+            setSaving(false);
+            if (err) { console.error(err); alert("Failed to save options."); return; }
+            onClose();
+            }
+        );
+        };
     
 
   // Handlers

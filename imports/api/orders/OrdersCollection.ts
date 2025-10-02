@@ -19,7 +19,8 @@ export type OrderMenuItem = {
   basePrice: number;        
   price: number;            
   ingredients: string[];     
-  modifiers?: OrderModifier[];    
+  modifiers?: OrderModifier[]; 
+  baseIncludedKeys?: string[];
   optionSelections?: OptionSelections; 
   served?: boolean;
 };

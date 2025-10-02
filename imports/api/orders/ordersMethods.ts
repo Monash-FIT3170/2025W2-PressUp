@@ -41,19 +41,49 @@ function equalSelections(a: OptionSelections = {}, b: OptionSelections = {}): bo
   return JSON.stringify(normalizeSelections(a)) === JSON.stringify(normalizeSelections(b));
 }
 
-function buildSnapshot(menu: MenuItem, selections: OptionSelections = {}) {
-  const baseLabels =
-    (menu.baseIngredients ?? [])
-      .filter((b) => b.default)
-      .map((b) => b.label);
+function equalBaseKeys(a?: string[], b?: string[]) {
+  const sa = [...new Set(a ?? [])].sort().join("|");
+  const sb = [...new Set(b ?? [])].sort().join("|");
+  return sa === sb;
+}
+
+function buildSnapshot(
+  menu: MenuItem,
+  selections: OptionSelections = {},
+  baseIncludedKeys?: string[] 
+) {
+  const baseDefs = menu.baseIngredients ?? [];
+
+  const defaultBaseKeys = baseDefs
+    .filter(b => b.removable === false ? true : !!b.default)
+    .map(b => b.key);
+
+  const baseSet = new Set(
+    (baseIncludedKeys && baseIncludedKeys.length > 0)
+      ? baseIncludedKeys
+      : defaultBaseKeys
+  );
+
+  const baseLabels = baseDefs
+    .filter(b => b.removable === false || baseSet.has(b.key))
+    .map(b => b.label);
 
   const modifiers: OrderModifier[] = [];
+
+  for (const b of baseDefs) {
+    const included = (b.removable === false) || baseSet.has(b.key);
+    if (included && typeof b.priceDelta === "number" && b.priceDelta !== 0) {
+      modifiers.push({ key: b.key, label: b.label, priceDelta: b.priceDelta });
+    }
+  }
+
   const optionLabels: string[] = [];
 
   for (const g of menu.optionGroups ?? []) {
     let selectedKeys = selections[g.id];
+
     if (!selectedKeys || selectedKeys.length === 0) {
-      const defaults = g.options.filter((o) => o.default).map((o) => o.key);
+      const defaults = g.options.filter(o => o.default).map(o => o.key);
       if (defaults.length > 0) selectedKeys = defaults;
       else if (g.type === "single" && g.options.length > 0 && g.required) {
         selectedKeys = [g.options[0].key];
@@ -62,7 +92,7 @@ function buildSnapshot(menu: MenuItem, selections: OptionSelections = {}) {
       }
     }
 
-    const chosen = g.options.filter((o) => selectedKeys!.includes(o.key));
+    const chosen = g.options.filter(o => selectedKeys!.includes(o.key));
     for (const o of chosen) {
       optionLabels.push(o.label);
       if (typeof o.priceDelta === "number" && o.priceDelta !== 0) {
@@ -94,11 +124,11 @@ function computeTotals(order: Order) {
   return { originalPrice: base, totalPrice: final };
 }
 
-async function recomputeTotals(orderId: IdType) {
-  const updated = (await OrdersCollection.findOneAsync(orderId)) as Order | undefined;
+async function recomputeTotals(orderId: IdType | Mongo.ObjectID) {
+  const updated = (await OrdersCollection.findOneAsync({ _id: orderId } as any)) as Order | undefined;
   if (!updated) return;
   const totals = computeTotals(updated);
-  await OrdersCollection.updateAsync(orderId, { $set: totals });
+  await OrdersCollection.updateAsync({ _id: orderId } as any, { $set: totals });
 }
 
 /** ---------- methods ---------- **/
@@ -189,10 +219,7 @@ Meteor.methods({
 
   /** -------- Add Menu Item to Order (including lineId) -------- **/
   "orders.addMenuItemFromMenu": requireLoginMethod(async function (
-    orderId: IdType,
-    menuItemId: IdType,
-    quantity: number = 1,
-    selections: OptionSelections = {},
+    orderId, menuItemId, quantity = 1, selections: OptionSelections = {},
   ) {
     check(orderId, Match.OneOf(String, Mongo.ObjectID));
     check(menuItemId, Match.OneOf(String, Mongo.ObjectID));
@@ -207,26 +234,30 @@ Meteor.methods({
     const menu = await MenuItemsCollection.findOneAsync(menuItemId);
     if (!menu) throw new Meteor.Error("menu-not-found", "Menu item not found");
 
-    // ① Check if the same line already exists: same menu + same option combination
+    // 기본 베이스 선택값
+    const defaultBaseKeys = (menu.baseIngredients ?? [])
+      .filter(b => b.removable === false ? true : !!b.default)
+      .map(b => b.key);
+
+    // 동일 라인 찾기: 옵션 + 베이스 선택 비교
     const idx = (order.menuItems ?? []).findIndex((it: any) =>
       String(it?.menuItemId) === String(menuItemId) &&
-      equalSelections(it?.optionSelections ?? {}, selections ?? {})
+      equalSelections(it?.optionSelections ?? {}, selections ?? {}) &&
+      equalBaseKeys(it?.baseIncludedKeys ?? [], defaultBaseKeys)      // ✅
     );
 
     if (idx >= 0) {
-      // ② If it exists, just increase the quantity
       await OrdersCollection.updateAsync(orderId, {
         $inc: { [`menuItems.${idx}.quantity`]: quantity },
       } as any);
       await recomputeTotals(orderId);
-      return; // End
+      return;
     }
 
-    // ③ If it doesn't exist, add a new line (keep current logic)
-    const snap = buildSnapshot(menu, selections);
+    const snap = buildSnapshot(menu, selections, defaultBaseKeys);     // ✅
     const item: OrderMenuItem = {
       lineId: Random.id(),
-      menuItemId,
+      menuItemId: menuItemId as IdType,
       name: menu.name,
       quantity,
       basePrice: snap.basePrice,
@@ -234,6 +265,7 @@ Meteor.methods({
       ingredients: snap.ingredients,
       modifiers: snap.modifiers,
       optionSelections: selections,
+      baseIncludedKeys: defaultBaseKeys,                                // ✅ 저장
     };
 
     await OrdersCollection.updateAsync(orderId, { $push: { menuItems: item } });
@@ -245,54 +277,77 @@ Meteor.methods({
     orderId: IdType,
     itemIndex: number,
     selections: OptionSelections,
+    baseIncludedKeys?: string[] 
   ) {
     check(orderId, String);
     check(itemIndex, Number);
-
-    const order = await OrdersCollection.findOneAsync(orderId);
-    if (!order) throw new Meteor.Error("order-not-found", "Order not found");
+  
+    const order = await OrdersCollection.findOneAsync({ _id: orderId } as any);
+    if (!order) throw new Meteor.Error("order-not-found", "Order not found")
     if (order.isLocked && !(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.MANAGER]))){
       throw new Meteor.Error("order-locked", "Order is locked and cannot be edited");
     }
 
     const item = order.menuItems[itemIndex];
     if (!item) throw new Meteor.Error("item-not-found", "Order item not found");
+  
+    const menu = await MenuItemsCollection.findOneAsync({ _id: item.menuItemId } as any);
+    if (!menu) throw new Meteor.Error("menu-not-found", "Menu item not found");  
 
-    const menu = await MenuItemsCollection.findOneAsync(item.menuItemId);
-    if (!menu) throw new Meteor.Error("menu-not-found", "Menu item not found");
+    const defaultBaseKeys = (menu.baseIngredients ?? [])
+      .filter(b => (b.removable === false) ? true : !!b.default)
+      .map(b => b.key);
 
-    const snap = buildSnapshot(menu, selections);
+    const hasArgBase = typeof baseIncludedKeys !== "undefined";
 
-    await OrdersCollection.updateAsync(orderId, {
-      $set: {
-        [`menuItems.${itemIndex}.price`]: snap.unitPrice,
-        [`menuItems.${itemIndex}.basePrice`]: snap.basePrice,
-        [`menuItems.${itemIndex}.ingredients`]: snap.ingredients,
-        [`menuItems.${itemIndex}.modifiers`]: snap.modifiers,
-        [`menuItems.${itemIndex}.optionSelections`]: selections,
-      },
-    });
+    const effectiveBaseKeys = hasArgBase
+      ? (baseIncludedKeys as string[]) 
+      : (Array.isArray(item.baseIncludedKeys)
+          ? (item.baseIncludedKeys as string[])
+          : defaultBaseKeys);
+
+    const snap = buildSnapshot(menu, selections, effectiveBaseKeys); 
+
+    await OrdersCollection.updateAsync(
+      { _id: orderId } as any,
+      {
+        $set: {
+          [`menuItems.${itemIndex}.price`]: snap.unitPrice,
+          [`menuItems.${itemIndex}.basePrice`]: snap.basePrice,
+          [`menuItems.${itemIndex}.ingredients`]: snap.ingredients,
+          [`menuItems.${itemIndex}.modifiers`]: snap.modifiers,
+          [`menuItems.${itemIndex}.optionSelections`]: selections,
+          [`menuItems.${itemIndex}.baseIncludedKeys`]: effectiveBaseKeys,
+        },
+      }
+    );
     await recomputeTotals(orderId);
   }),
 
   /** -------- Fallback: Delete by index -------- **/
   "orders.removeMenuItemAt": requireLoginMethod(async function (orderId: IdType, index: number) {
-    check(orderId, String);
+    check(orderId, Match.OneOf(String, Mongo.ObjectID));
     check(index, Number);
 
-    const order = await OrdersCollection.findOneAsync(orderId);
+    const order = await OrdersCollection.findOneAsync({ _id: orderId } as any);
     if (!order) throw new Meteor.Error("order-not-found", "Order not found");
 
-    await OrdersCollection.updateAsync(orderId, { $unset: { [`menuItems.${index}`]: 1 } } as any);
+    await OrdersCollection.updateAsync(
+      { _id: orderId } as any,
+      { $unset: { [`menuItems.${index}`]: 1 } } as any
+    );
     // ▼ TypeScript does not allow null, so cast it
-    await OrdersCollection.updateAsync(orderId, { $pull: { menuItems: null as any } } as any);
+    await OrdersCollection.updateAsync(
+      { _id: orderId } as any,
+      { $pull: { menuItems: null as any } } as any
+    );
 
     await recomputeTotals(orderId);
   }),
 
   /** -------- Delete by lineId (recommended) -------- **/
   "orders.removeMenuItemByLineId": requireLoginMethod(async function (orderId: IdType, lineId: string) {
-    check(orderId, String);
+    check(orderId, Match.OneOf(String, Mongo.ObjectID));
     check(lineId, String);
 
     const n = await OrdersCollection.updateAsync(orderId, { $pull: { menuItems: { lineId } } });
