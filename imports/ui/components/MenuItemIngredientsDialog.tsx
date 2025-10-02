@@ -110,10 +110,6 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string | Set<string>>
   >({});
-
-  // Initialize state
-  const existingSelections = (item as OrderMenuItem)?.optionSelections ?? {};
-
   const savedBaseKeys = (item as OrderMenuItem)?.baseIncludedKeys; // undefined | string[]
   const hasSavedBase = Array.isArray(savedBaseKeys);
 
@@ -124,12 +120,10 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
     const baseInit: Record<string, boolean> = {};
     baseIngredients.forEach((b) => {
       if (b.removable === false) {
-        baseInit[b.key] = true; // 강제 포함
+        baseInit[b.key] = true; 
       } else if (hasSavedBase) {
-        // 저장된 값이 있으면 그 값을 "그대로" 사용 (비어있는 배열도 존중)
         baseInit[b.key] = (savedBaseKeys as string[]).includes(b.key);
       } else {
-        // 저장된 값이 없을 때만 default 사용
         baseInit[b.key] = !!b.default;
       }
     });
@@ -178,7 +172,7 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
     //     });
     //   return same ? prev : optInit;
     // });
-  }, [open, canonical?._id, itemIndex]); // ⬅️ Dependency array removed!
+  }, [open, canonical?._id, itemIndex]);
 
   // Group options by base ingredient key
   const groupsByBaseKey = useMemo(() => {
