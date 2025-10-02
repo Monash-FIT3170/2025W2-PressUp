@@ -29,7 +29,10 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
   const finalizePayment = () => {
     if (!order || !order._id) return;
 
-    Meteor.call("orders.updateOrder", order._id, { paid: true });
+    Meteor.call("orders.updateOrder", order._id, {
+      paid: true,
+      orderStatus: OrderStatus.Paid,
+    });
 
     // Clear the table if dine-in
     if (order.tableNo !== null && order.tableNo !== undefined) {
