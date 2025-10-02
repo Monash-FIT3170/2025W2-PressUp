@@ -25,6 +25,12 @@ export const Menu = () => {
 
   useSubscribe("itemCategories");
   const categories = useTracker(() => ItemCategoriesCollection.find().fetch());
+  // insert initial categories if not existing
+  Meteor.call("itemCategories.insertInitial", (error: any) => {
+    if (error) {
+      console.error("Error inserting initial categories:", error);
+    }
+  });
 
   // Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
