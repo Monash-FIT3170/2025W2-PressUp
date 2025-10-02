@@ -32,7 +32,6 @@ export const PosSideMenu = ({
   items: _items,
   total,
   orderId,
-  onDelete,
   onUpdateOrder,
   onActiveOrderChange,
 }: PosSideMenuProps) => {
@@ -301,14 +300,23 @@ export const PosSideMenu = ({
   const [ingredientDialog, setIngredientDialog] = useState<{
     open: boolean;
     item: (MenuItem | OrderMenuItem) | null;
-  }>({ open: false, item: null });
+    idx: number | null;
+    orderId: string | null;
+    locked: boolean;
+  }>({ open: false, item: null, idx: null, orderId: null, locked: false });
 
-  const openIngredientDialog = (item: MenuItem | OrderMenuItem) => {
-    setIngredientDialog({ open: true, item });
+  const openIngredientDialog = (item: MenuItem | OrderMenuItem, idx: number) => {
+    setIngredientDialog({
+      open: true,
+      item,
+      idx,
+      orderId: order?._id ?? null,
+      locked: Boolean(order?.isLocked),
+    });
   };
-
+  
   const closeIngredientDialog = () => {
-    setIngredientDialog({ open: false, item: null });
+    setIngredientDialog({ open: false, item: null, idx: null, orderId: null, locked: false });
   };
 
   return (
@@ -518,7 +526,7 @@ export const PosSideMenu = ({
                     {/* New: View ingredients button */}
                     <MuiIconButton
                       size="small"
-                      onClick={() => openIngredientDialog(item)}
+                      onClick={() => openIngredientDialog(item, idx)}
                       disabled={isMenuItemsLoading || Boolean(order?.isLocked)} // Updated condition
                       aria-label="View ingredients"
                     >
@@ -837,6 +845,9 @@ export const PosSideMenu = ({
       <MenuItemIngredientsDialog
         open={ingredientDialog.open}
         item={ingredientDialog.item}
+        orderId={ingredientDialog.orderId ?? undefined}
+        itemIndex={ingredientDialog.idx ?? undefined}
+        locked={ingredientDialog.locked}
         onClose={closeIngredientDialog}
       />
     </div>

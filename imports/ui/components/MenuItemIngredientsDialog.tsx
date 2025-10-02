@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-
+import { Meteor } from "meteor/meteor";
 import {
   Dialog as MuiDialog,
   DialogTitle as MuiDialogTitle,
@@ -53,10 +53,13 @@ type CanonicalMenuItem = MenuItem & {
 };
 
 type Props = {
-  open: boolean;
-  item: (MenuItem | OrderMenuItem) | null;
-  onClose: () => void;
-};
+    open: boolean;
+    item: (MenuItem | OrderMenuItem) | null;
+    orderId?: string;
+    itemIndex?: number;
+    locked?: boolean;
+    onClose: () => void;
+  };
 
 const Money: React.FC<{ delta?: number }> = ({ delta }) => {
   if (typeof delta !== "number" || delta === 0) return null;
@@ -71,7 +74,14 @@ const Money: React.FC<{ delta?: number }> = ({ delta }) => {
   );
 };
 
-const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => {
+const MenuItemIngredientsDialog: React.FC<Props> = ({
+    open,
+    item,
+    orderId,
+    itemIndex,
+    locked = false,
+    onClose,
+  }) => {
   // Use the function signature for useSubscribe to ensure stability
   const isLoading = useSubscribe("menuItems")();
 
@@ -157,6 +167,48 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => 
     });
     return map;
   }, [baseIngredients, optionGroups]);
+
+    const buildSelections = (): Record<string, string[]> => {
+        const sel: Record<string, string[]> = {};
+        for (const g of optionGroups) {
+          const v = selectedOptions[g.id];
+          if (g.type === "single") {
+            sel[g.id] = typeof v === "string" && v ? [v] : [];
+          } else {
+            sel[g.id] = Array.from((v as Set<string>) ?? []);
+          }
+        }
+        return sel;
+      };
+    
+      const [saving, setSaving] = useState(false);
+    
+
+      const handleSave = () => {
+        if (!orderId || itemIndex == null || locked) {
+          onClose();
+          return;
+        }
+        setSaving(true);
+    
+        const selections = buildSelections();
+        Meteor.call(
+          "orders.updateMenuItemSelections",
+          orderId,
+          itemIndex,
+          selections,
+          (err: any) => {
+            setSaving(false);
+            if (err) {
+              console.error(err);
+              alert("Failed to save options.");
+              return;
+            }
+            onClose();
+          }
+        );
+      };
+    
 
   // Handlers
   const toggleBase = (b: BaseIngredient) => {
@@ -301,10 +353,15 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({ open, item, onClose }) => 
         )}
       </MuiDialogContent>
       <MuiDialogActions>
-        <MuiButton onClick={onClose} variant="outlined">
-          Close
+        <MuiButton onClick={onClose} variant="outlined">Close</MuiButton>
+        <MuiButton
+            onClick={handleSave}
+            variant="contained"
+            disabled={saving || locked}
+        >
+            Save
         </MuiButton>
-      </MuiDialogActions>
+        </MuiDialogActions>
     </MuiDialog>
   );
 };
