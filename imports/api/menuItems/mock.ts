@@ -1,29 +1,30 @@
-import { MenuItemsCollection } from "./MenuItemsCollection";
+import { MenuItemsCollection, MenuItem } from "./MenuItemsCollection";
+import type { OmitDB } from "../database";
 
-export const fixedMenuItems = [
+export const fixedMenuItems: OmitDB<MenuItem>[] = [
   {
     name: "Beef Burger",
-    ingredients: ["bun", "lettuce", "cheese", "tomato", "beef patty", "onion"],
+    ingredients: ["bun", "lettuce", "cheese", "tomato", "beef patty", "onion", "sauce"],
     available: true,
     quantity: 20,
     price: 9.0,
     category: ["Food"],
     image: "/menu_items/beef burger.png",
 
-    // New structure (options)
+    // options (new)
     baseIngredients: [
-      { key: "bun", label: "Bun", default: true, removable: false },
-      { key: "patty", label: "Beef Patty", default: true, removable: false },
-      { key: "onion", label: "Onion", default: true, removable: true },
-      { key: "cheese", label: "Cheese", default: true, removable: true },
+      { key: "bun",    label: "Bun",        default: true, removable: false },
+      { key: "patty",  label: "Beef Patty", default: true, removable: false },
+      { key: "onion",  label: "Onion",      default: true, removable: true  },
+      { key: "cheese", label: "Cheese",     default: true, removable: true  },
     ],
     optionGroups: [
       {
         id: "doneness",
         label: "Patty Doneness",
-        type: "single" as "single", // Explicitly define the type
+        type: "single" as const, // ← 유니온 리터럴로 고정
         options: [
-          { key: "m", label: "Medium", default: true },
+          { key: "m",  label: "Medium",      default: true },
           { key: "mw", label: "Medium Well" },
         ],
       },
@@ -32,31 +33,30 @@ export const fixedMenuItems = [
   {
     name: "Cappuccino",
     ingredients: ["espresso", "steamed milk", "milk foam"],
-    available: true,
-    quantity: 50,
     price: 5.0,
+    quantity: 50,
+    available: true,
     category: ["Drink"],
     image: "/menu_items/cappuccino.png",
-
-    // New structure (options)
     baseIngredients: [
-      { key: "espresso", label: "Espresso", default: true, removable: false },
-      { key: "foam", label: "Milk Foam", default: true, removable: true },
+      { key: "espresso", label: "Espresso",     default: true, removable: false },
+      { key: "milk",     label: "Steamed milk", default: true, removable: true  },
+      { key: "foam",     label: "Milk foam",    default: true, removable: true  },
     ],
     optionGroups: [
       {
-        id: "milk",
-        label: "Milk",
-        type: "single" as "single", // Explicitly define the type
+        id: "milk-type",
+        label: "Milk type",
+        type: "single" as const,   // ← 여기서도 as const
         required: true,
         options: [
-          { key: "whole", label: "Whole Milk", default: true },
-          { key: "almond", label: "Almond Milk", priceDelta: 0.5 },
-          { key: "oat", label: "Oat Milk", priceDelta: 0.7 },
+          { key: "full",   label: "Full cream", default: true },
+          { key: "almond", label: "Almond milk", priceDelta: 0.5 },
+          { key: "oat",    label: "Oat milk",    priceDelta: 0.6 },
         ],
       },
     ],
-  },
+  }, // ← 여기 콤마가 반드시 필요!
   {
     name: "Cookie",
     ingredients: ["flour", "sugar", "chocolate chips", "butter"],
@@ -129,6 +129,15 @@ export const fixedMenuItems = [
     category: ["Food"],
     image: "/menu_items/muffin.png",
   },
+  {
+    name: "Muffin2",
+    ingredients: ["flour2", "sugar", "blueberries", "butter"],
+    available: true,
+    quantity: 300,
+    price: 3.52,
+    category: ["Food"],
+    image: "/menu_items/muffin.png",
+  },
 ];
 
 export const mockMenuItems = async () => {
@@ -136,7 +145,7 @@ export const mockMenuItems = async () => {
   for (const raw of fixedMenuItems) {
     const now = new Date();
     await MenuItemsCollection.upsertAsync(
-      { name: raw.name }, // Unique key
+      { name: raw.name },
       {
         $set: { ...raw, updatedAt: now },
         $setOnInsert: { createdAt: now },

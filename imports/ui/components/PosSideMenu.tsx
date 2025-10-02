@@ -10,6 +10,7 @@ import { Roles } from "meteor/alanning:roles";
 import { RoleEnum } from "/imports/api/accounts/roles";
 import { Hide } from "./display/Hide";
 import { Button } from "./interaction/Button";
+import { Mongo } from "meteor/mongo";
 
 import MenuItemIngredientsDialog from "./MenuItemIngredientsDialog";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -40,9 +41,8 @@ export const PosSideMenu = ({
   // Fetch the current order for this table
   useSubscribe("orders");
   useSubscribe("tables");
-  const [orderType, setOrderType] = useState<
-    OrderType.DineIn | OrderType.Takeaway
-  >(OrderType.DineIn);
+  const isMenuItemsLoading = useSubscribe("menuItems");
+  const [orderType, setOrderType] = useState<OrderType>(OrderType.DineIn);
 
   // Use sessionStorage for activeOrderId
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(() => {
@@ -153,16 +153,18 @@ export const PosSideMenu = ({
   };
 
   // Function to get lowest unpaid order depending on the order type
-  const getLowestOrderId = (type: OrderType.DineIn | OrderType.Takeaway) => {
-    const orders = OrdersCollection.find(
+  const getLowestOrderId = (type: OrderType) => {
+    const selector =
       type === OrderType.DineIn
         ? { orderType: OrderType.DineIn, paid: false }
-        : { orderType: OrderType.Takeaway, paid: false },
-      type === "dine-in"
-        ? { sort: { orderNo: 1 } }
-        : { sort: { createdAt: -1 } },
-    ).fetch();
-    return orders.length > 0 ? orders[0]._id : null;
+        : { orderType: OrderType.Takeaway, paid: false };
+  
+    // Meteor 타입 사용
+    const sort: Mongo.SortSpecifier =
+      type === OrderType.DineIn ? { orderNo: 1 } : { createdAt: -1 };
+  
+    const orders = OrdersCollection.find(selector, { sort }).fetch();
+    return orders[0]?._id ?? null;
   };
 
   // Discount handlers
@@ -296,20 +298,21 @@ export const PosSideMenu = ({
               setActiveOrder(getLowestOrderId(OrderType.DineIn));
             }}
             className={`px-3 py-1 rounded-full font-semibold ${
-              orderType === "dine-in"
+              orderType === OrderType.DineIn
                 ? "bg-white text-press-up-purple"
                 : "bg-press-up-purple border border-white"
             }`}
           >
             Dine In
           </button>
+
           <button
             onClick={() => {
               setOrderType(OrderType.Takeaway);
               setActiveOrder(getLowestOrderId(OrderType.Takeaway));
             }}
             className={`px-3 py-1 rounded-full font-semibold ${
-              orderType === "takeaway"
+              orderType === OrderType.Takeaway
                 ? "bg-white text-press-up-purple"
                 : "bg-press-up-purple border border-white"
             }`}
@@ -441,7 +444,7 @@ export const PosSideMenu = ({
                     <MuiIconButton
                       size="small"
                       onClick={() => openIngredientDialog(item)}
-                      disabled={Boolean(order?.isLocked)}
+                      disabled={isMenuItemsLoading()} 
                       aria-label="View ingredients"
                     >
                       <MoreVertIcon fontSize="small" />

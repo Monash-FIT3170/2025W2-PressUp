@@ -38,6 +38,7 @@
     "react-router": "^7.7.1",
     "react-to-print": "^3.1.1",
     "recharts": "^3.1.2",
+    "simpl-schema": "^3.4.6",
     "tailwindcss": "^4.1.11",
     "ts-number-range": "^1.0.4"
   },
