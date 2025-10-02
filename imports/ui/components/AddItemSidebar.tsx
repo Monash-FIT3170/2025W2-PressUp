@@ -114,12 +114,12 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-[9999]">
       <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
-        <h2 className="text-xl font-bold mb-4 text-red-900 dark:text-white">
+        <h2 className="text-xl font-bold mb-4 text-red-900">
           Add New Menu Item Category
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4 mb-6">
           <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
+            <label className="block mb-2 text-sm font-medium text-red-900">
               Name
             </label>
             <input
@@ -129,7 +129,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5"
               required
             />
           </div>
@@ -157,7 +157,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
           </div>
         </form>
 
-        <h3 className="text-lg font-semibold mb-2 text-red-900 dark:text-white">
+        <h3 className="text-lg font-semibold mb-2 text-red-900">
           Existing Categories
         </h3>
         <ul className="space-y-2 max-h-48 overflow-y-auto">
@@ -166,7 +166,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
               key={cat._id}
               className="flex justify-between items-center bg-white rounded-lg px-3 py-2 shadow-sm"
             >
-              <span className="text-red-900 dark:text-white">{cat.name}</span>
+              <span className="text-red-900">{cat.name}</span>
               <button
                 type="button"
                 className="bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors"
