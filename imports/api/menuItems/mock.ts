@@ -4,7 +4,15 @@ import type { OmitDB } from "../database";
 export const fixedMenuItems: OmitDB<MenuItem>[] = [
   {
     name: "Beef Burger",
-    ingredients: ["bun", "lettuce", "cheese", "tomato", "beef patty", "onion", "sauce"],
+    ingredients: [
+      "bun",
+      "lettuce",
+      "cheese",
+      "tomato",
+      "beef patty",
+      "onion",
+      "sauce",
+    ],
     available: true,
     quantity: 20,
     price: 9.0,
@@ -13,10 +21,10 @@ export const fixedMenuItems: OmitDB<MenuItem>[] = [
 
     // options (new)
     baseIngredients: [
-      { key: "bun",    label: "Bun",        default: true, removable: false },
-      { key: "patty",  label: "Beef Patty", default: true, removable: false },
-      { key: "onion",  label: "Onion",      default: true, removable: true  },
-      { key: "cheese", label: "Cheese",     default: true, removable: true  },
+      { key: "bun", label: "Bun", default: true, removable: false },
+      { key: "patty", label: "Beef Patty", default: true, removable: false },
+      { key: "onion", label: "Onion", default: true, removable: true },
+      { key: "cheese", label: "Cheese", default: true, removable: true },
     ],
     optionGroups: [
       {
@@ -24,7 +32,7 @@ export const fixedMenuItems: OmitDB<MenuItem>[] = [
         label: "Patty Doneness",
         type: "single" as const,
         options: [
-          { key: "m",  label: "Medium",      default: true },
+          { key: "m", label: "Medium", default: true },
           { key: "mw", label: "Medium Well" },
         ],
       },
@@ -39,24 +47,24 @@ export const fixedMenuItems: OmitDB<MenuItem>[] = [
     category: ["Drink"],
     image: "/menu_items/cappuccino.png",
     baseIngredients: [
-      { key: "espresso", label: "Espresso",     default: true, removable: false },
-      { key: "milk",     label: "Steamed milk", default: true, removable: true  },
-      { key: "foam",     label: "Milk foam",    default: true, removable: true  },
+      { key: "espresso", label: "Espresso", default: true, removable: false },
+      { key: "milk", label: "Steamed milk", default: true, removable: true },
+      { key: "foam", label: "Milk foam", default: true, removable: true },
     ],
     optionGroups: [
       {
         id: "milk-type",
         label: "Milk type",
-        type: "single" as const, 
+        type: "single" as const,
         required: true,
         options: [
-          { key: "full",   label: "Full cream", default: true },
+          { key: "full", label: "Full cream", default: true },
           { key: "almond", label: "Almond milk", priceDelta: 0.5 },
-          { key: "oat",    label: "Oat milk",    priceDelta: 0.6 },
+          { key: "oat", label: "Oat milk", priceDelta: 0.6 },
         ],
       },
     ],
-  }, 
+  },
   {
     name: "Cookie",
     ingredients: ["flour", "sugar", "chocolate chips", "butter"],
@@ -147,10 +155,6 @@ export const mockMenuItems = async () => {
   for (const raw of fixedMenuItems) {
     const now = new Date();
     const doc = { ...raw, updatedAt: now };
-    await col.replaceOne(
-      { name: raw.name },
-      doc,
-      { upsert: true }
-    );
+    await col.replaceOne({ name: raw.name }, doc, { upsert: true });
   }
 };

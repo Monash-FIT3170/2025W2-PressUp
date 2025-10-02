@@ -13,7 +13,10 @@ import { IdType } from "../database";
 import { Roles } from "meteor/alanning:roles";
 import { RoleEnum } from "../accounts/roles";
 import { Random } from "meteor/random";
-import { MenuItemsCollection, MenuItem } from "../menuItems/MenuItemsCollection";
+import {
+  MenuItemsCollection,
+  MenuItem,
+} from "../menuItems/MenuItemsCollection";
 
 function sameKey(it: any, key: string): boolean {
   const lineId = typeof it?.lineId === "string" ? it.lineId : undefined;
@@ -26,7 +29,9 @@ function sameKey(it: any, key: string): boolean {
 /** ---------- helpers ---------- **/
 
 // Normalize selections: Sort keys and sort values in each group
-function normalizeSelections(sel: OptionSelections = {}): Record<string, string[]> {
+function normalizeSelections(
+  sel: OptionSelections = {},
+): Record<string, string[]> {
   const out: Record<string, string[]> = {};
   for (const gid of Object.keys(sel).sort()) {
     const v = sel[gid] ?? [];
@@ -37,8 +42,14 @@ function normalizeSelections(sel: OptionSelections = {}): Record<string, string[
 }
 
 // Deep comparison (compare after normalization)
-function equalSelections(a: OptionSelections = {}, b: OptionSelections = {}): boolean {
-  return JSON.stringify(normalizeSelections(a)) === JSON.stringify(normalizeSelections(b));
+function equalSelections(
+  a: OptionSelections = {},
+  b: OptionSelections = {},
+): boolean {
+  return (
+    JSON.stringify(normalizeSelections(a)) ===
+    JSON.stringify(normalizeSelections(b))
+  );
 }
 
 function equalBaseKeys(a?: string[], b?: string[]) {
@@ -50,28 +61,28 @@ function equalBaseKeys(a?: string[], b?: string[]) {
 function buildSnapshot(
   menu: MenuItem,
   selections: OptionSelections = {},
-  baseIncludedKeys?: string[] 
+  baseIncludedKeys?: string[],
 ) {
   const baseDefs = menu.baseIngredients ?? [];
 
   const defaultBaseKeys = baseDefs
-    .filter(b => b.removable === false ? true : !!b.default)
-    .map(b => b.key);
+    .filter((b) => (b.removable === false ? true : !!b.default))
+    .map((b) => b.key);
 
   const baseSet = new Set(
-    (baseIncludedKeys && baseIncludedKeys.length > 0)
+    baseIncludedKeys && baseIncludedKeys.length > 0
       ? baseIncludedKeys
-      : defaultBaseKeys
+      : defaultBaseKeys,
   );
 
   const baseLabels = baseDefs
-    .filter(b => b.removable === false || baseSet.has(b.key))
-    .map(b => b.label);
+    .filter((b) => b.removable === false || baseSet.has(b.key))
+    .map((b) => b.label);
 
   const modifiers: OrderModifier[] = [];
 
   for (const b of baseDefs) {
-    const included = (b.removable === false) || baseSet.has(b.key);
+    const included = b.removable === false || baseSet.has(b.key);
     if (included && typeof b.priceDelta === "number" && b.priceDelta !== 0) {
       modifiers.push({ key: b.key, label: b.label, priceDelta: b.priceDelta });
     }
@@ -83,7 +94,7 @@ function buildSnapshot(
     let selectedKeys = selections[g.id];
 
     if (!selectedKeys || selectedKeys.length === 0) {
-      const defaults = g.options.filter(o => o.default).map(o => o.key);
+      const defaults = g.options.filter((o) => o.default).map((o) => o.key);
       if (defaults.length > 0) selectedKeys = defaults;
       else if (g.type === "single" && g.options.length > 0 && g.required) {
         selectedKeys = [g.options[0].key];
@@ -92,11 +103,15 @@ function buildSnapshot(
       }
     }
 
-    const chosen = g.options.filter(o => selectedKeys!.includes(o.key));
+    const chosen = g.options.filter((o) => selectedKeys!.includes(o.key));
     for (const o of chosen) {
       optionLabels.push(o.label);
       if (typeof o.priceDelta === "number" && o.priceDelta !== 0) {
-        modifiers.push({ key: o.key, label: o.label, priceDelta: o.priceDelta });
+        modifiers.push({
+          key: o.key,
+          label: o.label,
+          priceDelta: o.priceDelta,
+        });
       }
     }
   }
@@ -125,7 +140,9 @@ function computeTotals(order: Order) {
 }
 
 async function recomputeTotals(orderId: IdType | Mongo.ObjectID) {
-  const updated = (await OrdersCollection.findOneAsync({ _id: orderId } as any)) as Order | undefined;
+  const updated = (await OrdersCollection.findOneAsync({
+    _id: orderId,
+  } as any)) as Order | undefined;
   if (!updated) return;
   const totals = computeTotals(updated);
   await OrdersCollection.updateAsync({ _id: orderId } as any, { $set: totals });
@@ -138,14 +155,23 @@ Meteor.methods({
     update: Partial<Order>,
   ) {
     if (!orderId || !update)
-      throw new Meteor.Error("invalid-arguments", "Order ID and update are required");
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Order ID and update are required",
+      );
 
-    const existingOrder = await OrdersCollection.findOneAsync(orderId as IdType);
-    if (!existingOrder) throw new Meteor.Error("order-not-found", "Order not found");
+    const existingOrder = await OrdersCollection.findOneAsync(
+      orderId as IdType,
+    );
+    if (!existingOrder)
+      throw new Meteor.Error("order-not-found", "Order not found");
 
     if (existingOrder.isLocked) {
       if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.MANAGER]))) {
-        throw new Meteor.Error("order-locked", "Order is locked and cannot be edited");
+        throw new Meteor.Error(
+          "order-locked",
+          "Order is locked and cannot be edited",
+        );
       }
     }
 
@@ -155,10 +181,14 @@ Meteor.methods({
   }),
 
   "orders.addOrder": requireLoginMethod(async function (order: Partial<Order>) {
-    if (!order) throw new Meteor.Error("invalid-arguments", "Order data is required");
+    if (!order)
+      throw new Meteor.Error("invalid-arguments", "Order data is required");
 
     if (!order.orderNo) {
-      const lastOrder = await OrdersCollection.find({}, { sort: { orderNo: -1 }, limit: 1 }).fetchAsync();
+      const lastOrder = await OrdersCollection.find(
+        {},
+        { sort: { orderNo: -1 }, limit: 1 },
+      ).fetchAsync();
       let nextOrderNo = 1001;
       if (lastOrder.length > 0 && typeof lastOrder[0].orderNo === "number") {
         nextOrderNo = lastOrder[0].orderNo + 1;
@@ -203,23 +233,35 @@ Meteor.methods({
   }),
 
   "orders.removeOrder": requireLoginMethod(async function (orderId: IdType) {
-    if (!orderId) throw new Meteor.Error("invalid-arguments", "Order ID is required");
+    if (!orderId)
+      throw new Meteor.Error("invalid-arguments", "Order ID is required");
     return await OrdersCollection.removeAsync(orderId);
   }),
 
-  "orders.setLocked": requireLoginMethod(async function (orderId: IdType, locked: boolean) {
+  "orders.setLocked": requireLoginMethod(async function (
+    orderId: IdType,
+    locked: boolean,
+  ) {
     check(orderId, String);
     check(locked, Boolean);
 
     if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.MANAGER]))) {
-      throw new Meteor.Error("invalid-permissions", "No permissions to edit locked state.");
+      throw new Meteor.Error(
+        "invalid-permissions",
+        "No permissions to edit locked state.",
+      );
     }
-    return await OrdersCollection.updateAsync(orderId, { $set: { isLocked: locked } });
+    return await OrdersCollection.updateAsync(orderId, {
+      $set: { isLocked: locked },
+    });
   }),
 
   /** -------- Add Menu Item to Order (including lineId) -------- **/
   "orders.addMenuItemFromMenu": requireLoginMethod(async function (
-    orderId, menuItemId, quantity = 1, selections: OptionSelections = {},
+    orderId,
+    menuItemId,
+    quantity = 1,
+    selections: OptionSelections = {},
   ) {
     check(orderId, Match.OneOf(String, Mongo.ObjectID));
     check(menuItemId, Match.OneOf(String, Mongo.ObjectID));
@@ -227,8 +269,14 @@ Meteor.methods({
 
     const order = await OrdersCollection.findOneAsync(orderId);
     if (!order) throw new Meteor.Error("order-not-found", "Order not found");
-    if (order.isLocked && !(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.MANAGER]))){
-      throw new Meteor.Error("order-locked", "Order is locked and cannot be edited");
+    if (
+      order.isLocked &&
+      !(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.MANAGER]))
+    ) {
+      throw new Meteor.Error(
+        "order-locked",
+        "Order is locked and cannot be edited",
+      );
     }
 
     const menu = await MenuItemsCollection.findOneAsync(menuItemId);
@@ -236,14 +284,15 @@ Meteor.methods({
 
     // 기본 베이스 선택값
     const defaultBaseKeys = (menu.baseIngredients ?? [])
-      .filter(b => b.removable === false ? true : !!b.default)
-      .map(b => b.key);
+      .filter((b) => (b.removable === false ? true : !!b.default))
+      .map((b) => b.key);
 
     // 동일 라인 찾기: 옵션 + 베이스 선택 비교
-    const idx = (order.menuItems ?? []).findIndex((it: any) =>
-      String(it?.menuItemId) === String(menuItemId) &&
-      equalSelections(it?.optionSelections ?? {}, selections ?? {}) &&
-      equalBaseKeys(it?.baseIncludedKeys ?? [], defaultBaseKeys)      // ✅
+    const idx = (order.menuItems ?? []).findIndex(
+      (it: any) =>
+        String(it?.menuItemId) === String(menuItemId) &&
+        equalSelections(it?.optionSelections ?? {}, selections ?? {}) &&
+        equalBaseKeys(it?.baseIncludedKeys ?? [], defaultBaseKeys), // ✅
     );
 
     if (idx >= 0) {
@@ -254,7 +303,7 @@ Meteor.methods({
       return;
     }
 
-    const snap = buildSnapshot(menu, selections, defaultBaseKeys);     // ✅
+    const snap = buildSnapshot(menu, selections, defaultBaseKeys); // ✅
     const item: OrderMenuItem = {
       lineId: Random.id(),
       menuItemId: menuItemId as IdType,
@@ -265,7 +314,7 @@ Meteor.methods({
       ingredients: snap.ingredients,
       modifiers: snap.modifiers,
       optionSelections: selections,
-      baseIncludedKeys: defaultBaseKeys,                                // ✅ 저장
+      baseIncludedKeys: defaultBaseKeys, // ✅ 저장
     };
 
     await OrdersCollection.updateAsync(orderId, { $push: { menuItems: item } });
@@ -277,55 +326,63 @@ Meteor.methods({
     orderId: IdType,
     itemIndex: number,
     selections: OptionSelections,
-    baseIncludedKeys?: string[] 
+    baseIncludedKeys?: string[],
   ) {
     check(orderId, String);
     check(itemIndex, Number);
-  
+
     const order = await OrdersCollection.findOneAsync({ _id: orderId } as any);
-    if (!order) throw new Meteor.Error("order-not-found", "Order not found")
-    if (order.isLocked && !(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.MANAGER]))){
-      throw new Meteor.Error("order-locked", "Order is locked and cannot be edited");
+    if (!order) throw new Meteor.Error("order-not-found", "Order not found");
+    if (
+      order.isLocked &&
+      !(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.MANAGER]))
+    ) {
+      throw new Meteor.Error(
+        "order-locked",
+        "Order is locked and cannot be edited",
+      );
     }
 
     const item = order.menuItems[itemIndex];
     if (!item) throw new Meteor.Error("item-not-found", "Order item not found");
-  
-    const menu = await MenuItemsCollection.findOneAsync({ _id: item.menuItemId } as any);
-    if (!menu) throw new Meteor.Error("menu-not-found", "Menu item not found");  
+
+    const menu = await MenuItemsCollection.findOneAsync({
+      _id: item.menuItemId,
+    } as any);
+    if (!menu) throw new Meteor.Error("menu-not-found", "Menu item not found");
 
     const defaultBaseKeys = (menu.baseIngredients ?? [])
-      .filter(b => (b.removable === false) ? true : !!b.default)
-      .map(b => b.key);
+      .filter((b) => (b.removable === false ? true : !!b.default))
+      .map((b) => b.key);
 
     const hasArgBase = typeof baseIncludedKeys !== "undefined";
 
     const effectiveBaseKeys = hasArgBase
-      ? (baseIncludedKeys as string[]) 
-      : (Array.isArray(item.baseIncludedKeys)
-          ? (item.baseIncludedKeys as string[])
-          : defaultBaseKeys);
+      ? (baseIncludedKeys as string[])
+      : Array.isArray(item.baseIncludedKeys)
+        ? (item.baseIncludedKeys as string[])
+        : defaultBaseKeys;
 
-    const snap = buildSnapshot(menu, selections, effectiveBaseKeys); 
+    const snap = buildSnapshot(menu, selections, effectiveBaseKeys);
 
-    await OrdersCollection.updateAsync(
-      { _id: orderId } as any,
-      {
-        $set: {
-          [`menuItems.${itemIndex}.price`]: snap.unitPrice,
-          [`menuItems.${itemIndex}.basePrice`]: snap.basePrice,
-          [`menuItems.${itemIndex}.ingredients`]: snap.ingredients,
-          [`menuItems.${itemIndex}.modifiers`]: snap.modifiers,
-          [`menuItems.${itemIndex}.optionSelections`]: selections,
-          [`menuItems.${itemIndex}.baseIncludedKeys`]: effectiveBaseKeys,
-        },
-      }
-    );
+    await OrdersCollection.updateAsync({ _id: orderId } as any, {
+      $set: {
+        [`menuItems.${itemIndex}.price`]: snap.unitPrice,
+        [`menuItems.${itemIndex}.basePrice`]: snap.basePrice,
+        [`menuItems.${itemIndex}.ingredients`]: snap.ingredients,
+        [`menuItems.${itemIndex}.modifiers`]: snap.modifiers,
+        [`menuItems.${itemIndex}.optionSelections`]: selections,
+        [`menuItems.${itemIndex}.baseIncludedKeys`]: effectiveBaseKeys,
+      },
+    });
     await recomputeTotals(orderId);
   }),
 
   /** -------- Fallback: Delete by index -------- **/
-  "orders.removeMenuItemAt": requireLoginMethod(async function (orderId: IdType, index: number) {
+  "orders.removeMenuItemAt": requireLoginMethod(async function (
+    orderId: IdType,
+    index: number,
+  ) {
     check(orderId, Match.OneOf(String, Mongo.ObjectID));
     check(index, Number);
 
@@ -334,37 +391,48 @@ Meteor.methods({
 
     await OrdersCollection.updateAsync(
       { _id: orderId } as any,
-      { $unset: { [`menuItems.${index}`]: 1 } } as any
+      { $unset: { [`menuItems.${index}`]: 1 } } as any,
     );
     // ▼ TypeScript does not allow null, so cast it
     await OrdersCollection.updateAsync(
       { _id: orderId } as any,
-      { $pull: { menuItems: null as any } } as any
+      { $pull: { menuItems: null as any } } as any,
     );
 
     await recomputeTotals(orderId);
   }),
 
   /** -------- Delete by lineId (recommended) -------- **/
-  "orders.removeMenuItemByLineId": requireLoginMethod(async function (orderId: IdType, lineId: string) {
+  "orders.removeMenuItemByLineId": requireLoginMethod(async function (
+    orderId: IdType,
+    lineId: string,
+  ) {
     check(orderId, Match.OneOf(String, Mongo.ObjectID));
     check(lineId, String);
 
-    const n = await OrdersCollection.updateAsync(orderId, { $pull: { menuItems: { lineId } } });
+    const n = await OrdersCollection.updateAsync(orderId, {
+      $pull: { menuItems: { lineId } },
+    });
     await recomputeTotals(orderId);
     return n;
   }),
 
   /** -------- Increase Quantity by 1 (lineId preferred, menuItemId fallback) -------- **/
-  "orders.incQtyByKey": requireLoginMethod(async function (orderId: IdType, key: string) {
+  "orders.incQtyByKey": requireLoginMethod(async function (
+    orderId: IdType,
+    key: string,
+  ) {
     check(orderId, String);
     check(key, String);
 
     const order = await OrdersCollection.findOneAsync(orderId);
     if (!order) throw new Meteor.Error("order-not-found", "Order not found");
 
-    const idx = (order.menuItems ?? []).findIndex((it: any) => sameKey(it, key));
-    if (idx < 0) throw new Meteor.Error("item-not-found", "Order item not found");
+    const idx = (order.menuItems ?? []).findIndex((it: any) =>
+      sameKey(it, key),
+    );
+    if (idx < 0)
+      throw new Meteor.Error("item-not-found", "Order item not found");
 
     await OrdersCollection.updateAsync(orderId, {
       $inc: { [`menuItems.${idx}.quantity`]: 1 },
@@ -374,23 +442,35 @@ Meteor.methods({
   }),
 
   /** -------- Decrease Quantity by 1 (delete if 0) -------- **/
-  "orders.decQtyByKey": requireLoginMethod(async function (orderId: IdType, key: string) {
+  "orders.decQtyByKey": requireLoginMethod(async function (
+    orderId: IdType,
+    key: string,
+  ) {
     check(orderId, String);
     check(key, String);
 
     const order = await OrdersCollection.findOneAsync(orderId);
     if (!order) throw new Meteor.Error("order-not-found", "Order not found");
 
-    const idx = (order.menuItems ?? []).findIndex((it: any) => sameKey(it, key));
-    if (idx < 0) throw new Meteor.Error("item-not-found", "Order item not found");
+    const idx = (order.menuItems ?? []).findIndex((it: any) =>
+      sameKey(it, key),
+    );
+    if (idx < 0)
+      throw new Meteor.Error("item-not-found", "Order item not found");
 
     const curQty = order.menuItems[idx]?.quantity ?? 1;
 
     if (curQty <= 1) {
-      await OrdersCollection.updateAsync(orderId, { $unset: { [`menuItems.${idx}`]: 1 } } as any);
-      await OrdersCollection.updateAsync(orderId, { $pull: { menuItems: null as any } } as any);
+      await OrdersCollection.updateAsync(orderId, {
+        $unset: { [`menuItems.${idx}`]: 1 },
+      } as any);
+      await OrdersCollection.updateAsync(orderId, {
+        $pull: { menuItems: null as any },
+      } as any);
     } else {
-      await OrdersCollection.updateAsync(orderId, { $inc: { [`menuItems.${idx}.quantity`]: -1 } } as any);
+      await OrdersCollection.updateAsync(orderId, {
+        $inc: { [`menuItems.${idx}.quantity`]: -1 },
+      } as any);
     }
 
     await recomputeTotals(orderId);

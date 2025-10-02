@@ -159,10 +159,10 @@ export const MainDisplay = () => {
       // If there is no option selection UI, selections will be an empty object {}
       await Meteor.callAsync(
         "orders.addMenuItemFromMenu",
-        order._id,        // Current order
-        menu._id,         // Menu item ID
-        1,                // Quantity
-        {}                // selections (option selections)
+        order._id, // Current order
+        menu._id, // Menu item ID
+        1, // Quantity
+        {}, // selections (option selections)
       );
       // Totals/discounts are recalculated on the server (recomputeTotals), so no need to calculate here
     } catch (e) {

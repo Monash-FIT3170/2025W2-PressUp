@@ -8,7 +8,7 @@ import {
   DialogActions as MuiDialogActions,
   List as MuiList,
   ListItem as MuiListItem,
-//   ListItemText as MuiListItemText,
+  //   ListItemText as MuiListItemText,
   Typography as MuiTypography,
   Button as MuiButton,
   Divider as MuiDivider,
@@ -53,13 +53,13 @@ type CanonicalMenuItem = MenuItem & {
 };
 
 type Props = {
-    open: boolean;
-    item: (MenuItem | OrderMenuItem) | null;
-    orderId?: string;
-    itemIndex?: number;
-    locked?: boolean;
-    onClose: () => void;
-  };
+  open: boolean;
+  item: (MenuItem | OrderMenuItem) | null;
+  orderId?: string;
+  itemIndex?: number;
+  locked?: boolean;
+  onClose: () => void;
+};
 
 const Money: React.FC<{ delta?: number }> = ({ delta }) => {
   if (typeof delta !== "number" || delta === 0) return null;
@@ -75,40 +75,44 @@ const Money: React.FC<{ delta?: number }> = ({ delta }) => {
 };
 
 const MenuItemIngredientsDialog: React.FC<Props> = ({
-    open,
-    item,
-    orderId,
-    itemIndex,
-    locked = false,
-    onClose,
-  }) => {
+  open,
+  item,
+  orderId,
+  itemIndex,
+  locked = false,
+  onClose,
+}) => {
   // Use the function signature for useSubscribe to ensure stability
   const isLoading = useSubscribe("menuItems")();
 
   // Fetch the canonical MenuItem from the database
   const canonical = useTracker<CanonicalMenuItem | null>(() => {
     if (isLoading || !item?.name) return null;
-    return (MenuItemsCollection.findOne({ name: item.name }) as CanonicalMenuItem) ?? null;
+    return (
+      (MenuItemsCollection.findOne({ name: item.name }) as CanonicalMenuItem) ??
+      null
+    );
   }, [isLoading, item?.name]);
 
   const baseIngredients = useMemo(
     () => (canonical?.baseIngredients ?? []) as BaseIngredient[],
-    [canonical?._id]
+    [canonical?._id],
   );
   const optionGroups = useMemo(
     () => (canonical?.optionGroups ?? []) as OptionGroup[],
-    [canonical?._id]
+    [canonical?._id],
   );
 
   const hasNew = baseIngredients.length > 0 || optionGroups.length > 0;
 
   // State for managing selections
   const [includedBase, setIncludedBase] = useState<Record<string, boolean>>({});
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string | Set<string>>>({});
+  const [selectedOptions, setSelectedOptions] = useState<
+    Record<string, string | Set<string>>
+  >({});
 
   // Initialize state
-  const existingSelections =
-  (item as OrderMenuItem)?.optionSelections ?? {};
+  const existingSelections = (item as OrderMenuItem)?.optionSelections ?? {};
 
   const savedBaseKeys = (item as OrderMenuItem)?.baseIncludedKeys; // undefined | string[]
   const hasSavedBase = Array.isArray(savedBaseKeys);
@@ -119,30 +123,32 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
 
     const baseInit: Record<string, boolean> = {};
     baseIngredients.forEach((b) => {
-    if (b.removable === false) {
+      if (b.removable === false) {
         baseInit[b.key] = true; // 강제 포함
-    } else if (hasSavedBase) {
+      } else if (hasSavedBase) {
         // 저장된 값이 있으면 그 값을 "그대로" 사용 (비어있는 배열도 존중)
         baseInit[b.key] = (savedBaseKeys as string[]).includes(b.key);
-    } else {
+      } else {
         // 저장된 값이 없을 때만 default 사용
         baseInit[b.key] = !!b.default;
-    }
+      }
     });
 
     const optInit: Record<string, string | Set<string>> = {};
     optionGroups.forEach((g) => {
-        const defaults = g.options.filter(o => o.default).map(o => o.key);
-        const saved = (item as OrderMenuItem)?.optionSelections?.[g.id];
+      const defaults = g.options.filter((o) => o.default).map((o) => o.key);
+      const saved = (item as OrderMenuItem)?.optionSelections?.[g.id];
 
-        if (g.type === "single") {
+      if (g.type === "single") {
         const savedOne = Array.isArray(saved) ? saved[0] : undefined;
         optInit[g.id] =
-            savedOne ?? (defaults[0] ?? (g.required && g.options[0] ? g.options[0].key : ""));
-        } else {
+          savedOne ??
+          defaults[0] ??
+          (g.required && g.options[0] ? g.options[0].key : "");
+      } else {
         const savedMany = Array.isArray(saved) ? saved : undefined;
         optInit[g.id] = new Set(savedMany ?? defaults);
-        }
+      }
     });
 
     setIncludedBase(baseInit);
@@ -189,46 +195,55 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
     return map;
   }, [baseIngredients, optionGroups]);
 
-    const buildSelections = (): Record<string, string[]> => {
-        const sel: Record<string, string[]> = {};
-        for (const g of optionGroups) {
-            const v = selectedOptions[g.id];
-            sel[g.id] = g.type === "single"
-            ? (typeof v === "string" && v ? [v] : [])
-            : Array.from((v as Set<string>) ?? []);
+  const buildSelections = (): Record<string, string[]> => {
+    const sel: Record<string, string[]> = {};
+    for (const g of optionGroups) {
+      const v = selectedOptions[g.id];
+      sel[g.id] =
+        g.type === "single"
+          ? typeof v === "string" && v
+            ? [v]
+            : []
+          : Array.from((v as Set<string>) ?? []);
+    }
+    return sel;
+  };
+
+  const [saving, setSaving] = useState(false);
+
+  const buildBaseIncludedKeys = (): string[] => {
+    return baseIngredients
+      .filter((b) => (b.removable === false ? true : !!includedBase[b.key]))
+      .map((b) => b.key);
+  };
+
+  const handleSave = () => {
+    if (!orderId || itemIndex == null || locked) {
+      onClose();
+      return;
+    }
+    setSaving(true);
+
+    const selections = buildSelections();
+    const baseIncludedKeys = buildBaseIncludedKeys();
+
+    Meteor.call(
+      "orders.updateMenuItemSelections",
+      orderId,
+      itemIndex,
+      selections,
+      baseIncludedKeys,
+      (err: any) => {
+        setSaving(false);
+        if (err) {
+          console.error(err);
+          alert("Failed to save options.");
+          return;
         }
-        return sel;
-        };
-    
-      const [saving, setSaving] = useState(false);
-    
-      const buildBaseIncludedKeys = (): string[] => {
-        return baseIngredients
-          .filter(b => (b.removable === false) ? true : !!includedBase[b.key])
-          .map(b => b.key);
-      };
-
-        const handleSave = () => {
-        if (!orderId || itemIndex == null || locked) { onClose(); return; }
-        setSaving(true);
-
-        const selections = buildSelections();
-        const baseIncludedKeys = buildBaseIncludedKeys();        
-
-        Meteor.call(
-            "orders.updateMenuItemSelections",
-            orderId,
-            itemIndex,
-            selections,
-            baseIncludedKeys,                                
-            (err: any) => {
-            setSaving(false);
-            if (err) { console.error(err); alert("Failed to save options."); return; }
-            onClose();
-            }
-        );
-        };
-    
+        onClose();
+      },
+    );
+  };
 
   // Handlers
   const toggleBase = (b: BaseIngredient) => {
@@ -314,7 +329,9 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                     {g.type === "single" ? (
                       <RadioGroup
                         value={(selectedOptions[g.id] as string) ?? ""}
-                        onChange={(e) => handleSingleChange(g.id, e.target.value)}
+                        onChange={(e) =>
+                          handleSingleChange(g.id, e.target.value)
+                        }
                       >
                         {g.options.map((o) => (
                           <FormControlLabel
@@ -323,7 +340,9 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                             control={<Radio size="small" />}
                             label={
                               <Box display="flex" alignItems="center">
-                                <MuiTypography variant="body2">{o.label}</MuiTypography>
+                                <MuiTypography variant="body2">
+                                  {o.label}
+                                </MuiTypography>
                                 <Money delta={o.priceDelta} />
                               </Box>
                             }
@@ -337,14 +356,21 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                             <FormControlLabel
                               control={
                                 <Checkbox
-                                  checked={((selectedOptions[g.id] as Set<string>) ?? new Set()).has(o.key)}
-                                  onChange={() => handleMultiToggle(g.id, o.key)}
+                                  checked={(
+                                    (selectedOptions[g.id] as Set<string>) ??
+                                    new Set()
+                                  ).has(o.key)}
+                                  onChange={() =>
+                                    handleMultiToggle(g.id, o.key)
+                                  }
                                   size="small"
                                 />
                               }
                               label={
                                 <Box display="flex" alignItems="center">
-                                  <MuiTypography variant="body2">{o.label}</MuiTypography>
+                                  <MuiTypography variant="body2">
+                                    {o.label}
+                                  </MuiTypography>
                                   <Money delta={o.priceDelta} />
                                 </Box>
                               }
@@ -373,15 +399,17 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
         )}
       </MuiDialogContent>
       <MuiDialogActions>
-        <MuiButton onClick={onClose} variant="outlined">Close</MuiButton>
-        <MuiButton
-            onClick={handleSave}
-            variant="contained"
-            disabled={saving || locked}
-        >
-            Save
+        <MuiButton onClick={onClose} variant="outlined">
+          Close
         </MuiButton>
-        </MuiDialogActions>
+        <MuiButton
+          onClick={handleSave}
+          variant="contained"
+          disabled={saving || locked}
+        >
+          Save
+        </MuiButton>
+      </MuiDialogActions>
     </MuiDialog>
   );
 };

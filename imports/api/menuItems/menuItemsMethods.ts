@@ -56,15 +56,15 @@ Meteor.methods({
       const base = (item.baseIngredients ?? [])
         .filter((b: BaseIngredient) => b.default)
         .map((b: BaseIngredient) => b.label);
-    
+
       type GroupOption = OptionGroup["options"][number];
-      const groupDefaults = (item.optionGroups ?? [])
-        .flatMap((g: OptionGroup) =>
+      const groupDefaults = (item.optionGroups ?? []).flatMap(
+        (g: OptionGroup) =>
           g.options
             .filter((o: GroupOption) => o.default)
             .map((o: GroupOption) => o.label),
-        );
-    
+      );
+
       ingredients = [...base, ...groupDefaults];
     }
 

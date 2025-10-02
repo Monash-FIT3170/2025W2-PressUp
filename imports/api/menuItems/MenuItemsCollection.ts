@@ -36,5 +36,7 @@ export interface MenuItem extends DBEntry {
   optionGroups?: OptionGroup[];
 }
 
-export const MenuItemsCollection =
-  new Mongo.Collection<OmitDB<MenuItem>, MenuItem>("menuItems");
+export const MenuItemsCollection = new Mongo.Collection<
+  OmitDB<MenuItem>,
+  MenuItem
+>("menuItems");

@@ -11,17 +11,17 @@ export type OrderModifier = {
 
 // OrderMenuItem reuses MenuItem shape but _id may be optional when created client-side
 export type OrderMenuItem = {
-  _id?: IdType;     
-  lineId?: string;        
-  menuItemId?: IdType;         
-  name: string;             
+  _id?: IdType;
+  lineId?: string;
+  menuItemId?: IdType;
+  name: string;
   quantity: number;
-  basePrice: number;        
-  price: number;            
-  ingredients: string[];     
-  modifiers?: OrderModifier[]; 
+  basePrice: number;
+  price: number;
+  ingredients: string[];
+  modifiers?: OrderModifier[];
   baseIncludedKeys?: string[];
-  optionSelections?: OptionSelections; 
+  optionSelections?: OptionSelections;
   served?: boolean;
 };
 
