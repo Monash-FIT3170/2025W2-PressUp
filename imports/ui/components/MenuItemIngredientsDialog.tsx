@@ -107,6 +107,8 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | Set<string>>>({});
 
   // Initialize state
+  const existingSelections =
+  (item as OrderMenuItem)?.optionSelections ?? {};
 
   // 2) Initialization effect: Only when the document changes or the dialog opens
   useEffect(() => {
@@ -114,18 +116,24 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
 
     const baseInit: Record<string, boolean> = {};
     baseIngredients.forEach((b) => {
-      baseInit[b.key] = b.removable === false ? true : !!b.default;
+        baseInit[b.key] = b.removable === false ? true : !!b.default;
     });
 
     const optInit: Record<string, string | Set<string>> = {};
     optionGroups.forEach((g) => {
-      const defaults = g.options.filter(o => o.default).map(o => o.key);
-      optInit[g.id] =
-        g.type === "single"
-          ? (defaults[0] ?? (g.required && g.options[0] ? g.options[0].key : ""))
-          : new Set(defaults);
+        const defaults = g.options.filter(o => o.default).map(o => o.key);
+        const saved = existingSelections[g.id]; 
+        if (g.type === "single") {
+        const savedOne = Array.isArray(saved) ? saved[0] : undefined;
+        optInit[g.id] =
+            savedOne ??
+            (defaults[0] ?? (g.required && g.options[0] ? g.options[0].key : ""));
+        } else {
+        const savedMany =
+            Array.isArray(saved) ? saved : undefined;
+        optInit[g.id] = new Set(savedMany ?? defaults);
+        }
     });
-
     // 3) Only set state when the value actually changes (prevent unnecessary renders)
     setIncludedBase(prev => {
       const sameLen = Object.keys(prev).length === Object.keys(baseInit).length;
@@ -151,7 +159,7 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
         });
       return same ? prev : optInit;
     });
-  }, [open, canonical?._id]); // ⬅️ Dependency array removed!
+  }, [open, canonical?._id, itemIndex]); // ⬅️ Dependency array removed!
 
   // Group options by base ingredient key
   const groupsByBaseKey = useMemo(() => {

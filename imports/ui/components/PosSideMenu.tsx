@@ -300,24 +300,16 @@ export const PosSideMenu = ({
   const [ingredientDialog, setIngredientDialog] = useState<{
     open: boolean;
     item: (MenuItem | OrderMenuItem) | null;
-    idx: number | null;
-    orderId: string | null;
-    locked: boolean;
-  }>({ open: false, item: null, idx: null, orderId: null, locked: false });
+    index: number | null;
+  }>({ open: false, item: null, index: null });
 
-  const openIngredientDialog = (item: MenuItem | OrderMenuItem, idx: number) => {
-    setIngredientDialog({
-      open: true,
-      item,
-      idx,
-      orderId: order?._id ?? null,
-      locked: Boolean(order?.isLocked),
-    });
+  const openIngredientDialog = (item: MenuItem | OrderMenuItem, index: number) => {
+    setIngredientDialog({ open: true, item, index });
   };
   
-  const closeIngredientDialog = () => {
-    setIngredientDialog({ open: false, item: null, idx: null, orderId: null, locked: false });
-  };
+  // const closeIngredientDialog = () => {
+  //   setIngredientDialog({ open: false, item: null, idx: null, orderId: null, locked: false });
+  // };
 
   return (
     <div className="w-[20vw] h-[75vh] flex flex-col">
@@ -845,10 +837,10 @@ export const PosSideMenu = ({
       <MenuItemIngredientsDialog
         open={ingredientDialog.open}
         item={ingredientDialog.item}
-        orderId={ingredientDialog.orderId ?? undefined}
-        itemIndex={ingredientDialog.idx ?? undefined}
-        locked={ingredientDialog.locked}
-        onClose={closeIngredientDialog}
+        orderId={order?._id}
+        itemIndex={ingredientDialog.index ?? undefined}
+        locked={Boolean(order?.isLocked)}
+        onClose={() => setIngredientDialog({ open: false, item: null, index: null })}
       />
     </div>
   );
