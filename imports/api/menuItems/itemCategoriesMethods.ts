@@ -18,7 +18,7 @@ Meteor.methods({
 
     // Check if cat with same name already exists
     const existingCat = await ItemCategoriesCollection.findOneAsync({
-      name: category.name,
+      name: { $regex: `^${category.name}$`, $options: "i" },
     });
     if (existingCat) {
       throw new Meteor.Error(
