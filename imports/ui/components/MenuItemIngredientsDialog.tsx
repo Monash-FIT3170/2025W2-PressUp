@@ -120,7 +120,7 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
     const baseInit: Record<string, boolean> = {};
     baseIngredients.forEach((b) => {
       if (b.removable === false) {
-        baseInit[b.key] = true; 
+        baseInit[b.key] = true;
       } else if (hasSavedBase) {
         baseInit[b.key] = (savedBaseKeys as string[]).includes(b.key);
       } else {
