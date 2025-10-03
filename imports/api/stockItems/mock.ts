@@ -9,27 +9,30 @@ export const mockStockItems = async () => {
   }
 
   // Gather all unique ingredients from fixedMenuItems
-  const allIngredients = Array.from(
-    new Set(fixedMenuItems.flatMap((item) => item.ingredients)),
-  );
-  for (const ingredient of allIngredients) {
-    const randomSupplier = (
-      await SuppliersCollection.rawCollection()
-        .aggregate([{ $sample: { size: 1 } }, { $project: { _id: 1 } }])
-        .toArray()
-    )[0];
+  // Make sure we only collect strings (no undefined)
+  const allIngredients: string[] = Array.from(
+    new Set(fixedMenuItems.flatMap((item) => item.ingredients ?? [])),
+  ).filter((x): x is string => typeof x === "string" && x.trim().length > 0);
 
-    const randomSupplierId = faker.datatype.boolean(0.75)
-      ? randomSupplier && randomSupplier._id
-        ? randomSupplier._id
-        : null
+  for (const ingredient of allIngredients) {
+    const sampled = await SuppliersCollection.rawCollection()
+      .aggregate([{ $sample: { size: 1 } }, { $project: { _id: 1 } }])
+      .toArray();
+
+    // Convert to string, but if missing use null (NOT undefined)
+    const sampledId: string | null = sampled[0]?._id
+      ? String(sampled[0]._id)
       : null;
 
+    // 75% chance to attach supplier if we have one; otherwise null
+    const supplier: string | null =
+      faker.datatype.boolean(0.75) && sampledId ? sampledId : null;
+
     await StockItemsCollection.insertAsync({
-      name: ingredient,
+      name: ingredient, // string
       quantity: faker.number.int({ min: 0, max: 50 }),
       location: faker.location.secondaryAddress(),
-      supplier: randomSupplierId,
+      supplier, // string | null (required by schema)
     });
   }
 };
