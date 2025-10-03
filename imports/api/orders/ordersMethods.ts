@@ -90,16 +90,30 @@ function buildSnapshot(
 
   const optionLabels: string[] = [];
 
+  // Updated loop for option groups
   for (const g of menu.optionGroups ?? []) {
+    const baseKey = g.id.split("-")[0];
+    const baseExists = baseDefs.some((b) => b.key === baseKey);
+    const baseIncluded =
+      !baseExists ||
+      baseSet.has(baseKey) ||
+      (baseExists && baseDefs.find((b) => b.key === baseKey)!.removable === false);
+
     let selectedKeys = selections[g.id];
 
-    if (!selectedKeys || selectedKeys.length === 0) {
-      const defaults = g.options.filter((o) => o.default).map((o) => o.key);
-      if (defaults.length > 0) selectedKeys = defaults;
-      else if (g.type === "single" && g.options.length > 0 && g.required) {
-        selectedKeys = [g.options[0].key];
-      } else {
-        selectedKeys = [];
+    if (!baseIncluded) {
+      // Base is off → force empty, no defaults
+      selectedKeys = [];
+    } else {
+      // Base is on → apply defaults if nothing is provided
+      if (!selectedKeys || selectedKeys.length === 0) {
+        const defaults = g.options.filter((o) => o.default).map((o) => o.key);
+        if (defaults.length > 0) selectedKeys = defaults;
+        else if (g.type === "single" && g.options.length > 0 && g.required) {
+          selectedKeys = [g.options[0].key];
+        } else {
+          selectedKeys = [];
+        }
       }
     }
 
@@ -107,11 +121,7 @@ function buildSnapshot(
     for (const o of chosen) {
       optionLabels.push(o.label);
       if (typeof o.priceDelta === "number" && o.priceDelta !== 0) {
-        modifiers.push({
-          key: o.key,
-          label: o.label,
-          priceDelta: o.priceDelta,
-        });
+        modifiers.push({ key: o.key, label: o.label, priceDelta: o.priceDelta });
       }
     }
   }
@@ -282,17 +292,15 @@ Meteor.methods({
     const menu = await MenuItemsCollection.findOneAsync(menuItemId);
     if (!menu) throw new Meteor.Error("menu-not-found", "Menu item not found");
 
-    // 기본 베이스 선택값
     const defaultBaseKeys = (menu.baseIngredients ?? [])
       .filter((b) => (b.removable === false ? true : !!b.default))
       .map((b) => b.key);
 
-    // 동일 라인 찾기: 옵션 + 베이스 선택 비교
     const idx = (order.menuItems ?? []).findIndex(
       (it: any) =>
         String(it?.menuItemId) === String(menuItemId) &&
         equalSelections(it?.optionSelections ?? {}, selections ?? {}) &&
-        equalBaseKeys(it?.baseIncludedKeys ?? [], defaultBaseKeys), // ✅
+        equalBaseKeys(it?.baseIncludedKeys ?? [], defaultBaseKeys), 
     );
 
     if (idx >= 0) {
@@ -303,7 +311,7 @@ Meteor.methods({
       return;
     }
 
-    const snap = buildSnapshot(menu, selections, defaultBaseKeys); // ✅
+    const snap = buildSnapshot(menu, selections, defaultBaseKeys); 
     const item: OrderMenuItem = {
       lineId: Random.id(),
       menuItemId: menuItemId as IdType,
@@ -314,7 +322,7 @@ Meteor.methods({
       ingredients: snap.ingredients,
       modifiers: snap.modifiers,
       optionSelections: selections,
-      baseIncludedKeys: defaultBaseKeys, // ✅ 저장
+      baseIncludedKeys: defaultBaseKeys, 
     };
 
     await OrdersCollection.updateAsync(orderId, { $push: { menuItems: item } });
@@ -328,10 +336,10 @@ Meteor.methods({
     selections: OptionSelections,
     baseIncludedKeys?: string[],
   ) {
-    check(orderId, String);
+    check(orderId, Match.OneOf(String, Mongo.ObjectID));
     check(itemIndex, Number);
 
-    const order = await OrdersCollection.findOneAsync({ _id: orderId } as any);
+    const order = await OrdersCollection.findOneAsync(orderId as any);
     if (!order) throw new Meteor.Error("order-not-found", "Order not found");
     if (
       order.isLocked &&
@@ -346,9 +354,10 @@ Meteor.methods({
     const item = order.menuItems[itemIndex];
     if (!item) throw new Meteor.Error("item-not-found", "Order item not found");
 
-    const menu = await MenuItemsCollection.findOneAsync({
-      _id: item.menuItemId,
-    } as any);
+    let menu = await MenuItemsCollection.findOneAsync({ _id: item.menuItemId } as any);
+    if (!menu && item?.name) {
+      menu = await MenuItemsCollection.findOneAsync({ name: item.name } as any);
+    }
     if (!menu) throw new Meteor.Error("menu-not-found", "Menu item not found");
 
     const defaultBaseKeys = (menu.baseIngredients ?? [])

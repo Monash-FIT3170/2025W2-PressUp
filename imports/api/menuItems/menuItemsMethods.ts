@@ -26,7 +26,7 @@ const OptionGroupSchema: any = Match.ObjectIncluding({
   label: String,
   type: Match.OneOf("single", "multiple"),
   required: Match.Optional(Boolean),
-  options: [OptionSchema], // ← 배열 안에 Pattern OK
+  options: [OptionSchema],
 });
 
 Meteor.methods({
@@ -129,7 +129,6 @@ Meteor.methods({
       category: Match.Optional([String]),
       image: Match.Optional(String),
       discount: Match.Optional(Number),
-      // New fields
       baseIngredients: Match.Optional([BaseIngredientSchema]),
       optionGroups: Match.Optional([OptionGroupSchema]),
       updatedAt: Match.Optional(Date),
