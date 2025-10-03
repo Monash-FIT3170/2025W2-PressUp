@@ -97,7 +97,8 @@ function buildSnapshot(
     const baseIncluded =
       !baseExists ||
       baseSet.has(baseKey) ||
-      (baseExists && baseDefs.find((b) => b.key === baseKey)!.removable === false);
+      (baseExists &&
+        baseDefs.find((b) => b.key === baseKey)!.removable === false);
 
     let selectedKeys = selections[g.id];
 
@@ -121,7 +122,11 @@ function buildSnapshot(
     for (const o of chosen) {
       optionLabels.push(o.label);
       if (typeof o.priceDelta === "number" && o.priceDelta !== 0) {
-        modifiers.push({ key: o.key, label: o.label, priceDelta: o.priceDelta });
+        modifiers.push({
+          key: o.key,
+          label: o.label,
+          priceDelta: o.priceDelta,
+        });
       }
     }
   }
@@ -300,7 +305,7 @@ Meteor.methods({
       (it: any) =>
         String(it?.menuItemId) === String(menuItemId) &&
         equalSelections(it?.optionSelections ?? {}, selections ?? {}) &&
-        equalBaseKeys(it?.baseIncludedKeys ?? [], defaultBaseKeys), 
+        equalBaseKeys(it?.baseIncludedKeys ?? [], defaultBaseKeys),
     );
 
     if (idx >= 0) {
@@ -311,7 +316,7 @@ Meteor.methods({
       return;
     }
 
-    const snap = buildSnapshot(menu, selections, defaultBaseKeys); 
+    const snap = buildSnapshot(menu, selections, defaultBaseKeys);
     const item: OrderMenuItem = {
       lineId: Random.id(),
       menuItemId: menuItemId as IdType,
@@ -322,7 +327,7 @@ Meteor.methods({
       ingredients: snap.ingredients,
       modifiers: snap.modifiers,
       optionSelections: selections,
-      baseIncludedKeys: defaultBaseKeys, 
+      baseIncludedKeys: defaultBaseKeys,
     };
 
     await OrdersCollection.updateAsync(orderId, { $push: { menuItems: item } });
@@ -354,7 +359,9 @@ Meteor.methods({
     const item = order.menuItems[itemIndex];
     if (!item) throw new Meteor.Error("item-not-found", "Order item not found");
 
-    let menu = await MenuItemsCollection.findOneAsync({ _id: item.menuItemId } as any);
+    let menu = await MenuItemsCollection.findOneAsync({
+      _id: item.menuItemId,
+    } as any);
     if (!menu && item?.name) {
       menu = await MenuItemsCollection.findOneAsync({ name: item.name } as any);
     }

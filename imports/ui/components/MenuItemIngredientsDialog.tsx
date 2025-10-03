@@ -1,4 +1,4 @@
-import React, { useEffect,useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import {
@@ -93,11 +93,11 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
 
   const baseIngredients = useMemo(
     () => (canonical?.baseIngredients ?? []) as BaseIngredient[],
-    [canonical?._id]
+    [canonical?._id],
   );
   const optionGroups = useMemo(
     () => (canonical?.optionGroups ?? []) as OptionGroup[],
-    [canonical?._id]
+    [canonical?._id],
   );
 
   const hasNew = baseIngredients.length > 0 || optionGroups.length > 0;
@@ -121,8 +121,8 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
         b.removable === false
           ? true
           : hasSavedBase
-          ? savedBaseKeys.includes(b.key)
-          : !!b.default;
+            ? savedBaseKeys.includes(b.key)
+            : !!b.default;
     });
 
     // Options (respect saved selections; otherwise defaults/required)
@@ -383,7 +383,9 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                         control={<Radio size="small" />}
                         label={
                           <Box display="flex" alignItems="center">
-                            <MuiTypography variant="body2">{o.label}</MuiTypography>
+                            <MuiTypography variant="body2">
+                              {o.label}
+                            </MuiTypography>
                             <Money delta={o.priceDelta} />
                           </Box>
                         }
@@ -407,7 +409,9 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                           }
                           label={
                             <Box display="flex" alignItems="center">
-                              <MuiTypography variant="body2">{o.label}</MuiTypography>
+                              <MuiTypography variant="body2">
+                                {o.label}
+                              </MuiTypography>
                               <Money delta={o.priceDelta} />
                             </Box>
                           }
@@ -455,7 +459,7 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                 } else {
                   onClose();
                 }
-              }
+              },
             );
           }}
           variant="contained"

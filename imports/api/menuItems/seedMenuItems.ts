@@ -11,7 +11,7 @@ Meteor.startup(async () => {
     await mockMenuItems();
     console.log("[seed] MenuItems hard reset & reseeded");
   } else if (Meteor.isDevelopment) {
-    await mockMenuItems(); 
+    await mockMenuItems();
     console.log("[seed] MenuItems upserted");
   }
 });
