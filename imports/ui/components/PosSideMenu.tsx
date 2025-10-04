@@ -10,6 +10,11 @@ import { Roles } from "meteor/alanning:roles";
 import { RoleEnum } from "/imports/api/accounts/roles";
 import { Hide } from "./display/Hide";
 import { Button } from "./interaction/Button";
+import { Mongo } from "meteor/mongo";
+
+import MenuItemIngredientsDialog from "./MenuItemIngredientsDialog";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { IconButton as MuiIconButton } from "@mui/material";
 
 interface PosSideMenuProps {
   tableNo: number | null;
@@ -27,18 +32,14 @@ export const PosSideMenu = ({
   items: _items,
   total,
   orderId,
-  onIncrease,
-  onDecrease,
-  onDelete,
   onUpdateOrder,
   onActiveOrderChange,
 }: PosSideMenuProps) => {
   // Fetch the current order for this table
   useSubscribe("orders");
   useSubscribe("tables");
-  const [orderType, setOrderType] = useState<
-    OrderType.DineIn | OrderType.Takeaway
-  >(OrderType.DineIn);
+  const isMenuItemsLoading = useSubscribe("menuItems")(); // Immediately call to get boolean
+  const [orderType, setOrderType] = useState<OrderType>(OrderType.DineIn);
 
   // Use sessionStorage for activeOrderId
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(() => {
@@ -62,6 +63,37 @@ export const PosSideMenu = ({
       ).fetch(),
     [],
   );
+
+  // Clear invalid selectedOrderId if it doesn't exist in the current active list
+  useEffect(() => {
+    if (!selectedOrderId) return;
+    const list =
+      orderType === OrderType.DineIn
+        ? activeDineInOrders
+        : activeTakeawayOrders;
+    const stillExists = list.some((o) => o._id === selectedOrderId);
+    if (!stillExists) {
+      setSelectedOrderId(null);
+      sessionStorage.removeItem("activeOrderId");
+      onActiveOrderChange?.(null);
+    }
+  }, [
+    orderType,
+    selectedOrderId,
+    activeDineInOrders.length,
+    activeTakeawayOrders.length,
+  ]);
+
+  // Clear selectedOrderId if the order type changes and the selected order is invalid
+  useEffect(() => {
+    if (!selectedOrderId) return;
+    const cur = OrdersCollection.findOne(selectedOrderId);
+    if (!cur || cur.orderType !== orderType || cur.paid) {
+      setSelectedOrderId(null);
+      sessionStorage.removeItem("activeOrderId");
+      onActiveOrderChange?.(null);
+    }
+  }, [orderType]);
 
   // Select order by id
   const order = useTracker(() => {
@@ -149,17 +181,28 @@ export const PosSideMenu = ({
   };
 
   // Function to get lowest unpaid order depending on the order type
-  const getLowestOrderId = (type: OrderType.DineIn | OrderType.Takeaway) => {
-    const orders = OrdersCollection.find(
+  const getLowestOrderId = (type: OrderType) => {
+    const selector =
       type === OrderType.DineIn
         ? { orderType: OrderType.DineIn, paid: false }
-        : { orderType: OrderType.Takeaway, paid: false },
-      type === "dine-in"
-        ? { sort: { orderNo: 1 } }
-        : { sort: { createdAt: -1 } },
-    ).fetch();
-    return orders.length > 0 ? orders[0]._id : null;
+        : { orderType: OrderType.Takeaway, paid: false };
+
+    // Meteor 타입 사용
+    const sort: Mongo.SortSpecifier =
+      type === OrderType.DineIn ? { orderNo: 1 } : { createdAt: -1 };
+
+    const orders = OrdersCollection.find(selector, { sort }).fetch();
+    return orders[0]?._id ?? null;
   };
+
+  const keyForQty = (it: any): string | null =>
+    (it?.lineId as string) ??
+    (it?.menuItemId as string) ??
+    (it?._id as string) ??
+    null;
+
+  const canDeleteByLineId = (it: any): it is { lineId: string } =>
+    typeof it?.lineId === "string" && it.lineId.length > 0;
 
   // Discount handlers
   const applyPercentDiscount = (percentage: number | string) => {
@@ -266,6 +309,24 @@ export const PosSideMenu = ({
     [rolesLoaded, rolesGraphLoaded],
   );
 
+  // Ingredient dialog state
+  const [ingredientDialog, setIngredientDialog] = useState<{
+    open: boolean;
+    item: (MenuItem | OrderMenuItem) | null;
+    index: number | null;
+  }>({ open: false, item: null, index: null });
+
+  const openIngredientDialog = (
+    item: MenuItem | OrderMenuItem,
+    index: number,
+  ) => {
+    setIngredientDialog({ open: true, item, index });
+  };
+
+  // const closeIngredientDialog = () => {
+  //   setIngredientDialog({ open: false, item: null, idx: null, orderId: null, locked: false });
+  // };
+
   return (
     <div className="w-[20vw] h-[75vh] flex flex-col">
       {/* Header */}
@@ -278,20 +339,21 @@ export const PosSideMenu = ({
               setActiveOrder(getLowestOrderId(OrderType.DineIn));
             }}
             className={`px-3 py-1 rounded-full font-semibold ${
-              orderType === "dine-in"
+              orderType === OrderType.DineIn
                 ? "bg-white text-press-up-purple"
                 : "bg-press-up-purple border border-white"
             }`}
           >
             Dine In
           </button>
+
           <button
             onClick={() => {
               setOrderType(OrderType.Takeaway);
               setActiveOrder(getLowestOrderId(OrderType.Takeaway));
             }}
             className={`px-3 py-1 rounded-full font-semibold ${
-              orderType === "takeaway"
+              orderType === OrderType.Takeaway
                 ? "bg-white text-press-up-purple"
                 : "bg-press-up-purple border border-white"
             }`}
@@ -382,9 +444,14 @@ export const PosSideMenu = ({
             displayedItems.map((item, idx) => {
               const qty = item.quantity ?? 1;
               const price = item.price;
+              const rowKey = (item as any)?.lineId
+                ? (item as any).lineId
+                : (item as any)?._id
+                  ? `${(item as any)._id}:${idx}`
+                  : `${order?._id ?? "order"}:${idx}`;
               return (
                 <div
-                  key={idx}
+                  key={rowKey}
                   className="bg-white p-4 rounded-md shadow-md space-y-2"
                 >
                   <div className="flex justify-between items-center">
@@ -397,7 +464,22 @@ export const PosSideMenu = ({
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => item._id && onDecrease(item._id)}
+                      onClick={() => {
+                        if (order?.isLocked) return;
+                        const key = keyForQty(item);
+                        if (!key || !order?._id) return;
+                        Meteor.call(
+                          "orders.decQtyByKey",
+                          order._id,
+                          String(key),
+                          (err: any) => {
+                            if (err) {
+                              console.error(err);
+                              alert("Failed to decrease quantity.");
+                            }
+                          },
+                        );
+                      }}
                       className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
                       disabled={Boolean(order?.isLocked)}
                     >
@@ -405,19 +487,73 @@ export const PosSideMenu = ({
                     </button>
                     <span>{qty}</span>
                     <button
-                      onClick={() => item._id && onIncrease(item._id)}
+                      onClick={() => {
+                        if (order?.isLocked) return;
+                        const key = keyForQty(item);
+                        if (!key || !order?._id) return;
+                        Meteor.call(
+                          "orders.incQtyByKey",
+                          order._id,
+                          String(key),
+                          (err: any) => {
+                            if (err) {
+                              console.error(err);
+                              alert("Failed to increase quantity.");
+                            }
+                          },
+                        );
+                      }}
                       className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
                       disabled={Boolean(order?.isLocked)}
                     >
                       ＋
                     </button>
                     <button
-                      onClick={() => item._id && onDelete(item._id)}
+                      onClick={() => {
+                        if (order?.isLocked) return;
+                        if (!order?._id) return;
+
+                        if (canDeleteByLineId(item)) {
+                          Meteor.call(
+                            "orders.removeMenuItemByLineId",
+                            order._id,
+                            item.lineId,
+                            (err: any) => {
+                              if (err) {
+                                console.error(err);
+                                alert("Failed to remove item.");
+                              }
+                            },
+                          );
+                        } else {
+                          Meteor.call(
+                            "orders.removeMenuItemAt",
+                            order._id,
+                            idx,
+                            (err: any) => {
+                              if (err) {
+                                console.error(err);
+                                alert("Failed to remove item.");
+                              }
+                            },
+                          );
+                        }
+                      }}
                       className="text-red-500 hover:text-red-700 text-lg font-bold"
                       disabled={Boolean(order?.isLocked)}
                     >
                       🗑
                     </button>
+
+                    {/* New: View ingredients button */}
+                    <MuiIconButton
+                      size="small"
+                      onClick={() => openIngredientDialog(item, idx)}
+                      disabled={isMenuItemsLoading || Boolean(order?.isLocked)} // Updated condition
+                      aria-label="View ingredients"
+                    >
+                      <MoreVertIcon fontSize="small" />
+                    </MuiIconButton>
                   </div>
                 </div>
               );
@@ -728,6 +864,16 @@ export const PosSideMenu = ({
           )}
         </div>
       </div>
+      <MenuItemIngredientsDialog
+        open={ingredientDialog.open}
+        item={ingredientDialog.item}
+        orderId={order?._id}
+        itemIndex={ingredientDialog.index ?? undefined}
+        locked={Boolean(order?.isLocked)}
+        onClose={() =>
+          setIngredientDialog({ open: false, item: null, index: null })
+        }
+      />
     </div>
   );
 };

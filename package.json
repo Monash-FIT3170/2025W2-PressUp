@@ -18,6 +18,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@faker-js/faker": "^9.9.0",
+    "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.1",
     "@tailwindcss/postcss": "^4.1.11",
     "chart.js": "^4.5.0",
@@ -37,6 +38,7 @@
     "react-router": "^7.7.1",
     "react-to-print": "^3.1.1",
     "recharts": "^3.1.2",
+    "simpl-schema": "^3.4.6",
     "tailwindcss": "^4.1.11",
     "ts-number-range": "^1.0.4"
   },

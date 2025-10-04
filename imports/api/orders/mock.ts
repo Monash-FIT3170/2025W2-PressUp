@@ -32,16 +32,48 @@ export const mockOrders = async (count: number) => {
       .aggregate([{ $sample: { size: faker.number.int({ min: 0, max: 3 }) } }])
       .toArray();
 
-    return rawMenuItems.map((item) => ({
-      _id: faker.string.alpha(10),
-      name: item.name,
-      quantity: faker.number.int({ min: 1, max: 3 }),
-      ingredients: item.ingredients ?? [],
-      available: item.available ?? true,
-      price: item.price ?? 0,
-      category: item.category ?? [],
-      image: item.image ?? "",
-    }));
+    return rawMenuItems.map((item): OrderMenuItem => {
+      // derive defaults from base + optionGroups (fallback to item.ingredients)
+      const baseDefs = item.baseIngredients ?? [];
+      const defaultBaseKeys = baseDefs
+        .filter((b: any) => (b.removable === false ? true : !!b.default))
+        .map((b: any) => b.key);
+
+      const baseLabels = baseDefs
+        .filter(
+          (b: any) => b.removable === false || defaultBaseKeys.includes(b.key),
+        )
+        .map((b: any) => b.label);
+
+      const groupDefaults = (item.optionGroups ?? []).flatMap((g: any) =>
+        (g.options ?? [])
+          .filter((o: any) => o.default)
+          .map((o: any) => o.label),
+      );
+
+      const ingredients: string[] =
+        Array.isArray(item.ingredients) && item.ingredients.length > 0
+          ? item.ingredients
+          : [...baseLabels, ...groupDefaults];
+
+      const basePrice = item.price ?? 0;
+
+      return {
+        // recommended line identifier for later edits
+        lineId: faker.string.alphanumeric(10),
+        // keep reference to the source menu item
+        menuItemId: String(item._id) as any,
+        name: item.name,
+        quantity: faker.number.int({ min: 1, max: 3 }),
+        basePrice,
+        price: basePrice, // no modifiers in mock
+        ingredients,
+        modifiers: [],
+        optionSelections: {},
+        baseIncludedKeys: defaultBaseKeys,
+        served: false,
+      };
+    });
   };
 
   const decideStatus = (items: OrderMenuItem[]): OrderStatus => {
