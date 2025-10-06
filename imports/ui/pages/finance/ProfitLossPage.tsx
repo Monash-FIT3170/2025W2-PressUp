@@ -386,8 +386,9 @@ export const ProfitLossPage = () => {
       <div className="flex items-baseline gap-4 mb-4">
         <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
         <h2 className="ml-4 text-red-900">
-          <span className="font-bold">Viewing Period:</span>{" "}
-          <span className="font-normal">{getDateRangeText(dateRange)}</span>
+            <span className="font-semibold text-lg">Viewing Period:{" "}
+            {getDateRangeText}
+            </span>
         </h2>
       </div>
 
