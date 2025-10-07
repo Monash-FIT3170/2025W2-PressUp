@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
-import { FinanceDateFilter } from "../../components/FinanceDateFilter";
+import { TaxDateFilter } from "../../components/TaxDateFilter";
 import {
   format,
-  startOfToday,
-  startOfWeek,
   startOfMonth,
   startOfYear,
-  subDays,
+  endOfMonth,
+  endOfYear,
+  endOfDay,
 } from "date-fns";
 import { Meteor } from "meteor/meteor";
 import { Order, OrderMenuItem } from "/imports/api/orders/OrdersCollection";
@@ -45,6 +45,22 @@ interface DetailItemProps {
   amount: number;
   percentage?: number;
 }
+
+// PAYG quarters helper
+const getQuarterRange = (date: Date) => {
+  const month = date.getMonth();
+  const quarterStartMonth = Math.floor(month / 3) * 3;
+  const start = new Date(date.getFullYear(), quarterStartMonth, 1);
+  const end = new Date(
+    date.getFullYear(),
+    quarterStartMonth + 3,
+    0,
+    23,
+    59,
+    59,
+  );
+  return { start, end };
+};
 
 export const DetailItem = React.memo(
   ({ label, amount, percentage }: DetailItemProps) => {
@@ -84,68 +100,26 @@ export const ProfitLossPage = () => {
   const [financialData, setFinancialData] = useState<FinancialData | null>(
     null,
   );
-  const [dateRange, setDateRange] = React.useState<
-    | "all"
-    | "today"
-    | "thisWeek"
-    | "thisMonth"
-    | "thisYear"
-    | "past7Days"
-    | "past30Days"
-  >("all");
+  const [dateRange, setDateRange] = useState<"all" | "month" | "PAYG" | "year">(
+      "all",
+    );
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  const getDateRangeText = (range: typeof dateRange): string => {
-    const today = startOfToday();
-    const end = today; // assume end is always today unless "all"
-    let start: Date;
-    switch (range) {
-      case "today":
-        start = today;
-        break;
-      case "thisWeek":
-        start = startOfWeek(today, { weekStartsOn: 1 }); // Monday
-        break;
-      case "thisMonth":
-        start = startOfMonth(today);
-        break;
-      case "thisYear":
-        start = startOfYear(today);
-        break;
-      case "past7Days":
-        start = subDays(today, 6); // 6 days ago + today = 7
-        break;
-      case "past30Days":
-        start = subDays(today, 29);
-        break;
-      case "all":
-      default:
-        return "All Time";
-    }
-    return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
-  };
+  const { start, end } = useMemo(() => {
+      if (dateRange === "all")
+        return { start: new Date(0), end: endOfDay(new Date()) };
+      if (dateRange === "month")
+        return { start: startOfMonth(currentDate), end: endOfMonth(currentDate) };
+      if (dateRange === "year")
+        return { start: startOfYear(currentDate), end: endOfYear(currentDate) };
+      if (dateRange === "PAYG") return getQuarterRange(currentDate);
+      return { start: new Date(0), end: endOfDay(new Date()) };
+    }, [dateRange, currentDate]);
 
-  const getDateRangeFilter = (range: string) => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    switch (range) {
-      case "today":
-        return (date: Date) => date >= today;
-      case "thisWeek":
-        return (date: Date) => date >= startOfWeek(today, { weekStartsOn: 1 });
-      case "thisMonth":
-        return (date: Date) => date >= startOfMonth(today);
-      case "thisYear":
-        return (date: Date) => date >= startOfYear(today);
-      case "past7Days":
-        return (date: Date) => date >= subDays(today, 6);
-      case "past30Days":
-        return (date: Date) => date >= subDays(today, 29);
-      case "all":
-      default:
-        return () => true;
-    }
-  };
+  const getDateRangeText = useMemo(() => {
+      if (dateRange === "all") return "All Time";
+      return `${format(start, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`;
+    }, [start, end, dateRange]);
 
   const processOrderData = useCallback(
     (
@@ -275,8 +249,6 @@ export const ProfitLossPage = () => {
 
     const fetchOrders = async () => {
       try {
-        const dateFilter = getDateRangeFilter(dateRange);
-
         const [orderData, purchaseOrderData, menuItems] = await Promise.all([
           Meteor.callAsync("orders.getAll") as Promise<Order[]>,
           Meteor.callAsync("purchaseOrders.getAll") as Promise<PurchaseOrder[]>,
@@ -290,12 +262,15 @@ export const ProfitLossPage = () => {
         });
 
         // Filter by date
-        const filteredOrderData = orderData.filter((order) =>
-          dateFilter(new Date(order.createdAt)),
-        );
-        const filteredPurchaseOrderData = purchaseOrderData.filter((po) =>
-          dateFilter(new Date(po.date)),
-        );
+        const filteredOrderData = orderData.filter((order) => {
+          const orderDate = new Date(order.createdAt);
+          return orderDate >= start && orderDate <= end;
+        });
+
+        const filteredPurchaseOrderData = purchaseOrderData.filter((po) => {
+          const poDate = new Date(po.date);
+          return poDate >= start && poDate <= end;
+        });
 
         const processedData = await processFinancialData(
           filteredOrderData,
@@ -309,7 +284,7 @@ export const ProfitLossPage = () => {
     };
 
     fetchOrders();
-  }, [setPageTitle, dateRange, processFinancialData]);
+  }, [setPageTitle, start, end, dateRange, processFinancialData]);
 
   const mainMetrics = useMemo(() => {
     if (!financialData) return [];
@@ -384,7 +359,15 @@ export const ProfitLossPage = () => {
     <div className="w-full p-6 bg-gray-50 max-h-screen overflow-y-auto">
       {/* Date Filter and Period Display */}
       <div className="flex items-baseline gap-4 mb-4">
-        <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
+        <TaxDateFilter
+          range={dateRange}
+          currentDate={currentDate}
+          onRangeChange={(r) => {
+            setDateRange(r);
+            setCurrentDate(new Date());
+          }}
+          onDateChange={setCurrentDate}
+        />
         <h2 className="ml-4 text-red-900">
             <span className="font-semibold text-lg">Viewing Period:{" "}
             {getDateRangeText}
