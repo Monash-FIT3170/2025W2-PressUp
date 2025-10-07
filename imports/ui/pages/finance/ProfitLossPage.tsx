@@ -101,25 +101,25 @@ export const ProfitLossPage = () => {
     null,
   );
   const [dateRange, setDateRange] = useState<"all" | "month" | "PAYG" | "year">(
-      "all",
-    );
+    "all",
+  );
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const { start, end } = useMemo(() => {
-      if (dateRange === "all")
-        return { start: new Date(0), end: endOfDay(new Date()) };
-      if (dateRange === "month")
-        return { start: startOfMonth(currentDate), end: endOfMonth(currentDate) };
-      if (dateRange === "year")
-        return { start: startOfYear(currentDate), end: endOfYear(currentDate) };
-      if (dateRange === "PAYG") return getQuarterRange(currentDate);
+    if (dateRange === "all")
       return { start: new Date(0), end: endOfDay(new Date()) };
-    }, [dateRange, currentDate]);
+    if (dateRange === "month")
+      return { start: startOfMonth(currentDate), end: endOfMonth(currentDate) };
+    if (dateRange === "year")
+      return { start: startOfYear(currentDate), end: endOfYear(currentDate) };
+    if (dateRange === "PAYG") return getQuarterRange(currentDate);
+    return { start: new Date(0), end: endOfDay(new Date()) };
+  }, [dateRange, currentDate]);
 
   const getDateRangeText = useMemo(() => {
-      if (dateRange === "all") return "All Time";
-      return `${format(start, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`;
-    }, [start, end, dateRange]);
+    if (dateRange === "all") return "All Time";
+    return `${format(start, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`;
+  }, [start, end, dateRange]);
 
   const processOrderData = useCallback(
     (
@@ -369,9 +369,9 @@ export const ProfitLossPage = () => {
           onDateChange={setCurrentDate}
         />
         <h2 className="ml-4 text-red-900">
-            <span className="font-semibold text-lg">Viewing Period:{" "}
-            {getDateRangeText}
-            </span>
+          <span className="font-semibold text-lg">
+            Viewing Period: {getDateRangeText}
+          </span>
         </h2>
       </div>
 

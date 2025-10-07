@@ -404,8 +404,8 @@ export const TaxPage = () => {
             onDateChange={setCurrentDate}
           />
           <h2 className="ml-4 text-red-900">
-            <span className="font-semibold text-lg">Viewing Period:{" "}
-            {getDateRangeText}
+            <span className="font-semibold text-lg">
+              Viewing Period: {getDateRangeText}
             </span>
           </h2>
         </div>
