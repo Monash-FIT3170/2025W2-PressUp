@@ -24,6 +24,7 @@ import {
   Label,
 } from "recharts";
 import { SearchBar } from "../../components/SearchBar";
+import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 
 interface FinancialData {
   revenue: {
@@ -92,6 +93,7 @@ export const ProfitLossPage = () => {
     | "past7Days"
     | "past30Days"
   >("all");
+
   const getDateRangeText = (range: typeof dateRange): string => {
     const today = startOfToday();
     const end = today; // assume end is always today unless "all"
@@ -122,7 +124,6 @@ export const ProfitLossPage = () => {
     return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
   };
 
-  // Filters data by date range
   const getDateRangeFilter = (range: string) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -146,16 +147,15 @@ export const ProfitLossPage = () => {
     }
   };
 
-  // Calculates revenue
   const processOrderData = useCallback(
     (
       orders: Order[],
+      categoryMap: Record<string, string[]>,
     ): {
       revenue: number;
       revenueItems: { label: string; amount: number; percentage: number }[];
     } => {
-      const revenueByCat: { [key: string]: number } = {};
-
+      const revenueByCat: Record<string, number> = {};
       let totalRevenue = 0;
 
       orders.forEach((order) => {
@@ -164,27 +164,29 @@ export const ProfitLossPage = () => {
         let orderRevenue = 0;
 
         order.menuItems.forEach((menuItem: OrderMenuItem) => {
-          const itemRevenue = menuItem.price * menuItem.quantity;
+          const itemRevenue = (menuItem.price ?? 0) * (menuItem.quantity ?? 1);
+          orderRevenue += itemRevenue;
 
-          orderRevenue += itemRevenue; // prevents double counting
-
+          const key = String((menuItem as any).menuItemId ?? "");
           const categories =
-            menuItem.category && menuItem.category.length > 0
-              ? menuItem.category
+            categoryMap[key] && categoryMap[key].length > 0
+              ? categoryMap[key]
               : ["uncategorized"];
 
-          categories.forEach((category: string) => {
-            revenueByCat[category] =
-              (revenueByCat[category] || 0) + itemRevenue;
+          categories.forEach((cat) => {
+            revenueByCat[cat] = (revenueByCat[cat] || 0) + itemRevenue;
           });
         });
+
         totalRevenue += orderRevenue;
       });
 
       const revenueItems = Object.keys(revenueByCat).map((category) => ({
         label: category,
         amount: revenueByCat[category],
-        percentage: (revenueByCat[category] / totalRevenue) * 100,
+        percentage: totalRevenue
+          ? (revenueByCat[category] / totalRevenue) * 100
+          : 0,
       }));
 
       return { revenue: totalRevenue, revenueItems };
@@ -192,7 +194,6 @@ export const ProfitLossPage = () => {
     [],
   );
 
-  // Calculates expenses
   const processPurchaseOrderData = useCallback(
     async (
       purchaseOrders: PurchaseOrder[],
@@ -243,22 +244,20 @@ export const ProfitLossPage = () => {
     async (
       orders: Order[],
       purchaseOrders: PurchaseOrder[],
+      categoryMap: Record<string, string[]>,
     ): Promise<FinancialData> => {
-      const { revenue: totalRevenue, revenueItems } = processOrderData(orders);
+      const { revenue: totalRevenue, revenueItems } = processOrderData(
+        orders,
+        categoryMap,
+      );
       const { expenses: totalExpenses, expenseItems } =
         await processPurchaseOrderData(purchaseOrders);
 
       const netProfit = totalRevenue - totalExpenses;
 
       return {
-        revenue: {
-          items: revenueItems,
-          total: totalRevenue,
-        },
-        expenses: {
-          items: expenseItems,
-          total: totalExpenses,
-        },
+        revenue: { items: revenueItems, total: totalRevenue },
+        expenses: { items: expenseItems, total: totalExpenses },
         netProfitLoss: {
           items: [
             { label: "Total Revenue", amount: totalRevenue },
@@ -278,32 +277,37 @@ export const ProfitLossPage = () => {
       try {
         const dateFilter = getDateRangeFilter(dateRange);
 
-        const orderData = (await Meteor.callAsync("orders.getAll")) as Order[];
-        const purchaseOrderData = (await Meteor.callAsync(
-          "purchaseOrders.getAll",
-        )) as PurchaseOrder[];
+        const [orderData, purchaseOrderData, menuItems] = await Promise.all([
+          Meteor.callAsync("orders.getAll") as Promise<Order[]>,
+          Meteor.callAsync("purchaseOrders.getAll") as Promise<PurchaseOrder[]>,
+          Meteor.callAsync("menuItems.getAll") as Promise<MenuItem[]>,
+        ]);
 
-        // Filter the data based on date range
-        const filteredOrderData = orderData.filter((order) => {
-          const orderDate = new Date(order.createdAt);
-          return dateFilter(orderDate);
+        // Build menuItemId -> categories map
+        const categoryMap: Record<string, string[]> = {};
+        menuItems.forEach((mi) => {
+          if (mi?._id) categoryMap[String(mi._id)] = mi.category ?? [];
         });
 
-        const filteredPurchaseOrderData = purchaseOrderData.filter((po) => {
-          const poDate = new Date(po.date);
-          return dateFilter(poDate);
-        });
+        // Filter by date
+        const filteredOrderData = orderData.filter((order) =>
+          dateFilter(new Date(order.createdAt)),
+        );
+        const filteredPurchaseOrderData = purchaseOrderData.filter((po) =>
+          dateFilter(new Date(po.date)),
+        );
 
-        // Uses filetered data to process
         const processedData = await processFinancialData(
           filteredOrderData,
           filteredPurchaseOrderData,
+          categoryMap,
         );
         setFinancialData(processedData);
       } catch (error) {
         console.error("Error fetching order data", error);
       }
     };
+
     fetchOrders();
   }, [setPageTitle, dateRange, processFinancialData]);
 

@@ -47,6 +47,17 @@ Meteor.methods({
     await mockMenuItems();
   }),
 
+  "debug.resetMenuItems": requireLoginMethod(async function () {
+    if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN]))) {
+      throw new Meteor.Error(
+        "unauthorized",
+        "Only admins can perform debug operations",
+      );
+    }
+    await MenuItemsCollection.rawCollection().deleteMany({});
+    await mockMenuItems();
+  }),
+
   "debug.mockItemCategories": requireLoginMethod(async function () {
     if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN]))) {
       throw new Meteor.Error(

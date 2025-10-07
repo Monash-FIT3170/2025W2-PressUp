@@ -1,10 +1,27 @@
 import { Mongo } from "meteor/mongo";
 import { DBEntry, OmitDB, IdType } from "../database";
-import { MenuItem } from "../menuItems/MenuItemsCollection";
+
+export type OptionSelections = Record<string, string[]>;
+
+export type OrderModifier = {
+  key: string;
+  label: string;
+  priceDelta: number;
+};
 
 // OrderMenuItem reuses MenuItem shape but _id may be optional when created client-side
-export type OrderMenuItem = Omit<MenuItem, "_id"> & {
+export type OrderMenuItem = {
   _id?: IdType;
+  lineId?: string;
+  menuItemId?: IdType;
+  name: string;
+  quantity: number;
+  basePrice: number;
+  price: number;
+  ingredients: string[];
+  modifiers?: OrderModifier[];
+  baseIncludedKeys?: string[];
+  optionSelections?: OptionSelections;
   served?: boolean;
 };
 
