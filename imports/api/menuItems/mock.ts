@@ -175,5 +175,3 @@ export const mockItemCategories = async () => {
     await ItemCategoriesCollection.insertAsync(category);
   }
 };
-
-
