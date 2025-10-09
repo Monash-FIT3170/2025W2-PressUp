@@ -46,7 +46,7 @@ export const SuppliersPage = () => {
   const handleSuccess = () => handleModalClose();
 
   const handleSupplierClick = (supplier: Supplier) => {
-    setSelectedSupplier(supplier);
+    setSelectedSupplier((x) => (x?._id === supplier._id ? null : supplier));
   };
 
   return (
