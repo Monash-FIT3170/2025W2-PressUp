@@ -17,6 +17,7 @@ import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { getHighestRole } from "/imports/helpers/roles";
 import { getDayOfWeek, DayOfWeek } from "/imports/helpers/date";
 import { WeekNavigation } from "../../components/WeekNavigation";
+import { RoleFilter } from "../../components/RoleFilter";
 
 export const RosterPage = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -32,6 +33,12 @@ export const RosterPage = () => {
   const [selectedWeek, setSelectedWeek] = useState(() =>
     getDayOfWeek(new Date(), DayOfWeek.MONDAY),
   );
+
+  // Role filter
+  const [selectedRoles, setSelectedRoles] = useState<RoleEnum[]>(() =>
+    Object.values(RoleEnum),
+  );
+
   const weekStart = selectedWeek;
   const weekEnd = (() => {
     const sunday = new Date(selectedWeek);
@@ -126,11 +133,23 @@ export const RosterPage = () => {
       {/* Roster Controls */}
       <div className="p-5 shrink-0">
         <div className="flex justify-between items-center">
-          {/* Week Navigation */}
-          <WeekNavigation
-            selectedWeek={selectedWeek}
-            onWeekChange={setSelectedWeek}
-          />
+          {/* Week Navigation and Role Filter */}
+          <div className="flex gap-4 items-center">
+            <WeekNavigation
+              selectedWeek={selectedWeek}
+              onWeekChange={setSelectedWeek}
+            />
+            <RoleFilter
+              selectedRoles={selectedRoles}
+              onRoleToggle={(role) => {
+                setSelectedRoles((prev) =>
+                  prev.includes(role)
+                    ? prev.filter((r) => r !== role)
+                    : [...prev, role],
+                );
+              }}
+            />
+          </div>
 
           {/* Clock In/Out and Publish Shift */}
           <div className="flex gap-2">
@@ -156,7 +175,13 @@ export const RosterPage = () => {
 
       {/* Roster Table */}
       <div className="flex-1 min-h-0 px-5 pb-5">
-        <RosterTable staff={staff} start={weekStart} end={weekEnd} />
+        <RosterTable
+          staff={staff.filter(
+            (s) => s.role && selectedRoles.includes(s.role as RoleEnum),
+          )}
+          start={weekStart}
+          end={weekEnd}
+        />
       </div>
 
       <Modal open={shiftModalOpen} onClose={() => setShiftModalOpen(false)}>
