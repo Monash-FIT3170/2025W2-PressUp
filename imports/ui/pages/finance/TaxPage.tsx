@@ -25,6 +25,8 @@ import { Trash } from "lucide-react";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { DeductionsCollection } from "/imports/api/tax/DeductionsCollection";
+import { ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
+import { calculateShiftPay } from "/imports/api/shifts/shiftsHelpers";
 
 interface FinancialDataField {
   title: string;
@@ -54,6 +56,12 @@ export const TaxPage = () => {
   useSubscribe("deductions");
   const deductions = useTracker(() => DeductionsCollection.find().fetch());
 
+  useSubscribe("shifts.all");
+  const shifts = useTracker(() => ShiftsCollection.find().fetch());
+
+  useSubscribe("users.all");
+  const users = useTracker(() => Meteor.users.find().fetch());
+
   const [selectedMetric, setSelectedMetric] = useState<
     "incomeTax" | "payrollTax" | "GSTCollected" | "GSTPaid"
   >("incomeTax");
@@ -74,7 +82,6 @@ export const TaxPage = () => {
   // Fetch data once
   const [orders, setOrders] = useState<any[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<any[]>([]);
-  const [shifts, setShifts] = useState<any[]>([]);
 
   useEffect(() => {
     setPageTitle("Finance - Tax Management");
@@ -83,10 +90,8 @@ export const TaxPage = () => {
       const fetchedPOs = (await Meteor.callAsync(
         "purchaseOrders.getAll",
       )) as any[];
-      const fetchedShifts = (await Meteor.callAsync("shifts.getAll")) as any[];
       setOrders(fetchedOrders);
       setPurchaseOrders(fetchedPOs);
-      setShifts(fetchedShifts);
     };
     fetchData();
   }, [setPageTitle]);
@@ -105,7 +110,7 @@ export const TaxPage = () => {
 
   const getDateRangeText = useMemo(() => {
     if (dateRange === "all") return "All Time";
-    return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
+    return `${format(start, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`;
   }, [start, end, dateRange]);
 
   // Filter data by date
@@ -139,11 +144,16 @@ export const TaxPage = () => {
   );
   const filteredShifts = useMemo(
     () =>
-      shifts.filter(
-        (s) =>
-          (s.date instanceof Date ? s.date : new Date(s.date)) >= start &&
-          (s.date instanceof Date ? s.date : new Date(s.date)) <= end,
-      ),
+      shifts.filter((s) => {
+        const shiftStart =
+          s.start instanceof Date ? s.start : new Date(s.start);
+        const shiftEnd = s.end
+          ? s.end instanceof Date
+            ? s.end
+            : new Date(s.end)
+          : new Date();
+        return shiftStart <= end && shiftEnd >= start;
+      }),
     [shifts, start, end],
   );
 
@@ -218,34 +228,40 @@ export const TaxPage = () => {
   >([]);
 
   useEffect(() => {
-    let isMounted = true;
-    (async () => {
-      let payTotal = 0;
-      const payByDate: Record<string, number> = {};
-      for (const s of filteredShifts) {
-        const pay = Number(
-          (await Meteor.callAsync("shifts.getPayForShift", s._id)) ?? 0,
-        );
-        const tax = pay * 0.0485;
-        payTotal += pay;
-        const dateKey = format(
-          s.date instanceof Date ? s.date : new Date(s.date),
-          dateRange === "year" ? "MMM" : "dd/MM",
-        );
-        payByDate[dateKey] = (payByDate[dateKey] || 0) + tax;
-      }
-      if (!isMounted) return;
-      setPayrollTax(payTotal * 0.0485);
-      setPayrollItems(
-        Object.entries(payByDate).map(([label, amount]) => ({ label, amount })),
+    let payTotal = 0;
+    const payByDate: Record<string, number> = {};
+
+    const userPayRates: Record<string, number> = {};
+    users.forEach((user: any) => {
+      userPayRates[user._id] = user.payRate ?? 0;
+    });
+
+    for (const s of filteredShifts) {
+      const payRate = userPayRates[s.user] ?? 0;
+      const pay = calculateShiftPay(s, payRate);
+      const tax = pay * 0.0485;
+      payTotal += pay;
+      const dateKey = format(
+        s.start instanceof Date ? s.start : new Date(s.start),
+        dateRange === "year" ? "MMM" : "dd/MM",
       );
-      const income = profitTotal - expensesTotal - deductionsTotal - payTotal;
-      setTaxableIncome(income > 0 ? income : 0);
-    })();
-    return () => {
-      isMounted = false;
-    };
-  }, [filteredShifts, profitTotal, expensesTotal, deductionsTotal, dateRange]);
+      payByDate[dateKey] = (payByDate[dateKey] || 0) + tax;
+    }
+
+    setPayrollTax(payTotal * 0.0485);
+    setPayrollItems(
+      Object.entries(payByDate).map(([label, amount]) => ({ label, amount })),
+    );
+    const income = profitTotal - expensesTotal - deductionsTotal - payTotal;
+    setTaxableIncome(income > 0 ? income : 0);
+  }, [
+    filteredShifts,
+    users,
+    profitTotal,
+    expensesTotal,
+    deductionsTotal,
+    dateRange,
+  ]);
 
   const financialData: Record<string, FinancialDataField> = {
     incomeTax: {
@@ -404,8 +420,9 @@ export const TaxPage = () => {
             onDateChange={setCurrentDate}
           />
           <h2 className="ml-4 text-red-900">
-            <span className="font-bold">Viewing Period:</span>{" "}
-            {getDateRangeText}
+            <span className="font-semibold text-lg">
+              Viewing Period: {getDateRangeText}
+            </span>
           </h2>
         </div>
 

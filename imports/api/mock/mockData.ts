@@ -16,7 +16,6 @@ export const mockDataGenerator = async ({
   tableCount,
   postCount,
   commentCount,
-  shiftCount,
   deductionCount,
   accountCount,
 }: {
@@ -26,7 +25,6 @@ export const mockDataGenerator = async ({
   tableCount?: number;
   postCount?: number;
   commentCount?: number;
-  shiftCount?: number;
   deductionCount?: number;
   accountCount?: number;
 }) => {
@@ -36,7 +34,6 @@ export const mockDataGenerator = async ({
   tableCount = tableCount || 10;
   postCount = postCount || 5;
   commentCount = commentCount || 10;
-  shiftCount = shiftCount || 15;
   deductionCount = deductionCount || 8;
   accountCount = accountCount || 8;
 
@@ -45,7 +42,7 @@ export const mockDataGenerator = async ({
   await mockSuppliers(supplierCount);
   await mockMenuItems();
   await mockDeductions(deductionCount);
-  await mockShifts(shiftCount);
+  await mockShifts();
   await mockPosts(postCount);
 
   await mockStockItems();
