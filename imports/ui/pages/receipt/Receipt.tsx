@@ -1,6 +1,6 @@
 import React from "react";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import {
   OrdersCollection,
   OrderType,
@@ -9,6 +9,11 @@ import {
 export const ReceiptPage = () => {
   const navigate = useNavigate();
   useSubscribe("orders");
+
+  // passing split bill through navigation as it is not stored in the database
+  const location = useLocation();
+  const splits = location.state?.splits as number[] | undefined;
+
 
   // Get orderId from sessionStorage
   const orderId = sessionStorage.getItem("activeOrderId");
@@ -43,6 +48,16 @@ export const ReceiptPage = () => {
         <p className="text-gray-500">Loading receipt...</p>
       </div>
     );
+  }
+  
+  // for split bill calculations
+  const total = order.totalPrice;
+  const sumOfSplits = splits?.reduce((a, b) => a + b, 0) ?? 0;
+  const remaining = total - sumOfSplits;
+
+  const displaySplits = splits ? [...splits] : [];
+  if (remaining > 0) {
+    displaySplits.push(remaining);
   }
 
   return (
@@ -118,6 +133,22 @@ export const ReceiptPage = () => {
                 </span>
               </div>
             </div>
+          )}
+          {displaySplits.length > 0 && (
+            <>
+              <div className="mb-2">
+                <span>Splitting Bill ({displaySplits.length} Divisions)</span>
+                <div>
+                  {displaySplits.map((amount, index) => (
+                    <div key={index} className="flex justify-between py-0.5">
+                      <span>Split {index + 1}:</span>
+                      <span>${amount.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <hr className="my-2" />
+            </>
           )}
           <div className="flex justify-between">
             <span>Total:</span>
