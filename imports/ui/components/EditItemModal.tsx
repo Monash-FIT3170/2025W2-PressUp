@@ -1,5 +1,7 @@
 import React, { useState, useEffect, FormEvent } from "react";
 import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
+import { ItemCategoriesCollection } from "/imports/api/menuItems/ItemCategoriesCollection";
 import { Modal } from "./Modal";
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { IngredientDropdown } from "./IngredientDropdown";
@@ -33,6 +35,11 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   item,
   onSave,
 }) => {
+  const categoriesCollection = useTracker(() =>
+    ItemCategoriesCollection.find().fetch(),
+  );
+  const categoryNames = categoriesCollection.map((c) => c.name);
+
   const [formData, setFormData] = useState({
     name: "",
     quantity: 0,
@@ -121,6 +128,21 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
 
   const selectPredefinedImage = (imagePath: string) => {
     setFormData({ ...formData, image: imagePath });
+  };
+
+  const handleCategoryChange = (newCategories: string[]) => {
+    setCategories(newCategories);
+
+    // Detect newly added categories
+    const newOnes = newCategories.filter((cat) => !categoryNames.includes(cat));
+
+    newOnes.forEach((cat) => {
+      Meteor.call("itemCategories.insert", { name: cat }, (error: any) => {
+        if (error) {
+          console.error("Error inserting category:", error);
+        }
+      });
+    });
   };
 
   return (
@@ -218,8 +240,8 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
 
             <CategoryDropdown
               selectedCategories={categories}
-              onChange={setCategories}
-              initialCategories={["Food", "Drink", "Dessert"]}
+              onChange={handleCategoryChange}
+              initialCategories={categoryNames} // reactive categories
             />
 
             <AllergenDropdown

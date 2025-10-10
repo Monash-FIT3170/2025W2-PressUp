@@ -1,4 +1,4 @@
-import { mockMenuItems } from "../menuItems/mock";
+import { mockItemCategories, mockMenuItems } from "../menuItems/mock";
 import { mockStockItems } from "../stockItems/mock";
 import { mockSuppliers } from "../suppliers/mock";
 import { mockPurchaseOrders } from "../purchaseOrders/mock";
@@ -50,4 +50,5 @@ export const mockDataGenerator = async ({
   await mockTables(tableCount);
   await mockOrders(orderCount);
   await mockComments(commentCount);
+  await mockItemCategories();
 };

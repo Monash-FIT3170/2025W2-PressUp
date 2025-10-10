@@ -1,5 +1,6 @@
 import { MenuItemsCollection, MenuItem } from "./MenuItemsCollection";
 import type { OmitDB } from "../database";
+import { ItemCategoriesCollection } from "./ItemCategoriesCollection";
 
 export const fixedMenuItems: OmitDB<MenuItem>[] = [
   {
@@ -156,5 +157,21 @@ export const mockMenuItems = async () => {
     const now = new Date();
     const doc = { ...raw, updatedAt: now };
     await col.replaceOne({ name: raw.name }, doc, { upsert: true });
+  }
+};
+
+export const fixedItemCategories = [
+  { name: "Food" },
+  { name: "Drink" },
+  { name: "Dessert" },
+];
+
+export const mockItemCategories = async () => {
+  if ((await ItemCategoriesCollection.countDocuments()) > 0) {
+    await ItemCategoriesCollection.dropCollectionAsync();
+  }
+
+  for (const category of fixedItemCategories) {
+    await ItemCategoriesCollection.insertAsync(category);
   }
 };
