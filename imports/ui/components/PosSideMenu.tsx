@@ -963,6 +963,7 @@ export const PosSideMenu = ({
                     : null
                 }
                 order={order}
+                splits={splits}
               />
             </div>
           )}
