@@ -141,7 +141,7 @@ export const ReceiptPage = () => {
                 <div>
                   {displaySplits.map((amount, index) => (
                     <div key={index} className="flex justify-between py-0.5">
-                      <span>Split {index + 1}:</span>
+                      <span>Split {index + 1} -</span>
                       <span>${amount.toFixed(2)}</span>
                     </div>
                   ))}
