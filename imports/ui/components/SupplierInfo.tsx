@@ -6,14 +6,13 @@ import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { IdType } from "/imports/api/database";
 import { Cross } from "./symbols/GeneralSymbols";
+import { Table } from "./Table";
 
 interface SupplierInfoProps {
   supplier: Supplier;
-  isExpanded: boolean;
-  onToggle: () => void;
 }
 
-export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
+export const SupplierInfo = ({ supplier }: SupplierInfoProps) => {
   // Fetch stock items for this supplier
   const stockItems = useTracker(() => {
     return StockItemsCollection.find(
@@ -77,17 +76,15 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
   if (!supplier.address) supplier.address = "";
   if (!supplier.website) supplier.website = "";
 
-  if (!isExpanded) return null;
-
   return (
-    <div className="bg-gray-100 p-6 mx-4 mb-4 rounded-lg border">
-      <div className="mb-4">
+    <div className="p-6 h-full flex flex-col">
+      <div className="mb-4 flex-shrink-0">
         <h2 className="text-2xl font-bold text-gray-800 border-b-2 border-gray-300 pb-2">
           {supplier.name}
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-6 gap-3 flex-1 min-h-0">
         {/* Contact Information */}
         <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-2">
           <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b border-gray-200 pb-2 underline">
@@ -132,115 +129,93 @@ export const SupplierInfo = ({ supplier, isExpanded }: SupplierInfoProps) => {
         </div>
 
         {/* Supplier Goods */}
-        <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-1">
-          <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b border-gray-200 pb-2 underline">
+        <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-1 flex flex-col min-h-0">
+          <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b border-gray-200 pb-2 underline flex-shrink-0">
             Stock Items
           </h3>
-          <ul className="space-y-1 text-sm">
-            {stockItems.length > 0 ? (
-              stockItems.map((item, index) => (
-                <li key={index} className="flex items-center justify-between">
-                  <div className="flex items-center overflow-hidden w-full">
-                    <span className="w-2 h-2 bg-gray-400 rounded-full mr-3 shrink-0"></span>
-                    <span className="text-gray-800 truncate">{item.name}</span>
-                  </div>
-                  <button
-                    onClick={() => removeItemFromSupplier(item._id)}
-                    className="text-red-600 hover:text-red-800 hover:bg-red-100 rounded-full p-1 transition-colors"
-                    title="Remove from supplier"
-                  >
-                    <Cross height="12px" width="12px" viewBox="0 0 14 14" />
-                  </button>
-                </li>
-              ))
-            ) : (
-              <li className="text-gray-500 italic">No stock items found</li>
-            )}
-          </ul>
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <ul className="space-y-1 text-sm">
+              {stockItems.length > 0 ? (
+                stockItems.map((item, index) => (
+                  <li key={index} className="flex items-center justify-between">
+                    <div className="flex items-center overflow-hidden w-full">
+                      <span className="w-2 h-2 bg-gray-400 rounded-full mr-3 shrink-0"></span>
+                      <span className="text-gray-800 truncate">
+                        {item.name}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => removeItemFromSupplier(item._id)}
+                      className="text-red-600 hover:text-red-800 hover:bg-red-100 rounded-full p-1 transition-colors"
+                      title="Remove from supplier"
+                    >
+                      <Cross height="12px" width="12px" viewBox="0 0 14 14" />
+                    </button>
+                  </li>
+                ))
+              ) : (
+                <li className="text-gray-500 italic">No stock items found</li>
+              )}
+            </ul>
+          </div>
         </div>
 
         {/* Order History */}
-        <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-3">
-          <h3 className="text-lg font-semibold text-gray-700 underline border-b border-gray-200 mb-3 pb-2">
+        <div className="bg-white p-4 rounded-lg shadow-sm lg:col-span-3 flex flex-col min-h-0">
+          <h3 className="text-lg font-semibold text-gray-700 underline border-b border-gray-200 mb-3 pb-2 flex-shrink-0">
             Order History
           </h3>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th
-                    className="text-left p-2 font-medium text-white rounded-l"
-                    style={{ backgroundColor: "#6f597b" }}
-                  >
-                    No.
-                  </th>
-                  <th
-                    className="text-left p-2 font-medium text-white"
-                    style={{ backgroundColor: "#6f597b" }}
-                  >
-                    Date
-                  </th>
-                  <th
-                    className="text-left p-2 font-medium text-white"
-                    style={{ backgroundColor: "#6f597b" }}
-                  >
-                    Stock Item
-                  </th>
-                  <th
-                    className="text-left p-2 font-medium text-white"
-                    style={{ backgroundColor: "#6f597b" }}
-                  >
-                    Quantity
-                  </th>
-                  <th
-                    className="text-left p-2 font-medium text-white rounded-r"
-                    style={{ backgroundColor: "#6f597b" }}
-                  >
-                    Total Cost <span className="text-xs">(Inc GST)</span>
-                  </th>
-                  <th className="text-left p-2 font-medium text-gray-600"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {purchaseOrders.length > 0 ? (
-                  purchaseOrders.map((order, index) => (
-                    <tr key={index} className="border-b border-gray-100">
-                      <td className="p-2 text-gray-800">{order.number}</td>
-                      <td className="p-2 text-gray-800">
-                        {order.date.toLocaleDateString()}
-                      </td>
-                      <td className="p-2 text-gray-800">
-                        {order.stockItemName}
-                      </td>
-                      <td className="p-2 text-gray-800">{order.quantity}</td>
-                      <td className="p-2 text-gray-800">
-                        ${order.totalCost.toFixed(2)}
-                      </td>
-                      <td className="p-2">
-                        <button
-                          className="text-white text-xs px-3 py-1 rounded transition-colors"
-                          style={{
-                            backgroundColor: "#6f597b",
-                          }}
-                        >
-                          Repurchase
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="p-4 text-center text-gray-500 italic"
-                    >
-                      No purchase orders found for this supplier
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div className="flex-1 min-h-0 flex flex-col">
+            <Table
+              columns={[
+                {
+                  key: "number",
+                  header: "No.",
+                  gridCol: "min-content",
+                  align: "left",
+                  render: (order) => <span>{order.number}</span>,
+                },
+                {
+                  key: "date",
+                  header: "Date",
+                  gridCol: "min-content",
+                  align: "left",
+                  render: (order) => (
+                    <span>{order.date.toLocaleDateString()}</span>
+                  ),
+                },
+                {
+                  key: "stockItem",
+                  header: "Stock Item",
+                  gridCol: "1fr",
+                  align: "left",
+                  render: (order) => (
+                    <span className="truncate">{order.stockItemName}</span>
+                  ),
+                },
+                {
+                  key: "quantity",
+                  header: "Quantity",
+                  gridCol: "min-content",
+                  align: "left",
+                  render: (order) => <span>{order.quantity}</span>,
+                },
+                {
+                  key: "totalCost",
+                  header: (
+                    <>
+                      Total Cost <span className="text-xs">(Inc GST)</span>
+                    </>
+                  ),
+                  gridCol: "min-content",
+                  align: "left",
+                  render: (order) => <span>${order.totalCost.toFixed(2)}</span>,
+                },
+              ]}
+              data={purchaseOrders}
+              emptyMessage="No purchase orders found for this supplier"
+            />
           </div>
         </div>
       </div>

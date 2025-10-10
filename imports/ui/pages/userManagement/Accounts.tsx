@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
-// import { Roles } from "meteor/alanning:roles";
-import { RoleEnum } from "/imports/api/accounts/roles";
+import { RoleEnum, getHighestRole } from "/imports/api/accounts/roles";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { CreateUserData } from "../../../api/accounts/userTypes";
 import { usePageTitle } from "../../hooks/PageTitleContext";
@@ -9,6 +8,10 @@ import { EditPassword } from "../../components/EditPassword";
 import { Accounts } from "meteor/accounts-base";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Input } from "../../components/interaction/Input";
+import { Button } from "../../components/interaction/Button";
+
+import { Table, TableColumn } from "../../components/Table";
+import { SmallPill } from "../../components/SmallPill";
 import { Roles } from "meteor/alanning:roles";
 
 export const UserManagementPage = () => {
@@ -16,7 +19,6 @@ export const UserManagementPage = () => {
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<Meteor.User | null>(null);
-  const [showEntries, setShowEntries] = useState(10);
 
   const { users, currentUserId } = useTracker(() => {
     const usersHandle = Meteor.subscribe("users.all");
@@ -175,159 +177,115 @@ export const UserManagementPage = () => {
     }
   };
 
-  return (
-    <div
-      className="max-h-screen w-full overflow-auto"
-      style={{ backgroundColor: "#ffffff" }}
-    >
-      <div className="p-12 pb-4 w-full">
-        {/* Action Buttons */}
-        <div className="flex gap-4 mb-6">
-          <button
-            onClick={() => setShowAddUserModal(true)}
-            className="px-6 py-3 text-white font-medium rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-            style={{ backgroundColor: "#c97f97" }}
-          >
-            + Add New User
-          </button>
-
-          {selectedUsers.length > 0 && (
-            <button
-              onClick={handleDeleteSelected}
-              className="px-6 py-3 text-white font-medium rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-              style={{ backgroundColor: "#1e032e" }}
-            >
-              - Remove User
-            </button>
-          )}
-
-          <button
-            onClick={exportToCSV}
-            className="px-6 py-3 text-white font-medium rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-            style={{ backgroundColor: "#6f597b" }}
-          >
-            Export User List
-          </button>
+  // Define table columns
+  const columns: TableColumn<Meteor.User & { roles: string[] }>[] = [
+    {
+      key: "select",
+      header: (
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedUsers([...users]);
+              } else {
+                setSelectedUsers([]);
+              }
+            }}
+          />
+          <span>Name</span>
         </div>
+      ),
+      gridCol: "2fr",
+      align: "left",
+      render: (user) => (
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={selectedUsers.some((u) => u._id === user._id)}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedUsers((prev) => [...prev, user]);
+              } else {
+                setSelectedUsers((prev) =>
+                  prev.filter((u) => u._id !== user._id),
+                );
+              }
+            }}
+          />
+          <span className="font-medium text-gray-800">
+            {`${user.profile?.firstName || ""} ${user.profile?.lastName || ""}`.trim() ||
+              "Unknown User"}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "username",
+      header: "Username",
+      gridCol: "1fr",
+      align: "left",
+      render: (user) => <span>{user.username || "No username"}</span>,
+    },
+    {
+      key: "role",
+      header: "Role",
+      gridCol: "min-content",
+      render: (user) => {
+        if (!user.roles || user.roles.length === 0) {
+          return <span className="text-gray-500 italic">No Role</span>;
+        }
 
-        {/* Show entries dropdown */}
-        <div className="mb-4 flex items-center gap-2">
-          <span className="text-gray-700">Show</span>
-          <select
-            value={showEntries}
-            onChange={(e) => setShowEntries(Number(e.target.value))}
-            className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
-          <span className="text-gray-700">entries</span>
+        const highestRole = getHighestRole(user.roles);
+        if (!highestRole) {
+          return <span className="text-gray-500 italic">No Role</span>;
+        }
+
+        return <SmallPill>{highestRole}</SmallPill>;
+      },
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      gridCol: "min-content",
+      render: (user) => (
+        <div className="flex gap-2">
+          <Button variant="positive" onClick={() => handleEditUser(user)}>
+            Edit
+          </Button>
+          {user._id !== currentUserId && (
+            <Button variant="negative" onClick={() => handleDeleteUser(user)}>
+              Delete
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="flex flex-1 flex-col">
+      {/* Action buttons */}
+      <div className="flex justify-between items-center p-4 gap-2">
+        <div></div>
+        <div className="flex gap-2">
+          <Button variant="positive" onClick={() => setShowAddUserModal(true)}>
+            Add New User
+          </Button>
+          {selectedUsers.length > 0 && (
+            <Button variant="negative" onClick={handleDeleteSelected}>
+              Remove Users ({selectedUsers.length})
+            </Button>
+          )}
+          <Button variant="positive" onClick={exportToCSV}>
+            Export CSV
+          </Button>
         </div>
       </div>
 
-      {/* User Table Container */}
-      <div className="px-6 pb-6">
-        <div
-          className="w-full rounded-lg shadow-xl overflow-hidden border-4"
-          style={{ borderColor: "#6f597b" }}
-        >
-          {/* Table Header */}
-          <div
-            className="grid grid-cols-6 gap-4 p-4 text-white font-semibold"
-            style={{ backgroundColor: "#6f597b" }}
-          >
-            <div className="flex items-center gap-2">
-              <Input
-                type="checkbox"
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedUsers([...users]);
-                  } else {
-                    setSelectedUsers([]);
-                  }
-                }}
-              />
-              <span>First Name</span>
-            </div>
-            <div>Last Name</div>
-            <div>Group</div>
-            <div>Active</div>
-            <div>Actions</div>
-            <div></div>
-          </div>
-
-          {/* Table Body */}
-          <div className="bg-white">
-            {users.slice(0, showEntries).map((user, index) => {
-              const isCurrentUser = user._id === currentUserId;
-
-              return (
-                <div
-                  key={user._id}
-                  className={`grid grid-cols-6 gap-4 p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors ${
-                    index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Input
-                      // checked={isSelected}
-                      type="checkbox"
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedUsers((prev) => [...prev, user]);
-                        } else {
-                          setSelectedUsers((prev) =>
-                            prev.filter((u) => u._id !== user._id),
-                          );
-                        }
-                      }}
-                    />
-                    <span className="font-medium text-gray-800">
-                      {user.profile?.firstName || "Unknown"}
-                    </span>
-                  </div>
-
-                  <div className="text-gray-800">
-                    {user.profile?.lastName || "User"}
-                  </div>
-
-                  <div className="text-gray-600">
-                    {user.roles?.[0] ? (
-                      <span className="capitalize font-medium">
-                        {user.roles[0]}
-                      </span>
-                    ) : (
-                      "No Role"
-                    )}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditUser(user)}
-                      className="px-4 py-2 text-white rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
-                      style={{ backgroundColor: "#c97f97" }}
-                    >
-                      EDIT
-                    </button>
-                  </div>
-
-                  <div>
-                    {!isCurrentUser && (
-                      <button
-                        onClick={() => handleDeleteUser(user)}
-                        className="px-3 py-2 bg-red-500 text-white rounded-full text-sm font-medium hover:bg-red-600 transition-colors"
-                      >
-                        DELETE
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      {/* Table */}
+      <div className="flex-1 min-h-0">
+        <Table columns={columns} data={users} emptyMessage="No users found" />
       </div>
 
       {/* Add User Modal */}
@@ -455,20 +413,17 @@ const AddUserModal = ({
             />
           )}
           <div className="flex gap-2 pt-4">
-            <button
+            <Button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+              variant="negative"
+              width="full"
             >
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-3 text-white rounded-lg hover:opacity-90 font-medium"
-              style={{ backgroundColor: "#c97f97" }}
-            >
+            </Button>
+            <Button type="submit" variant="positive" width="full">
               Add User
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -508,7 +463,7 @@ const EditUserModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Update user profile + role
-    await onSubmit(user._id, {
+    onSubmit(user._id, {
       profile: {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -602,20 +557,17 @@ const EditUserModal = ({
             setPassword={setFormData}
           ></EditPassword>
           <div className="flex gap-2 pt-4">
-            <button
+            <Button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+              variant="negative"
+              width="full"
             >
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-3 text-white rounded-lg hover:opacity-90 font-medium"
-              style={{ backgroundColor: "#c97f97" }}
-            >
+            </Button>
+            <Button type="submit" variant="positive" width="full">
               Update User
-            </button>
+            </Button>
           </div>
         </form>
       </div>
