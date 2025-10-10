@@ -110,7 +110,7 @@ export const TaxPage = () => {
 
   const getDateRangeText = useMemo(() => {
     if (dateRange === "all") return "All Time";
-    return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
+    return `${format(start, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`;
   }, [start, end, dateRange]);
 
   // Filter data by date
@@ -420,8 +420,9 @@ export const TaxPage = () => {
             onDateChange={setCurrentDate}
           />
           <h2 className="ml-4 text-red-900">
-            <span className="font-bold">Viewing Period:</span>{" "}
-            {getDateRangeText}
+            <span className="font-semibold text-lg">
+              Viewing Period: {getDateRangeText}
+            </span>
           </h2>
         </div>
 
