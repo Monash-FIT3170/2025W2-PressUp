@@ -356,7 +356,7 @@ export const PosSideMenu = ({
 
   const openIngredientDialog = (
     item: MenuItem | OrderMenuItem,
-    index: number,
+    index: number, 
   ) => {
     setIngredientDialog({ open: true, item, index });
   };
