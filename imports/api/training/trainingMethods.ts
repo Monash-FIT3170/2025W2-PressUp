@@ -24,7 +24,43 @@ Meteor.methods({
     if (updates.title !== undefined) check(updates.title, String);
     if (updates.items !== undefined) check(updates.items, Array);
 
-    return await TrainingListsCollection.updateAsync(listId, { $set: updates });
+   const result = await TrainingListsCollection.updateAsync(listId, { $set: updates });
+
+     // If items changed, update all related progress entries
+  if (updates.items !== undefined) {
+    const newItemIds = updates.items.map(item => item.id);
+
+    // Update all progress entries for this list
+    await TrainingProgressCollection.updateAsync(
+      { trainingListId: listId },
+      {
+        $set: newItemIds.reduce((acc, itemId) => {
+          acc[`completedItems.${itemId}`] = false; // add new items if missing
+          return acc;
+        }, {} as Record<string, boolean>)
+      },
+      { multi: true } // update all documents for this training list
+    );
+
+    // Optionally, remove any completedItems that are no longer in the list
+    const removeKeys = Object.keys(updates.items.reduce((acc, item) => {
+      acc[item.id] = true;
+      return acc;
+    }, {} as Record<string, boolean>));
+
+    await TrainingProgressCollection.updateAsync(
+      { trainingListId: listId },
+      {
+        $unset: removeKeys.reduce((acc, key) => {
+          if (!newItemIds.includes(key)) acc[`completedItems.${key}`] = "";
+          return acc;
+        }, {} as Record<string, "">)
+      },
+      { multi: true }
+    );
+  }
+
+  return result;
   }),
 
   "trainingLists.remove": requireLoginMethod(async function (listId: IdType) {
@@ -43,6 +79,34 @@ Meteor.methods({
     return await TrainingProgressCollection.insertAsync(progress);
   }),
 
+  "trainingProgress.ensureForStaff": requireLoginMethod(async function (staffId: string, trainingListId: string, items: { id: string }[]) {
+    const completedItems = items.reduce((acc, item) => {
+      acc[item.id] = false;
+      return acc;
+    }, {} as Record<string, boolean>);
+
+        check(staffId, String);
+    check(trainingListId, String);
+    check(completedItems, Object);
+
+   // Check if already exists
+    const existing = await TrainingProgressCollection.findOneAsync({
+      staffId,
+      trainingListId,
+    });
+
+    if (!existing) {
+
+      const progress: OmitDB<TrainingProgress> = {
+        staffId,
+        trainingListId,
+        completedItems,
+      };
+      // Insert normally via Meteor collection so minimongo sees it
+     return await TrainingProgressCollection.insertAsync(progress);
+    }
+  }),
+
   "trainingProgress.update": requireLoginMethod(async function (
     progressId: IdType,
     updates: Partial<OmitDB<TrainingProgress>>,
@@ -50,8 +114,8 @@ Meteor.methods({
     check(progressId, String);
     if (updates.staffId !== undefined) check(updates.staffId, String);
     if (updates.trainingListId !== undefined) check(updates.trainingListId, String);
-    if (updates.completedItems !== undefined) check(updates.completedItems, Object);
-
+    if (updates.completedItems !== undefined) { check(updates.completedItems, Object);
+}
     return await TrainingProgressCollection.updateAsync(progressId, { $set: updates });
   }),
 
