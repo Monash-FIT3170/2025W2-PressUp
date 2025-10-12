@@ -107,12 +107,12 @@ export const StockPage = () => {
           Add Item
         </button>
       </div>
-      <div id="stock" className="flex flex-1 flex-col min-h-0">
+      <div
+        id="stock"
+        className="flex flex-1 flex-col min-h-screen items-center justify-center"
+      >
         {isLoadingStockItems() || isLoadingSuppliers() ? (
-          <p className="text-gray-400 p-4">
-            {" "}
-            <Loading />{" "}
-          </p>
+          <Loading />
         ) : (
           <StockTable
             stockItems={filteredStockItems}
