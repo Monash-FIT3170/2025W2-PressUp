@@ -4,6 +4,7 @@ import { CircleUserRound } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useSubscribe } from "meteor/react-meteor-data";
 import { Roles } from "meteor/alanning:roles";
+import { Loading } from "../components/Loading";
 
 type Post = {
   postedBy: string;
@@ -53,9 +54,11 @@ function PostHeader({ post }: PostHeaderProps) {
             {user ? user.profile?.lastName : "User"}
           </p>
           <p className="text-md font-semibold">
-            {userRole
-              ? userRole.charAt(0).toUpperCase() + userRole.slice(1)
-              : "Loading user's role..."}
+            {userRole ? (
+              userRole.charAt(0).toUpperCase() + userRole.slice(1)
+            ) : (
+              <Loading />
+            )}
           </p>
         </div>
         <div className="text-sm text-gray-400 ml-auto">

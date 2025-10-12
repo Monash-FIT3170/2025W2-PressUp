@@ -2,6 +2,7 @@ import { Meteor } from "meteor/meteor";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
+import { Loading } from "../components/Loading";
 import {
   Company,
   CompanyCollection,
@@ -182,14 +183,18 @@ export const PurchaseOrderForm = ({
       <div className="grid grid-cols-2">
         <div>
           <div className="font-bold pb-2">
-            {isLoadingCompany()
-              ? "Loading..."
-              : company?.name || "No Company Name"}
+            {isLoadingCompany() ? (
+              <Loading />
+            ) : (
+              company?.name || "No Company Name"
+            )}
           </div>
           <div>
-            {isLoadingCompany()
-              ? "Loading..."
-              : company?.address || "No Address"}
+            {isLoadingCompany() ? (
+              <Loading />
+            ) : (
+              company?.address || "No Address"
+            )}
           </div>
           {company?.phone && (
             <div>
