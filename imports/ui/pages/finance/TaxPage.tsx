@@ -4,6 +4,7 @@ import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { TaxDateFilter } from "../../components/TaxDateFilter";
 import { EditDeductionModal } from "../../components/EditDeductionModal";
+import { Loading } from "../../components/Loading";
 import {
   format,
   startOfMonth,
@@ -400,7 +401,7 @@ export const TaxPage = () => {
   if (!orders.length) {
     return (
       <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        Loading...
+        <Loading />
       </div>
     );
   }

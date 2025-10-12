@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { TaxDateFilter } from "../../components/TaxDateFilter";
+import { Loading } from "../../components/Loading";
 import {
   format,
   startOfMonth,
@@ -339,7 +340,7 @@ export const ProfitLossPage = () => {
   if (!financialData) {
     return (
       <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        Loading...
+        <Loading />
       </div>
     );
   }
