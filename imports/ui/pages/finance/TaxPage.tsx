@@ -4,6 +4,7 @@ import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { TaxDateFilter } from "../../components/TaxDateFilter";
 import { EditDeductionModal } from "../../components/EditDeductionModal";
+import { Loading } from "../../components/Loading";
 import {
   format,
   startOfMonth,
@@ -83,8 +84,12 @@ export const TaxPage = () => {
     setPageTitle("Finance - Tax Management");
     const fetchData = async () => {
       try {
-        const fetchedOrders = (await Meteor.callAsync("orders.getAll")) as any[];
-        const fetchedPOs = (await Meteor.callAsync("purchaseOrders.getAll")) as any[];
+        const fetchedOrders = (await Meteor.callAsync(
+          "orders.getAll",
+        )) as any[];
+        const fetchedPOs = (await Meteor.callAsync(
+          "purchaseOrders.getAll",
+        )) as any[];
         setOrders(Array.isArray(fetchedOrders) ? fetchedOrders : []);
         setPurchaseOrders(Array.isArray(fetchedPOs) ? fetchedPOs : []);
       } catch (err) {
@@ -402,7 +407,7 @@ export const TaxPage = () => {
   if (loadingData) {
     return (
       <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        Loading tax data...
+        <Loading />
       </div>
     );
   }
