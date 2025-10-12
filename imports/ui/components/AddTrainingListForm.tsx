@@ -27,6 +27,10 @@ export const AddTrainingListForm = ({
       setTitle(trainingList[0].title);
       setRawItems(trainingList[0].items.map((i) => i.name).join("\n"));
       setInitialised(true); // only initialize once
+    } else if (trainingList.length === 0 && !initialised) {
+      setTitle("");
+      setRawItems("");
+      setInitialised(true);
     }
   }, [trainingList, initialised]);
 
