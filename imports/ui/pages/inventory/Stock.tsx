@@ -14,6 +14,7 @@ import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
 import { ConfirmModal } from "../../components/ConfirmModal";
+import { Loading } from "../../components/Loading";
 
 export const StockPage = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -108,7 +109,10 @@ export const StockPage = () => {
       </div>
       <div id="stock" className="flex flex-1 flex-col min-h-0">
         {isLoadingStockItems() || isLoadingSuppliers() ? (
-          <p className="text-gray-400 p-4">Loading inventory...</p>
+          <p className="text-gray-400 p-4">
+            {" "}
+            <Loading />{" "}
+          </p>
         ) : (
           <StockTable
             stockItems={filteredStockItems}
