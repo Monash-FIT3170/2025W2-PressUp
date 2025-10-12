@@ -25,3 +25,6 @@ import "./company/companyMethods";
 import "./company/companyPublishing";
 import "./debug/debugMethods";
 import "./menuItems/seedMenuItems";
+import "./training/trainingListsPublishing";
+import "./training/trainingMethods";
+import "./training/trainingProgressPublishing";
