@@ -7,6 +7,7 @@ import { Input, Label } from "../../components/interaction/Input";
 import { TextArea } from "../../components/interaction/TextArea";
 import { Button } from "../../components/interaction/Button";
 import { Form } from "../../components/interaction/form/Form";
+import { Loading } from "../../components/Loading";
 
 export const CompanySettings = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -76,7 +77,7 @@ export const CompanySettings = () => {
   if (isLoadingCompany()) {
     return (
       <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        Loading...
+        <Loading />
       </div>
     );
   }

@@ -5,6 +5,7 @@ import {
   OrdersCollection,
   OrderType,
 } from "/imports/api/orders/OrdersCollection";
+import { Loading } from "../../components/Loading";
 
 export const ReceiptPage = () => {
   const navigate = useNavigate();
@@ -44,7 +45,9 @@ export const ReceiptPage = () => {
   if (!order) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center h-full">
-        <p className="text-gray-500">Loading receipt...</p>
+        <p className="text-gray-500">
+          <Loading />
+        </p>
       </div>
     );
   }
