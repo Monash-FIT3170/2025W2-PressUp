@@ -24,7 +24,19 @@ export const PosItemCard = ({ item, onClick }: Props) => {
         <h3 className="text-sm font-semibold text-gray-200 truncate">
           {item.name}
         </h3>
-        <p className="text-white font-bold text-sm">${item.price.toFixed(2)}</p>
+        <div className="text-white font-bold text-sm">
+          {item.discount && item.discount > 0 && (
+            <span className="line-through opacity-60 mr-1">
+              ${item.price.toFixed(2)}
+            </span>
+          )}
+          <span>
+            $
+            {item.discount && item.discount > 0
+              ? (item.price * (1 - item.discount / 100)).toFixed(2)
+              : item.price.toFixed(2)}
+          </span>
+        </div>
       </div>
     </div>
   );
