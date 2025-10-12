@@ -127,6 +127,7 @@ Meteor.methods({
       available: Match.Optional(Boolean),
       price: Match.Optional(Number),
       category: Match.Optional([String]),
+      allergens: Match.Optional([String]),
       image: Match.Optional(String),
       discount: Match.Optional(Number),
       baseIngredients: Match.Optional([BaseIngredientSchema]),

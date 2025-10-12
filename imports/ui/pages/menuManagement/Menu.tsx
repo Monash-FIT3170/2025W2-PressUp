@@ -46,7 +46,7 @@ export const Menu = () => {
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
 
   const handleItemClick = (item: MenuItem) => {
-    Meteor.call("menuItems.updateQuantity", item._id, 1);
+    Meteor.call("menuItems.updateQuantity", String(item._id), 1);
     setSelectedItem(item);
     setIsEditModalOpen(true);
   };
