@@ -22,6 +22,7 @@ import {
 import { MenuItemsCollection } from "/imports/api/menuItems/MenuItemsCollection";
 import { MenuItem } from "/imports/api";
 import { OrderMenuItem } from "/imports/api/orders/OrdersCollection";
+import { Loading } from "../components/Loading";
 
 type BaseIngredient = {
   key: string;
@@ -274,7 +275,7 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
       <MuiDialogContent dividers>
         {isLoading ? (
           <MuiTypography variant="body2" color="text.secondary">
-            Loading…
+            <Loading />
           </MuiTypography>
         ) : hasNew ? (
           <>

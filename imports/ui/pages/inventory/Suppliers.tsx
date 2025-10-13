@@ -9,6 +9,7 @@ import { SupplierTable } from "../../components/SupplierTable";
 import { SupplierInfo } from "../../components/SupplierInfo";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { Button } from "../../components/interaction/Button";
+import { Loading } from "../../components/Loading";
 
 export const SuppliersPage = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -61,9 +62,11 @@ export const SuppliersPage = () => {
       </div>
 
       <div className="flex flex-1 flex-col min-h-0">
-        <div className={`min-h-0 ${selectedSupplier ? "flex-1" : "flex-1"}`}>
+        <div
+          className={`${selectedSupplier ? "flex-1" : "flex-1"} flex items-center justify-center`}
+        >
           {isLoadingSuppliers() || isLoadingStockItems() ? (
-            <p className="text-gray-400 p-4">Loading suppliers...</p>
+            <Loading />
           ) : (
             <SupplierTable
               suppliers={filteredSuppliers}
