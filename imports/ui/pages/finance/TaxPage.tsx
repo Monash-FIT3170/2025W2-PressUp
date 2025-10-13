@@ -24,7 +24,7 @@ import {
 } from "recharts";
 import { Trash } from "lucide-react";
 import { ConfirmModal } from "../../components/ConfirmModal";
-import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { useTracker } from "meteor/react-meteor-data";
 import { DeductionsCollection } from "/imports/api/tax/DeductionsCollection";
 import { ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
 import { calculateShiftPay } from "/imports/api/shifts/shiftsHelpers";
@@ -84,8 +84,12 @@ export const TaxPage = () => {
     setPageTitle("Finance - Tax Management");
     const fetchData = async () => {
       try {
-        const fetchedOrders = (await Meteor.callAsync("orders.getAll")) as any[];
-        const fetchedPOs = (await Meteor.callAsync("purchaseOrders.getAll")) as any[];
+        const fetchedOrders = (await Meteor.callAsync(
+          "orders.getAll",
+        )) as any[];
+        const fetchedPOs = (await Meteor.callAsync(
+          "purchaseOrders.getAll",
+        )) as any[];
         setOrders(Array.isArray(fetchedOrders) ? fetchedOrders : []);
         setPurchaseOrders(Array.isArray(fetchedPOs) ? fetchedPOs : []);
       } catch (err) {
