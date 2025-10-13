@@ -53,14 +53,9 @@ const getQuarterRange = (date: Date) => {
 
 export const TaxPage = () => {
   const [_, setPageTitle] = usePageTitle();
-  useSubscribe("deductions");
-  const deductions = useTracker(() => DeductionsCollection.find().fetch());
-
-  useSubscribe("shifts.all");
-  const shifts = useTracker(() => ShiftsCollection.find().fetch());
-
-  useSubscribe("users.all");
-  const users = useTracker(() => Meteor.users.find().fetch());
+  const deductions = useTracker(() => DeductionsCollection.find().fetch(), []);
+  const shifts = useTracker(() => ShiftsCollection.find().fetch(), []);
+  const users = useTracker(() => Meteor.users.find().fetch(), []);
 
   const [selectedMetric, setSelectedMetric] = useState<
     "incomeTax" | "payrollTax" | "GSTCollected" | "GSTPaid"
@@ -82,16 +77,23 @@ export const TaxPage = () => {
   // Fetch data once
   const [orders, setOrders] = useState<any[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<any[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
     setPageTitle("Finance - Tax Management");
     const fetchData = async () => {
-      const fetchedOrders = (await Meteor.callAsync("orders.getAll")) as any[];
-      const fetchedPOs = (await Meteor.callAsync(
-        "purchaseOrders.getAll",
-      )) as any[];
-      setOrders(fetchedOrders);
-      setPurchaseOrders(fetchedPOs);
+      try {
+        const fetchedOrders = (await Meteor.callAsync("orders.getAll")) as any[];
+        const fetchedPOs = (await Meteor.callAsync("purchaseOrders.getAll")) as any[];
+        setOrders(Array.isArray(fetchedOrders) ? fetchedOrders : []);
+        setPurchaseOrders(Array.isArray(fetchedPOs) ? fetchedPOs : []);
+      } catch (err) {
+        console.error("Error fetching finance data:", err);
+        setOrders([]);
+        setPurchaseOrders([]);
+      } finally {
+        setLoadingData(false);
+      }
     };
     fetchData();
   }, [setPageTitle]);
@@ -397,10 +399,10 @@ export const TaxPage = () => {
     setSelectedDeduction(null);
   };
 
-  if (!orders.length) {
+  if (loadingData) {
     return (
       <div className="w-full p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        Loading...
+        Loading tax data...
       </div>
     );
   }
