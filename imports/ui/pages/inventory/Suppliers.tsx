@@ -62,9 +62,7 @@ export const SuppliersPage = () => {
       </div>
 
       <div className="flex flex-1 flex-col min-h-0">
-        <div
-          className={`${selectedSupplier ? "flex-1" : "flex-1"} flex items-center justify-center`}
-        >
+       <div className={`min-h-0 ${selectedSupplier ? "flex-1" : "flex-1"}`}>
           {isLoadingSuppliers() || isLoadingStockItems() ? (
             <Loading />
           ) : (
