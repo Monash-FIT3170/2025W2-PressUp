@@ -4,6 +4,10 @@ on:
     types: [closed]
     branches: [main]
 
+concurrency:
+  group: ${{ github.repository }}-version
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
