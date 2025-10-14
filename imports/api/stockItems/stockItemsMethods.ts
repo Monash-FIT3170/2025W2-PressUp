@@ -11,20 +11,11 @@ Meteor.methods({
     check(item.name, String);
     check(item.quantity, Number);
     check(item.location, String);
+    if (item.expiryDate !== undefined) {
+      check(item.expiryDate, Date);
+    }
 
     return await StockItemsCollection.insertAsync(item);
-  }),
-
-  "stockItems.update": requireLoginMethod(async function (
-    itemId: IdType,
-    updates: OmitDB<StockItem>,
-  ) {
-    check(itemId, String);
-    check(updates.name, String);
-    check(updates.quantity, Number);
-    check(updates.location, String);
-
-    return await StockItemsCollection.updateAsync(itemId, { $set: updates });
   }),
 
   "stockItems.remove": requireLoginMethod(async function (itemId: IdType) {
@@ -39,5 +30,40 @@ Meteor.methods({
     return await StockItemsCollection.updateAsync(itemId, {
       $set: { supplier: null },
     });
+  }),
+
+  "stockItems.rename": requireLoginMethod(async function (
+    oldName: string,
+    newName: string,
+  ) {
+    check(oldName, String);
+    check(newName, String);
+
+    return await StockItemsCollection.updateAsync(
+      { name: oldName },
+      { $set: { name: newName } },
+      { multi: true },
+    );
+  }),
+
+  "stockItems.update": requireLoginMethod(async function (
+    itemId: IdType,
+    updates: Partial<
+      Pick<OmitDB<StockItem>, "quantity" | "location" | "expiryDate">
+    >,
+  ) {
+    check(itemId, String);
+
+    if (updates.quantity !== undefined) {
+      check(updates.quantity, Number);
+    }
+    if (updates.location !== undefined) {
+      check(updates.location, String);
+    }
+    if (updates.expiryDate !== undefined) {
+      check(updates.expiryDate, Date);
+    }
+
+    return await StockItemsCollection.updateAsync(itemId, { $set: updates });
   }),
 });
