@@ -1,0 +1,64 @@
+name: Semantic Versioning
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag_release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # Get all tags
+
+      - name: Determine version bump type from branch prefix
+        id: bump
+        run: |
+          SRC="${{ github.event.pull_request.head.ref }}"
+          if [[ "$SRC" == major/* ]]; then echo "type=major" >> $GITHUB_OUTPUT
+          elif [[ "$SRC" =~ ^(fix|bugfix|bug|hotfix)/ ]]; then echo "type=patch" >> $GITHUB_OUTPUT
+          else echo "type=minor" >> $GITHUB_OUTPUT; fi
+
+      - name: Compute next version from existing tags (vX.Y.Z)
+        id: ver
+        run: |
+          LAST=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)
+          if [[ -z "$LAST" ]]; then
+            NEW="v1.0.0"
+          else
+            BASE="${LAST#v}"
+            IFS='.' read -r MAJOR MINOR PATCH <<<"$BASE"
+            case "${{ steps.bump.outputs.type }}" in
+              major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+              patch) PATCH=$((PATCH+1)) ;;
+            esac
+            NEW="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+          echo "last=${LAST:-none}" >> $GITHUB_OUTPUT
+          echo "new=$NEW" >> $GITHUB_OUTPUT
+
+      - name: Create new version tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.ver.outputs.new }}" -m "Release ${{ steps.ver.outputs.new }} (via ${{
+            steps.bump.outputs.type }})"
+          git push origin "${{ steps.ver.outputs.new }}"
+
+      - name: Create GitHub release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = "${{ steps.ver.outputs.new }}";
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name: tag,
+              generate_release_notes: true
+            });
