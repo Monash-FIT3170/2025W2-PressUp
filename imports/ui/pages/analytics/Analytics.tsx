@@ -191,7 +191,9 @@ export const AnalyticsPage = () => {
         <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
         <h2 className="text-lg lg:text-xl font-semibold text-press-up-washed-blue">
           Viewing Period:{" "}
-          <span className="font-normal text-press-up-navy">{getDateRangeText(dateRange)}</span>
+          <span className="font-normal text-press-up-navy">
+            {getDateRangeText(dateRange)}
+          </span>
         </h2>
         <ExportButton onExport={handleExport} />
       </div>

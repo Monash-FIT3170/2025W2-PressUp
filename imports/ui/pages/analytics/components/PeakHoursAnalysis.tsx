@@ -126,7 +126,9 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
             {formatHour(peakHour.hour)}({peakHour.orderCount} orders)
           </p>
         ) : (
-          <p className="text-sm text-press-up-navy">No peak hour data available</p>
+          <p className="text-sm text-press-up-navy">
+            No peak hour data available
+          </p>
         )}
         <p className="text-xs text-press-up-washed-blue mt-1">
           This data supports staff scheduling decisions
@@ -267,7 +269,9 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
           </p>
         </div>
         <div className="bg-press-up-cream p-4 rounded-lg">
-          <h4 className="font-medium text-press-up-navy">Average Order Value</h4>
+          <h4 className="font-medium text-press-up-navy">
+            Average Order Value
+          </h4>
           <p className="text-2xl font-bold text-press-up-blue">
             $
             {(

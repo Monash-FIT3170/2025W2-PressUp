@@ -98,7 +98,9 @@ export const SalesTrendsVisualization: React.FC<
 
       {/* Chart */}
       <div className="space-y-3">
-        <h3 className="text-lg font-medium text-press-up-washed-blue">Sales Over Time</h3>
+        <h3 className="text-lg font-medium text-press-up-washed-blue">
+          Sales Over Time
+        </h3>
 
         {salesData.some((d) => d.totalSales > 0) ? (
           <div className="relative">

@@ -131,7 +131,7 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
 
     // Debug logging
     console.log("Orders count:", orders.length);
-    console.log("Paid orders:", orders.filter(o => o.paid).length);
+    console.log("Paid orders:", orders.filter((o) => o.paid).length);
     console.log("Item map:", Array.from(itemMap.entries()));
     console.log("Most popular:", mostPopular);
 
@@ -148,7 +148,8 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
       <div className="bg-press-up-light-purple p-4 rounded-lg">
         <p className="text-sm text-press-up-navy">
           <span className="font-semibold">Overall Most Popular:</span>{" "}
-          {overallMostPopular.name || "No data available"} ({overallMostPopular.quantity} units sold)
+          {overallMostPopular.name || "No data available"} (
+          {overallMostPopular.quantity} units sold)
         </p>
         <p className="text-xs text-press-up-washed-blue mt-1">
           This data helps with stock ordering decisions
@@ -173,7 +174,9 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
                     {index + 1}
                   </div>
                   <div>
-                    <p className="font-medium text-press-up-navy">{item.name}</p>
+                    <p className="font-medium text-press-up-navy">
+                      {item.name}
+                    </p>
                     <p className="text-sm text-press-up-washed-blue">
                       ${item.averagePrice.toFixed(2)} avg price
                     </p>
