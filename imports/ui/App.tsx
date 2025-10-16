@@ -12,7 +12,7 @@ import { TablesPage } from "./pages/pos/Tables";
 import { ReceiptIndex } from "./pages/receipt/Index";
 import { ReceiptPage } from "./pages/receipt/Receipt";
 import { LoginPage } from "./pages/Login";
-import { UserManagementPage } from "./pages/userManagement/userManagement";
+import { UserManagementPage } from "./pages/userManagement/Accounts";
 import { RosterPage } from "./pages/staff/Roster";
 import { CommunicationPage } from "./pages/staff/Communication";
 import { DebugPage } from "./pages/debug/Debug";

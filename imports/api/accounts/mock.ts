@@ -4,7 +4,7 @@ import { Meteor } from "meteor/meteor";
 import { faker } from "@faker-js/faker";
 import { RoleEnum } from "./roles";
 
-export const mockAccounts = async (count: number = 8) => {
+export const mockAccounts = async (count: number = 30) => {
   if ((await Meteor.users.find().countAsync()) > 1) return;
 
   const roles = [RoleEnum.CASUAL, RoleEnum.MANAGER, RoleEnum.ADMIN];
