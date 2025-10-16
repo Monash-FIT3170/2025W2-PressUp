@@ -1,5 +1,21 @@
 <img src="PressUp.png" alt="PressUp Logo" />
 
+# Project Summary
+PressUp forms an all-in-one solution for cafe management, simplifying the complexities of running a small business.  By combining modern technology with an intuitive, user-friendly design and reliable system performance, we aim to empower café owners and streamline daily operations for their teams.
+
+Key Features:
+- POS system
+- Inventory Management
+- Menu Management
+- User Management
+- Staff Management
+- Financial Management
+- Analytics & Reporting
+- Kitchen Management
+
+All this and more has been created to allow cafe owners to run their small business with ease. The following ReadMe details how it can be utilised, with tips to make this as simple as possible. 
+
+
 # Team
 
 ## 🧠 System Architects
