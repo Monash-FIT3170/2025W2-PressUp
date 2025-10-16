@@ -18,7 +18,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@faker-js/faker": "^9.9.0",
-    "@mui/icons-material": "^7.3.2",
+    "@mui/icons-material": "^7.3.4",
     "@mui/material": "^7.3.1",
     "@tailwindcss/postcss": "^4.1.11",
     "chart.js": "^4.5.0",
