@@ -23,6 +23,21 @@ Meteor.methods({
     return await PostsCollection.removeAsync(postId);
   }),
 
+  "posts.pin": requireLoginMethod(async function (postId: IdType) {
+    if (!postId)
+      throw new Meteor.Error("invalid-arguments", "Post ID is required");
+    
+    const post = await PostsCollection.findOneAsync(postId);
+    if (!post) {
+      throw new Meteor.Error("not-found", "Post not found");
+    }
+    
+    const newPinnedStatus = !post.pinned;
+    return await PostsCollection.updateAsync(postId, {
+      $set: { pinned: newPinnedStatus }
+    });
+  }),
+
   "posts.getCategories": async function () {
     const posts = await PostsCollection.find(
       {},

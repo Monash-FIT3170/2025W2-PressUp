@@ -6,6 +6,7 @@ export interface Post extends DBEntry {
   subject: string;
   content: string;
   category: string;
+  pinned?: boolean;
 }
 
 export const PostsCollection = new Mongo.Collection<OmitDB<Post>, Post>(
