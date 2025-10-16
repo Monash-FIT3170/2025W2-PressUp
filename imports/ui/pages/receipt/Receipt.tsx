@@ -12,7 +12,7 @@ export const ReceiptPage = () => {
 
   // passing split bill through navigation as it is not stored in the database
   const location = useLocation();
-  const splits = location.state?.splits as number[] | undefined;
+  const splits = location.state?.splits as string[] | undefined;
 
 
   // Get orderId from sessionStorage
@@ -52,10 +52,12 @@ export const ReceiptPage = () => {
   
   // for split bill calculations
   const total = order.totalPrice;
-  const sumOfSplits = splits?.reduce((a, b) => a + b, 0) ?? 0;
-  const remaining = total - sumOfSplits;
 
-  const displaySplits = splits ? [...splits] : [];
+  // split bill calculations
+  const numericSplits = splits?.map(s => parseFloat(s) || 0) ?? [];
+  const sumOfSplits = numericSplits.reduce((a, b) => a + b, 0);
+  const remaining = total - sumOfSplits;
+  const displaySplits = numericSplits.length > 0 ? [...numericSplits] : [];
   if (remaining > 0) {
     displaySplits.push(remaining);
   }
