@@ -2,16 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
 import { TaxDateFilter } from "../../components/TaxDateFilter";
-import {
-  format,
-  startOfMonth,
-  startOfYear,
-  endOfMonth,
-  endOfYear,
-  endOfDay,
-} from "date-fns";
-import { Meteor } from "meteor/meteor";
-import { PurchaseOrder } from "/imports/api/purchaseOrders/PurchaseOrdersCollection";
+import { startOfMonth, endOfMonth } from "date-fns";
 import {
   BarChart,
   Bar,
@@ -56,7 +47,7 @@ export const ExpensesPage = () => {
       expensesByCategory: [],
       expensesByMonth: [],
     };
-  }, [dateRange]);
+  }, []);
 
   const handleDateRangeChange = (start: Date, end: Date) => {
     setDateRange({ start, end });
@@ -66,7 +57,7 @@ export const ExpensesPage = () => {
     <div className="flex flex-col gap-4 w-full overflow-y-scroll p-4">
       <div className="flex flex-col gap-4">
         <h1 className="text-4xl font-bold">Expenses</h1>
-        
+
         <TaxDateFilter
           startDate={dateRange.start}
           endDate={dateRange.end}
@@ -97,7 +88,9 @@ export const ExpensesPage = () => {
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Monthly Expenses Trend</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Monthly Expenses Trend
+            </h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={expenseData.expensesByMonth}>
                 <CartesianGrid strokeDasharray="3 3" />

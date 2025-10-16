@@ -31,7 +31,7 @@ interface ItemStats {
 export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
   orders,
   timeFrame,
-  customDateRange,
+  customDateRange: _customDateRange,
 }) => {
   const popularItems = useMemo(() => {
     const today = startOfToday();
@@ -102,7 +102,7 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
     return Array.from(itemMap.values())
       .sort((a, b) => b.totalQuantity - a.totalQuantity)
       .slice(0, 5);
-  }, [orders, timeFrame, customDateRange]);
+  }, [orders, timeFrame]);
 
   const overallMostPopular = useMemo<{ name: string; quantity: number }>(() => {
     const itemMap = new Map<string, number>();

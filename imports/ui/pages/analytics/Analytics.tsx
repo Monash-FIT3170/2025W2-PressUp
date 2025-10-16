@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useSubscribe } from "meteor/react-meteor-data";
-import { Order, OrdersCollection } from "/imports/api/orders/OrdersCollection";
+import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
 import { PopularItemsAnalysis } from "./components/PopularItemsAnalysis";
 import { SalesTrendsVisualization } from "./components/SalesTrendsVisualization";
 import { PeakHoursAnalysis } from "./components/PeakHoursAnalysis";
@@ -54,10 +54,12 @@ export const AnalyticsPage = () => {
     if (!dateRangeBounds.start || !dateRangeBounds.end) {
       return orders;
     }
-    
+
     return orders.filter((order) => {
       const orderDate = new Date(order.createdAt);
-      return orderDate >= dateRangeBounds.start! && orderDate <= dateRangeBounds.end!;
+      return (
+        orderDate >= dateRangeBounds.start! && orderDate <= dateRangeBounds.end!
+      );
     });
   }, [orders, dateRangeBounds]);
 
@@ -108,9 +110,8 @@ export const AnalyticsPage = () => {
     setPageTitle("Analytics & Reporting");
   }, [setPageTitle]);
 
-  const convertToCSV = (objArray: any) => {
-    const array =
-      typeof objArray !== "object" ? JSON.parse(objArray) : objArray;
+  const convertToCSV = (objArray: Order[]) => {
+    const array = objArray;
 
     const header = [
       "Order ID",
@@ -128,7 +129,7 @@ export const AnalyticsPage = () => {
         order.orderNo || "",
         order.menuItems
           ? order.menuItems.reduce(
-              (sum: number, item: any) => sum + item.quantity,
+              (sum: number, item) => sum + item.quantity,
               0,
             )
           : 0,
@@ -144,7 +145,7 @@ export const AnalyticsPage = () => {
     return str;
   };
 
-  const downloadCSV = (data: any, fileName: string) => {
+  const downloadCSV = (data: Order[], fileName: string) => {
     const csvData = new Blob([convertToCSV(data)], { type: "text/csv" });
     const csvURL = URL.createObjectURL(csvData);
     const link = document.createElement("a");
@@ -173,8 +174,12 @@ export const AnalyticsPage = () => {
     <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto scroll-smooth bg-gray-50 p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics & Reporting</h1>
-        <p className="text-gray-600">Comprehensive insights into your business performance</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Analytics & Reporting
+        </h1>
+        <p className="text-gray-600">
+          Comprehensive insights into your business performance
+        </p>
       </div>
 
       {/* Filters */}

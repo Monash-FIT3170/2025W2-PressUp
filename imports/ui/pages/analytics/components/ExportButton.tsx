@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 interface ExportButtonProps {
-  onExport: any;
+  onExport: () => void;
   disabled?: boolean;
 }
 
