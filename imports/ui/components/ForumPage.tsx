@@ -38,10 +38,9 @@ export default function ForumPage() {
         (categoryFilter === "" || p.category === categoryFilter),
     )
     .sort((a, b) => {
-      // First sort by pinned status (pinned posts first)
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
-      // Then sort by date (newest first)
+      
       return b.datePosted.getTime() - a.datePosted.getTime();
     });
   const [subject, setSubject] = useState<string>("");
