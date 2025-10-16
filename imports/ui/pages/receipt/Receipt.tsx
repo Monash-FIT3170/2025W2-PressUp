@@ -14,7 +14,6 @@ export const ReceiptPage = () => {
   const location = useLocation();
   const splits = location.state?.splits as string[] | undefined;
 
-
   // Get orderId from sessionStorage
   const orderId = sessionStorage.getItem("activeOrderId");
 
@@ -49,7 +48,7 @@ export const ReceiptPage = () => {
       </div>
     );
   }
-  
+
   // for split bill calculations
   const total = order.totalPrice;
 
