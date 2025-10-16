@@ -53,7 +53,7 @@ export const ReceiptPage = () => {
   const total = order.totalPrice;
 
   // split bill calculations
-  const numericSplits = splits?.map(s => parseFloat(s) || 0) ?? [];
+  const numericSplits = splits?.map((s) => parseFloat(s) || 0) ?? [];
   const sumOfSplits = numericSplits.reduce((a, b) => a + b, 0);
   const remaining = total - sumOfSplits;
   const displaySplits = numericSplits.length > 0 ? [...numericSplits] : [];
