@@ -197,7 +197,7 @@ export const PosSideMenu = ({
   };
 
   // Split Bill state
-  const [splits, setSplits] = useState<number[]>([]);
+  const [splits, setSplits] = useState<string[]>([]);
   const [remaining, setRemaining] = useState<number>(0);
 
   // Recalculate remaining when total changes
@@ -207,21 +207,25 @@ export const PosSideMenu = ({
 
   const handleAddSplit = () => {
     if (remaining <= 0) return;
-    setSplits((prev) => [...prev, 0]);
+    setSplits((prev) => [...prev, ""]);
   };
 
+
+
   const handleSplitChange = (index: number, value: string) => {
-    // Allow user to type a partial decimal like "4." or "4.5"
     const decimalRegex = /^\d*\.?\d{0,2}$/;
 
-    // If input is empty or matches the decimal pattern, update splits
     if (value === "" || decimalRegex.test(value)) {
       const newSplits = [...splits];
-      newSplits[index] = value === "" ? 0 : parseFloat(value);
-      const sum = newSplits.reduce((a, b) => a + (isNaN(b) ? 0 : b), 0);
-      const newRemaining = parseFloat((baseTotal - sum).toFixed(2));
+      newSplits[index] = value;
       setSplits(newSplits);
-      setRemaining(newRemaining);
+
+      // Calculate remaining
+      const sum = newSplits.reduce(
+        (a, b) => a + (parseFloat(b) || 0),
+        0
+      );
+      setRemaining(parseFloat((baseTotal - sum).toFixed(2)));
     }
   };
 
@@ -661,17 +665,17 @@ export const PosSideMenu = ({
                       <input
                         type="text"
                         inputMode="decimal"
-                        value={val === 0 ? "" : val.toString()}
+                        value={val}
                         onChange={(e) => handleSplitChange(i, e.target.value)}
                         placeholder="Enter amount e.g. 10.50"
                         className={`w-full bg-white rounded px-3 py-1.5 text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                          val < 0 || isNaN(val)
+                          parseFloat(val) < 0 || isNaN(parseFloat(val))
                             ? "ring-red-400"
                             : "focus:ring-pink-300"
                         } shadow-sm`}
                       />
                       {/* Validation text */}
-                      {val < 0 || isNaN(val) ? (
+                      {parseFloat(val) < 0 || isNaN(parseFloat(val)) ? (
                         <span className="text-red-400 text-[11px] mt-1">
                           Please enter a valid amount.
                         </span>
