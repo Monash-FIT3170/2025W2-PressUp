@@ -1,8 +1,15 @@
 import { Meteor } from "meteor/meteor";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { FormEvent, useEffect, useState } from "react";
-import { SuppliersCollection, StockItem } from "/imports/api";
+import {
+  SuppliersCollection,
+  StockItem,
+  StockItemsCollection,
+} from "/imports/api";
 import { IdType } from "/imports/api/database";
+import { Input, Label } from "./interaction/Input";
+import { Button } from "./interaction/Button";
+import { Select } from "./interaction/Select";
 
 interface Props {
   onSuccess: () => void;
@@ -12,10 +19,18 @@ interface Props {
 
 export const AddItemForm = ({ onSuccess, item }: Props) => {
   useSubscribe("suppliers");
+  useSubscribe("stockItems.all");
+
   const suppliers = useTracker(
     () => SuppliersCollection.find({}, { sort: { name: 1 } }).fetch(),
     [],
   );
+
+  const existingItemNames = useTracker(() => {
+    const allItems = StockItemsCollection.find({}).fetch();
+    const uniqueNames = [...new Set(allItems.map((item) => item.name))];
+    return uniqueNames.sort();
+  }, []);
 
   const [itemName, setItemName] = useState(item?.name ?? "");
   const [quantity, setQuantity] = useState<string>(
@@ -28,11 +43,17 @@ export const AddItemForm = ({ onSuccess, item }: Props) => {
   const [selectedValue, setSelectedValue] = useState<string>(
     item?.supplier ? String(item.supplier) : "",
   );
+  const [expiryDate, setExpiryDate] = useState<string>(
+    item?.expiryDate ? item.expiryDate.toISOString().split("T")[0] : "",
+  );
 
   useEffect(() => {
     setItemName(item?.name ?? "");
     setQuantity(item ? String(item.quantity) : "");
     setLocation(item?.location ?? "");
+    setExpiryDate(
+      item?.expiryDate ? item.expiryDate.toISOString().split("T")[0] : "",
+    );
 
     const supplierId = item?.supplier ?? "";
     setSupplier(supplierId || null);
@@ -54,16 +75,17 @@ export const AddItemForm = ({ onSuccess, item }: Props) => {
       return;
     }
 
+    const expiryDateObj = expiryDate ? new Date(expiryDate) : undefined;
+
     if (item && item._id) {
       // Editing existing item
       Meteor.call(
         "stockItems.update",
         item._id,
         {
-          name: itemName,
           quantity: parsedQuantity,
           location,
-          supplier,
+          expiryDate: expiryDateObj,
         },
         (error: Meteor.Error | undefined) => {
           if (error) {
@@ -81,6 +103,7 @@ export const AddItemForm = ({ onSuccess, item }: Props) => {
           quantity: parsedQuantity,
           location,
           supplier,
+          expiryDate: expiryDateObj,
         },
         (error: Meteor.Error | undefined) => {
           if (error) {
@@ -90,6 +113,7 @@ export const AddItemForm = ({ onSuccess, item }: Props) => {
             setQuantity("");
             setLocation("");
             setSupplier(null);
+            setExpiryDate("");
             onSuccess();
           }
         },
@@ -107,48 +131,42 @@ export const AddItemForm = ({ onSuccess, item }: Props) => {
       <div className="p-4 md:p-5">
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Item Name
-            </label>
-            <input
+            <Label>Item Name</Label>
+            <Input
               value={itemName}
               onChange={(e) => setItemName(e.target.value)}
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               placeholder="Coffee"
+              list="existing-names"
               required
             />
+            <datalist id="existing-names">
+              {existingItemNames.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
           </div>
           <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Quantity
-            </label>
-            <input
+            <Label>Quantity</Label>
+            <Input
               type="number"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              min="0"
               placeholder="0"
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             />
           </div>
           <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Location
-            </label>
-            <input
+            <Label>Location</Label>
+            <Input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Storage Room 1"
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             />
           </div>
           <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Supplier
-            </label>
-            <select
+            <Label>Supplier</Label>
+            <Select
               value={selectedValue}
               onChange={(e) => {
                 setSelectedValue(e.target.value);
@@ -161,10 +179,9 @@ export const AddItemForm = ({ onSuccess, item }: Props) => {
                   setSupplier(found && found._id ? found._id : null);
                 }
               }}
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+              placeholder="--Select supplier--"
               required
             >
-              <option value="">--Select supplier--</option>
               {suppliers
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .map((supplier, i) => (
@@ -172,28 +189,21 @@ export const AddItemForm = ({ onSuccess, item }: Props) => {
                     {supplier.name}
                   </option>
                 ))}
-            </select>
+            </Select>
           </div>
-          {!item && (
-            <div className="grid grid-cols-1 p-4">
-              <button
-                type="submit"
-                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-press-up-positive-button hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
-              >
-                Add Item
-              </button>
-            </div>
-          )}
-          {item && (
-            <div className="grid grid-cols-1 p-4">
-              <button
-                type="submit"
-                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-press-up-positive-button hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
-              >
-                Save Item
-              </button>
-            </div>
-          )}
+          <div>
+            <Label>Expiry Date (Optional)</Label>
+            <Input
+              type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 p-4">
+            <Button type="submit" variant="positive" width="full">
+              {item ? "Save Item" : "Add Item"}
+            </Button>
+          </div>
         </form>
       </div>
     </div>
