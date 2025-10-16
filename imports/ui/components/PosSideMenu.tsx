@@ -15,7 +15,6 @@ import { Mongo } from "meteor/mongo";
 import MenuItemIngredientsDialog from "./MenuItemIngredientsDialog";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { IconButton as MuiIconButton } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete"; 
 
 interface PosSideMenuProps {
   tableNo: number | null;
@@ -221,10 +220,8 @@ export const PosSideMenu = ({
       setSplits(newSplits);
 
       // Calculate remaining
-      const sum = newSplits.reduce(
-        (a, b) => a + (parseFloat(b) || 0),
-        0
-      );
+      const sum = newSplits.reduce((a, b) => a + (parseFloat(b) || 0), 0);
+
       setRemaining(parseFloat((baseTotal - sum).toFixed(2)));
     }
   };
@@ -360,7 +357,7 @@ export const PosSideMenu = ({
 
   const openIngredientDialog = (
     item: MenuItem | OrderMenuItem,
-    index: number, 
+    index: number,
   ) => {
     setIngredientDialog({ open: true, item, index });
   };
@@ -380,11 +377,10 @@ export const PosSideMenu = ({
               setOrderType(OrderType.DineIn);
               setActiveOrder(getLowestOrderId(OrderType.DineIn));
             }}
-            className={`px-3 py-1 rounded-full font-semibold ${
-              orderType === OrderType.DineIn
-                ? "bg-white text-press-up-purple"
-                : "bg-press-up-purple border border-white"
-            }`}
+            className={`px-3 py-1 rounded-full font-semibold ${orderType === OrderType.DineIn
+              ? "bg-white text-press-up-purple"
+              : "bg-press-up-purple border border-white"
+              }`}
           >
             Dine In
           </button>
@@ -394,11 +390,10 @@ export const PosSideMenu = ({
               setOrderType(OrderType.Takeaway);
               setActiveOrder(getLowestOrderId(OrderType.Takeaway));
             }}
-            className={`px-3 py-1 rounded-full font-semibold ${
-              orderType === OrderType.Takeaway
-                ? "bg-white text-press-up-purple"
-                : "bg-press-up-purple border border-white"
-            }`}
+            className={`px-3 py-1 rounded-full font-semibold ${orderType === OrderType.Takeaway
+              ? "bg-white text-press-up-purple"
+              : "bg-press-up-purple border border-white"
+              }`}
           >
             Takeaway
           </button>
@@ -668,11 +663,10 @@ export const PosSideMenu = ({
                         value={val}
                         onChange={(e) => handleSplitChange(i, e.target.value)}
                         placeholder="Enter amount e.g. 10.50"
-                        className={`w-full bg-white rounded px-3 py-1.5 text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                          parseFloat(val) < 0 || isNaN(parseFloat(val))
-                            ? "ring-red-400"
-                            : "focus:ring-pink-300"
-                        } shadow-sm`}
+                        className={`w-full bg-white rounded px-3 py-1.5 text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 ${parseFloat(val) < 0 || isNaN(parseFloat(val))
+                          ? "ring-red-400"
+                          : "focus:ring-pink-300"
+                          } shadow-sm`}
                       />
                       {/* Validation text */}
                       {parseFloat(val) < 0 || isNaN(parseFloat(val)) ? (
