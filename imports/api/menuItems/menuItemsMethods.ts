@@ -253,4 +253,23 @@ Meteor.methods({
       ingredients: { $regex: ingredient, $options: "i" },
     }).fetch();
   }),
+
+    "menuItems.updateIngredients": requireLoginMethod(async function (
+      menuItemId: string,
+      baseIngredients: BaseIngredient[],
+      optionGroups: OptionGroup[]
+      ) {
+      check(menuItemId, String);
+      check(baseIngredients, Array);
+      check(optionGroups, Array);
+
+      const result = await MenuItemsCollection.updateAsync(menuItemId, {
+        $set: {
+          baseIngredients,
+          optionGroups
+        },
+      });
+
+      return result;
+    }),
 });

@@ -8,11 +8,16 @@ import { IngredientDropdown } from "./IngredientDropdown";
 import { CategoryDropdown } from "./CategoryDropdown";
 import { AllergenDropdown } from "./AllergenDropdown";
 import { ConfirmModal } from "./ConfirmModal";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { IconButton as MuiIconButton } from "@mui/material";
+import MenuItemIngredientsEditorDialog from "./MenuItemIngredientsEditorDialog";
+import { Button } from "./interaction/Button";
+
 
 interface EditItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  item: MenuItem | null;
+  item: MenuItem;
   onSave: (updatedItem: Partial<MenuItem>) => void;
 }
 
@@ -145,6 +150,18 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     });
   };
 
+    // Ingredient dialog state
+    const [ingredientDialog, setIngredientDialog] = useState<{
+      open: boolean;
+      item: (MenuItem) | null;
+    }>({ open: false, item: null });
+
+    const openIngredientDialog = (
+      item: MenuItem,
+    ) => {
+      setIngredientDialog({ open: true, item });
+    };
+
   return (
     <>
       <Modal
@@ -219,23 +236,19 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 </span>
               </div>
             )}
-
-            <IngredientDropdown
-              selectedIngredients={ingredients}
-              onChange={setIngredients}
-              initialIngredients={[
-                "Milk",
-                "Flour",
-                "Eggs",
-                "Bread",
-                "Butter",
-                "Strawberries",
-                "Avocado",
-                "Bacon",
-                "Olive Oil",
-                "Paprika",
-                "Jam",
-              ]}
+            <button
+            type="button"
+                      onClick={() => openIngredientDialog(item)}
+                      className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg"
+                    >
+            </button>
+            <MenuItemIngredientsEditorDialog
+              open={ingredientDialog.open}
+              item={ingredientDialog.item}
+              //itemIndex={ingredientDialog.index ?? undefined}
+              onClose={() =>
+                setIngredientDialog({ open: false, item: null })
+              }
             />
 
             <CategoryDropdown
