@@ -129,29 +129,35 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
       }
     });
 
+    // Debug logging
+    console.log("Orders count:", orders.length);
+    console.log("Paid orders:", orders.filter(o => o.paid).length);
+    console.log("Item map:", Array.from(itemMap.entries()));
+    console.log("Most popular:", mostPopular);
+
     return mostPopular;
   }, [orders]);
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-800">
+      <h2 className="text-xl font-semibold text-press-up-navy">
         Popular Items Analysis
       </h2>
 
       {/* Summary */}
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <p className="text-sm text-blue-800">
+      <div className="bg-press-up-light-purple p-4 rounded-lg">
+        <p className="text-sm text-press-up-navy">
           <span className="font-semibold">Overall Most Popular:</span>{" "}
-          {overallMostPopular.name}({overallMostPopular.quantity} units sold)
+          {overallMostPopular.name || "No data available"} ({overallMostPopular.quantity} units sold)
         </p>
-        <p className="text-xs text-blue-600 mt-1">
+        <p className="text-xs text-press-up-washed-blue mt-1">
           This data helps with stock ordering decisions
         </p>
       </div>
 
       {/* Popular Items List */}
       <div className="space-y-3">
-        <h3 className="text-lg font-medium text-gray-700">
+        <h3 className="text-lg font-medium text-press-up-washed-blue">
           Top Items ({timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1)})
         </h3>
 
@@ -160,24 +166,24 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
             {popularItems.map((item, index) => (
               <div
                 key={item.name}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-press-up-cream rounded-lg"
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-press-up-purple text-white rounded-full flex items-center justify-center text-sm font-bold">
                     {index + 1}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-800">{item.name}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-medium text-press-up-navy">{item.name}</p>
+                    <p className="text-sm text-press-up-washed-blue">
                       ${item.averagePrice.toFixed(2)} avg price
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-gray-800">
+                  <p className="font-semibold text-press-up-navy">
                     {item.totalQuantity} sold
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-press-up-washed-blue">
                     ${item.totalRevenue.toFixed(2)} revenue
                   </p>
                 </div>
@@ -185,7 +191,7 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-4">
+          <p className="text-press-up-washed-blue text-center py-4">
             No data available for this time period
           </p>
         )}

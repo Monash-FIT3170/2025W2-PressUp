@@ -83,22 +83,22 @@ export const SalesTrendsVisualization: React.FC<
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-800">Sales Trends</h2>
+      <h2 className="text-xl font-semibold text-press-up-navy">Sales Trends</h2>
 
       {/* Summary */}
-      <div className="bg-green-50 p-4 rounded-lg">
-        <p className="text-sm text-green-800">
+      <div className="bg-press-up-light-purple p-4 rounded-lg">
+        <p className="text-sm text-press-up-navy">
           <span className="font-semibold">Total Sales:</span> $
           {salesData.reduce((sum, d) => sum + d.totalSales, 0).toFixed(2)}
         </p>
-        <p className="text-xs text-green-600 mt-1">
+        <p className="text-xs text-press-up-washed-blue mt-1">
           This data supports inventory planning decisions
         </p>
       </div>
 
       {/* Chart */}
       <div className="space-y-3">
-        <h3 className="text-lg font-medium text-gray-700">Sales Over Time</h3>
+        <h3 className="text-lg font-medium text-press-up-washed-blue">Sales Over Time</h3>
 
         {salesData.some((d) => d.totalSales > 0) ? (
           <div className="relative">

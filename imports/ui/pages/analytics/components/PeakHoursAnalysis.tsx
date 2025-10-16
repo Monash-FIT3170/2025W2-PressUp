@@ -114,28 +114,28 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-800">
+      <h2 className="text-xl font-semibold text-press-up-navy">
         Peak Hours Analysis
       </h2>
 
       {/* Summary */}
-      <div className="bg-orange-50 p-4 rounded-lg">
+      <div className="bg-press-up-light-purple p-4 rounded-lg">
         {peakHour.orderCount > 0 ? (
-          <p className="text-sm text-orange-800">
+          <p className="text-sm text-press-up-navy">
             <span className="font-semibold">Peak Hour:</span>{" "}
             {formatHour(peakHour.hour)}({peakHour.orderCount} orders)
           </p>
         ) : (
-          <p className="text-sm text-orange-800">No peak hour data available</p>
+          <p className="text-sm text-press-up-navy">No peak hour data available</p>
         )}
-        <p className="text-xs text-orange-600 mt-1">
+        <p className="text-xs text-press-up-washed-blue mt-1">
           This data supports staff scheduling decisions
         </p>
       </div>
 
       {/* Chart */}
       <div className="space-y-3">
-        <h3 className="text-lg font-medium text-gray-700">
+        <h3 className="text-lg font-medium text-press-up-washed-blue">
           Customer Traffic Patterns (
           {timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1)})
         </h3>
@@ -254,21 +254,21 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
 
       {/* Additional Insights */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-medium text-gray-800">Total Orders</h4>
+        <div className="bg-press-up-cream p-4 rounded-lg">
+          <h4 className="font-medium text-press-up-navy">Total Orders</h4>
           <p className="text-2xl font-bold text-press-up-purple">
             {hourlyData.reduce((sum, d) => sum + d.orderCount, 0)}
           </p>
         </div>
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-medium text-gray-800">Total Revenue</h4>
-          <p className="text-2xl font-bold text-green-600">
+        <div className="bg-press-up-cream p-4 rounded-lg">
+          <h4 className="font-medium text-press-up-navy">Total Revenue</h4>
+          <p className="text-2xl font-bold text-press-up-positive-button">
             ${hourlyData.reduce((sum, d) => sum + d.totalRevenue, 0).toFixed(2)}
           </p>
         </div>
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-medium text-gray-800">Average Order Value</h4>
-          <p className="text-2xl font-bold text-blue-600">
+        <div className="bg-press-up-cream p-4 rounded-lg">
+          <h4 className="font-medium text-press-up-navy">Average Order Value</h4>
+          <p className="text-2xl font-bold text-press-up-blue">
             $
             {(
               hourlyData.reduce((sum, d) => sum + d.totalRevenue, 0) /

@@ -178,10 +178,10 @@ export const AnalyticsPage = () => {
     <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto scroll-smooth bg-gray-50 p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-press-up-navy mb-2">
           Analytics & Reporting
         </h1>
-        <p className="text-gray-600">
+        <p className="text-press-up-washed-blue">
           Comprehensive insights into your business performance
         </p>
       </div>
@@ -189,16 +189,16 @@ export const AnalyticsPage = () => {
       {/* Filters */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
         <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
-        <h2 className="text-lg lg:text-xl font-semibold text-gray-700">
+        <h2 className="text-lg lg:text-xl font-semibold text-press-up-washed-blue">
           Viewing Period:{" "}
-          <span className="font-normal">{getDateRangeText(dateRange)}</span>
+          <span className="font-normal text-press-up-navy">{getDateRangeText(dateRange)}</span>
         </h2>
         <ExportButton onExport={handleExport} />
       </div>
 
       {/* Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow-lg p-6 border border-press-up-grey">
           <PopularItemsAnalysis
             orders={ordersFiltered}
             timeFrame={dateRange}
@@ -206,14 +206,14 @@ export const AnalyticsPage = () => {
           />
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow-lg p-6 border border-press-up-grey">
           <SalesTrendsVisualization
             orders={ordersFiltered}
             dateRangeBounds={dateRangeBounds}
           />
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 lg:col-span-2">
+        <div className="bg-white rounded-lg shadow-lg p-6 border border-press-up-grey lg:col-span-2">
           <PeakHoursAnalysis orders={ordersFiltered} timeFrame={dateRange} />
         </div>
       </div>
