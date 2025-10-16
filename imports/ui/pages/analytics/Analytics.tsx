@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useSubscribe } from "meteor/react-meteor-data";
-import { Order } from "/imports/api/orders/OrdersCollection";
+import { Order, OrdersCollection } from "/imports/api/orders/OrdersCollection";
 import { PopularItemsAnalysis } from "./components/PopularItemsAnalysis";
 import { SalesTrendsVisualization } from "./components/SalesTrendsVisualization";
 import { PeakHoursAnalysis } from "./components/PeakHoursAnalysis";
 import { ExportButton } from "./components/ExportButton";
-import { Meteor } from "meteor/meteor";
 import {
   format,
   startOfToday,
@@ -35,7 +34,6 @@ export const AnalyticsPage = () => {
     end: Date;
   } | null>(null);
 
-  const [ordersFiltered, setOrdersFiltered] = useState<Order[]>([]);
   const [dateRangeBounds, setDateRangeBounds] = useState<{
     start: Date | null;
     end: Date | null;
@@ -44,7 +42,24 @@ export const AnalyticsPage = () => {
     end: null,
   });
 
-  useSubscribe("orders");
+  // Subscribe to orders collection
+  const ordersReady = useSubscribe("orders");
+  const orders = useMemo(() => {
+    if (!ordersReady()) return [];
+    return OrdersCollection.find().fetch();
+  }, [ordersReady]);
+
+  // Filter orders based on date range
+  const ordersFiltered = useMemo(() => {
+    if (!dateRangeBounds.start || !dateRangeBounds.end) {
+      return orders;
+    }
+    
+    return orders.filter((order) => {
+      const orderDate = new Date(order.createdAt);
+      return orderDate >= dateRangeBounds.start! && orderDate <= dateRangeBounds.end!;
+    });
+  }, [orders, dateRangeBounds]);
 
   const getDateRangeText = (_range: string) => {
     if (!dateRangeBounds.start || !dateRangeBounds.end) {
@@ -91,18 +106,7 @@ export const AnalyticsPage = () => {
 
   useEffect(() => {
     setPageTitle("Analytics & Reporting");
-
-    const fetchOrders = async () => {
-      try {
-        const orderData = (await Meteor.callAsync("orders.getAll")) as Order[];
-        setOrdersFiltered(orderData);
-      } catch (error) {
-        console.error("Error fetching order data", error);
-      }
-    };
-
-    fetchOrders();
-  }, [setPageTitle, dateRange]);
+  }, [setPageTitle]);
 
   const convertToCSV = (objArray: any) => {
     const array =
@@ -128,7 +132,7 @@ export const AnalyticsPage = () => {
               0,
             )
           : 0,
-        order.paid ? "FALSE" : "TRUE",
+        order.paid ? "TRUE" : "FALSE",
         order.orderStatus || "",
         order.createdAt
           ? format(new Date(order.createdAt), "yyyy-MM-dd HH:mm:ss")
@@ -167,6 +171,12 @@ export const AnalyticsPage = () => {
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto scroll-smooth bg-gray-50 p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics & Reporting</h1>
+        <p className="text-gray-600">Comprehensive insights into your business performance</p>
+      </div>
+
       {/* Filters */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
         <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
@@ -179,22 +189,24 @@ export const AnalyticsPage = () => {
 
       {/* Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PopularItemsAnalysis
-          orders={ordersFiltered}
-          timeFrame={dateRange}
-          customDateRange={customDateRange}
-        />
+        <div className="bg-white rounded-lg shadow p-6">
+          <PopularItemsAnalysis
+            orders={ordersFiltered}
+            timeFrame={dateRange}
+            customDateRange={customDateRange}
+          />
+        </div>
 
-        <SalesTrendsVisualization
-          orders={ordersFiltered}
-          dateRangeBounds={
-            customDateRange
-              ? { start: customDateRange.start, end: customDateRange.end }
-              : null
-          }
-        />
+        <div className="bg-white rounded-lg shadow p-6">
+          <SalesTrendsVisualization
+            orders={ordersFiltered}
+            dateRangeBounds={dateRangeBounds}
+          />
+        </div>
 
-        <PeakHoursAnalysis orders={ordersFiltered} timeFrame={dateRange} />
+        <div className="bg-white rounded-lg shadow p-6 lg:col-span-2">
+          <PeakHoursAnalysis orders={ordersFiltered} timeFrame={dateRange} />
+        </div>
       </div>
     </div>
   );
