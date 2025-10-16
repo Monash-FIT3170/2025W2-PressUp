@@ -1,10 +1,10 @@
 import { IdType } from "/imports/api/database";
-
-export type OrderStatus = "pending" | "preparing" | "ready" | "served";
+import { OrderType, OrderStatus } from "/imports/api/orders/OrdersCollection";
 
 export type UiOrder = {
   _id: IdType;
   orderNo: number;
+  orderType: OrderType;
   status: OrderStatus;
   tableNo: number | null;
   createdAt: string;

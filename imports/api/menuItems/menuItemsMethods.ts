@@ -3,6 +3,31 @@ import { check, Match } from "meteor/check";
 import { MenuItem, MenuItemsCollection } from "./MenuItemsCollection";
 import { requireLoginMethod } from "../accounts/wrappers";
 import { IdType, OmitDB } from "../database";
+import type { BaseIngredient, OptionGroup } from "./MenuItemsCollection";
+
+// Define reusable schemas
+const BaseIngredientSchema: any = Match.ObjectIncluding({
+  key: String,
+  label: String,
+  default: Boolean,
+  removable: Match.Optional(Boolean),
+  priceDelta: Match.Optional(Number),
+});
+
+const OptionSchema: any = Match.ObjectIncluding({
+  key: String,
+  label: String,
+  priceDelta: Match.Optional(Number),
+  default: Match.Optional(Boolean),
+});
+
+const OptionGroupSchema: any = Match.ObjectIncluding({
+  id: String,
+  label: String,
+  type: Match.OneOf("single", "multiple"),
+  required: Match.Optional(Boolean),
+  options: [OptionSchema],
+});
 
 Meteor.methods({
   "menuItems.insert": requireLoginMethod(async function (
@@ -12,17 +37,38 @@ Meteor.methods({
     check(item, {
       name: String,
       quantity: Number,
-      ingredients: [String],
+      ingredients: Match.Optional([String]), // Optional for backward compatibility
       available: Boolean,
       price: Number,
       category: Match.Optional([String]),
       image: String,
+      // New fields
+      baseIngredients: Match.Optional([BaseIngredientSchema]),
+      optionGroups: Match.Optional([OptionGroupSchema]),
       // DBEntry fields
       createdAt: Match.Optional(Date),
       updatedAt: Match.Optional(Date),
     });
 
-    // Check if item with same name already exists
+    // Automatically generate ingredients if not provided
+    let ingredients = item.ingredients;
+    if ((!ingredients || ingredients.length === 0) && item.baseIngredients) {
+      const base = (item.baseIngredients ?? [])
+        .filter((b: BaseIngredient) => b.default)
+        .map((b: BaseIngredient) => b.label);
+
+      type GroupOption = OptionGroup["options"][number];
+      const groupDefaults = (item.optionGroups ?? []).flatMap(
+        (g: OptionGroup) =>
+          g.options
+            .filter((o: GroupOption) => o.default)
+            .map((o: GroupOption) => o.label),
+      );
+
+      ingredients = [...base, ...groupDefaults];
+    }
+
+    // Check if item with the same name already exists
     const existingItem = await MenuItemsCollection.findOneAsync({
       name: item.name,
     });
@@ -46,6 +92,7 @@ Meteor.methods({
     // Add timestamps if not provided
     const itemWithTimestamps = {
       ...item,
+      ingredients: ingredients || [], // Ensure ingredients is always an array
       createdAt: item.createdAt || new Date(),
       updatedAt: item.updatedAt || new Date(),
     };
@@ -73,7 +120,19 @@ Meteor.methods({
     updatedFields: Partial<OmitDB<MenuItem>>,
   ) {
     check(itemName, String);
-    check(updatedFields, Object);
+    check(updatedFields, {
+      name: Match.Optional(String),
+      quantity: Match.Optional(Number),
+      ingredients: Match.Optional([String]),
+      available: Match.Optional(Boolean),
+      price: Match.Optional(Number),
+      category: Match.Optional([String]),
+      image: Match.Optional(String),
+      discount: Match.Optional(Number),
+      baseIngredients: Match.Optional([BaseIngredientSchema]),
+      optionGroups: Match.Optional([OptionGroupSchema]),
+      updatedAt: Match.Optional(Date),
+    });
 
     if (!itemName || !updatedFields) {
       throw new Meteor.Error(

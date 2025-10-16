@@ -46,6 +46,17 @@ Meteor.methods({
     await mockMenuItems();
   }),
 
+  "debug.resetMenuItems": requireLoginMethod(async function () {
+    if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN]))) {
+      throw new Meteor.Error(
+        "unauthorized",
+        "Only admins can perform debug operations",
+      );
+    }
+    await MenuItemsCollection.rawCollection().deleteMany({});
+    await mockMenuItems();
+  }),
+
   "debug.mockStockItems": requireLoginMethod(async function () {
     if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN]))) {
       throw new Meteor.Error(
@@ -63,7 +74,7 @@ Meteor.methods({
         "Only admins can perform debug operations",
       );
     }
-    await mockSuppliers(10);
+    await mockSuppliers(30);
   }),
 
   "debug.mockPurchaseOrders": requireLoginMethod(async function () {
@@ -73,7 +84,7 @@ Meteor.methods({
         "Only admins can perform debug operations",
       );
     }
-    await mockPurchaseOrders(10);
+    await mockPurchaseOrders(100);
   }),
 
   "debug.mockTables": requireLoginMethod(async function () {
@@ -123,7 +134,7 @@ Meteor.methods({
         "Only admins can perform debug operations",
       );
     }
-    await mockShifts(15);
+    await mockShifts();
   }),
 
   "debug.mockDeductions": requireLoginMethod(async function () {

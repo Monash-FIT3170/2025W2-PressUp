@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
-import { FinanceDateFilter } from "../../components/FinanceDateFilter";
+import { TaxDateFilter } from "../../components/TaxDateFilter";
 import {
   format,
-  startOfToday,
-  startOfWeek,
   startOfMonth,
   startOfYear,
-  subDays,
+  endOfMonth,
+  endOfYear,
+  endOfDay,
 } from "date-fns";
 import { Meteor } from "meteor/meteor";
 import { Order, OrderMenuItem } from "/imports/api/orders/OrdersCollection";
@@ -24,6 +24,7 @@ import {
   Label,
 } from "recharts";
 import { SearchBar } from "../../components/SearchBar";
+import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 
 interface FinancialData {
   revenue: {
@@ -44,6 +45,22 @@ interface DetailItemProps {
   amount: number;
   percentage?: number;
 }
+
+// PAYG quarters helper
+const getQuarterRange = (date: Date) => {
+  const month = date.getMonth();
+  const quarterStartMonth = Math.floor(month / 3) * 3;
+  const start = new Date(date.getFullYear(), quarterStartMonth, 1);
+  const end = new Date(
+    date.getFullYear(),
+    quarterStartMonth + 3,
+    0,
+    23,
+    59,
+    59,
+  );
+  return { start, end };
+};
 
 export const DetailItem = React.memo(
   ({ label, amount, percentage }: DetailItemProps) => {
@@ -83,79 +100,36 @@ export const ProfitLossPage = () => {
   const [financialData, setFinancialData] = useState<FinancialData | null>(
     null,
   );
-  const [dateRange, setDateRange] = React.useState<
-    | "all"
-    | "today"
-    | "thisWeek"
-    | "thisMonth"
-    | "thisYear"
-    | "past7Days"
-    | "past30Days"
-  >("all");
-  const getDateRangeText = (range: typeof dateRange): string => {
-    const today = startOfToday();
-    const end = today; // assume end is always today unless "all"
-    let start: Date;
-    switch (range) {
-      case "today":
-        start = today;
-        break;
-      case "thisWeek":
-        start = startOfWeek(today, { weekStartsOn: 1 }); // Monday
-        break;
-      case "thisMonth":
-        start = startOfMonth(today);
-        break;
-      case "thisYear":
-        start = startOfYear(today);
-        break;
-      case "past7Days":
-        start = subDays(today, 6); // 6 days ago + today = 7
-        break;
-      case "past30Days":
-        start = subDays(today, 29);
-        break;
-      case "all":
-      default:
-        return "All Time";
-    }
-    return `${format(start, "dd/MM/yy")} – ${format(end, "dd/MM/yy")}`;
-  };
+  const [dateRange, setDateRange] = useState<"all" | "month" | "PAYG" | "year">(
+    "all",
+  );
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Filters data by date range
-  const getDateRangeFilter = (range: string) => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const { start, end } = useMemo(() => {
+    if (dateRange === "all")
+      return { start: new Date(0), end: endOfDay(new Date()) };
+    if (dateRange === "month")
+      return { start: startOfMonth(currentDate), end: endOfMonth(currentDate) };
+    if (dateRange === "year")
+      return { start: startOfYear(currentDate), end: endOfYear(currentDate) };
+    if (dateRange === "PAYG") return getQuarterRange(currentDate);
+    return { start: new Date(0), end: endOfDay(new Date()) };
+  }, [dateRange, currentDate]);
 
-    switch (range) {
-      case "today":
-        return (date: Date) => date >= today;
-      case "thisWeek":
-        return (date: Date) => date >= startOfWeek(today, { weekStartsOn: 1 });
-      case "thisMonth":
-        return (date: Date) => date >= startOfMonth(today);
-      case "thisYear":
-        return (date: Date) => date >= startOfYear(today);
-      case "past7Days":
-        return (date: Date) => date >= subDays(today, 6);
-      case "past30Days":
-        return (date: Date) => date >= subDays(today, 29);
-      case "all":
-      default:
-        return () => true;
-    }
-  };
+  const getDateRangeText = useMemo(() => {
+    if (dateRange === "all") return "All Time";
+    return `${format(start, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`;
+  }, [start, end, dateRange]);
 
-  // Calculates revenue
   const processOrderData = useCallback(
     (
       orders: Order[],
+      categoryMap: Record<string, string[]>,
     ): {
       revenue: number;
       revenueItems: { label: string; amount: number; percentage: number }[];
     } => {
-      const revenueByCat: { [key: string]: number } = {};
-
+      const revenueByCat: Record<string, number> = {};
       let totalRevenue = 0;
 
       orders.forEach((order) => {
@@ -164,27 +138,29 @@ export const ProfitLossPage = () => {
         let orderRevenue = 0;
 
         order.menuItems.forEach((menuItem: OrderMenuItem) => {
-          const itemRevenue = menuItem.price * menuItem.quantity;
+          const itemRevenue = (menuItem.price ?? 0) * (menuItem.quantity ?? 1);
+          orderRevenue += itemRevenue;
 
-          orderRevenue += itemRevenue; // prevents double counting
-
+          const key = String((menuItem as any).menuItemId ?? "");
           const categories =
-            menuItem.category && menuItem.category.length > 0
-              ? menuItem.category
+            categoryMap[key] && categoryMap[key].length > 0
+              ? categoryMap[key]
               : ["uncategorized"];
 
-          categories.forEach((category: string) => {
-            revenueByCat[category] =
-              (revenueByCat[category] || 0) + itemRevenue;
+          categories.forEach((cat) => {
+            revenueByCat[cat] = (revenueByCat[cat] || 0) + itemRevenue;
           });
         });
+
         totalRevenue += orderRevenue;
       });
 
       const revenueItems = Object.keys(revenueByCat).map((category) => ({
         label: category,
         amount: revenueByCat[category],
-        percentage: (revenueByCat[category] / totalRevenue) * 100,
+        percentage: totalRevenue
+          ? (revenueByCat[category] / totalRevenue) * 100
+          : 0,
       }));
 
       return { revenue: totalRevenue, revenueItems };
@@ -192,7 +168,6 @@ export const ProfitLossPage = () => {
     [],
   );
 
-  // Calculates expenses
   const processPurchaseOrderData = useCallback(
     async (
       purchaseOrders: PurchaseOrder[],
@@ -243,22 +218,20 @@ export const ProfitLossPage = () => {
     async (
       orders: Order[],
       purchaseOrders: PurchaseOrder[],
+      categoryMap: Record<string, string[]>,
     ): Promise<FinancialData> => {
-      const { revenue: totalRevenue, revenueItems } = processOrderData(orders);
+      const { revenue: totalRevenue, revenueItems } = processOrderData(
+        orders,
+        categoryMap,
+      );
       const { expenses: totalExpenses, expenseItems } =
         await processPurchaseOrderData(purchaseOrders);
 
       const netProfit = totalRevenue - totalExpenses;
 
       return {
-        revenue: {
-          items: revenueItems,
-          total: totalRevenue,
-        },
-        expenses: {
-          items: expenseItems,
-          total: totalExpenses,
-        },
+        revenue: { items: revenueItems, total: totalRevenue },
+        expenses: { items: expenseItems, total: totalExpenses },
         netProfitLoss: {
           items: [
             { label: "Total Revenue", amount: totalRevenue },
@@ -276,36 +249,42 @@ export const ProfitLossPage = () => {
 
     const fetchOrders = async () => {
       try {
-        const dateFilter = getDateRangeFilter(dateRange);
+        const [orderData, purchaseOrderData, menuItems] = await Promise.all([
+          Meteor.callAsync("orders.getAll") as Promise<Order[]>,
+          Meteor.callAsync("purchaseOrders.getAll") as Promise<PurchaseOrder[]>,
+          Meteor.callAsync("menuItems.getAll") as Promise<MenuItem[]>,
+        ]);
 
-        const orderData = (await Meteor.callAsync("orders.getAll")) as Order[];
-        const purchaseOrderData = (await Meteor.callAsync(
-          "purchaseOrders.getAll",
-        )) as PurchaseOrder[];
+        // Build menuItemId -> categories map
+        const categoryMap: Record<string, string[]> = {};
+        menuItems.forEach((mi) => {
+          if (mi?._id) categoryMap[String(mi._id)] = mi.category ?? [];
+        });
 
-        // Filter the data based on date range
+        // Filter by date
         const filteredOrderData = orderData.filter((order) => {
           const orderDate = new Date(order.createdAt);
-          return dateFilter(orderDate);
+          return orderDate >= start && orderDate <= end;
         });
 
         const filteredPurchaseOrderData = purchaseOrderData.filter((po) => {
           const poDate = new Date(po.date);
-          return dateFilter(poDate);
+          return poDate >= start && poDate <= end;
         });
 
-        // Uses filetered data to process
         const processedData = await processFinancialData(
           filteredOrderData,
           filteredPurchaseOrderData,
+          categoryMap,
         );
         setFinancialData(processedData);
       } catch (error) {
         console.error("Error fetching order data", error);
       }
     };
+
     fetchOrders();
-  }, [setPageTitle, dateRange, processFinancialData]);
+  }, [setPageTitle, start, end, dateRange, processFinancialData]);
 
   const mainMetrics = useMemo(() => {
     if (!financialData) return [];
@@ -380,10 +359,19 @@ export const ProfitLossPage = () => {
     <div className="w-full p-6 bg-gray-50 max-h-screen overflow-y-auto">
       {/* Date Filter and Period Display */}
       <div className="flex items-baseline gap-4 mb-4">
-        <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
+        <TaxDateFilter
+          range={dateRange}
+          currentDate={currentDate}
+          onRangeChange={(r) => {
+            setDateRange(r);
+            setCurrentDate(new Date());
+          }}
+          onDateChange={setCurrentDate}
+        />
         <h2 className="ml-4 text-red-900">
-          <span className="font-bold">Viewing Period:</span>{" "}
-          <span className="font-normal">{getDateRangeText(dateRange)}</span>
+          <span className="font-semibold text-lg">
+            Viewing Period: {getDateRangeText}
+          </span>
         </h2>
       </div>
 

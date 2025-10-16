@@ -1,296 +1,210 @@
-import { Meteor } from "meteor/meteor";
-import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-import React, { useEffect, useState, useMemo } from "react";
-import { Shift, ShiftsCollection } from "/imports/api/shifts/ShiftsCollection";
-import { RoleEnum, roleColors } from "/imports/api/accounts/roles";
+import React, { useMemo } from "react";
+import { Shift, ShiftStatus } from "/imports/api/shifts/ShiftsCollection";
+import { getDayOfWeek, DayOfWeek } from "/imports/helpers/date";
+import { clsx } from "clsx";
 
-// Helper to get the most recent Monday from a date
-function getMonday(d: Date) {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = (day === 0 ? -6 : 1) - day; // Monday as start, Sunday as end
-  date.setDate(date.getDate() + diff);
-  date.setHours(0, 0, 0, 0);
-  return date;
+export interface RosterStaff {
+  id: string;
+  name: string;
+  role: string | null;
+  shifts: Shift[];
 }
-
-// Helper to format date as 'Apr 29, 2024'
-function formatDate(date: Date) {
-  return date.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-// Helper to format time as '08:00' or '08:30'
-function formatTime(hour: number, minute: number) {
-  return (
-    hour.toString().padStart(2, "0") + ":" + minute.toString().padStart(2, "0")
-  );
-}
-
-const daysOfWeek = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
 
 interface RosterTableProps {
-  PublishShiftButton: React.ReactNode;
+  staff: RosterStaff[];
+  start?: Date;
+  end?: Date;
 }
 
-export const RosterTable = ({ PublishShiftButton }: RosterTableProps) => {
+const statusColour = (status: ShiftStatus) => {
+  switch (status) {
+    case ShiftStatus.SCHEDULED:
+      return "bg-blue-100";
+    case ShiftStatus.CLOCKED_IN:
+      return "bg-green-100";
+    case ShiftStatus.CLOCKED_OUT:
+      return "bg-red-100";
+    default:
+      return "bg-gray-300";
+  }
+};
+
+export const RosterTable = ({
+  staff,
+  start: providedStart,
+  end: providedEnd,
+}: RosterTableProps) => {
+  const locale = navigator.language ?? "en-AU";
   const today = new Date();
-  const baseMonday = getMonday(today);
+  const start = providedStart || getDayOfWeek(today, DayOfWeek.MONDAY);
+  const end =
+    providedEnd ||
+    (() => {
+      const monday = getDayOfWeek(today, DayOfWeek.MONDAY);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      sunday.setHours(23, 59, 59, 999);
+      return sunday;
+    })();
 
-  const shiftsLoading = useSubscribe("shifts.all")();
-  const usersLoading = useSubscribe("users.all")();
-  const staffShifts = useTracker(() => {
-    const staffMap = new Map<
-      string,
-      { name: string; role: string; shifts: Shift[] }
-    >();
+  // Timeline sizing
+  const timelineData = useMemo(() => {
+    const totalMs = end.getTime() - start.getTime();
+    const now = new Date();
 
-    Meteor.users
-      .find(
-        {},
-        {
-          fields: {
-            "profile.firstName": 1,
-            "profile.lastName": 1,
-            username: 1,
-          },
-        },
-      )
-      .forEach((user) => {
-        staffMap.set(user._id, {
-          name:
-            `${user.profile?.firstName ?? ""} ${user.profile?.lastName ?? ""}`.trim() ||
-            user.username ||
-            "Unknown",
-          role: RoleEnum.CASUAL,
-          shifts: [],
+    return staff.map((staffMember) => {
+      const positionedShifts = staffMember.shifts
+        .filter((shift) => (shift.end ?? now) >= start && shift.start <= end)
+        .map((shift) => {
+          const shiftStart = new Date(
+            Math.max(shift.start.getTime(), start.getTime()),
+          );
+          const shiftEnd = new Date(
+            Math.min((shift.end ?? now).getTime(), end.getTime()),
+          );
+
+          // Start position and length of shift in timeline
+          const leftPercent =
+            ((shiftStart.getTime() - start.getTime()) / totalMs) * 100;
+          const widthPercent =
+            ((shiftEnd.getTime() - shiftStart.getTime()) / totalMs) * 100;
+
+          let zIndex;
+          switch (shift.status) {
+            case ShiftStatus.CLOCKED_IN:
+              zIndex = 3;
+              break;
+            case ShiftStatus.CLOCKED_OUT:
+              zIndex = 2;
+              break;
+            default:
+              zIndex = 1;
+              break;
+          }
+
+          return {
+            ...shift,
+            leftPercent,
+            widthPercent,
+            zIndex,
+          };
         });
+
+      return {
+        ...staffMember,
+        positionedShifts,
+      };
+    });
+  }, [staff, start, end]);
+
+  const headerDays = useMemo(() => {
+    const days = [];
+    const totalWeekMs = end.getTime() - start.getTime();
+
+    const totalDays = Math.ceil(totalWeekMs / (1000 * 60 * 60 * 24));
+    for (let i = 0; i < totalDays; i++) {
+      const dayStart = new Date(start);
+      dayStart.setDate(start.getDate() + i);
+      const leftPercent =
+        ((dayStart.getTime() - start.getTime()) / totalWeekMs) * 100;
+
+      days.push({
+        leftPercent,
+        label: dayStart.toLocaleDateString(locale, {
+          weekday: "short",
+          day: "numeric",
+        }),
       });
-
-    ShiftsCollection.find({}, { sort: { date: 1 } }).forEach((shift) => {
-      if (!staffMap.has(shift.user)) {
-        staffMap.set(shift.user, { name: "Unknown", role: "", shifts: [] });
-      }
-      staffMap.get(shift.user)!.shifts.push(shift);
-    });
-
-    return Array.from(staffMap.values());
-  }, [shiftsLoading, usersLoading]);
-
-  const [allRoles, setAllRoles] = useState<string[]>([]);
-  const [roleFilter, setRoleFilter] = useState<string[]>([]);
-
-  useEffect(() => {
-    // Use roles defined in roles.ts instead of dynamically generating from data
-    const definedRoles = Object.values(RoleEnum);
-    setAllRoles(definedRoles);
-  }, []);
-
-  useEffect(() => {
-    if (allRoles.length > 0 && roleFilter.length === 0) {
-      setRoleFilter(allRoles);
     }
-  }, [allRoles, roleFilter.length]);
 
-  // Start with the most recent Monday as the base week
-  const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, -1 = prev, +1 = next
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  // Calculate the start and end dates for the current week
-  const weekStart = useMemo(() => {
-    const start = new Date(baseMonday);
-    start.setDate(start.getDate() + weekOffset * 7);
-    return start;
-  }, [baseMonday, weekOffset]);
-
-  const weekEnd = useMemo(() => {
-    const end = new Date(weekStart);
-    end.setDate(weekStart.getDate() + 6);
-    return end;
-  }, [weekStart]);
-
-  // Get the date for each day in the week (Monday-Sunday)
-  const weekDates = useMemo(() => {
-    return Array.from({ length: 7 }).map((_, i) => {
-      const d = new Date(weekStart);
-      d.setDate(weekStart.getDate() + i);
-      return d;
-    });
-  }, [weekStart]);
-
-  const filteredShifts = useMemo(() => {
-    return staffShifts.filter((s) => roleFilter.includes(s.role));
-  }, [staffShifts, roleFilter]);
-
-  const getShiftForStaffAndDay = (
-    staff: { shifts: Shift[]; role: string },
-    dayIndex: number,
-  ) => {
-    const cellDate = weekDates[dayIndex];
-    return (
-      staff.shifts.find(
-        (shift) => shift.date.toDateString() == cellDate.toDateString(),
-      ) || null
-    );
-  };
-
-  // Handle role filter change
-  const handleRoleChange = (role: string) => {
-    setRoleFilter((prev) =>
-      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
-    );
-  };
-
-  // Get display text for dropdown button
-  const getDropdownText = () => {
-    if (roleFilter.length === 0) return "All Roles";
-    if (roleFilter.length === allRoles.length) return "All Roles";
-    if (roleFilter.length === 1) return roleFilter[0];
-    return `${roleFilter.length} roles selected`;
-  };
+    return days;
+  }, [start, end]);
 
   return (
-    <div className="overflow-x-auto mt-8">
-      <div className="flex items-center mb-4 gap-4">
-        <button
-          className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-          onClick={() => setWeekOffset((w) => w - 1)}
-        >
-          Previous Week
-        </button>
-        <span className="font-semibold text-lg">
-          {formatDate(weekStart)} - {formatDate(weekEnd)}
-        </span>
-        <button
-          className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-          onClick={() => setWeekOffset((w) => w + 1)}
-        >
-          Next Week
-        </button>
-        <div className="flex items-center ms-8 relative">
-          <img
-            src="/filter-icon.svg"
-            alt="Filter Icon"
-            className="mr-2 w-5 h-5 text-red-900"
-          />
-          <label htmlFor="role-filter" className="mr-2 font-bold text-red-900">
-            Role:
-          </label>
-          <div className="relative">
-            <button
-              id="role-filter"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="border border-red-900 rounded-xl px-3 py-1 text-red-900 bg-white min-w-32 text-left flex items-center justify-between"
-            >
-              <span>{getDropdownText()}</span>
-              <span className="ml-2">▼</span>
-            </button>
-            {isDropdownOpen && (
-              <div className="absolute top-full left-0 mt-1 w-full bg-white border border-red-900 rounded-xl shadow-lg z-10">
-                {allRoles.map((role) => (
-                  <label
-                    key={role}
-                    className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={roleFilter.includes(role)}
-                      onChange={() => handleRoleChange(role)}
-                      className="mr-2"
-                    />
-                    {role}
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
+    <div className="h-full flex flex-col">
+      {/* Sticky header with day indicators */}
+      <div className="flex shrink-0 sticky top-0 z-10">
+        <div className="w-36 bg-press-up-light-purple py-1 px-2 border-y-2 border-press-up-light-purple rounded-l-lg flex items-center justify-center font-bold text-red-900">
+          Staff
         </div>
-        <div className="px-4 ml-auto">{PublishShiftButton}</div>
+        <div className="flex-1 relative bg-press-up-light-purple border-y-2 border-press-up-light-purple rounded-r-lg">
+          {headerDays.map((day, index) => (
+            <div
+              key={index}
+              className="absolute flex items-center py-1 px-1 font-bold text-red-900 text-sm"
+              style={{ left: `${day.leftPercent}%` }}
+            >
+              {day.label}
+            </div>
+          ))}
+        </div>
       </div>
-      <table className="min-w-full border border-gray-300">
-        <thead>
-          <tr>
-            <th className="border border-gray-300 px-2 py-1 bg-gray-100 text-left">
-              Employee
-            </th>
-            {daysOfWeek.map((day, i) => (
-              <th
-                key={day}
-                className="border border-gray-300 px-2 py-1 bg-gray-100"
-                style={{ minHeight: "60px" }}
-              >
-                {day}
-                <div className="text-xs text-gray-500">
-                  {formatDate(weekDates[i])}
-                </div>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {filteredShifts.map((staff) => (
-            <tr key={staff.name}>
-              <td className="border border-gray-300 px-2 py-1 font-medium text-left">
-                {staff.name}
-              </td>
-              {Array.from({ length: 7 }).map((_, dayIndex) => {
-                const shift = getShiftForStaffAndDay(staff, dayIndex);
+
+      {/* Staff rows */}
+      <div className="flex-1 overflow-y-auto">
+        {timelineData.map((staffMember) => (
+          <div
+            key={staffMember.id}
+            className="flex items-center h-16 border-b border-gray-200"
+          >
+            <div className="w-36 px-4 py-1 font-medium text-red-900 relative flex items-center h-16">
+              <span className="truncate">{staffMember.name}</span>
+              <div className="absolute bg-amber-700/25 w-px h-3/4 end-0 bottom-1/8" />
+            </div>
+
+            <div className="flex-1 h-full relative bg-gray-50">
+              {headerDays.slice(1).map((marker, index) => (
+                <div
+                  key={index}
+                  className="absolute h-3/4 bg-amber-700/25 w-px bottom-1/8"
+                  style={{ left: `${marker.leftPercent}%` }}
+                />
+              ))}
+
+              {staffMember.positionedShifts.map((shift, shiftIndex) => {
                 return (
-                  <td
-                    key={dayIndex}
-                    className="border border-gray-300 p-0 align-top"
-                    style={{ minHeight: "60px", position: "relative" }}
+                  <div
+                    key={shiftIndex}
+                    className={clsx(
+                      "absolute flex flex-col items-center justify-center h-12 top-2 rounded border text-[10px] font-medium overflow-hidden px-1",
+                      statusColour(shift.status),
+                    )}
+                    style={{
+                      left: `${shift.leftPercent}%`,
+                      width: `${Math.max(shift.widthPercent, 0.5)}%`,
+                      zIndex: shift.zIndex,
+                    }}
+                    title={`${shift.status} - ${shift.start.toLocaleString()} to ${shift.end?.toLocaleString() ?? "Ongoing"}`}
                   >
-                    {shift ? (
-                      <div
-                        style={{
-                          backgroundColor: roleColors[staff.role] || "#6b7280", // fallback gray
-                          color: "#fff",
-                          borderRadius: "0.375rem",
-                          padding: "0.25rem 0.5rem",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "2px",
-                          width: "100%",
-                          height: "100%",
-                          minHeight: "60px",
-                        }}
-                      >
-                        <span
-                          className="font-mono text-sm text-center"
-                          style={{ color: "#fff" }}
-                        >
-                          {formatTime(shift.start.hour, shift.start.minute)} -{" "}
-                          {formatTime(shift.end.hour, shift.end.minute)}
+                    {shift.widthPercent > 4 ? (
+                      shift.status === ShiftStatus.CLOCKED_IN && !shift.end ? (
+                        <span className="whitespace-nowrap overflow-hidden">
+                          Active
                         </span>
-                        <span
-                          className="text-xs text-center font-mono"
-                          style={{ color: "rgba(255,255,255,0.9)" }}
-                        >
-                          {staff.role}
-                        </span>
-                      </div>
+                      ) : (
+                        <>
+                          <span className="whitespace-nowrap overflow-hidden">
+                            {shift.start.toLocaleTimeString(locale, {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                          <span className="whitespace-nowrap overflow-hidden">
+                            {shift.end?.toLocaleTimeString(locale, {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </>
+                      )
                     ) : null}
-                  </td>
+                  </div>
                 );
               })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

@@ -22,6 +22,7 @@ import {
   Typography,
 } from "@mui/material";
 import type { UiOrder } from "./KitchenMgmtTypes";
+import { OrderType } from "/imports/api/orders/OrdersCollection";
 
 type UiMenuItem = UiOrder["menuItems"][number];
 
@@ -199,8 +200,10 @@ export const OrderCard = ({ order }: OrderCardProps) => {
 
           <div>
             <p className="font-bold text-lg text-press-up-purple">
-              {order.tableNo != null
-                ? `Table No: ${order.tableNo}`
+              {order.orderType == OrderType.DineIn
+                ? order.tableNo == null
+                  ? "Dine-In"
+                  : `Table No: ${order.tableNo}`
                 : "Takeaway"}
             </p>
             <p className="text-sm text-press-up-purple">{order.createdAt}</p>
@@ -237,8 +240,10 @@ export const OrderCard = ({ order }: OrderCardProps) => {
           </p>
           <p>
             <strong>
-              {order.tableNo != null
-                ? `Table No: ${order.tableNo}`
+              {order.orderType == OrderType.DineIn
+                ? order.tableNo == null
+                  ? "Dine-In"
+                  : `Table No: ${order.tableNo}`
                 : "Takeaway"}
             </strong>
           </p>

@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { Meteor } from "meteor/meteor";
-import { MenuItem, Tables } from "/imports/api";
-import { OrderMenuItem } from "/imports/api/orders/OrdersCollection";
+import { MenuItem } from "/imports/api";
+import { OrderMenuItem, OrderType } from "/imports/api/orders/OrdersCollection";
 import { PaymentModal } from "./PaymentModal";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-import { Order, OrdersCollection, TablesCollection } from "/imports/api";
+import { Order, OrdersCollection } from "/imports/api";
 import { IdType } from "/imports/api/database";
 import { Roles } from "meteor/alanning:roles";
 import { RoleEnum } from "/imports/api/accounts/roles";
 import { Hide } from "./display/Hide";
-import { useNavigate, useLocation } from "react-router";
 import { Button } from "./interaction/Button";
+import { Mongo } from "meteor/mongo";
+
+import MenuItemIngredientsDialog from "./MenuItemIngredientsDialog";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { IconButton as MuiIconButton } from "@mui/material";
 
 interface PosSideMenuProps {
   tableNo: number | null;
@@ -21,8 +25,6 @@ interface PosSideMenuProps {
   onDecrease: (itemId: IdType) => void;
   onDelete: (itemId: IdType) => void;
   onUpdateOrder?: (fields: Partial<Order>) => void;
-  selectedTable: number | null;
-  setSelectedTable: (tableNo: number) => void;
   onActiveOrderChange?: (orderId: string | null) => void;
 }
 
@@ -30,45 +32,76 @@ export const PosSideMenu = ({
   items: _items,
   total,
   orderId,
-  onIncrease,
-  onDecrease,
-  onDelete,
   onUpdateOrder,
-  selectedTable,
-  setSelectedTable,
   onActiveOrderChange,
 }: PosSideMenuProps) => {
   // Fetch the current order for this table
   useSubscribe("orders");
   useSubscribe("tables");
-  const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
+  const isMenuItemsLoading = useSubscribe("menuItems")(); // Immediately call to get boolean
+  const [orderType, setOrderType] = useState<OrderType>(OrderType.DineIn);
 
-  const [selectedTakeawayId, setSelectedTakeawayId] = useState<string | null>(
-    null,
+  // Use sessionStorage for activeOrderId
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(() => {
+    return sessionStorage.getItem("activeOrderId") || null;
+  });
+
+  // List active orders for each type
+  const activeDineInOrders = useTracker(
+    () =>
+      OrdersCollection.find(
+        { orderType: OrderType.DineIn, paid: false },
+        { sort: { orderNo: 1 } },
+      ).fetch(),
+    [],
   );
   const activeTakeawayOrders = useTracker(
     () =>
       OrdersCollection.find(
-        { orderType: "takeaway", paid: false },
+        { orderType: OrderType.Takeaway, paid: false },
         { sort: { createdAt: -1 } },
       ).fetch(),
     [],
   );
 
-  const order = useTracker(() => {
-    if (orderType === "dine-in" && selectedTable != null) {
-      // Find the table and get its activeOrderID
-      const table = TablesCollection.findOne({ tableNo: selectedTable });
-      if (table?.activeOrderID) {
-        return OrdersCollection.findOne(table.activeOrderID) ?? null;
-      }
-      return null;
+  // Clear invalid selectedOrderId if it doesn't exist in the current active list
+  useEffect(() => {
+    if (!selectedOrderId) return;
+    const list =
+      orderType === OrderType.DineIn
+        ? activeDineInOrders
+        : activeTakeawayOrders;
+    const stillExists = list.some((o) => o._id === selectedOrderId);
+    if (!stillExists) {
+      setSelectedOrderId(null);
+      sessionStorage.removeItem("activeOrderId");
+      onActiveOrderChange?.(null);
     }
-    if (orderType === "takeaway" && selectedTakeawayId) {
-      return OrdersCollection.findOne(selectedTakeawayId as string) ?? null;
+  }, [
+    orderType,
+    selectedOrderId,
+    activeDineInOrders.length,
+    activeTakeawayOrders.length,
+  ]);
+
+  // Clear selectedOrderId if the order type changes and the selected order is invalid
+  useEffect(() => {
+    if (!selectedOrderId) return;
+    const cur = OrdersCollection.findOne(selectedOrderId);
+    if (!cur || cur.orderType !== orderType || cur.paid) {
+      setSelectedOrderId(null);
+      sessionStorage.removeItem("activeOrderId");
+      onActiveOrderChange?.(null);
+    }
+  }, [orderType]);
+
+  // Select order by id
+  const order = useTracker(() => {
+    if (selectedOrderId) {
+      return OrdersCollection.findOne(selectedOrderId as string) ?? null;
     }
     return null;
-  }, [orderType, selectedTable, selectedTakeawayId]);
+  }, [selectedOrderId]);
 
   const displayedItems = order?.menuItems ?? [];
   const baseTotal =
@@ -128,8 +161,48 @@ export const PosSideMenu = ({
   }, [originalPrice, discountPercent, discountAmount]);
 
   useEffect(() => {
+    if (order?._id) {
+      sessionStorage.setItem("activeOrderId", order._id);
+    } else {
+      sessionStorage.removeItem("activeOrderId");
+    }
     onActiveOrderChange?.(order?._id ?? null);
   }, [order?._id, onActiveOrderChange]);
+
+  // Set active order
+  const setActiveOrder = (orderId: string | null) => {
+    setSelectedOrderId(orderId);
+    if (orderId) {
+      sessionStorage.setItem("activeOrderId", orderId);
+    } else {
+      sessionStorage.removeItem("activeOrderId");
+    }
+    onActiveOrderChange?.(orderId);
+  };
+
+  // Function to get lowest unpaid order depending on the order type
+  const getLowestOrderId = (type: OrderType) => {
+    const selector =
+      type === OrderType.DineIn
+        ? { orderType: OrderType.DineIn, paid: false }
+        : { orderType: OrderType.Takeaway, paid: false };
+
+    // Meteor 타입 사용
+    const sort: Mongo.SortSpecifier =
+      type === OrderType.DineIn ? { orderNo: 1 } : { createdAt: -1 };
+
+    const orders = OrdersCollection.find(selector, { sort }).fetch();
+    return orders[0]?._id ?? null;
+  };
+
+  const keyForQty = (it: any): string | null =>
+    (it?.lineId as string) ??
+    (it?.menuItemId as string) ??
+    (it?._id as string) ??
+    null;
+
+  const canDeleteByLineId = (it: any): it is { lineId: string } =>
+    typeof it?.lineId === "string" && it.lineId.length > 0;
 
   // Discount handlers
   const applyPercentDiscount = (percentage: number | string) => {
@@ -229,30 +302,30 @@ export const PosSideMenu = ({
     }
   };
 
-  const tables: Tables[] = useTracker(
-    () => TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch(),
-    [],
-  );
-
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Table change handler
-  const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = Number(e.target.value);
-    setSelectedTable(selected);
-    // Update the URL with the new tableNo as a query parameter
-    const params = new URLSearchParams(location.search);
-    params.set("tableNo", String(selected));
-    navigate(`${location.pathname}?${params.toString()}`);
-  };
-
   const rolesLoaded = useSubscribe("users.roles")();
   const rolesGraphLoaded = useSubscribe("users.rolesGraph")();
   const canLockOrder = useTracker(
     () => Roles.userIsInRole(Meteor.userId(), [RoleEnum.MANAGER]),
     [rolesLoaded, rolesGraphLoaded],
   );
+
+  // Ingredient dialog state
+  const [ingredientDialog, setIngredientDialog] = useState<{
+    open: boolean;
+    item: (MenuItem | OrderMenuItem) | null;
+    index: number | null;
+  }>({ open: false, item: null, index: null });
+
+  const openIngredientDialog = (
+    item: MenuItem | OrderMenuItem,
+    index: number,
+  ) => {
+    setIngredientDialog({ open: true, item, index });
+  };
+
+  // const closeIngredientDialog = () => {
+  //   setIngredientDialog({ open: false, item: null, idx: null, orderId: null, locked: false });
+  // };
 
   return (
     <div className="w-[20vw] h-[75vh] flex flex-col">
@@ -261,19 +334,26 @@ export const PosSideMenu = ({
         {/* Toggle buttons */}
         <div className="flex justify-center gap-2 mb-2 relative">
           <button
-            onClick={() => setOrderType("dine-in")}
+            onClick={() => {
+              setOrderType(OrderType.DineIn);
+              setActiveOrder(getLowestOrderId(OrderType.DineIn));
+            }}
             className={`px-3 py-1 rounded-full font-semibold ${
-              orderType === "dine-in"
+              orderType === OrderType.DineIn
                 ? "bg-white text-press-up-purple"
                 : "bg-press-up-purple border border-white"
             }`}
           >
             Dine In
           </button>
+
           <button
-            onClick={() => setOrderType("takeaway")}
+            onClick={() => {
+              setOrderType(OrderType.Takeaway);
+              setActiveOrder(getLowestOrderId(OrderType.Takeaway));
+            }}
             className={`px-3 py-1 rounded-full font-semibold ${
-              orderType === "takeaway"
+              orderType === OrderType.Takeaway
                 ? "bg-white text-press-up-purple"
                 : "bg-press-up-purple border border-white"
             }`}
@@ -282,72 +362,58 @@ export const PosSideMenu = ({
           </button>
         </div>
 
-        {/* Table Dropdown or Takeaway */}
+        {/* Order Dropdown for Dine-in and Takeaway */}
         <div className="flex justify-center items-center relative">
-          {orderType === "dine-in" ? (
-            <select
-              className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none"
-              value={selectedTable ?? ""}
-              onChange={handleTableChange}
+          <div className="absolute left-0">
+            <button
+              className="px-3 rounded-full font-semibold text-m transition-colors duration-200 bg-white text-press-up-purple hover:bg-gray-300"
+              onClick={async () => {
+                try {
+                  // create a fresh order for current type
+                  const newId = await Meteor.callAsync("orders.addOrder", {
+                    orderType,
+                    tableNo: null,
+                    menuItems: [],
+                    totalPrice: 0,
+                    createdAt: new Date(),
+                    orderStatus: "pending",
+                    paid: false,
+                  });
+                  setSelectedOrderId(String(newId));
+                  onActiveOrderChange?.(String(newId));
+                } catch (e) {
+                  console.error(e);
+                  alert("Failed to create order.");
+                }
+              }}
             >
-              {tables.map((table) => (
-                <option
-                  key={table.tableNo}
-                  value={table.tableNo}
-                  disabled={!table.isOccupied}
-                  className={table.isOccupied ? "bg-red-400" : "bg-green-400"}
-                >
-                  Table {table.tableNo}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="absolute left-0">
-                <button
-                  className="px-3 rounded-full font-semibold text-m transition-colors duration-200 bg-white text-press-up-purple hover:bg-gray-300"
-                  onClick={async () => {
-                    try {
-                      // create a fresh takeaway order
-                      const newId = await Meteor.callAsync("orders.addOrder", {
-                        orderType: "takeaway",
-                        tableNo: null,
-                        menuItems: [],
-                        totalPrice: 0,
-                        createdAt: new Date(),
-                        orderStatus: "pending",
-                        paid: false,
-                      });
-                      setSelectedTakeawayId(String(newId)); // select the new order immediately
-                      onActiveOrderChange?.(String(newId));
-                    } catch (e) {
-                      console.error(e);
-                      alert("Failed to create takeaway order.");
-                    }
-                  }}
-                >
-                  +
-                </button>
-              </div>
-              <select
-                className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none"
-                value={selectedTakeawayId ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value || null;
-                  setSelectedTakeawayId(v);
-                  onActiveOrderChange?.(v);
-                }}
-              >
-                <option value="">Select Order</option>
-                {activeTakeawayOrders.map((o) => (
-                  <option key={o._id} value={o._id}>
-                    Order #{o.orderNo}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
+              +
+            </button>
+          </div>
+          <select
+            className="text-lg font-semibold bg-press-up-purple text-white border-none outline-none"
+            value={selectedOrderId ?? ""}
+            onChange={(e) => {
+              const v = e.target.value || null;
+              setSelectedOrderId(v);
+              if (v) {
+                sessionStorage.setItem("activeOrderId", v);
+              } else {
+                sessionStorage.removeItem("activeOrderId");
+              }
+              onActiveOrderChange?.(v);
+            }}
+          >
+            <option value="">Select Order</option>
+            {(orderType === OrderType.DineIn
+              ? activeDineInOrders
+              : activeTakeawayOrders
+            ).map((o) => (
+              <option key={o._id} value={o._id}>
+                Order #{o.orderNo}
+              </option>
+            ))}
+          </select>
           {/* Lock button (managers only) */}
           <Hide hide={!canLockOrder}>
             <button
@@ -378,9 +444,14 @@ export const PosSideMenu = ({
             displayedItems.map((item, idx) => {
               const qty = item.quantity ?? 1;
               const price = item.price;
+              const rowKey = (item as any)?.lineId
+                ? (item as any).lineId
+                : (item as any)?._id
+                  ? `${(item as any)._id}:${idx}`
+                  : `${order?._id ?? "order"}:${idx}`;
               return (
                 <div
-                  key={idx}
+                  key={rowKey}
                   className="bg-white p-4 rounded-md shadow-md space-y-2"
                 >
                   <div className="flex justify-between items-center">
@@ -393,7 +464,22 @@ export const PosSideMenu = ({
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => item._id && onDecrease(item._id)}
+                      onClick={() => {
+                        if (order?.isLocked) return;
+                        const key = keyForQty(item);
+                        if (!key || !order?._id) return;
+                        Meteor.call(
+                          "orders.decQtyByKey",
+                          order._id,
+                          String(key),
+                          (err: any) => {
+                            if (err) {
+                              console.error(err);
+                              alert("Failed to decrease quantity.");
+                            }
+                          },
+                        );
+                      }}
                       className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
                       disabled={Boolean(order?.isLocked)}
                     >
@@ -401,97 +487,92 @@ export const PosSideMenu = ({
                     </button>
                     <span>{qty}</span>
                     <button
-                      onClick={() => item._id && onIncrease(item._id)}
+                      onClick={() => {
+                        if (order?.isLocked) return;
+                        const key = keyForQty(item);
+                        if (!key || !order?._id) return;
+                        Meteor.call(
+                          "orders.incQtyByKey",
+                          order._id,
+                          String(key),
+                          (err: any) => {
+                            if (err) {
+                              console.error(err);
+                              alert("Failed to increase quantity.");
+                            }
+                          },
+                        );
+                      }}
                       className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-lg font-bold"
                       disabled={Boolean(order?.isLocked)}
                     >
                       ＋
                     </button>
                     <button
-                      onClick={() => item._id && onDelete(item._id)}
+                      onClick={() => {
+                        if (order?.isLocked) return;
+                        if (!order?._id) return;
+
+                        if (canDeleteByLineId(item)) {
+                          Meteor.call(
+                            "orders.removeMenuItemByLineId",
+                            order._id,
+                            item.lineId,
+                            (err: any) => {
+                              if (err) {
+                                console.error(err);
+                                alert("Failed to remove item.");
+                              }
+                            },
+                          );
+                        } else {
+                          Meteor.call(
+                            "orders.removeMenuItemAt",
+                            order._id,
+                            idx,
+                            (err: any) => {
+                              if (err) {
+                                console.error(err);
+                                alert("Failed to remove item.");
+                              }
+                            },
+                          );
+                        }
+                      }}
                       className="text-red-500 hover:text-red-700 text-lg font-bold"
                       disabled={Boolean(order?.isLocked)}
                     >
                       🗑
                     </button>
+
+                    {/* New: View ingredients button */}
+                    <MuiIconButton
+                      size="small"
+                      onClick={() => openIngredientDialog(item, idx)}
+                      disabled={isMenuItemsLoading || Boolean(order?.isLocked)} // Updated condition
+                      aria-label="View ingredients"
+                    >
+                      <MoreVertIcon fontSize="small" />
+                    </MuiIconButton>
                   </div>
                 </div>
               );
             })
           ) : (
             <div className="p-4 text-center text-gray-500">
-              {selectedTable != null &&
-              tables.find((t) => t.tableNo === selectedTable)?.isOccupied &&
-              !tables.find((t) => t.tableNo === selectedTable)
-                ?.activeOrderID ? (
-                /* dine-in empty: show "start new order for table" card (keep as-is) */
+              {/* Empty state for no order selected */}
+              {!selectedOrderId && (
                 <div className="bg-yellow-100 p-4 rounded-md space-y-2">
                   <p className="font-bold text-gray-800 mb-2">
-                    No active orders for this table.
-                  </p>
-                  <Button
-                    variant="positive"
-                    width="full"
-                    onClick={async () => {
-                      try {
-                        console.log("Creating order for table:", selectedTable);
-                        const dbTable = tables.find(
-                          (t) => t.tableNo === selectedTable,
-                        );
-                        if (!dbTable || !dbTable._id) {
-                          alert("Could not find table in database.");
-                          return;
-                        }
-
-                        const orderId = await Meteor.callAsync(
-                          "orders.addOrder",
-                          {
-                            tableNo: selectedTable,
-                            menuItems: [],
-                            totalPrice: 0,
-                            createdAt: new Date(),
-                            orderStatus: "pending",
-                            paid: false,
-                          },
-                        );
-
-                        await Meteor.callAsync(
-                          "tables.addOrder",
-                          dbTable._id,
-                          orderId,
-                        );
-
-                        console.log("Order created:", orderId);
-                      } catch (err) {
-                        console.error("Error adding order:", err);
-                        alert(
-                          "Failed to add order. Check console for details.",
-                        );
-                      }
-                    }}
-                    disabled={
-                      !!tables.find(
-                        (t) => t.tableNo === selectedTable && t.activeOrderID, // <-- Only block if there's an active order
-                      )
-                    }
-                  >
-                    Start a new order?
-                  </Button>
-                </div>
-              ) : orderType === "takeaway" && !selectedTakeawayId ? (
-                /* takeaway empty + no selected order: show helper */
-                <div className="bg-yellow-100 p-4 rounded-md space-y-2">
-                  <p className="font-bold text-gray-800 mb-2">
-                    No active takeaway order.
+                    No active {orderType} order.
                   </p>
                   <p className="text-sm text-gray-700">
                     Use the + button above to create a new order.
                   </p>
                 </div>
-              ) : (
-                /* takeaway with an order selected but no items: show nothing (so the user can add from menu) */
-                <span className="sr-only">{/* keep area clean */}</span>
               )}
+              {/* If order selected but no items, show nothing (allow adding from menu) */}
+              {selectedOrderId && <span className="sr-only" />}
             </div>
           )}
         </div>
@@ -760,7 +841,9 @@ export const PosSideMenu = ({
             <div className="my-4">
               <PaymentModal
                 tableNo={
-                  order.orderType === "dine-in" ? (order.tableNo ?? null) : null
+                  order.orderType === OrderType.DineIn
+                    ? (order.tableNo ?? null)
+                    : null
                 }
                 order={order}
               />
@@ -781,6 +864,16 @@ export const PosSideMenu = ({
           )}
         </div>
       </div>
+      <MenuItemIngredientsDialog
+        open={ingredientDialog.open}
+        item={ingredientDialog.item}
+        orderId={order?._id}
+        itemIndex={ingredientDialog.index ?? undefined}
+        locked={Boolean(order?.isLocked)}
+        onClose={() =>
+          setIngredientDialog({ open: false, item: null, index: null })
+        }
+      />
     </div>
   );
 };

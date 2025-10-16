@@ -131,6 +131,22 @@ Before committing changes, run `npm run fix` to lint and format your code. Note 
 
 This check is performed using the workflow found at `.github/workflows/code-quality.yml`.
 
+## Versioning Strategy
+
+This project versions based on the [Semantic Versioning](https://semver.org/) standard. Each release is associated with a version number vX.Y.Z (e.g. 1.2.3) where:
+- X (Major): denotes significant widespread or breaking changes.
+- Y (Minor): indicates implementation of a new feature.
+- Z (Patch): representing a bug fix or small adjustment.
+Given that this is a web application major version updates are expected to be very infrequent. However, the full versioning scheme is maintained for consistency.
+
+Versioning is performed using a GitHub Actions workflow located at `.github/versioning.yml` which runs on PR merge. The workflow makes use of git tags and the branch prefix to determine versioning:
+- A prefix of `major/` will increment the major version (and reset minor and patch to zero).
+- A prefix of `fix/`, `bugfix/`, `bug/` or `hotfix/` will increment the patch version
+- All other prefixes increment the minor version (and reset the patch version).
+Minor patch branches are expected to almost always be prefixed with `feature/`.
+
+The workflow also creates a GitHub release with the new version and a list of commits included in the PR with attribution. As a result contributors are encouraged to make descriptive but concise commit messages.
+
 # Deployment
 
 We have automated deployment setup on [Render](https://render.com/), the deployed application can be accessed at <https://pressup.onrender.com/>. We are using the free tier so the application will go to sleep after a period of inactivity with wake up usually taking a few minutes.

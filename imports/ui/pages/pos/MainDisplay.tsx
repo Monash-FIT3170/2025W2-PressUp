@@ -1,5 +1,4 @@
 import { MenuItemsCollection, OrdersCollection } from "/imports/api";
-import { TablesCollection } from "/imports/api";
 import { PosItemCard } from "../../components/PosItemCard";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { PosSideMenu } from "../../components/PosSideMenu";
@@ -13,7 +12,6 @@ import {
 } from "/imports/api/orders/OrdersCollection";
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { IdType } from "/imports/api/database";
-import { useLocation } from "react-router";
 
 export const MainDisplay = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -23,28 +21,19 @@ export const MainDisplay = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedTable, setSelectedTable] = useState<number | null>(null);
-  const location = useLocation();
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
 
   useSubscribe("menuItems");
   useSubscribe("orders");
-  useSubscribe("tables");
 
-  const tables = useTracker(() => TablesCollection.find().fetch());
   const posItems = useTracker(() => MenuItemsCollection.find().fetch());
-  // Fetch the current order for the selected table
+  // Only use activeOrderId for order selection
   const order = useTracker(() => {
     if (activeOrderId) {
       return OrdersCollection.findOne(activeOrderId as string) ?? null;
     }
-    return selectedTable
-      ? (OrdersCollection.find({
-          tableNo: selectedTable,
-          $or: [{ orderType: "dine-in" }, { orderType: { $exists: false } }],
-        }).fetch()[0] ?? null)
-      : null;
-  }, [activeOrderId, selectedTable]);
+    return null;
+  }, [activeOrderId]);
 
   const filteredItems = posItems.filter((item) => {
     const matchesName = item.name
@@ -57,30 +46,6 @@ export const MainDisplay = () => {
     const isAvailable = item.available === true;
     return matchesName && matchesCategory && isAvailable;
   });
-
-  useEffect(() => {
-    if (selectedTable !== null) return; // Only set on initial load
-
-    if (tables.length > 0) {
-      // Find the lowest table number that is occupied
-      const occupiedTables = tables.filter((t) => t.isOccupied);
-      if (occupiedTables.length > 0) {
-        const lowestOccupiedTableNo = Math.min(
-          ...occupiedTables.map((t) => t.tableNo),
-        );
-        setSelectedTable(lowestOccupiedTableNo);
-        return;
-      }
-    }
-  }, [tables, selectedTable]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const tableNoParam = params.get("tableNo");
-    if (tableNoParam) {
-      setSelectedTable(Number(tableNoParam));
-    }
-  }, [location.search]);
 
   // Update order status (accept partial updates)
   const updateOrderInDb = (updatedFields: Partial<Order>) => {
@@ -188,51 +153,22 @@ export const MainDisplay = () => {
     }
   };
 
-  const handleItemClick = (item: MenuItem) => {
-    if (!order) return;
-    if (order.isLocked) return; // prevent adding items to locked orders
-    const existing = (order.menuItems as OrderMenuItem[]).find(
-      (i) => i._id === item._id,
-    );
-    let updatedItems;
-    if (existing) {
-      updatedItems = (order.menuItems as OrderMenuItem[]).map((i) =>
-        i._id === item._id ? { ...i, quantity: i.quantity + 1 } : i,
+  const handleItemClick = async (menu: MenuItem) => {
+    if (!order || order.isLocked) return;
+    try {
+      // If there is no option selection UI, selections will be an empty object {}
+      await Meteor.callAsync(
+        "orders.addMenuItemFromMenu",
+        order._id, // Current order
+        menu._id, // Menu item ID
+        1, // Quantity
+        {}, // selections (option selections)
       );
-    } else {
-      // convert MenuItem -> OrderMenuItem shape (keep _id, name, price, ingredients, available, category, image)
-      const newOrderItem: OrderMenuItem = {
-        _id: item._id,
-        name: item.name,
-        quantity: 1,
-        ingredients: item.ingredients || [],
-        available: item.available,
-        price: item.price,
-        category: item.category,
-        image: item.image,
-      };
-      updatedItems = [...(order.menuItems as OrderMenuItem[]), newOrderItem];
+      // Totals/discounts are recalculated on the server (recomputeTotals), so no need to calculate here
+    } catch (e) {
+      console.error(e);
+      alert("Failed to add item.");
     }
-    const newTotal = updatedItems.reduce(
-      (sum, i) => sum + i.quantity * i.price,
-      0,
-    );
-    const dp2 = order.discountPercent ?? 0;
-    const da2 = order.discountAmount ?? 0;
-    let discountedTotal = newTotal;
-    if (dp2 > 0) {
-      discountedTotal = newTotal - newTotal * (dp2 / 100) - da2;
-    } else if (da2 > 0) {
-      discountedTotal = newTotal - da2;
-    }
-    updateOrderInDb({
-      menuItems: updatedItems,
-      totalPrice: parseFloat(discountedTotal.toFixed(2)),
-      discountPercent: order.discountPercent ?? 0,
-      discountAmount: order.discountAmount ?? 0,
-      originalPrice: parseFloat(newTotal.toFixed(2)),
-      orderStatus: OrderStatus.Pending,
-    });
   };
 
   return (
@@ -302,7 +238,7 @@ export const MainDisplay = () => {
       {/* Side Panel */}
       <div id="pos-side-panel" className="p-4">
         <PosSideMenu
-          tableNo={order?.tableNo || selectedTable}
+          tableNo={order?.tableNo ?? null}
           items={order?.menuItems || []}
           total={order?.totalPrice || 0}
           orderId={order?._id}
@@ -310,8 +246,6 @@ export const MainDisplay = () => {
           onDecrease={handleDecrease}
           onDelete={handleDelete}
           onUpdateOrder={updateOrderInDb}
-          selectedTable={selectedTable} // pass down
-          setSelectedTable={setSelectedTable} // pass down
           onActiveOrderChange={setActiveOrderId}
         />
       </div>

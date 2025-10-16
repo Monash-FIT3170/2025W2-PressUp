@@ -1,17 +1,17 @@
 import { Mongo } from "meteor/mongo";
 import { DBEntry, OmitDB } from "../database";
-import { NumbersToN } from "ts-number-range";
 
-export type ShiftTime = {
-  hour: NumbersToN<24>;
-  minute: NumbersToN<60>;
-};
+export enum ShiftStatus {
+  SCHEDULED = "Scheduled",
+  CLOCKED_IN = "Clocked In",
+  CLOCKED_OUT = "Clocked Out",
+}
 
 export interface Shift extends DBEntry {
   user: string;
-  date: Date;
-  start: ShiftTime;
-  end: ShiftTime;
+  start: Date;
+  end: Date | null;
+  status: ShiftStatus;
 }
 
 export const ShiftsCollection = new Mongo.Collection<OmitDB<Shift>, Shift>(

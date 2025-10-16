@@ -3,6 +3,10 @@ import React, { useEffect, useState } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { TablesCollection } from "/imports/api/tables/TablesCollection";
+import {
+  OrdersCollection,
+  OrderType,
+} from "/imports/api/orders/OrdersCollection";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useNavigate } from "react-router";
@@ -123,6 +127,12 @@ export const TablesPage = () => {
     TablesCollection.find({}, { sort: { tableNo: 1 } }).fetch(),
   );
 
+  // Non-assigned dine-in orders for dropdown
+  useSubscribe("orders");
+  const orders = useTracker(() =>
+    OrdersCollection.find({}, { sort: { orderNo: 1 } }).fetch(),
+  );
+
   const MAX_NO_TABLES = 20;
   const GRID_COLS = 5;
   const GRID_ROWS = Math.ceil(MAX_NO_TABLES / GRID_COLS);
@@ -159,7 +169,10 @@ export const TablesPage = () => {
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
   const [clearOrderOnSave, setClearOrderOnSave] = useState(false);
   const [deleteTableInput, setDeleteTableInput] = useState("");
-  const [selectedMoveTableNo, setSelectedMoveTableNo] = useState<number | null>(
+  const [selectedMoveTableNo, setSelectedMoveTableNo] = useState<string | null>(
+    null,
+  );
+  const [selectedMoveOrderNo, setSelectedMoveOrderNo] = useState<string | null>(
     null,
   );
 
@@ -300,12 +313,11 @@ export const TablesPage = () => {
     }
   };
 
-  const goToOrder = (tableNo?: number) => {
-    if (tableNo !== null) {
-      navigate(`/pos/orders?tableNo=${tableNo}`);
-    } else {
-      navigate("/pos/orders");
+  const goToOrder = (orderId?: string) => {
+    if (orderId) {
+      sessionStorage.setItem("activeOrderId", orderId);
     }
+    navigate("/pos/orders");
   };
 
   // initialize modal-local fields from snapshot when opening edit modal
@@ -529,84 +541,39 @@ export const TablesPage = () => {
                     />
                   </>
                 )}
-                {/* Top row: Add Order + Occupied toggle */}
+                {/* Top row: Occupied toggle */}
                 <div
                   className={`flex items-center gap-2 mb-3 ${
                     tablesFromDb.find(
                       (t) =>
                         t.tableNo === editTableData!.tableNo && t.activeOrderID,
                     )
-                      ? "justify-end"
-                      : "justify-between"
+                      ? "justify-between"
+                      : "justify-end"
                   }`}
                 >
-                  {/* Add Order Button */}
-                  {!tablesFromDb.find(
-                    (t) =>
-                      t.tableNo === editTableData!.tableNo &&
-                      t.activeOrderID &&
-                      t.isOccupied,
-                  ) && (
-                    <Button
-                      variant="positive"
-                      onClick={async () => {
-                        try {
-                          const dbTable = tablesFromDb.find(
-                            (t) => t.tableNo === editTableData!.tableNo,
-                          );
-                          if (!dbTable || !dbTable._id) {
-                            alert("Could not find table in database.");
-                            return;
-                          }
-
-                          // Create new order (only if no existing one, because we disable otherwise)
-                          const orderId = await Meteor.callAsync(
-                            "orders.addOrder",
-                            {
-                              // orderNo is now auto-generated server-side
-                              tableNo: editTableData!.tableNo,
-                              orderType: "dine-in",
-                              menuItems: [],
-                              totalPrice: 0,
-                              createdAt: new Date(),
-                              orderStatus: "pending",
-                              paid: false,
-                            },
-                          );
-
-                          // Link order to table
-                          await Meteor.callAsync(
-                            "tables.addOrder",
-                            dbTable._id,
-                            orderId,
-                          );
-
-                          // Update local grid
-                          const updated = grid.map((t) =>
-                            t?.tableNo === editTableData!.tableNo
-                              ? {
-                                  ...t,
-                                  isOccupied: true,
-                                  activeOrderID: String(orderId),
-                                }
-                              : t,
-                          );
-                          setGrid(updated);
-                          setModalType(null);
-                          markChanged();
-                          goToOrder(editTableData!.tableNo);
-                        } catch (err) {
-                          console.error("Error adding order:", err);
-                          alert(
-                            "Failed to add order. Check console for details.",
-                          );
-                        }
-                      }}
-                    >
-                      Add Order
-                    </Button>
-                  )}
-
+                  {/* Go to Order button (only displays for Table which has an active order) */}
+                  {(() => {
+                    const order = editTableData?.activeOrderID
+                      ? orders.find(
+                          (o) => o._id === editTableData.activeOrderID,
+                        )
+                      : null;
+                    if (!order) return null;
+                    return (
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            goToOrder(String(editTableData?.activeOrderID));
+                          }}
+                          variant="positive"
+                        >
+                          {`Go to Order #${order.orderNo}`}
+                        </Button>
+                      </div>
+                    );
+                  })()}
                   {/* Occupied/Vacant Toggle */}
                   <div className="flex gap-2">
                     <Button
@@ -669,6 +636,86 @@ export const TablesPage = () => {
                   </div>
                 </div>
 
+                {/* Add Order to Table */}
+                {!editTableData?.activeOrderID && (
+                  <div className="mb-3">
+                    <hr></hr>
+                    <label className="block mt-2 font-semibold">
+                      Add Order to Table:
+                    </label>
+                    <div className="mb-3 flex flex-row items-center justify-between gap-2">
+                      <select
+                        value={selectedMoveOrderNo ?? ""}
+                        onChange={(e) => setSelectedMoveOrderNo(e.target.value)}
+                        className="text-lg font-semibold bg-press-up-negative-button text-white border-none outline-none rounded-full px-4 py-2 shadow-md"
+                        style={{ minWidth: 160 }}
+                      >
+                        <option value="" className="bg-white text-gray-700">
+                          Select Order
+                        </option>
+                        {orders
+                          .filter(
+                            (o) =>
+                              !o.paid &&
+                              o.orderType === OrderType.DineIn &&
+                              o.tableNo === null,
+                          )
+                          .map((o) => (
+                            <option
+                              key={o._id}
+                              value={o._id}
+                              className="bg-white text-gray-700"
+                            >
+                              Order #{o.orderNo}
+                            </option>
+                          ))}
+                      </select>
+                      <Button
+                        variant="negative"
+                        disabled={!selectedMoveOrderNo}
+                        onClick={async () => {
+                          // Update the selected order's tableNo
+                          await Meteor.callAsync(
+                            "orders.updateOrder",
+                            selectedMoveOrderNo,
+                            { tableNo: editTableData.tableNo },
+                          );
+                          // Add order to table
+                          await Meteor.callAsync(
+                            "tables.addOrder",
+                            editTableData._id,
+                            selectedMoveOrderNo,
+                          );
+                          // Set table as occupied with at least 1 occupant
+                          await Meteor.callAsync(
+                            "tables.setOccupied",
+                            editTableData._id,
+                            true,
+                            1,
+                          );
+                          // Re-render by updating grid from DB
+                          const refreshedTables = TablesCollection.find(
+                            {},
+                            { sort: { tableNo: 1 } },
+                          ).fetch();
+                          const newGrid = Array(GRID_SIZE).fill(null);
+                          refreshedTables.forEach((table, idx) => {
+                            if (idx < GRID_SIZE) {
+                              newGrid[idx] = table;
+                            }
+                          });
+                          setGrid(newGrid);
+                          setModalType(null);
+                          markChanged();
+                          goToOrder(String(selectedMoveOrderNo));
+                        }}
+                      >
+                        Add Order
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Move Order to Table */}
                 {editTableData?.activeOrderID && (
                   <div className="mb-3">
@@ -679,9 +726,7 @@ export const TablesPage = () => {
                     <div className="mb-3 flex flex-row items-center justify-between gap-2">
                       <select
                         value={selectedMoveTableNo ?? ""}
-                        onChange={(e) =>
-                          setSelectedMoveTableNo(Number(e.target.value))
-                        }
+                        onChange={(e) => setSelectedMoveTableNo(e.target.value)}
                         className="text-lg font-semibold bg-press-up-negative-button text-white border-none outline-none rounded-full px-4 py-2 shadow-md"
                         style={{ minWidth: 160 }}
                       >
@@ -709,7 +754,7 @@ export const TablesPage = () => {
                         disabled={!selectedMoveTableNo}
                         onClick={async () => {
                           const newTable = tablesFromDb.find(
-                            (t) => t.tableNo === selectedMoveTableNo,
+                            (t) => t.tableNo === Number(selectedMoveTableNo),
                           );
                           if (!newTable || !editTableData.activeOrderID) return;
                           // Clear old table

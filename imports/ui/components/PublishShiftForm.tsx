@@ -11,9 +11,8 @@ interface PublishShiftFormProps {
 }
 
 export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
-  const [date, setDate] = useState<string>("");
-  const [startTime, setStartTime] = useState<string>("");
-  const [endTime, setEndTime] = useState<string>("");
+  const [startDateTime, setStartDateTime] = useState<string>("");
+  const [endDateTime, setEndDateTime] = useState<string>("");
   const [userId, setUserId] = useState("");
 
   useSubscribe("users");
@@ -33,17 +32,15 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
   const onSubmit: FormEventHandler = (e) => {
     e.preventDefault();
 
-    const shiftDate = new Date(`${date}T00:00:00`);
-    const [startHour, startMinute] = startTime.split(":").map(Number);
-    const [endHour, endMinute] = endTime.split(":").map(Number);
+    const start = new Date(startDateTime);
+    const end = new Date(endDateTime);
 
     Meteor.call(
-      "shifts.new",
+      "shifts.schedule",
       {
         userId,
-        date: shiftDate,
-        start: { hour: startHour, minute: startMinute },
-        end: { hour: endHour, minute: endMinute },
+        start,
+        end,
       },
       (error: Meteor.Error | undefined, result: string | undefined) => {
         if (error) {
@@ -54,9 +51,8 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
         }
         console.log("Shift created with ID:", result);
         onSuccess();
-        setDate("");
-        setStartTime("");
-        setEndTime("");
+        setStartDateTime("");
+        setEndDateTime("");
         setUserId("");
       },
     );
@@ -83,29 +79,20 @@ export const PublishShiftForm = ({ onSuccess }: PublishShiftFormProps) => {
           </Select>
         </div>
         <div>
-          <Label>Date</Label>
+          <Label>Start Time</Label>
           <Input
-            value={date}
-            type="date"
-            onChange={(e) => setDate(e.target.value)}
+            value={startDateTime}
+            type="datetime-local"
+            onChange={(e) => setStartDateTime(e.target.value)}
             required
           />
         </div>
         <div>
-          <Label>Start</Label>
+          <Label>End Time</Label>
           <Input
-            value={startTime}
-            type="time"
-            onChange={(e) => setStartTime(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <Label>End</Label>
-          <Input
-            value={endTime}
-            type="time"
-            onChange={(e) => setEndTime(e.target.value)}
+            value={endDateTime}
+            type="datetime-local"
+            onChange={(e) => setEndDateTime(e.target.value)}
             required
           />
         </div>

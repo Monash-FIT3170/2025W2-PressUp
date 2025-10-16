@@ -18,9 +18,10 @@ export const Button = React.forwardRef<HTMLButtonElement, Props>(
     {
       variant = "positive",
       width = "fit",
-      className, // Allow external className override/merge
-      children, // Render children
-      disabled, // Use for styling
+      className,
+      children,
+      disabled,
+      type,
       ...rest
     },
     ref,
@@ -29,6 +30,7 @@ export const Button = React.forwardRef<HTMLButtonElement, Props>(
       <button
         ref={ref}
         disabled={disabled}
+        type={type ?? "button"} // Avoid accidental form submit
         {...rest}
         className={clsx(
           "text-nowrap shadow-lg/20 hover:shadow-md ease-in-out transition-all duration-300 rounded-xl cursor-pointer inline-flex p-2 grow-0 text-sm font-medium items-center justify-center",
@@ -38,7 +40,7 @@ export const Button = React.forwardRef<HTMLButtonElement, Props>(
           className, // Merge external className
         )}
       >
-        {children} {/* Render children */}
+        {children}
       </button>
     );
   },
