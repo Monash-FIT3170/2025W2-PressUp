@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useSubscribe } from "meteor/react-meteor-data";
+import { useTracker } from "meteor/react-meteor-data";
+import { Meteor } from "meteor/meteor";
 import {
   Order,
   OrderMenuItem,
@@ -46,12 +47,15 @@ export const AnalyticsPage = () => {
     end: null,
   });
 
-  // Subscribe to orders collection
-  const ordersReady = useSubscribe("orders");
-  const orders = useMemo(() => {
-    if (!ordersReady()) return [];
-    return OrdersCollection.find().fetch();
-  }, [ordersReady]);
+  // Subscribe to orders collection using the same pattern as OrderHistoryPage
+  const orders: Order[] = useTracker(() => {
+    const sub = Meteor.subscribe("orders");
+    if (!sub.ready()) return [];
+    const docs = OrdersCollection.find({}, { sort: { createdAt: -1 } }).fetch();
+    console.log("Orders fetched in analytics:", docs.length);
+    console.log("Sample order:", docs[0]);
+    return docs;
+  }, []);
 
   // Filter orders based on date range
   const ordersFiltered = useMemo(() => {
@@ -200,7 +204,7 @@ export const AnalyticsPage = () => {
 
       {/* Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-lg p-6 border border-press-up-grey">
+        <div className="bg-white rounded-lg shadow-lg p-6">
           <PopularItemsAnalysis
             orders={ordersFiltered}
             timeFrame={dateRange}
@@ -208,14 +212,14 @@ export const AnalyticsPage = () => {
           />
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-6 border border-press-up-grey">
+        <div className="bg-white rounded-lg shadow-lg p-6">
           <SalesTrendsVisualization
             orders={ordersFiltered}
             dateRangeBounds={dateRangeBounds}
           />
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-6 border border-press-up-grey lg:col-span-2">
+        <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
           <PeakHoursAnalysis orders={ordersFiltered} timeFrame={dateRange} />
         </div>
       </div>

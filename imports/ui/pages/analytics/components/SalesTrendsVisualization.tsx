@@ -52,7 +52,8 @@ export const SalesTrendsVisualization: React.FC<
     );
 
     orders.forEach((order) => {
-      if (!order.paid) return;
+      // Include all orders for analytics, not just paid ones
+      // if (!order.paid) return;
 
       const orderDate = new Date(order.createdAt);
       if ((start && orderDate < start) || (end && orderDate > end)) return;

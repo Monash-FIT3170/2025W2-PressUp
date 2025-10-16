@@ -16,7 +16,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         disabled={disabled}
-        className="px-4 py-2 bg-press-up-purple text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+        className="px-4 py-2 bg-press-up-navy text-white rounded-md hover:bg-press-up-purple disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
       >
         <svg
           className="w-4 h-4"

@@ -76,9 +76,10 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
     const itemMap = new Map<string, ItemStats>();
 
     filteredorders.forEach((order) => {
-      if (!order.paid) {
-        return;
-      }
+      // Include all orders for analytics, not just paid ones
+      // if (!order.paid) {
+      //   return;
+      // }
       order.menuItems.forEach((menuItem: OrderMenuItem) => {
         const existing = itemMap.get(menuItem.name);
         const revenue = menuItem.price * menuItem.quantity;
@@ -108,7 +109,18 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
     const itemMap = new Map<string, number>();
 
     orders.forEach((order) => {
-      if (!order.paid) return;
+      // Debug: log order details
+      console.log(
+        "Processing order:",
+        order._id,
+        "paid:",
+        order.paid,
+        "status:",
+        order.orderStatus,
+      );
+
+      // Include all orders, not just paid ones, for analytics
+      // if (!order.paid) return;
 
       order.menuItems.forEach((menuItem: OrderMenuItem) => {
         itemMap.set(

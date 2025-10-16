@@ -63,9 +63,10 @@ export const PeakHoursAnalysis: React.FC<PeakHoursAnalysisProps> = ({
     const filteredOrders = orders.filter((o) => {
       const orderDate = new Date(o.createdAt);
 
-      if (!o.paid) {
-        return false;
-      }
+      // Include all orders for analytics, not just paid ones
+      // if (!o.paid) {
+      //   return false;
+      // }
 
       if (startDate && endDate) {
         return orderDate >= startDate && orderDate <= endDate;
