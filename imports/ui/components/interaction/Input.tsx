@@ -19,6 +19,9 @@ interface InputProps
     | "autoComplete"
     | "required"
     | "onFocus"
+    | "onBlur"
+    | "onKeyDown"
+    | "autoFocus"
     | "list"
   > {
   variant?: InputVaraint;
