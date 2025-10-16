@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { FinanceCard } from "../../components/FinanceCard";
-import { TaxDateFilter } from "../../components/TaxDateFilter";
-import { startOfMonth, endOfMonth } from "date-fns";
+import { FinanceDateFilter } from "../../components/FinanceDateFilter";
 import {
   BarChart,
   Bar,
@@ -27,13 +26,15 @@ interface ExpenseData {
 
 export const ExpensesPage = () => {
   const [_, setPageTitle] = usePageTitle();
-  const [dateRange, setDateRange] = useState<{
-    start: Date;
-    end: Date;
-  }>({
-    start: startOfMonth(new Date()),
-    end: endOfMonth(new Date()),
-  });
+  const [dateRange, setDateRange] = useState<
+    | "all"
+    | "today"
+    | "thisWeek"
+    | "thisMonth"
+    | "thisYear"
+    | "past7Days"
+    | "past30Days"
+  >("thisMonth");
 
   useEffect(() => {
     setPageTitle("Expenses");
@@ -49,27 +50,17 @@ export const ExpensesPage = () => {
     };
   }, []);
 
-  const handleDateRangeChange = (start: Date, end: Date) => {
-    setDateRange({ start, end });
-  };
-
   return (
     <div className="flex flex-col gap-4 w-full overflow-y-scroll p-4">
       <div className="flex flex-col gap-4">
         <h1 className="text-4xl font-bold">Expenses</h1>
 
-        <TaxDateFilter
-          startDate={dateRange.start}
-          endDate={dateRange.end}
-          onDateRangeChange={handleDateRangeChange}
-        />
+        <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <FinanceCard
             title="Total Expenses"
-            value={expenseData.totalExpenses}
-            format="currency"
-            color="red"
+            amount={expenseData.totalExpenses}
           />
         </div>
 

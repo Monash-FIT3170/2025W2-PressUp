@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useSubscribe } from "meteor/react-meteor-data";
-import { OrdersCollection } from "/imports/api/orders/OrdersCollection";
+import {
+  Order,
+  OrderMenuItem,
+  OrdersCollection,
+} from "/imports/api/orders/OrdersCollection";
 import { PopularItemsAnalysis } from "./components/PopularItemsAnalysis";
 import { SalesTrendsVisualization } from "./components/SalesTrendsVisualization";
 import { PeakHoursAnalysis } from "./components/PeakHoursAnalysis";
@@ -129,7 +133,7 @@ export const AnalyticsPage = () => {
         order.orderNo || "",
         order.menuItems
           ? order.menuItems.reduce(
-              (sum: number, item) => sum + item.quantity,
+              (sum: number, item: OrderMenuItem) => sum + item.quantity,
               0,
             )
           : 0,
