@@ -67,8 +67,8 @@ export const PaymentModal = ({ order, splits }: PaymentModalProps) => {
       {/* Fade In */}
       <div
         className={`fixed inset-0 flex items-center justify-center z-50 transition-opacity duration-400 ${
-            isOpen ? "opacity-100" : "opacity-0 invisible"
-          }`}
+          isOpen ? "opacity-100" : "opacity-0 invisible"
+        }`}
         onClick={closeModal}
       >
         {/* Modal */}

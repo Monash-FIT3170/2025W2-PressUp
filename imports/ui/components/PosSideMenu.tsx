@@ -209,8 +209,6 @@ export const PosSideMenu = ({
     setSplits((prev) => [...prev, ""]);
   };
 
-
-
   const handleSplitChange = (index: number, value: string) => {
     const decimalRegex = /^\d*\.?\d{0,2}$/;
 
@@ -226,13 +224,10 @@ export const PosSideMenu = ({
     }
   };
 
-
   const handleResetSplits = () => {
     setSplits([]);
     setRemaining(baseTotal);
   };
-
-
 
   const keyForQty = (it: any): string | null =>
     (it?.lineId as string) ??
@@ -377,10 +372,11 @@ export const PosSideMenu = ({
               setOrderType(OrderType.DineIn);
               setActiveOrder(getLowestOrderId(OrderType.DineIn));
             }}
-            className={`px-3 py-1 rounded-full font-semibold ${orderType === OrderType.DineIn
-              ? "bg-white text-press-up-purple"
-              : "bg-press-up-purple border border-white"
-              }`}
+            className={`px-3 py-1 rounded-full font-semibold ${
+              orderType === OrderType.DineIn
+                ? "bg-white text-press-up-purple"
+                : "bg-press-up-purple border border-white"
+            }`}
           >
             Dine In
           </button>
@@ -390,10 +386,11 @@ export const PosSideMenu = ({
               setOrderType(OrderType.Takeaway);
               setActiveOrder(getLowestOrderId(OrderType.Takeaway));
             }}
-            className={`px-3 py-1 rounded-full font-semibold ${orderType === OrderType.Takeaway
-              ? "bg-white text-press-up-purple"
-              : "bg-press-up-purple border border-white"
-              }`}
+            className={`px-3 py-1 rounded-full font-semibold ${
+              orderType === OrderType.Takeaway
+                ? "bg-white text-press-up-purple"
+                : "bg-press-up-purple border border-white"
+            }`}
           >
             Takeaway
           </button>
@@ -663,10 +660,11 @@ export const PosSideMenu = ({
                         value={val}
                         onChange={(e) => handleSplitChange(i, e.target.value)}
                         placeholder="Enter amount e.g. 10.50"
-                        className={`w-full bg-white rounded px-3 py-1.5 text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 ${parseFloat(val) < 0 || isNaN(parseFloat(val))
-                          ? "ring-red-400"
-                          : "focus:ring-pink-300"
-                          } shadow-sm`}
+                        className={`w-full bg-white rounded px-3 py-1.5 text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                          parseFloat(val) < 0 || isNaN(parseFloat(val))
+                            ? "ring-red-400"
+                            : "focus:ring-pink-300"
+                        } shadow-sm`}
                       />
                       {/* Validation text */}
                       {parseFloat(val) < 0 || isNaN(parseFloat(val)) ? (
@@ -699,7 +697,6 @@ export const PosSideMenu = ({
               )}
             </div>
           )}
-
 
           {/* Displaying discount infomation*/}
           {discountPercent !== 0 && (
