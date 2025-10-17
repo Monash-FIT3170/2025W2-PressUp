@@ -261,25 +261,27 @@ export const OrderCard = ({ order }: OrderCardProps) => {
     const defaultSelections = getDefaultSelections(optionGroups);
     const savedSelections =
       ((menuItem as any).optionSelections as Record<string, string[]>) ?? {};
-    
+
     for (const g of optionGroups) {
       const baseKey = g.id.split("-")[0];
-      const baseExists = baseDefs.some((b: { key: string }) => b.key === baseKey);
+      const baseExists = baseDefs.some(
+        (b: { key: string }) => b.key === baseKey,
+      );
       if (baseExists && !chosenBase.has(baseKey)) continue;
-    
+
       // saved/default arrays
       const savedRaw = Array.isArray(savedSelections[g.id])
         ? savedSelections[g.id]
         : [];
       const def = defaultSelections[g.id] ?? [];
-    
+
       const saved = savedRaw.length === 0 && def.length > 0 ? def : savedRaw;
-    
+
       if (!sameArray(saved, def)) {
         const savedLabels = g.options
           .filter((o: { key: string }) => saved.includes(o.key))
           .map((o: { label: string }) => o.label);
-    
+
         if (g.type === "single") {
           if (savedLabels.length > 0) {
             notes.push(`${g.label}: ${savedLabels[0]}`);
