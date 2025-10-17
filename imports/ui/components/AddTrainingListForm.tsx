@@ -3,44 +3,52 @@ import { Form } from "./interaction/form/Form";
 import { Button } from "./interaction/Button";
 import { TextArea } from "./interaction/TextArea";
 import { Meteor } from "meteor/meteor";
-import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-import { TrainingListsCollection } from "/imports/api/training/TrainingListsCollection";
+import { TrainingList } from "/imports/api/training/TrainingListsCollection";
 
 export interface TrainingListFormData {
   title: string;
   items: { id: string; name: string }[];
 }
 
-export const AddTrainingListForm = ({
-  onSuccess,
-}: {
+interface AddTrainingListFormProps {
+  trainingList?: TrainingList | null;
   onSuccess: () => void;
+}
+
+export const AddTrainingListForm: React.FC<AddTrainingListFormProps> = ({
+  trainingList,
+  onSuccess,
 }) => {
-  useSubscribe("trainingLists.all");
-  const trainingList = useTracker(() => TrainingListsCollection.find().fetch());
   const [title, setTitle] = useState("");
   const [rawItems, setRawItems] = useState("");
-  const [initialised, setInitialised] = useState(false);
 
   useEffect(() => {
-    if (!initialised && trainingList.length > 0) {
-      setTitle(trainingList[0].title);
-      setRawItems(trainingList[0].items.map((i) => i.name).join("\n"));
-      setInitialised(true); // only initialize once
-    } else if (trainingList.length === 0 && !initialised) {
+    if (trainingList) {
+      setTitle(trainingList.title);
+      setRawItems(trainingList.items?.map((i) => i.name).join("\n") || "");
+    } else {
       setTitle("");
       setRawItems("");
-      setInitialised(true);
     }
-  }, [trainingList, initialised]);
+  }, [trainingList]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title.trim()) return; // optional: prevent empty title
 
+    // Parse and deduplicate item names
+    const inputNames = Array.from(
+      new Set(
+        rawItems
+          .split(/[\n,]+|\s{2,}/)
+          .map((item) => item.trim())
+          .filter((item) => item.length > 0),
+      ),
+    );
+
     // Build a lookup of existing items by name
-    const existingItemsByName = (trainingList[0]?.items || []).reduce(
+    const existingItemsByName = (trainingList?.items || []).reduce(
       (acc, item) => {
         acc[item.name] = item.id;
         return acc;
@@ -48,28 +56,26 @@ export const AddTrainingListForm = ({
       {} as Record<string, string>,
     );
 
-    // Split raw items and assign IDs
-    const items = rawItems
-      .split(/[\n,]+|\s{2,}/) // split by newline, comma, or 2+ spaces
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0)
-      .map((name) => ({
-        id: existingItemsByName[name] || crypto.randomUUID(),
-        name,
-      }));
+    // Only keep items that are in the inputNames (removes deleted ones)
+    const items = inputNames.map((name) => ({
+      id: existingItemsByName[name] || crypto.randomUUID(),
+      name,
+    }));
 
     const formData: TrainingListFormData = {
       title,
       items,
     };
 
-    if (trainingList.length > 0) {
-      // Update existing list
-      try {
+    let listId = trainingList?._id;
+
+    try {
+      if (trainingList) {
+        // Update existing list
         await new Promise((resolve, reject) => {
           Meteor.call(
             "trainingLists.update",
-            trainingList[0]._id,
+            trainingList._id,
             formData,
             (err: Meteor.Error, res: any) => {
               if (err) reject(err);
@@ -77,40 +83,47 @@ export const AddTrainingListForm = ({
             },
           );
         });
-        onSuccess();
-      } catch (err) {
-        alert("Failed to update training list.");
-        console.error(err);
+      } else {
+        // Insert new list
+        listId = await new Promise((resolve, reject) => {
+          Meteor.call(
+            "trainingLists.insert",
+            formData,
+            (err: Meteor.Error, res: any) => {
+              if (err) reject(err);
+              else resolve(res);
+            },
+          );
+        });
       }
-      return;
-    }
 
-    // Insert new list
-    try {
-      await new Promise((resolve, reject) => {
-        Meteor.call(
-          "trainingLists.insert",
-          formData,
-          (err: Meteor.Error, res: any) => {
-            if (err) reject(err);
-            else resolve(res);
-          },
-        );
-      });
+      // Update progress for all staff
+      const staff = Meteor.users.find().fetch();
+      for (const user of staff) {
+        await new Promise((resolve, reject) => {
+          Meteor.call(
+            "trainingProgress.ensureForStaff",
+            user._id,
+            listId,
+            items,
+            (err: Meteor.Error, res: any) => {
+              if (err) reject(err);
+              else resolve(res);
+            },
+          );
+        });
+      }
+
       onSuccess();
     } catch (err) {
-      alert("Failed to create training list.");
+      alert("Failed to save training list or update staff progress.");
       console.error(err);
     }
   };
 
   return (
     <Form
-      title={
-        trainingList.length > 0
-          ? "Edit Training List"
-          : "Create New Training List"
-      }
+      title={trainingList ? "Edit Training List" : "Create New Training List"}
       onSubmit={onSuccess}
     >
       <div>
