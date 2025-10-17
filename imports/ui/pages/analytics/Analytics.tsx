@@ -185,7 +185,7 @@ export const AnalyticsPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto scroll-smooth bg-gray-50 p-6">
+    <div className="w-full p-6 bg-gray-50 max-h-screen overflow-y-auto">
       {/* Filters */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
         <FinanceDateFilter
