@@ -8,7 +8,7 @@ import {
   UpdateLineItemInput,
   UpdateStockItemInput,
 } from "./types";
-import { insertStockItem } from "./helpers";
+import { insertStockItem, mergeDuplicates } from "./helpers";
 
 Meteor.methods({
   "stockItems.insert": requireLoginMethod(async function (
@@ -56,11 +56,23 @@ Meteor.methods({
 
     const updatedLineItems = [...stockItem.lineItems];
     const currentLineItem = updatedLineItems[lineItemIndex];
+
+    const update: Partial<
+      Pick<typeof currentLineItem, "quantity" | "location" | "expiry">
+    > = {};
+    if (updates.quantity !== undefined) {
+      update.quantity = updates.quantity;
+    }
+    if (updates.location !== undefined) {
+      update.location = updates.location;
+    }
+    if (updates.expiry !== undefined) {
+      update.expiry = updates.expiry;
+    }
+
     updatedLineItems[lineItemIndex] = {
       ...currentLineItem,
-      ...(updates.quantity !== undefined && { quantity: updates.quantity }),
-      ...(updates.location !== undefined && { location: updates.location }),
-      ...(updates.expiry !== undefined && { expiry: updates.expiry }),
+      ...update,
     };
 
     return await StockItemsCollection.updateAsync(stockItemId, {
@@ -75,11 +87,19 @@ Meteor.methods({
     check(oldName, String);
     check(newName, String);
 
-    return await StockItemsCollection.updateAsync(
-      { name: oldName },
-      { $set: { name: newName } },
-      { multi: true },
-    );
+    const itemsToRename = await StockItemsCollection.find({
+      name: oldName,
+    }).fetchAsync();
+
+    for (const item of itemsToRename) {
+      await StockItemsCollection.updateAsync(item._id, {
+        $set: { name: newName },
+      });
+
+      await mergeDuplicates(newName, item.supplier);
+    }
+
+    return itemsToRename.length;
   }),
 
   "stockItems.updateStockItem": requireLoginMethod(async function (
@@ -92,26 +112,47 @@ Meteor.methods({
       check(updates.name, String);
     }
 
-    const updateObj: any = {};
-    if (updates.name !== undefined) {
-      updateObj.name = updates.name;
-    }
-    if (updates.supplier !== undefined) {
-      updateObj.supplier = updates.supplier;
+    const stockItem = await StockItemsCollection.findOneAsync(stockItemId);
+    if (!stockItem) {
+      throw new Meteor.Error("not-found", "Stock item not found");
     }
 
-    return await StockItemsCollection.updateAsync(stockItemId, {
-      $set: updateObj,
+    const newName = updates.name !== undefined ? updates.name : stockItem.name;
+    const newSupplier =
+      updates.supplier !== undefined ? updates.supplier : stockItem.supplier;
+
+    const update: Partial<Pick<typeof stockItem, "name" | "supplier">> = {};
+    if (updates.name !== undefined) {
+      update.name = updates.name;
+    }
+    if (updates.supplier !== undefined) {
+      update.supplier = updates.supplier;
+    }
+
+    await StockItemsCollection.updateAsync(stockItemId, {
+      $set: update,
     });
+
+    const mergedItemId = await mergeDuplicates(newName, newSupplier);
+    return mergedItemId || stockItemId;
   }),
 
   "stockItems.removeFromSupplier": requireLoginMethod(async function (
     stockItemId: IdType,
   ) {
     check(stockItemId, String);
-    return await StockItemsCollection.updateAsync(stockItemId, {
+
+    const stockItem = await StockItemsCollection.findOneAsync(stockItemId);
+    if (!stockItem) {
+      throw new Meteor.Error("not-found", "Stock item not found");
+    }
+
+    await StockItemsCollection.updateAsync(stockItemId, {
       $set: { supplier: null },
     });
+
+    const mergedItemId = await mergeDuplicates(stockItem.name, null);
+    return mergedItemId || stockItemId;
   }),
 
   "stockItems.disposeLineItem": requireLoginMethod(async function (
