@@ -107,10 +107,7 @@ export const StockPage = () => {
           Add Item
         </button>
       </div>
-      <div
-        id="stock"
-        className="flex flex-1 flex-col min-h-screen items-center justify-center"
-      >
+      <div id="stock" className="flex flex-1 flex-col min-h-0">
         {isLoadingStockItems() || isLoadingSuppliers() ? (
           <Loading />
         ) : (
