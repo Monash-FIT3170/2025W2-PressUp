@@ -223,11 +223,10 @@ export const ReceiptPage = () => {
                     .map((o: { key: string; label: string }) => o.label);
 
                   if (g.type === "single") {
-                    // e.g. "Milk type: Oat milk"
-                    const label = savedLabels[0] ?? "(none)";
-                    customNotes.push(`${g.label}: ${label}`);
+                    if (savedLabels[0]) {
+                      customNotes.push(`${g.label}: ${savedLabels[0]}`);
+                    }
                   } else if (savedLabels.length > 0) {
-                    // e.g. "Extras: Caramel, Whip"
                     customNotes.push(`${g.label}: ${savedLabels.join(", ")}`);
                   }
                 }
