@@ -1,124 +1,51 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { StockItemWithSupplier } from "../pages/inventory/types";
+import React, { useMemo } from "react";
+import {
+  StockItemWithSupplier,
+  AggregatedStockItem,
+} from "../pages/inventory/types";
 import { Pill } from "./Pill";
 import { OutOfStock, InStock, LowInStock } from "./symbols/StatusSymbols";
 import { Table, TableColumn } from "./Table";
-import { Meteor } from "meteor/meteor";
-import { Pencil } from "lucide-react";
-import { Input } from "./interaction/Input";
-
-interface AggregatedStockItem {
-  name: string;
-  totalQuantity: number;
-  itemCount: number;
-}
+import { Button } from "./interaction/Button";
 
 interface AggregateStockTableProps {
   stockItems: StockItemWithSupplier[];
   filter?: "all" | "inStock" | "lowInStock" | "outOfStock";
-  onItemNameClick?: (name: string) => void;
+  onItemNameClick?: (stockItemId: string) => void;
+  onEditItem?: (stockItem: StockItemWithSupplier) => void;
 }
-
-interface EditableNameProps {
-  name: string;
-  onSave: (newName: string) => void;
-  onItemClick?: (name: string) => void;
-}
-
-const EditableName = ({ name, onSave, onItemClick }: EditableNameProps) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(name);
-
-  useEffect(() => {
-    setEditValue(name);
-  }, [name]);
-
-  const handleSave = () => {
-    if (editValue.trim() && editValue !== name) {
-      onSave(editValue.trim());
-    }
-    setIsEditing(false);
-    setEditValue(name);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSave();
-    } else if (e.key === "Escape") {
-      setIsEditing(false);
-      setEditValue(name);
-    }
-  };
-
-  if (isEditing) {
-    return (
-      <div className="max-w-xs">
-        <Input
-          type="text"
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onBlur={handleSave}
-          onKeyDown={handleKeyPress}
-          autoFocus
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      <span
-        className="truncate cursor-pointer hover:text-blue-600 underline decoration-2 underline-offset-2"
-        onClick={() => onItemClick?.(name)}
-        title="Click to view details"
-      >
-        {name}
-      </span>
-      <button
-        onClick={() => setIsEditing(true)}
-        className="flex-shrink-0 p-1 hover:bg-gray-100 rounded transition-colors"
-        title="Edit name"
-      >
-        <Pencil size={14} className="text-gray-500 hover:text-blue-600" />
-      </button>
-    </div>
-  );
-};
 
 export const AggregateStockTable = ({
   stockItems,
   filter = "all",
   onItemNameClick,
+  onEditItem,
 }: AggregateStockTableProps) => {
   const lowInStockThreshold = 10;
 
   const aggregatedItems = useMemo(() => {
-    const itemGroups = new Map<string, StockItemWithSupplier[]>();
-
-    // Group items by name
-    for (const stockItem of stockItems) {
-      if (!itemGroups.has(stockItem.name)) {
-        itemGroups.set(stockItem.name, []);
-      }
-      itemGroups.get(stockItem.name)!.push(stockItem);
-    }
-
-    // Aggregate data for each group
     const result = [];
-    for (const [name, items] of itemGroups) {
+    for (const stockItem of stockItems) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Only count quantity for non-expired items
-      const totalQuantity = items.reduce((sum, item) => {
-        const isExpired = item.expiryDate && new Date(item.expiryDate) < today;
-        return sum + (isExpired ? 0 : item.quantity);
-      }, 0);
+      // Total quantity excludes expired line items
+      let totalQuantity = 0;
+      const totalLineItems = stockItem.lineItems.length;
+
+      for (const lineItem of stockItem.lineItems) {
+        const isExpired = lineItem.expiry && new Date(lineItem.expiry) < today;
+        if (!isExpired) {
+          totalQuantity += lineItem.quantity;
+        }
+      }
 
       result.push({
-        name,
+        name: stockItem.name,
+        supplier: stockItem.supplier,
+        stockItemId: stockItem._id,
         totalQuantity,
-        itemCount: items.length,
+        itemCount: totalLineItems,
       });
     }
 
@@ -134,41 +61,39 @@ export const AggregateStockTable = ({
     });
   }, [stockItems, filter]);
 
-  const handleNameUpdate = useCallback((oldName: string, newName: string) => {
-    Meteor.call(
-      "stockItems.rename",
-      oldName,
-      newName,
-      (error: Meteor.Error | undefined) => {
-        if (error) {
-          alert("Error updating item name: " + error.reason);
-        }
-      },
-    );
-  }, []);
-
   const columns = useMemo(
     (): TableColumn<AggregatedStockItem>[] => [
       {
         key: "name",
         header: "Item Name",
-        gridCol: "minmax(0,1.5fr)",
+        gridCol: "minmax(0,1fr)",
         align: "left",
         render: (item) => (
-          <EditableName
-            name={item.name}
-            onSave={(newName) => handleNameUpdate(item.name, newName)}
-            onItemClick={onItemNameClick}
-          />
+          <span
+            className="truncate cursor-pointer hover:text-blue-600 underline decoration-2 underline-offset-2"
+            onClick={() => onItemNameClick?.(item.stockItemId)}
+            title="Click to view details"
+          >
+            {item.name}
+          </span>
+        ),
+      },
+      {
+        key: "supplier",
+        header: "Supplier",
+        gridCol: "minmax(0,1fr)",
+        align: "left",
+        render: (item) => (
+          <span className="truncate">
+            {item.supplier?.name || "No supplier"}
+          </span>
         ),
       },
       {
         key: "itemCount",
         header: "Line Items",
         gridCol: "min-content",
-        render: (item) => (
-          <span className="text-sm text-gray-600">{item.itemCount}</span>
-        ),
+        render: (item) => <span className="truncate">{item.itemCount}</span>,
       },
       {
         key: "quantity",
@@ -234,8 +159,28 @@ export const AggregateStockTable = ({
           }
         },
       },
+      {
+        key: "actions",
+        header: "Actions",
+        gridCol: "min-content",
+        render: (item) => {
+          const stockItem = stockItems.find(
+            (si) => si._id === item.stockItemId,
+          );
+          return (
+            <div className="flex gap-2">
+              <Button
+                variant="positive"
+                onClick={() => stockItem && onEditItem?.(stockItem)}
+              >
+                Edit
+              </Button>
+            </div>
+          );
+        },
+      },
     ],
-    [handleNameUpdate, onItemNameClick, lowInStockThreshold],
+    [onItemNameClick, onEditItem, lowInStockThreshold, stockItems],
   );
 
   return (

@@ -23,19 +23,23 @@ interface InputProps
     | "onKeyDown"
     | "autoFocus"
     | "list"
+    | "disabled"
   > {
   variant?: InputVaraint;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ variant = "default", ...rest }, ref) => {
+  ({ variant = "default", disabled, ...rest }, ref) => {
     return (
       <input
         ref={ref}
+        disabled={disabled}
         {...rest}
         className={clsx(
           "sm:text-3xl md:text-sm rounded-lg w-full p-3",
-          variantColours[variant],
+          disabled
+            ? "bg-gray-100 border border-gray-200 text-gray-500 cursor-not-allowed"
+            : variantColours[variant],
         )}
       />
     );

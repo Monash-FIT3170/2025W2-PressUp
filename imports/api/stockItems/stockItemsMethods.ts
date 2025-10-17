@@ -1,34 +1,70 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
-import { StockItem, StockItemsCollection } from "..";
+import { StockItemsCollection } from "..";
 import { requireLoginMethod } from "../accounts/wrappers";
-import { IdType, OmitDB } from "../database";
+import { IdType } from "../database";
+import {
+  AddStockItemInput,
+  UpdateLineItemInput,
+  UpdateStockItemInput,
+} from "./types";
+import { insertStockItem } from "./helpers";
 
 Meteor.methods({
   "stockItems.insert": requireLoginMethod(async function (
-    item: OmitDB<StockItem>,
+    input: AddStockItemInput,
   ) {
-    check(item.name, String);
-    check(item.quantity, Number);
-    check(item.location, String);
-    if (item.expiryDate != null) {
-      check(item.expiryDate, Date);
+    check(input.name, String);
+    check(input.quantity, Number);
+    check(input.location, String);
+    if (input.expiry != null) {
+      check(input.expiry, Date);
     }
 
-    return await StockItemsCollection.insertAsync(item);
+    return await insertStockItem(input);
   }),
 
-  "stockItems.remove": requireLoginMethod(async function (itemId: IdType) {
-    check(itemId, String);
-    return await StockItemsCollection.removeAsync(itemId);
-  }),
-
-  "stockItems.removeFromSupplier": requireLoginMethod(async function (
-    itemId: IdType,
+  "stockItems.updateLineItem": requireLoginMethod(async function (
+    stockItemId: IdType,
+    lineItemId: string,
+    updates: UpdateLineItemInput,
   ) {
-    check(itemId, String);
-    return await StockItemsCollection.updateAsync(itemId, {
-      $set: { supplier: null },
+    check(stockItemId, String);
+    check(lineItemId, String);
+
+    if (updates.quantity !== undefined) {
+      check(updates.quantity, Number);
+    }
+    if (updates.location !== undefined) {
+      check(updates.location, String);
+    }
+    if (updates.expiry !== undefined && updates.expiry != null) {
+      check(updates.expiry, Date);
+    }
+
+    const stockItem = await StockItemsCollection.findOneAsync(stockItemId);
+    if (!stockItem) {
+      throw new Meteor.Error("not-found", "Stock item not found");
+    }
+
+    const lineItemIndex = stockItem.lineItems.findIndex(
+      (li) => li.id === lineItemId,
+    );
+    if (lineItemIndex === -1) {
+      throw new Meteor.Error("not-found", "Line item not found");
+    }
+
+    const updatedLineItems = [...stockItem.lineItems];
+    const currentLineItem = updatedLineItems[lineItemIndex];
+    updatedLineItems[lineItemIndex] = {
+      ...currentLineItem,
+      ...(updates.quantity !== undefined && { quantity: updates.quantity }),
+      ...(updates.location !== undefined && { location: updates.location }),
+      ...(updates.expiry !== undefined && { expiry: updates.expiry }),
+    };
+
+    return await StockItemsCollection.updateAsync(stockItemId, {
+      $set: { lineItems: updatedLineItems },
     });
   }),
 
@@ -46,24 +82,35 @@ Meteor.methods({
     );
   }),
 
-  "stockItems.update": requireLoginMethod(async function (
-    itemId: IdType,
-    updates: Partial<
-      Pick<OmitDB<StockItem>, "quantity" | "location" | "expiryDate">
-    >,
+  "stockItems.updateStockItem": requireLoginMethod(async function (
+    stockItemId: IdType,
+    updates: UpdateStockItemInput,
   ) {
-    check(itemId, String);
+    check(stockItemId, String);
 
-    if (updates.quantity !== undefined) {
-      check(updates.quantity, Number);
-    }
-    if (updates.location !== undefined) {
-      check(updates.location, String);
-    }
-    if (updates.expiryDate != null) {
-      check(updates.expiryDate, Date);
+    if (updates.name !== undefined) {
+      check(updates.name, String);
     }
 
-    return await StockItemsCollection.updateAsync(itemId, { $set: updates });
+    const updateObj: any = {};
+    if (updates.name !== undefined) {
+      updateObj.name = updates.name;
+    }
+    if (updates.supplier !== undefined) {
+      updateObj.supplier = updates.supplier;
+    }
+
+    return await StockItemsCollection.updateAsync(stockItemId, {
+      $set: updateObj,
+    });
+  }),
+
+  "stockItems.removeFromSupplier": requireLoginMethod(async function (
+    stockItemId: IdType,
+  ) {
+    check(stockItemId, String);
+    return await StockItemsCollection.updateAsync(stockItemId, {
+      $set: { supplier: null },
+    });
   }),
 });

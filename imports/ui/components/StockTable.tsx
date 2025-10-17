@@ -1,71 +1,82 @@
 import React, { useMemo } from "react";
-import { StockItemWithSupplier } from "../pages/inventory/types";
+import { LineItemWithDetails } from "../pages/inventory/types";
 import { OutOfStock, InStock, LowInStock } from "./symbols/StatusSymbols";
 import { Table, TableColumn } from "./Table";
 import { dateDifferenceDisplay } from "../../helpers/date";
+import { Button } from "./interaction/Button";
+import { Pill } from "./Pill";
 
 interface StockTableProps {
-  stockItems: StockItemWithSupplier[];
+  stockItems: LineItemWithDetails[];
+  onEdit?: (item: LineItemWithDetails) => void;
+  onDispose?: (item: LineItemWithDetails) => void;
 }
 
-export const StockTable = ({ stockItems }: StockTableProps) => {
+export const StockTable = ({
+  stockItems,
+  onEdit,
+  onDispose,
+}: StockTableProps) => {
   const lowInStockThreshold = 10;
 
-  const sortedStockItems = useMemo(() => {
+  const sortedLineItems = useMemo(() => {
     return [...stockItems].sort((a, b) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const aExpired = a.expiryDate && new Date(a.expiryDate) < today;
-      const bExpired = b.expiryDate && new Date(b.expiryDate) < today;
+      const aExpired = a.expiry && new Date(a.expiry) < today;
+      const bExpired = b.expiry && new Date(b.expiry) < today;
 
       if (aExpired && bExpired) {
-        return (
-          new Date(b.expiryDate!).getTime() - new Date(a.expiryDate!).getTime()
-        );
+        return new Date(b.expiry!).getTime() - new Date(a.expiry!).getTime();
       }
       if (aExpired) return 1;
       if (bExpired) return -1;
 
       // For non-expired items: items with expiry dates first, then no expiry
-      if (!a.expiryDate && !b.expiryDate) return 0;
-      if (!a.expiryDate) return 1;
-      if (!b.expiryDate) return -1;
+      if (!a.expiry && !b.expiry) return 0;
+      if (!a.expiry) return 1;
+      if (!b.expiry) return -1;
 
-      return (
-        new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime()
-      );
+      return new Date(a.expiry).getTime() - new Date(b.expiry).getTime();
     });
   }, [stockItems]);
 
   const columns = useMemo(
-    (): TableColumn<StockItemWithSupplier>[] => [
-      {
-        key: "supplier",
-        header: "Supplier",
-        gridCol: "1fr",
-        render: (item) => (
-          <span className="truncate">
-            {item.supplier?.name || "No supplier"}
-          </span>
-        ),
-      },
+    (): TableColumn<LineItemWithDetails>[] => [
       {
         key: "location",
         header: "Location",
-        gridCol: "1fr",
+        gridCol: "minmax(120px, 0.8fr)",
         render: (item) => <span className="truncate">{item.location}</span>,
+      },
+      {
+        key: "expiry",
+        header: "Expiry",
+        gridCol: "minmax(160px, 1fr)",
+        render: (item) => {
+          if (!item.expiry) return <span>-</span>;
+
+          const expiry = new Date(item.expiry);
+          const displayText = dateDifferenceDisplay(expiry);
+          const dateText = expiry.toLocaleDateString();
+
+          return (
+            <span className="truncate">
+              {displayText} - {dateText}
+            </span>
+          );
+        },
       },
       {
         key: "quantity",
         header: "Quantity",
-        gridCol: "min-content",
+        gridCol: "minmax(80px, min-content)",
         align: "right",
         render: (item) => {
           const today = new Date();
-          today.setHours(0, 0, 0, 0); // Start of today
-          const isExpired =
-            item.expiryDate && new Date(item.expiryDate) < today;
+          today.setHours(0, 0, 0, 0);
+          const isExpired = item.expiry && new Date(item.expiry) < today;
 
           let stockIcon;
           if (isExpired || item.quantity == 0) {
@@ -85,30 +96,70 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
         },
       },
       {
-        key: "expiryDate",
-        header: "Expiry",
-        gridCol: "min-content",
+        key: "status",
+        header: "Status",
+        gridCol: "minmax(100px, min-content)",
         render: (item) => {
-          if (!item.expiryDate) return <span>-</span>;
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const isExpired = item.expiry && new Date(item.expiry) < today;
 
-          const expiry = new Date(item.expiryDate);
-          const displayText = dateDifferenceDisplay(expiry);
-
-          return (
-            <span className="truncate" title={expiry.toLocaleDateString()}>
-              {displayText}
-            </span>
-          );
+          if (isExpired || item.quantity == 0) {
+            return (
+              <Pill
+                bgColour="bg-red-700"
+                borderColour="border-red-700"
+                textColour="text-white"
+              >
+                Out of Stock
+              </Pill>
+            );
+          } else if (item.quantity <= lowInStockThreshold) {
+            return (
+              <Pill
+                bgColour="bg-sky-300"
+                borderColour="border-sky-300"
+                textColour="text-white"
+              >
+                Low Stock
+              </Pill>
+            );
+          } else {
+            return (
+              <Pill
+                bgColour="bg-green-700"
+                borderColour="border-green-700"
+                textColour="text-white"
+              >
+                In Stock
+              </Pill>
+            );
+          }
         },
       },
+      {
+        key: "actions",
+        header: "Actions",
+        gridCol: "minmax(140px, min-content)",
+        render: (item) => (
+          <div className="flex gap-2">
+            <Button variant="positive" onClick={() => onEdit?.(item)}>
+              Edit
+            </Button>
+            <Button variant="negative" onClick={() => onDispose?.(item)}>
+              Dispose
+            </Button>
+          </div>
+        ),
+      },
     ],
-    [lowInStockThreshold],
+    [lowInStockThreshold, onEdit, onDispose],
   );
 
   return (
     <Table
       columns={columns}
-      data={sortedStockItems}
+      data={sortedLineItems}
       emptyMessage="No inventory items"
     />
   );
