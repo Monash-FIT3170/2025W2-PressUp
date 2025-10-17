@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Meteor } from "meteor/meteor";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { StockItemsCollection, SuppliersCollection } from "/imports/api";
@@ -11,6 +12,11 @@ import { EditLineItemForm } from "../../components/EditLineItemForm";
 import { EditStockItemNameModal } from "../../components/EditStockItemNameModal";
 import { StockFilter } from "../../components/StockFilter";
 import { Loading } from "../../components/Loading";
+import { LineItemFilter as LineItemFilterComponent } from "../../components/LineItemFilter";
+import {
+  LineItemFilter as LineItemFilterKey,
+  StockFilter as StockFilterKey,
+} from "./types";
 import { Button } from "../../components/interaction/Button";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { ArrowLeft } from "lucide-react";
@@ -21,9 +27,10 @@ export const StockPage = () => {
     setPageTitle("Inventory Management - Stock");
   }, [setPageTitle]);
 
-  const [filter, setFilter] = useState<
-    "all" | "inStock" | "lowInStock" | "outOfStock"
-  >("all");
+  const [filter, setFilter] = useState<StockFilterKey>(StockFilterKey.ALL);
+  const [lineItemFilter, setLineItemFilter] = useState<LineItemFilterKey>(
+    LineItemFilterKey.UNDISPOSED,
+  );
   const [formResetKey, setFormResetKey] = useState(0);
   const [selectedStockItemId, setSelectedStockItemId] = useState<string | null>(
     null,
@@ -64,13 +71,35 @@ export const StockPage = () => {
     return result;
   }, [stockItems]);
 
-  const filteredLineItems = useMemo(
-    () =>
-      lineItems.filter((item) =>
-        selectedStockItemId ? item.stockItemId === selectedStockItemId : true,
-      ),
-    [lineItems, selectedStockItemId],
-  );
+  const filteredLineItems = useMemo(() => {
+    let filtered = lineItems.filter((item) =>
+      selectedStockItemId ? item.stockItemId === selectedStockItemId : true,
+    );
+
+    const today = new Date();
+    switch (lineItemFilter) {
+      case LineItemFilterKey.UNDISPOSED:
+        filtered = filtered.filter((item) => !item.disposed);
+        break;
+      case LineItemFilterKey.NOT_EXPIRED:
+        filtered = filtered.filter(
+          (item) => !item.expiry || item.expiry > today,
+        );
+        break;
+      case LineItemFilterKey.EXPIRED:
+        filtered = filtered.filter(
+          (item) => item.expiry && item.expiry <= today,
+        );
+        break;
+      case LineItemFilterKey.DISPOSED:
+        filtered = filtered.filter((item) => item.disposed);
+        break;
+      default:
+        break;
+    }
+
+    return filtered;
+  }, [lineItems, selectedStockItemId, lineItemFilter]);
 
   const [addItemModalOpen, setAddItemModalOpen] = useState(false);
   const [editItemModalOpen, setEditItemModalOpen] = useState(false);
@@ -109,7 +138,16 @@ export const StockPage = () => {
   };
 
   const handleDisposeItem = (item: LineItemWithDetails) => {
-    console.log("Dispose item:", item);
+    Meteor.call(
+      "stockItems.disposeLineItem",
+      item.stockItemId,
+      item.id,
+      (error: Meteor.Error | undefined) => {
+        if (error) {
+          alert("Error disposing item: " + error.reason);
+        }
+      },
+    );
   };
 
   const handleEditStockItem = (stockItem: StockItemWithSupplier) => {
@@ -124,30 +162,38 @@ export const StockPage = () => {
 
   return (
     <div className="flex flex-1 flex-col h-full">
-      <div className="grid grid-cols-2">
-        {selectedStockItemId ? (
-          <div className="flex items-center gap-4 p-4">
-            <Button
-              variant="positive"
-              onClick={() => setSelectedStockItemId(null)}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft size={16} />
-              Back to All Items
-            </Button>
-            <h2 className="text-lg font-semibold text-gray-700">
-              {filteredLineItems[0]?.stockItemName || "Item"} from{" "}
-              {filteredLineItems[0]?.supplier?.name || "No supplier"}
-            </h2>
-          </div>
-        ) : (
-          <StockFilter filter={filter} onFilterChange={setFilter} />
-        )}
-        <div className="justify-self-end p-4">
-          <Button variant="positive" onClick={() => setAddItemModalOpen(true)}>
-            Add Item
-          </Button>
+      {selectedStockItemId && (
+        <div className="p-4">
+          <h2 className="text-lg font-semibold text-gray-700">
+            {filteredLineItems[0]?.stockItemName || "Item"} from{" "}
+            {filteredLineItems[0]?.supplier?.name || "No supplier"}
+          </h2>
         </div>
+      )}
+      <div className="flex justify-between items-center p-4">
+        <div className="flex items-center gap-4">
+          {selectedStockItemId ? (
+            <>
+              <Button
+                variant="positive"
+                onClick={() => setSelectedStockItemId(null)}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft size={16} />
+                Back to All Items
+              </Button>
+              <LineItemFilterComponent
+                filter={lineItemFilter}
+                onFilterChange={setLineItemFilter}
+              />
+            </>
+          ) : (
+            <StockFilter filter={filter} onFilterChange={setFilter} />
+          )}
+        </div>
+        <Button variant="positive" onClick={() => setAddItemModalOpen(true)}>
+          Add Item
+        </Button>
       </div>
       <div id="stock" className="flex flex-1 flex-col min-h-0 h-0">
         {isLoadingStockItems() || isLoadingSuppliers() ? (

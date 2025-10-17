@@ -113,4 +113,35 @@ Meteor.methods({
       $set: { supplier: null },
     });
   }),
+
+  "stockItems.disposeLineItem": requireLoginMethod(async function (
+    stockItemId: IdType,
+    lineItemId: string,
+  ) {
+    check(stockItemId, String);
+    check(lineItemId, String);
+
+    const stockItem = await StockItemsCollection.findOneAsync(stockItemId);
+    if (!stockItem) {
+      throw new Meteor.Error("not-found", "Stock item not found");
+    }
+
+    const lineItemIndex = stockItem.lineItems.findIndex(
+      (li) => li.id === lineItemId,
+    );
+    if (lineItemIndex === -1) {
+      throw new Meteor.Error("not-found", "Line item not found");
+    }
+
+    const updatedLineItems = [...stockItem.lineItems];
+    updatedLineItems[lineItemIndex] = {
+      ...updatedLineItems[lineItemIndex],
+      disposed: true,
+      quantity: 0,
+    };
+
+    return await StockItemsCollection.updateAsync(stockItemId, {
+      $set: { lineItems: updatedLineItems },
+    });
+  }),
 });

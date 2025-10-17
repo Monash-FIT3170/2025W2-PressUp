@@ -18,6 +18,7 @@ export const insertStockItem = async (input: AddStockItemInput) => {
     quantity: input.quantity,
     location: input.location,
     expiry: input.expiry || null,
+    disposed: false,
   };
 
   if (existingItem) {

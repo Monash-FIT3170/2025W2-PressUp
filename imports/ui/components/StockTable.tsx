@@ -143,12 +143,20 @@ export const StockTable = ({
         gridCol: "minmax(140px, min-content)",
         render: (item) => (
           <div className="flex gap-2">
-            <Button variant="positive" onClick={() => onEdit?.(item)}>
-              Edit
-            </Button>
-            <Button variant="negative" onClick={() => onDispose?.(item)}>
-              Dispose
-            </Button>
+            {onEdit && (
+              <Button variant="positive" onClick={() => onEdit(item)}>
+                Edit
+              </Button>
+            )}
+            {onDispose && (
+              <Button
+                variant="negative"
+                onClick={() => onDispose?.(item)}
+                disabled={item.disposed}
+              >
+                {item.disposed ? "Disposed" : "Dispose"}
+              </Button>
+            )}
           </div>
         ),
       },

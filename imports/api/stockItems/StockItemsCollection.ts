@@ -6,6 +6,7 @@ export interface StockLineItem {
   quantity: number;
   location: string;
   expiry: Date | null;
+  disposed: boolean;
 }
 
 export interface StockItem extends DBEntry {

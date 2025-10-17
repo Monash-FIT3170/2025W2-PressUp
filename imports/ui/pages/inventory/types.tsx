@@ -18,3 +18,18 @@ export interface AggregatedStockItem {
   totalQuantity: number;
   itemCount: number;
 }
+
+export enum LineItemFilter {
+  ALL = "all",
+  UNDISPOSED = "undisposed",
+  NOT_EXPIRED = "notExpired",
+  EXPIRED = "expired",
+  DISPOSED = "disposed",
+}
+
+export enum StockFilter {
+  ALL = "all",
+  IN_STOCK = "inStock",
+  LOW_IN_STOCK = "lowInStock",
+  OUT_OF_STOCK = "outOfStock",
+}
