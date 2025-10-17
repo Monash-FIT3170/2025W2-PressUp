@@ -173,13 +173,15 @@ export const OrderCard = ({ order }: OrderCardProps) => {
       .filter((b) => (b.removable === false ? true : !!b.default))
       .map((b) => b.key);
 
-  const getDefaultSelections = (optionGroups?: Array<{
-    id: string;
-    label: string;
-    type: "single" | "multiple";
-    required?: boolean;
-    options: Array<{ key: string; label: string; default?: boolean }>;
-  }>) => {
+  const getDefaultSelections = (
+    optionGroups?: Array<{
+      id: string;
+      label: string;
+      type: "single" | "multiple";
+      required?: boolean;
+      options: Array<{ key: string; label: string; default?: boolean }>;
+    }>,
+  ) => {
     const out: Record<string, string[]> = {};
     for (const g of optionGroups ?? []) {
       const defaults = g.options.filter((o) => o.default).map((o) => o.key);
@@ -206,20 +208,21 @@ export const OrderCard = ({ order }: OrderCardProps) => {
     const rawIds = (order.menuItems ?? [])
       .map((mi) => (mi as any).menuItemId)
       .filter(Boolean);
-  
+
     if (rawIds.length === 0) return {} as Record<string, any>;
-  
+
     const asStrings = rawIds.map((v: any) =>
-      typeof v === "string" ? v : v?._str ?? String(v),
+      typeof v === "string" ? v : (v?._str ?? String(v)),
     );
-  
+
     const selector = { _id: { $in: [...rawIds, ...asStrings] as any } };
     const docs = MenuItemsCollection.find(selector as any).fetch();
-  
+
     const map: Record<string, any> = {};
     docs.forEach((d: any) => {
       const keyObj = d?._id;
-      const keyStr = typeof keyObj === "string" ? keyObj : keyObj?._str ?? String(keyObj);
+      const keyStr =
+        typeof keyObj === "string" ? keyObj : (keyObj?._str ?? String(keyObj));
       map[keyStr] = d;
       if (keyObj) map[keyObj] = d;
     });
@@ -229,7 +232,8 @@ export const OrderCard = ({ order }: OrderCardProps) => {
   // ===== Build brief "customization notes" for a line item =====
   const computeCustomNotes = (menuItem: UiMenuItem): string[] => {
     const rawId: any = (menuItem as any)?.menuItemId;
-    const keyStr = typeof rawId === "string" ? rawId : rawId?._str ?? String(rawId);
+    const keyStr =
+      typeof rawId === "string" ? rawId : (rawId?._str ?? String(rawId));
     const canonical = canonicalMap[keyStr] ?? canonicalMap[rawId];
     const notes: string[] = [];
     if (!canonical) return notes;
@@ -238,7 +242,7 @@ export const OrderCard = ({ order }: OrderCardProps) => {
     const defaultBaseKeys = getDefaultBaseKeys(baseDefs);
     const chosenBase = new Set(
       (menuItem as any).baseIncludedKeys &&
-        (menuItem as any).baseIncludedKeys.length > 0
+      (menuItem as any).baseIncludedKeys.length > 0
         ? (menuItem as any).baseIncludedKeys
         : defaultBaseKeys,
     );
@@ -260,7 +264,9 @@ export const OrderCard = ({ order }: OrderCardProps) => {
 
     for (const g of optionGroups) {
       const baseKey = g.id.split("-")[0];
-      const baseExists = baseDefs.some((b: { key: string }) => b.key === baseKey);
+      const baseExists = baseDefs.some(
+        (b: { key: string }) => b.key === baseKey,
+      );
       if (baseExists && !chosenBase.has(baseKey)) continue;
 
       const saved = Array.isArray(savedSelections[g.id])
@@ -284,8 +290,6 @@ export const OrderCard = ({ order }: OrderCardProps) => {
 
     return notes;
   };
-
-
 
   return (
     <>
@@ -339,7 +343,9 @@ export const OrderCard = ({ order }: OrderCardProps) => {
                   return (
                     <li key={index} className="flex flex-wrap items-baseline">
                       <span className="mr-2">-</span>
-                      <span className="font-semibold mr-1">{item.quantity}x</span>
+                      <span className="font-semibold mr-1">
+                        {item.quantity}x
+                      </span>
                       <span className="mr-2">{item.name}</span>
                       {notes.length > 0 && (
                         <span className="text-xs text-gray-500">
@@ -350,7 +356,9 @@ export const OrderCard = ({ order }: OrderCardProps) => {
                   );
                 })
               ) : (
-                <li className="italic text-sm text-press-up-purple">No items</li>
+                <li className="italic text-sm text-press-up-purple">
+                  No items
+                </li>
               )}
             </ul>
           </div>
@@ -445,7 +453,9 @@ export const OrderCard = ({ order }: OrderCardProps) => {
                       primary={it.name}
                       secondary={
                         notes.length > 0 ? (
-                          <span style={{ color: "#6b7280" /* Tailwind gray-500 */ }}>
+                          <span
+                            style={{ color: "#6b7280" /* Tailwind gray-500 */ }}
+                          >
                             {notes.join(" · ")}
                           </span>
                         ) : undefined

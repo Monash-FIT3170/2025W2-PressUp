@@ -54,7 +54,12 @@ export const fixedMenuItems: OmitDB<MenuItem>[] = [
     image: "/menu_items/cookie.png",
     baseIngredients: [
       { key: "dough", label: "Cookie Dough", default: true, removable: false },
-      { key: "chips", label: "Chocolate Chips", default: true, removable: true },
+      {
+        key: "chips",
+        label: "Chocolate Chips",
+        default: true,
+        removable: true,
+      },
     ],
   },
   {
@@ -66,7 +71,12 @@ export const fixedMenuItems: OmitDB<MenuItem>[] = [
     category: ["Food"],
     image: "/menu_items/croissant.png",
     baseIngredients: [
-      { key: "dough", label: "Croissant Dough", default: true, removable: false },
+      {
+        key: "dough",
+        label: "Croissant Dough",
+        default: true,
+        removable: false,
+      },
       { key: "butter", label: "Butter", default: true, removable: false },
     ],
   },
@@ -80,7 +90,12 @@ export const fixedMenuItems: OmitDB<MenuItem>[] = [
     image: "/menu_items/muffin.png",
     baseIngredients: [
       { key: "base", label: "Muffin Base", default: true, removable: false },
-      { key: "blueberry", label: "Blueberries", default: true, removable: true },
+      {
+        key: "blueberry",
+        label: "Blueberries",
+        default: true,
+        removable: true,
+      },
     ],
   },
 
