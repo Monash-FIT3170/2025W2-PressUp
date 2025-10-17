@@ -323,7 +323,9 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                         size="small"
                         sx={{
                           "&.Mui-checked": { color: PURPLE },
-                          "&:hover": { backgroundColor: "rgba(142,68,173,0.08)" },
+                          "&:hover": {
+                            backgroundColor: "rgba(142,68,173,0.08)",
+                          },
                         }}
                       />
                     }
@@ -360,7 +362,9 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                                 disabled={!includedBase[b.key]}
                                 sx={{
                                   "&.Mui-checked": { color: PURPLE },
-                                  "&:hover": { backgroundColor: "rgba(142,68,173,0.08)" },
+                                  "&:hover": {
+                                    backgroundColor: "rgba(142,68,173,0.08)",
+                                  },
                                 }}
                               />
                             }
@@ -393,7 +397,9 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                                   disabled={!includedBase[b.key]}
                                   sx={{
                                     "&.Mui-checked": { color: PURPLE },
-                                    "&:hover": { backgroundColor: "rgba(142,68,173,0.08)" },
+                                    "&:hover": {
+                                      backgroundColor: "rgba(142,68,173,0.08)",
+                                    },
                                   }}
                                 />
                               }
