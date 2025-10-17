@@ -225,9 +225,13 @@ export const OrderHistoryPage = () => {
   ];
 
   return (
-    <div className="flex flex-1 flex-col h-full"> {/* Add h-full */}
+    <div className="flex flex-1 flex-col h-full">
+      {" "}
+      {/* Add h-full */}
       {/* Controls */}
-      <div className="flex items-center p-4 gap-3 flex-shrink-0"> {/* Add flex-shrink-0 to prevent controls from shrinking */}
+      <div className="flex items-center p-4 gap-3 flex-shrink-0">
+        {" "}
+        {/* Add flex-shrink-0 to prevent controls from shrinking */}
         <div className="w-60">
           <Select
             value={statusFilter}
@@ -248,9 +252,10 @@ export const OrderHistoryPage = () => {
           />
         </div>
       </div>
-
       {/* Table with scrolling */}
-      <div className="flex-1 min-h-0 overflow-auto"> {/* Add overflow-auto for scrolling */}
+      <div className="flex-1 min-h-0 overflow-auto">
+        {" "}
+        {/* Add overflow-auto for scrolling */}
         <Table
           columns={columns}
           data={filtered}

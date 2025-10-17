@@ -8,7 +8,6 @@ import {
 } from "/imports/api/orders/OrdersCollection";
 import { Loading } from "../../components/Loading";
 
-
 export const ReceiptPage = () => {
   const navigate = useNavigate();
   useSubscribe("menuItems");
@@ -68,20 +67,24 @@ export const ReceiptPage = () => {
   }
 
   // Build default selections from canonical
-  const getDefaultBaseKeys = (baseDefs?: Array<{key:string; default:boolean; removable?:boolean}>) =>
+  const getDefaultBaseKeys = (
+    baseDefs?: Array<{ key: string; default: boolean; removable?: boolean }>,
+  ) =>
     (baseDefs ?? [])
-      .filter(b => (b.removable === false ? true : !!b.default))
-      .map(b => b.key);
+      .filter((b) => (b.removable === false ? true : !!b.default))
+      .map((b) => b.key);
 
-  const getDefaultSelections = (optionGroups?: Array<{
-    id: string;
-    type: "single"|"multiple";
-    required?: boolean;
-    options: Array<{key:string;label:string;default?:boolean}>;
-  }>) => {
+  const getDefaultSelections = (
+    optionGroups?: Array<{
+      id: string;
+      type: "single" | "multiple";
+      required?: boolean;
+      options: Array<{ key: string; label: string; default?: boolean }>;
+    }>,
+  ) => {
     const out: Record<string, string[]> = {};
     for (const g of optionGroups ?? []) {
-      const defaults = g.options.filter(o => o.default).map(o => o.key);
+      const defaults = g.options.filter((o) => o.default).map((o) => o.key);
       if (g.type === "single") {
         if (defaults.length > 0) out[g.id] = [defaults[0]];
         else if (g.required && g.options[0]) out[g.id] = [g.options[0].key];
@@ -152,16 +155,19 @@ export const ReceiptPage = () => {
             // grab canonical menu item to know defaults
             const canonical = useTracker(() => {
               if (!menuItem?.menuItemId) return null;
-              return MenuItemsCollection.findOne(menuItem.menuItemId as any) ?? null;
+              return (
+                MenuItemsCollection.findOne(menuItem.menuItemId as any) ?? null
+              );
             }, [menuItem?.menuItemId]);
 
             // compute diffs (brief)
-            let customNotes: string[] = [];
+            const customNotes: string[] = [];
             if (canonical) {
               const baseDefs = canonical.baseIngredients ?? [];
               const defaultBaseKeys = getDefaultBaseKeys(baseDefs);
               const chosenBase = new Set(
-                (menuItem.baseIncludedKeys && menuItem.baseIncludedKeys.length > 0)
+                menuItem.baseIncludedKeys &&
+                menuItem.baseIncludedKeys.length > 0
                   ? menuItem.baseIncludedKeys
                   : defaultBaseKeys,
               );
@@ -183,7 +189,9 @@ export const ReceiptPage = () => {
               for (const g of optionGroups) {
                 // if this group is tied to a base key and base is OFF, skip
                 const baseKey = g.id.split("-")[0];
-                const baseExists = baseDefs.some((b: { key: string }) => b.key === baseKey);
+                const baseExists = baseDefs.some(
+                  (b: { key: string }) => b.key === baseKey,
+                );
                 if (baseExists && !chosenBase.has(baseKey)) continue;
 
                 const saved = Array.isArray(savedSelections[g.id])
@@ -195,7 +203,9 @@ export const ReceiptPage = () => {
                 if (!sameArray(saved, def)) {
                   // build human readable labels for saved
                   const savedLabels = g.options
-                    .filter((o: { key: string; label: string }) => saved.includes(o.key))
+                    .filter((o: { key: string; label: string }) =>
+                      saved.includes(o.key),
+                    )
                     .map((o: { key: string; label: string }) => o.label);
 
                   if (g.type === "single") {
@@ -230,7 +240,6 @@ export const ReceiptPage = () => {
               </div>
             );
           })}
-
 
           {/* Horizontal divider */}
           <hr className="my-2" />
