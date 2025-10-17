@@ -172,7 +172,7 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
         </Typography>
 
         {baseIngredients.map((b) => (
-          <Box
+          <Box position="relative"
             key={b.key}
             sx={{
               display: "flex",
@@ -183,17 +183,17 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
               borderRadius: 1,
               bgcolor: "background.paper",
               boxShadow: 0.5,
+              pr: 6,
             }}
           >
             <TextField
-              label="Label"
               value={b.label}
               onChange={(e) => handleBaseChange(b.key, "label", e.target.value)}
               size="small"
               sx={{ flex: "1 1 40%" }}
             />
             <TextField
-              label="Price Δ"
+              label="Price"
               type="number"
               value={b.priceDelta ?? 0}
               onChange={(e) => handleBaseChange(b.key, "priceDelta", Number(e.target.value))}
@@ -201,24 +201,74 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
               sx={{ flex: "0 0 120px" }}
             />
             <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="body2">Optional:</Typography>
-              <Switch
-                checked={b.removable ?? true}
-                onChange={(e) => handleBaseChange(b.key, "removable", e.target.checked)}
-                size="small"
-              />
+              <Typography
+                variant="body2"
+                sx={{ color: "#111827", fontWeight: 500 }} // optional, matches Tailwind style
+              >
+                Optional:
+              </Typography>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleBaseChange(b.key, "removable", !(b.removable ?? true))
+                }
+                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-press-up-purple ${
+                  b.removable ?? true ? "bg-press-up-purple" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block w-5 h-5 transform bg-white rounded-full transition-transform ${
+                    b.removable ?? true ? "translate-x-5" : "translate-x-1"
+                  }`}
+                />
+              </button>
             </Box>
             <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="body2">Default:</Typography>
-              <Switch
-                checked={b.default ?? false}
-                onChange={(e) => handleBaseChange(b.key, "default", e.target.checked)}
-                size="small"
-              />
+              <Typography
+                variant="body2"
+                sx={{ color: "#111827", fontWeight: 500 }}
+              >
+                Default:
+              </Typography>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleBaseChange(b.key, "default", !(b.default ?? false))
+                }
+                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-press-up-purple ${
+                  b.default ?? false ? "bg-press-up-purple" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block w-5 h-5 transform bg-white rounded-full transition-transform ${
+                    b.default ?? false ? "translate-x-5" : "translate-x-1"
+                  }`}
+                />
+              </button>
             </Box>
-            <IconButton color="error" onClick={() => handleRemoveBase(b.key)}>
-              <Delete />
-            </IconButton>
+            <div
+                  className="absolute top-1/2 -translate-y-1/2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors z-10"
+                  onClick={() => handleRemoveBase(b.key)}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-red-500"
+                  >
+                    <path d="M3 6h18"></path>
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                  </svg>
+                </div>
           </Box>
         ))}
 
@@ -234,7 +284,7 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
         </Typography>
 
         {optionGroups.map((g) => (
-          <Box
+          <Box position="relative"
             key={g.id}
             sx={{
               mb: 2,
@@ -243,6 +293,7 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
               borderColor: "divider",
               borderRadius: 2,
               bgcolor: "background.paper",
+              pr: 6,
             }}
           >
             <Box display="flex" alignItems="center" gap={1.5} mb={1}>
@@ -269,21 +320,54 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
               </TextField>
 
               <Box display="flex" alignItems="center" gap={1}>
-                <Typography variant="body2">Required:</Typography>
-                <Switch
-                  checked={g.required ?? false}
-                  onChange={(e) => handleGroupChange(g.id, "required", e.target.checked)}
-                  size="small"
-                />
-              </Box>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#111827", fontWeight: 500 }} // optional to match Tailwind text style
+                >
+                  Required:
+                </Typography>
 
-              <IconButton color="error" onClick={() => handleRemoveGroup(g.id)}>
-                <Delete />
-              </IconButton>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleGroupChange(g.id, "required", !(g.required ?? false))
+                  }
+                  className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-press-up-purple ${
+                    g.required ? "bg-press-up-purple" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block w-5 h-5 transform bg-white rounded-full transition-transform ${
+                      g.required ? "translate-x-5" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </Box>
+              <div
+                  className="absolute top-5.5 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors z-10"
+                  onClick={() => handleRemoveGroup(g.id)}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-red-500"
+                  >
+                    <path d="M3 6h18"></path>
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                  </svg>
+                </div>
             </Box>
 
             {g.options.map((o) => (
-              <Box
+              <Box position="relative"
                 key={o.key}
                 sx={{
                   display: "flex",
@@ -291,17 +375,17 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
                   gap: 1.5,
                   mb: 1,
                   ml: 2,
+                  pr: 6,
                 }}
               >
                 <TextField
-                  label="Label"
                   value={o.label}
                   onChange={(e) => handleOptionChange(g.id, o.key, "label", e.target.value)}
                   size="small"
                   sx={{ flex: "1 1 40%" }}
                 />
                 <TextField
-                  label="Price Δ"
+                  label="Price"
                   type="number"
                   value={o.priceDelta ?? 0}
                   onChange={(e) =>
@@ -311,18 +395,47 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
                   sx={{ flex: "0 0 120px" }}
                 />
                 <Box display="flex" alignItems="center" gap={1}>
-                  <Typography variant="body2">Default:</Typography>
-                  <Switch
-                    checked={o.default ?? false}
-                    onChange={(e) =>
-                      handleOptionChange(g.id, o.key, "default", e.target.checked)
+                  <Typography variant="body2" sx={{ color: "#111827" }}>
+                    Default:
+                  </Typography>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleOptionChange(g.id, o.key, "default", !(o.default ?? false))
                     }
-                    size="small"
-                  />
+                    className={`relative inline-flex items-center h-5 rounded-full w-10 transition-colors focus:outline-none focus:ring-2 focus:ring-press-up-purple ${
+                      o.default ? "bg-press-up-purple" : "bg-gray-300"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${
+                        o.default ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
                 </Box>
-                <IconButton color="error" onClick={() => handleRemoveOption(g.id, o.key)}>
-                  <Delete />
-                </IconButton>
+                <div
+                  className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors z-10"
+                  onClick={() => handleRemoveOption(g.id, o.key)}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-red-500"
+                  >
+                    <path d="M3 6h18"></path>
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                  </svg>
+                </div>
               </Box>
             ))}
 
@@ -341,14 +454,22 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
         Add Option Group
         </Button>
       </DialogContent>
-
-      <DialogActions>
-        <Button onClick={onClose} variant="outlined">
+      <DialogActions className="flex justify-end gap-3 p-4">
+        <button
+          type="button"
+          onClick={onClose}
+          className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-lg"
+        >
           Cancel
-        </Button>
-        <Button onClick={handleSave} variant="contained">
-          Save Changes
-        </Button>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleSave}
+          className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg"
+        >
+          Save
+        </button>
       </DialogActions>
     </Dialog>
   );}
