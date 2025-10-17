@@ -10,6 +10,7 @@ import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
 import { EditItemModal } from "../../components/EditItemModal";
 import { SearchBar } from "../../components/SearchBar";
 import { AllergenFilter } from "../../components/AllergenFilter";
+import { ItemCategoriesCollection } from "/imports/api/menuItems/ItemCategoriesCollection";
 
 export const Menu = () => {
   // Set title
@@ -21,6 +22,15 @@ export const Menu = () => {
   // Subscribe to menu items
   useSubscribe("menuItems");
   const posItems = useTracker(() => MenuItemsCollection.find().fetch());
+
+  useSubscribe("itemCategories");
+  const categories = useTracker(() => ItemCategoriesCollection.find().fetch());
+  // insert initial categories if not existing
+  Meteor.call("itemCategories.insertInitial", (error: any) => {
+    if (error) {
+      console.error("Error inserting initial categories:", error);
+    }
+  });
 
   // Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -36,7 +46,7 @@ export const Menu = () => {
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
 
   const handleItemClick = (item: MenuItem) => {
-    Meteor.call("menuItems.updateQuantity", item._id, 1);
+    Meteor.call("menuItems.updateQuantity", String(item._id), 1);
     setSelectedItem(item);
     setIsEditModalOpen(true);
   };
@@ -91,6 +101,21 @@ export const Menu = () => {
       );
     });
 
+  // category buttons
+  const categoryButtons = categories.map((cat) => (
+    <button
+      key={cat._id}
+      onClick={() => toggleCategory(cat.name)}
+      className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors duration-200 ${
+        selectedCategories.includes(cat.name)
+          ? "bg-[#6f597b] text-white"
+          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+      }`}
+    >
+      {cat.name}
+    </button>
+  ));
+
   return (
     <div className="flex flex-1 overflow-auto">
       {/* Main content area */}
@@ -107,19 +132,7 @@ export const Menu = () => {
 
           {/* Category Filter Buttons */}
           <div className="flex space-x-4">
-            {["Food", "Drink", "Dessert"].map((cat) => (
-              <button
-                key={cat}
-                onClick={() => toggleCategory(cat)}
-                className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors duration-200 ${
-                  selectedCategories.includes(cat)
-                    ? "bg-[#6f597b] text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+            <div className="flex space-x-4">{categoryButtons}</div>
 
             {/* Allergen Filter */}
             <AllergenFilter
