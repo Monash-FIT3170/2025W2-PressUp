@@ -7,20 +7,19 @@ import {
   OrderType,
 } from "/imports/api/orders/OrdersCollection";
 import { Loading } from "../../components/Loading";
+import type { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
+import { Mongo } from "meteor/mongo";
 
 export const ReceiptPage = () => {
   const navigate = useNavigate();
   useSubscribe("menuItems");
   useSubscribe("orders");
 
-  // passing split bill through navigation as it is not stored in the database
   const location = useLocation();
   const splits = location.state?.splits as string[] | undefined;
 
-  // Get orderId from sessionStorage
   const orderId = sessionStorage.getItem("activeOrderId");
 
-  // Find lowest unpaid dine-in order
   const lowestDineInOrderId = useTracker(() => {
     const orders = OrdersCollection.find(
       { orderType: OrderType.DineIn, paid: false },
@@ -38,11 +37,32 @@ export const ReceiptPage = () => {
     navigate("/pos/orders");
   };
 
-  // Retrieve order by _id
   const order = useTracker(() => {
     if (!orderId) return null;
     return OrdersCollection.findOne(orderId) ?? null;
   }, [orderId]);
+
+  const canonicalMenuItems = useTracker<Record<string, MenuItem>>(() => {
+    const items = order?.menuItems ?? [];
+
+    // Make sure TS knows ObjectID is possible here
+    const rawIds: Array<string | Mongo.ObjectID | undefined> = items.map(
+      (it) => it.menuItemId as string | Mongo.ObjectID | undefined,
+    );
+
+    // Type guard matches the parameter type
+    const ids: Array<string | Mongo.ObjectID> = rawIds.filter(
+      (id): id is string | Mongo.ObjectID => id != null,
+    );
+
+    const map: Record<string, MenuItem> = {};
+    for (const id of ids) {
+      // Minimongo accepts either string or ObjectID here
+      const doc = MenuItemsCollection.findOne(id as any);
+      if (doc) map[String(id)] = doc;
+    }
+    return map;
+  }, [order?.menuItems]);
 
   if (!order) {
     return (
@@ -57,16 +77,13 @@ export const ReceiptPage = () => {
   // for split bill calculations
   const total = order.totalPrice;
 
-  // split bill calculations
   const numericSplits = splits?.map((s) => parseFloat(s) || 0) ?? [];
   const sumOfSplits = numericSplits.reduce((a, b) => a + b, 0);
   const remaining = total - sumOfSplits;
   const displaySplits = numericSplits.length > 0 ? [...numericSplits] : [];
-  if (remaining > 0) {
-    displaySplits.push(remaining);
-  }
+  if (remaining > 0) displaySplits.push(remaining);
 
-  // Build default selections from canonical
+  // --- helper functions (same as before) ---
   const getDefaultBaseKeys = (
     baseDefs?: Array<{ key: string; default: boolean; removable?: boolean }>,
   ) =>
@@ -102,25 +119,6 @@ export const ReceiptPage = () => {
     const sb = [...b].sort().join("|");
     return sa === sb;
   };
-
-  // Move the useTracker outside the map - get all canonical menu items at once
-  const canonicalMenuItems = useTracker(() => {
-    if (!order?.menuItems) return {};
-    
-    const menuItemIds = order.menuItems
-      .map(item => item.menuItemId)
-      .filter(id => id != null);
-    
-    const canonicals: Record<string, any> = {};
-    menuItemIds.forEach(id => {
-      const canonical = MenuItemsCollection.findOne(id as any);
-      if (canonical) {
-        canonicals[String(id)] = canonical;
-      }
-    });
-    
-    return canonicals;
-  }, [order?.menuItems]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -172,8 +170,8 @@ export const ReceiptPage = () => {
           {/* Display quantities */}
           {order.menuItems.map((menuItem, index) => {
             // Get canonical from the pre-fetched object instead of useTracker
-            const canonical = menuItem.menuItemId 
-              ? canonicalMenuItems[String(menuItem.menuItemId)] 
+            const canonical = menuItem.menuItemId
+              ? canonicalMenuItems[String(menuItem.menuItemId)]
               : null;
 
             // compute diffs (brief)
