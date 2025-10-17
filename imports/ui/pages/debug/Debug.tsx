@@ -283,6 +283,36 @@ export const DebugPage = () => {
 
         <div className="flex flex-col gap-2">
           <h3 className="font-semibold flex items-center gap-2">
+            <CoffeeIcon fill="currentColor" />
+            Menu Item Categories
+          </h3>
+          <div className="flex gap-2">
+            <Button
+              onClick={() =>
+                handleMethodCall(
+                  "debug.mockItemCategories",
+                  "Mock menu item categories added successfully",
+                )
+              }
+            >
+              Add Mock Menu Item Categories
+            </Button>
+            <Button
+              variant="negative"
+              onClick={() =>
+                handleMethodCall(
+                  "debug.dropItemCategories",
+                  "Menu item categories collection dropped successfully",
+                )
+              }
+            >
+              Drop Menu Item Categories
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h3 className="font-semibold flex items-center gap-2">
             <Calendar size={20} />
             Shifts
           </h3>
