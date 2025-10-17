@@ -11,7 +11,7 @@ Meteor.methods({
     check(item.name, String);
     check(item.quantity, Number);
     check(item.location, String);
-    if (item.expiryDate !== undefined) {
+    if (item.expiryDate != null) {
       check(item.expiryDate, Date);
     }
 
@@ -60,7 +60,7 @@ Meteor.methods({
     if (updates.location !== undefined) {
       check(updates.location, String);
     }
-    if (updates.expiryDate !== undefined) {
+    if (updates.expiryDate != null) {
       check(updates.expiryDate, Date);
     }
 

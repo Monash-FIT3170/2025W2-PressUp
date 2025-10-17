@@ -11,6 +11,33 @@ interface StockTableProps {
 export const StockTable = ({ stockItems }: StockTableProps) => {
   const lowInStockThreshold = 10;
 
+  const sortedStockItems = useMemo(() => {
+    return [...stockItems].sort((a, b) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const aExpired = a.expiryDate && new Date(a.expiryDate) < today;
+      const bExpired = b.expiryDate && new Date(b.expiryDate) < today;
+
+      if (aExpired && bExpired) {
+        return (
+          new Date(b.expiryDate!).getTime() - new Date(a.expiryDate!).getTime()
+        );
+      }
+      if (aExpired) return 1;
+      if (bExpired) return -1;
+
+      // For non-expired items: items with expiry dates first, then no expiry
+      if (!a.expiryDate && !b.expiryDate) return 0;
+      if (!a.expiryDate) return 1;
+      if (!b.expiryDate) return -1;
+
+      return (
+        new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime()
+      );
+    });
+  }, [stockItems]);
+
   const columns = useMemo(
     (): TableColumn<StockItemWithSupplier>[] => [
       {
@@ -35,14 +62,19 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
         gridCol: "min-content",
         align: "right",
         render: (item) => {
-          const stockIcon =
-            item.quantity == 0 ? (
-              <OutOfStock />
-            ) : item.quantity <= lowInStockThreshold ? (
-              <LowInStock />
-            ) : (
-              <InStock />
-            );
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // Start of today
+          const isExpired =
+            item.expiryDate && new Date(item.expiryDate) < today;
+
+          let stockIcon;
+          if (isExpired || item.quantity == 0) {
+            stockIcon = <OutOfStock />;
+          } else if (item.quantity <= lowInStockThreshold) {
+            stockIcon = <LowInStock />;
+          } else {
+            stockIcon = <InStock />;
+          }
 
           return (
             <div className="flex justify-end items-center gap-2">
@@ -76,7 +108,7 @@ export const StockTable = ({ stockItems }: StockTableProps) => {
   return (
     <Table
       columns={columns}
-      data={stockItems}
+      data={sortedStockItems}
       emptyMessage="No inventory items"
     />
   );

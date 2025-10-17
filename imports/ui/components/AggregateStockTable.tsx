@@ -106,7 +106,14 @@ export const AggregateStockTable = ({
     // Aggregate data for each group
     const result = [];
     for (const [name, items] of itemGroups) {
-      const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Only count quantity for non-expired items
+      const totalQuantity = items.reduce((sum, item) => {
+        const isExpired = item.expiryDate && new Date(item.expiryDate) < today;
+        return sum + (isExpired ? 0 : item.quantity);
+      }, 0);
 
       result.push({
         name,

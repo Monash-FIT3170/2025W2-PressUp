@@ -8,7 +8,7 @@ export interface StockItem extends DBEntry {
   quantity: number;
   location: string; // TODO: This may need to be its own collection?
   supplier: IdType | null;
-  expiryDate?: Date;
+  expiryDate: Date | null;
 }
 
 export const StockItemsCollection = new Mongo.Collection<
