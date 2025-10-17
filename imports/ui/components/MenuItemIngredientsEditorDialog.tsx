@@ -6,13 +6,11 @@ import {
   DialogActions,
   TextField,
   Typography,
-  IconButton,
   Button,
   Divider,
-  Switch,
   Box,
 } from "@mui/material";
-import { Add, Delete } from "@mui/icons-material";
+import { Add } from "@mui/icons-material";
 import { Meteor } from "meteor/meteor";
 import { MenuItem } from "/imports/api";
 import AddIcon from "@mui/icons-material/Add";
@@ -63,6 +61,13 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
     }
   }, [item?._id, open]);
 
+  const slugify = (text: string) =>
+  text
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")       // replace spaces with hyphens
+    .replace(/[^\w-]/g, "");    // remove all non-alphanumeric or hyphen characters
+
   const handleAddBase = () => {
     setBaseIngredients((prev) => [
       ...prev,
@@ -81,11 +86,11 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
     );
   };
 
-  const handleAddGroup = (baseKey?: string) => {
-    const newId = baseKey ? `${baseKey}-group-${Date.now()}` : `group-${Date.now()}`;
+  const handleAddGroup = (baseKey?: string, label = "") => {
+    const newId = slugify(label || `group-${Date.now()}`);
     setOptionGroups((prev) => [
       ...prev,
-      { id: newId, label: "", type: "single", required: false, options: [] },
+      { id: newId, label, type: "single", required: false, options: [] },
     ]);
   };
 
@@ -95,23 +100,18 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
 
   const handleGroupChange = (id: string, field: keyof OptionGroup, value: any) => {
     setOptionGroups((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, [field]: value } : g)),
+      prev.map((g) => (g.id === id ? { ...g, [field]: value } : g))
     );
   };
 
   const handleAddOption = (groupId: string) => {
+    const newKey = `option-${Date.now()}`;
     setOptionGroups((prev) =>
       prev.map((g) =>
         g.id === groupId
-          ? {
-              ...g,
-              options: [
-                ...g.options,
-                { key: `opt-${Date.now()}`, label: "", default: false, priceDelta: 0 },
-              ],
-            }
-          : g,
-      ),
+          ? { ...g, options: [...g.options, { key: newKey, label: "", default: false, priceDelta: 0 }] }
+          : g
+      )
     );
   };
 
@@ -129,28 +129,43 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
     groupId: string,
     optKey: string,
     field: keyof Option,
-    value: any,
+    value: any
   ) => {
     setOptionGroups((prev) =>
-      prev.map((g) =>
-        g.id === groupId
-          ? {
-              ...g,
-              options: g.options.map((o) =>
-                o.key === optKey ? { ...o, [field]: value } : o,
-              ),
-            }
-          : g,
-      ),
+      prev.map((g) => {
+        if (g.id !== groupId) return g;
+        return {
+          ...g,
+          options: g.options.map((o) =>
+            o.key === optKey ? { ...o, [field]: value } : o
+          ),
+        };
+      })
     );
   };
 
   const handleSave = () => {
+    const processedGroups = optionGroups.map((g) => {
+      const finalId = slugify(g.label || g.id); // generate ID from label only on save
+      console.log("OptionGroup Label:", g.label, "-> Final ID:", finalId);
+
+      return {
+        ...g,
+        id: finalId,
+        options: g.options.map((o) => ({
+          ...o,
+          key: o.key, // keep option keys as-is
+        })),
+      };
+    });
+
+    console.log("Processed Groups ready to save:", processedGroups);
+
     Meteor.call(
       "menuItems.updateIngredients",
       item?.name?.toString(),
       baseIngredients,
-      optionGroups,
+      processedGroups,
       (err: any) => {
         if (err) {
           console.error(err);
@@ -158,9 +173,10 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
         } else {
           onClose();
         }
-      },
+      }
     );
   };
+
 
   return (
   <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">

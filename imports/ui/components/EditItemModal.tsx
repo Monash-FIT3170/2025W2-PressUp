@@ -4,14 +4,10 @@ import { useTracker } from "meteor/react-meteor-data";
 import { ItemCategoriesCollection } from "/imports/api/menuItems/ItemCategoriesCollection";
 import { Modal } from "./Modal";
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
-import { IngredientDropdown } from "./IngredientDropdown";
 import { CategoryDropdown } from "./CategoryDropdown";
 import { AllergenDropdown } from "./AllergenDropdown";
 import { ConfirmModal } from "./ConfirmModal";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { IconButton as MuiIconButton } from "@mui/material";
 import MenuItemIngredientsEditorDialog from "./MenuItemIngredientsEditorDialog";
-import { Button } from "./interaction/Button";
 
 
 interface EditItemModalProps {

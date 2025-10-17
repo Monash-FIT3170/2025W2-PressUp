@@ -29,7 +29,7 @@ export const fixedMenuItems: OmitDB<MenuItem>[] = [
     ],
     optionGroups: [
       {
-        id: "doneness",
+        id: "patty-doneness",
         label: "Patty Doneness",
         type: "single" as const,
         options: [
