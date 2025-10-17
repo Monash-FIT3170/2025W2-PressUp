@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { StockItemWithSupplier } from "../pages/inventory/types";
 import { Pill } from "./Pill";
 import { OutOfStock, InStock, LowInStock } from "./symbols/StatusSymbols";
@@ -16,14 +16,16 @@ interface AggregatedStockItem {
 interface AggregateStockTableProps {
   stockItems: StockItemWithSupplier[];
   filter?: "all" | "inStock" | "lowInStock" | "outOfStock";
+  onItemNameClick?: (name: string) => void;
 }
 
 interface EditableNameProps {
   name: string;
   onSave: (newName: string) => void;
+  onItemClick?: (name: string) => void;
 }
 
-const EditableName = ({ name, onSave }: EditableNameProps) => {
+const EditableName = ({ name, onSave, onItemClick }: EditableNameProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(name);
 
@@ -65,7 +67,13 @@ const EditableName = ({ name, onSave }: EditableNameProps) => {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="truncate">{name}</span>
+      <span
+        className="truncate cursor-pointer hover:text-blue-600 underline decoration-2 underline-offset-2"
+        onClick={() => onItemClick?.(name)}
+        title="Click to view details"
+      >
+        {name}
+      </span>
       <button
         onClick={() => setIsEditing(true)}
         className="flex-shrink-0 p-1 hover:bg-gray-100 rounded transition-colors"
@@ -80,6 +88,7 @@ const EditableName = ({ name, onSave }: EditableNameProps) => {
 export const AggregateStockTable = ({
   stockItems,
   filter = "all",
+  onItemNameClick,
 }: AggregateStockTableProps) => {
   const lowInStockThreshold = 10;
 
@@ -118,7 +127,7 @@ export const AggregateStockTable = ({
     });
   }, [stockItems, filter]);
 
-  const handleNameUpdate = (oldName: string, newName: string) => {
+  const handleNameUpdate = useCallback((oldName: string, newName: string) => {
     Meteor.call(
       "stockItems.rename",
       oldName,
@@ -129,94 +138,98 @@ export const AggregateStockTable = ({
         }
       },
     );
-  };
+  }, []);
 
-  const columns: TableColumn<AggregatedStockItem>[] = [
-    {
-      key: "name",
-      header: "Item Name",
-      gridCol: "minmax(0,1.5fr)",
-      align: "left",
-      render: (item) => (
-        <EditableName
-          name={item.name}
-          onSave={(newName) => handleNameUpdate(item.name, newName)}
-        />
-      ),
-    },
-    {
-      key: "itemCount",
-      header: "Line Items",
-      gridCol: "min-content",
-      render: (item) => (
-        <span className="text-sm text-gray-600">{item.itemCount}</span>
-      ),
-    },
-    {
-      key: "quantity",
-      header: "Total Quantity",
-      gridCol: "min-content",
-      align: "right",
-      render: (item) => {
-        const stockIcon =
-          item.totalQuantity == 0 ? (
-            <OutOfStock />
-          ) : item.totalQuantity <= lowInStockThreshold ? (
-            <LowInStock />
-          ) : (
-            <InStock />
-          );
-
-        return (
-          <div className="flex justify-end">
-            <span className="truncate max-w-full px-1">
-              {item.totalQuantity}
-            </span>
-            <span className="flex-shrink-0 self-center">{stockIcon}</span>
-          </div>
-        );
+  const columns = useMemo(
+    (): TableColumn<AggregatedStockItem>[] => [
+      {
+        key: "name",
+        header: "Item Name",
+        gridCol: "minmax(0,1.5fr)",
+        align: "left",
+        render: (item) => (
+          <EditableName
+            name={item.name}
+            onSave={(newName) => handleNameUpdate(item.name, newName)}
+            onItemClick={onItemNameClick}
+          />
+        ),
       },
-    },
-
-    {
-      key: "status",
-      header: "Status",
-      gridCol: "min-content",
-      render: (item) => {
-        if (item.totalQuantity == 0) {
-          return (
-            <Pill
-              bgColour="bg-red-700"
-              borderColour="border-red-700"
-              textColour="text-white"
-            >
-              Out of Stock
-            </Pill>
-          );
-        } else if (item.totalQuantity <= lowInStockThreshold) {
-          return (
-            <Pill
-              bgColour="bg-sky-300"
-              borderColour="border-sky-300"
-              textColour="text-white"
-            >
-              Low in Stock
-            </Pill>
-          );
-        } else {
-          return (
-            <Pill
-              bgColour="bg-green-700"
-              borderColour="border-green-700"
-              textColour="text-white"
-            >
-              In Stock
-            </Pill>
-          );
-        }
+      {
+        key: "itemCount",
+        header: "Line Items",
+        gridCol: "min-content",
+        render: (item) => (
+          <span className="text-sm text-gray-600">{item.itemCount}</span>
+        ),
       },
-    },
-  ];
+      {
+        key: "quantity",
+        header: "Total Quantity",
+        gridCol: "min-content",
+        align: "right",
+        render: (item) => {
+          const stockIcon =
+            item.totalQuantity == 0 ? (
+              <OutOfStock />
+            ) : item.totalQuantity <= lowInStockThreshold ? (
+              <LowInStock />
+            ) : (
+              <InStock />
+            );
+
+          return (
+            <div className="flex justify-end">
+              <span className="truncate max-w-full px-1">
+                {item.totalQuantity}
+              </span>
+              <span className="flex-shrink-0 self-center">{stockIcon}</span>
+            </div>
+          );
+        },
+      },
+
+      {
+        key: "status",
+        header: "Status",
+        gridCol: "min-content",
+        render: (item) => {
+          if (item.totalQuantity == 0) {
+            return (
+              <Pill
+                bgColour="bg-red-700"
+                borderColour="border-red-700"
+                textColour="text-white"
+              >
+                Out of Stock
+              </Pill>
+            );
+          } else if (item.totalQuantity <= lowInStockThreshold) {
+            return (
+              <Pill
+                bgColour="bg-sky-300"
+                borderColour="border-sky-300"
+                textColour="text-white"
+              >
+                Low in Stock
+              </Pill>
+            );
+          } else {
+            return (
+              <Pill
+                bgColour="bg-green-700"
+                borderColour="border-green-700"
+                textColour="text-white"
+              >
+                In Stock
+              </Pill>
+            );
+          }
+        },
+      },
+    ],
+    [handleNameUpdate, onItemNameClick, lowInStockThreshold],
+  );
 
   return (
     <Table

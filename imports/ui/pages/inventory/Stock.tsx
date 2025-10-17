@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-
 import {
   StockItemsCollection,
   Supplier,
   SuppliersCollection,
 } from "/imports/api";
 import { AggregateStockTable } from "../../components/AggregateStockTable";
+import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
 import { AddItemForm } from "../../components/AddItemForm";
 import { StockFilter } from "../../components/StockFilter";
 import { Loading } from "../../components/Loading";
+import { Button } from "../../components/interaction/Button";
+import { ArrowLeft } from "lucide-react";
 
 export const StockPage = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -23,6 +25,7 @@ export const StockPage = () => {
     "all" | "inStock" | "lowInStock" | "outOfStock"
   >("all");
   const [formResetKey, setFormResetKey] = useState(0);
+  const [selectedItemName, setSelectedItemName] = useState<string | null>(null);
 
   const isLoadingStockItems = useSubscribe("stockItems.all");
   const isLoadingSuppliers = useSubscribe("suppliers");
@@ -45,6 +48,14 @@ export const StockPage = () => {
     return result;
   });
 
+  const filteredStockItems = useMemo(
+    () =>
+      stockItems.filter((item) =>
+        selectedItemName ? item.name === selectedItemName : true,
+      ),
+    [stockItems, selectedItemName],
+  );
+
   // Modal state for adding new items
   const [addItemModalOpen, setAddItemModalOpen] = useState(false);
 
@@ -56,21 +67,40 @@ export const StockPage = () => {
   const handleSuccess = () => handleModalClose();
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col h-full">
       <div className="grid grid-cols-2">
-        <StockFilter filter={filter} onFilterChange={setFilter} />
-        <button
-          onClick={() => setAddItemModalOpen(true)}
-          className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-press-up-purple text-white cursor-pointer w-24 right-2 hover:bg-press-up-purple"
-        >
-          Add Item
-        </button>
+        {selectedItemName ? (
+          <div className="flex items-center gap-4 p-4">
+            <Button
+              variant="positive"
+              onClick={() => setSelectedItemName(null)}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft size={16} />
+              Back to All Stock
+            </Button>
+            <h2 className="text-lg">{selectedItemName}</h2>
+          </div>
+        ) : (
+          <StockFilter filter={filter} onFilterChange={setFilter} />
+        )}
+        <div className="justify-self-end p-4">
+          <Button variant="positive" onClick={() => setAddItemModalOpen(true)}>
+            Add Item
+          </Button>
+        </div>
       </div>
-      <div id="stock" className="flex flex-1 flex-col min-h-0">
+      <div id="stock" className="flex flex-1 flex-col min-h-0 h-0">
         {isLoadingStockItems() || isLoadingSuppliers() ? (
           <Loading />
+        ) : selectedItemName ? (
+          <StockTable stockItems={filteredStockItems} />
         ) : (
-          <AggregateStockTable stockItems={stockItems} filter={filter} />
+          <AggregateStockTable
+            stockItems={stockItems}
+            filter={filter}
+            onItemNameClick={setSelectedItemName}
+          />
         )}
       </div>
 
