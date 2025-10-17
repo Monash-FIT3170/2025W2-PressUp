@@ -1,5 +1,6 @@
 import React from "react";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
+import { MenuItemsCollection } from "/imports/api/menuItems/MenuItemsCollection";
 import { useNavigate, useLocation } from "react-router";
 import {
   OrdersCollection,
@@ -7,8 +8,10 @@ import {
 } from "/imports/api/orders/OrdersCollection";
 import { Loading } from "../../components/Loading";
 
+
 export const ReceiptPage = () => {
   const navigate = useNavigate();
+  useSubscribe("menuItems");
   useSubscribe("orders");
 
   // passing split bill through navigation as it is not stored in the database
@@ -64,6 +67,39 @@ export const ReceiptPage = () => {
     displaySplits.push(remaining);
   }
 
+  // Build default selections from canonical
+  const getDefaultBaseKeys = (baseDefs?: Array<{key:string; default:boolean; removable?:boolean}>) =>
+    (baseDefs ?? [])
+      .filter(b => (b.removable === false ? true : !!b.default))
+      .map(b => b.key);
+
+  const getDefaultSelections = (optionGroups?: Array<{
+    id: string;
+    type: "single"|"multiple";
+    required?: boolean;
+    options: Array<{key:string;label:string;default?:boolean}>;
+  }>) => {
+    const out: Record<string, string[]> = {};
+    for (const g of optionGroups ?? []) {
+      const defaults = g.options.filter(o => o.default).map(o => o.key);
+      if (g.type === "single") {
+        if (defaults.length > 0) out[g.id] = [defaults[0]];
+        else if (g.required && g.options[0]) out[g.id] = [g.options[0].key];
+        else out[g.id] = [];
+      } else {
+        out[g.id] = defaults;
+      }
+    }
+    return out;
+  };
+
+  const sameArray = (a: string[] = [], b: string[] = []) => {
+    if (a.length !== b.length) return false;
+    const sa = [...a].sort().join("|");
+    const sb = [...b].sort().join("|");
+    return sa === sb;
+  };
+
   return (
     <div className="flex flex-1 flex-col">
       <button
@@ -112,15 +148,89 @@ export const ReceiptPage = () => {
           </div>
 
           {/* Display quantities */}
-          {order.menuItems.map((menuItem, index) => (
-            <div key={index} className="grid grid-cols-3 mb-1">
-              <span>{menuItem.name}</span>
-              <span className="text-right">{menuItem.quantity}</span>
-              <span className="text-right">
-                ${(menuItem.quantity * menuItem.price).toFixed(2)}
-              </span>
-            </div>
-          ))}
+          {order.menuItems.map((menuItem, index) => {
+            // grab canonical menu item to know defaults
+            const canonical = useTracker(() => {
+              if (!menuItem?.menuItemId) return null;
+              return MenuItemsCollection.findOne(menuItem.menuItemId as any) ?? null;
+            }, [menuItem?.menuItemId]);
+
+            // compute diffs (brief)
+            let customNotes: string[] = [];
+            if (canonical) {
+              const baseDefs = canonical.baseIngredients ?? [];
+              const defaultBaseKeys = getDefaultBaseKeys(baseDefs);
+              const chosenBase = new Set(
+                (menuItem.baseIncludedKeys && menuItem.baseIncludedKeys.length > 0)
+                  ? menuItem.baseIncludedKeys
+                  : defaultBaseKeys,
+              );
+
+              // base adds/removals (skip non-removable; those are always on)
+              for (const b of baseDefs) {
+                if (b.removable === false) continue;
+                const wasDefault = !!b.default;
+                const isOn = chosenBase.has(b.key);
+                if (wasDefault && !isOn) customNotes.push(`No ${b.label}`);
+                if (!wasDefault && isOn) customNotes.push(`Add ${b.label}`);
+              }
+
+              // option changes
+              const optionGroups = canonical.optionGroups ?? [];
+              const defaultSelections = getDefaultSelections(optionGroups);
+              const savedSelections = menuItem.optionSelections ?? {};
+
+              for (const g of optionGroups) {
+                // if this group is tied to a base key and base is OFF, skip
+                const baseKey = g.id.split("-")[0];
+                const baseExists = baseDefs.some((b: { key: string }) => b.key === baseKey);
+                if (baseExists && !chosenBase.has(baseKey)) continue;
+
+                const saved = Array.isArray(savedSelections[g.id])
+                  ? savedSelections[g.id]
+                  : [];
+
+                const def = defaultSelections[g.id] ?? [];
+
+                if (!sameArray(saved, def)) {
+                  // build human readable labels for saved
+                  const savedLabels = g.options
+                    .filter((o: { key: string; label: string }) => saved.includes(o.key))
+                    .map((o: { key: string; label: string }) => o.label);
+
+                  if (g.type === "single") {
+                    // e.g. "Milk type: Oat milk"
+                    const label = savedLabels[0] ?? "(none)";
+                    customNotes.push(`${g.label}: ${label}`);
+                  } else if (savedLabels.length > 0) {
+                    // e.g. "Extras: Caramel, Whip"
+                    customNotes.push(`${g.label}: ${savedLabels.join(", ")}`);
+                  }
+                }
+              }
+            }
+
+            return (
+              <div key={index} className="mb-1">
+                {/* main line */}
+                <div className="grid grid-cols-3">
+                  <span>{menuItem.name}</span>
+                  <span className="text-right">{menuItem.quantity}</span>
+                  <span className="text-right">
+                    ${(menuItem.quantity * menuItem.price).toFixed(2)}
+                  </span>
+                </div>
+
+                {/* brief customization line (only when needed) */}
+                {customNotes.length > 0 && (
+                  <div className="col-span-3 text-xs text-gray-500 mt-0.5">
+                    {customNotes.join(" · ")}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
 
           {/* Horizontal divider */}
           <hr className="my-2" />
