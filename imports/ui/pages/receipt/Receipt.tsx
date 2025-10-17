@@ -103,6 +103,25 @@ export const ReceiptPage = () => {
     return sa === sb;
   };
 
+  // Move the useTracker outside the map - get all canonical menu items at once
+  const canonicalMenuItems = useTracker(() => {
+    if (!order?.menuItems) return {};
+    
+    const menuItemIds = order.menuItems
+      .map(item => item.menuItemId)
+      .filter(id => id != null);
+    
+    const canonicals: Record<string, any> = {};
+    menuItemIds.forEach(id => {
+      const canonical = MenuItemsCollection.findOne(id as any);
+      if (canonical) {
+        canonicals[String(id)] = canonical;
+      }
+    });
+    
+    return canonicals;
+  }, [order?.menuItems]);
+
   return (
     <div className="flex flex-1 flex-col">
       <button
@@ -152,13 +171,10 @@ export const ReceiptPage = () => {
 
           {/* Display quantities */}
           {order.menuItems.map((menuItem, index) => {
-            // grab canonical menu item to know defaults
-            const canonical = useTracker(() => {
-              if (!menuItem?.menuItemId) return null;
-              return (
-                MenuItemsCollection.findOne(menuItem.menuItemId as any) ?? null
-              );
-            }, [menuItem?.menuItemId]);
+            // Get canonical from the pre-fetched object instead of useTracker
+            const canonical = menuItem.menuItemId 
+              ? canonicalMenuItems[String(menuItem.menuItemId)] 
+              : null;
 
             // compute diffs (brief)
             const customNotes: string[] = [];
