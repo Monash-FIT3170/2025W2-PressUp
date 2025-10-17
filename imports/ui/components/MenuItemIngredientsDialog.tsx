@@ -24,6 +24,9 @@ import { MenuItem } from "/imports/api";
 import { OrderMenuItem } from "/imports/api/orders/OrdersCollection";
 import { Loading } from "../components/Loading";
 
+const PURPLE = "#8E44AD";
+const PURPLE_DARK = "#732d91";
+
 type BaseIngredient = {
   key: string;
   label: string;
@@ -69,7 +72,12 @@ const Money: React.FC<{ delta?: number }> = ({ delta }) => {
       variant="outlined"
       size="small"
       label={`${sign}$${Math.abs(delta).toFixed(2)}`}
-      sx={{ ml: 1 }}
+      sx={{
+        ml: 1,
+        borderColor: PURPLE,
+        color: PURPLE,
+        fontWeight: 600,
+      }}
     />
   );
 };
@@ -270,9 +278,33 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
   }, [baseIngredients, optionGroups, includedBase, selectedOptions]);
 
   return (
-    <MuiDialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <MuiDialogTitle>{item?.name ?? "Ingredients"}</MuiDialogTitle>
-      <MuiDialogContent dividers>
+    <MuiDialog
+      open={open}
+      onClose={onClose}
+      maxWidth="xs"
+      fullWidth
+      PaperProps={{
+        sx: {
+          border: `3px solid ${PURPLE}`,
+          borderRadius: 2,
+        },
+      }}
+    >
+      <MuiDialogTitle
+        sx={{
+          color: PURPLE,
+          fontWeight: 700,
+          borderBottom: `1px solid ${PURPLE}22`,
+        }}
+      >
+        {item?.name ?? "Ingredients"}
+      </MuiDialogTitle>
+      <MuiDialogContent
+        dividers
+        sx={{
+          "& .MuiTypography--section": { color: PURPLE, fontWeight: 700 },
+        }}
+      >
         {isLoading ? (
           <MuiTypography variant="body2" color="text.secondary">
             <Loading />
@@ -289,6 +321,10 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                         onChange={() => toggleBase(b)}
                         disabled={b.removable === false}
                         size="small"
+                        sx={{
+                          "&.Mui-checked": { color: PURPLE },
+                          "&:hover": { backgroundColor: "rgba(142,68,173,0.08)" },
+                        }}
                       />
                     }
                     label={
@@ -301,7 +337,10 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                 </MuiListItem>
                 {(groupsByBaseKey[b.key] || []).map((g) => (
                   <Box key={g.id} sx={{ pl: 4 }}>
-                    <MuiTypography variant="body2" sx={{ fontWeight: 600 }}>
+                    <MuiTypography
+                      variant="body2"
+                      sx={{ fontWeight: 700, color: PURPLE }}
+                    >
                       {g.label}
                     </MuiTypography>
                     {g.type === "single" ? (
@@ -319,6 +358,10 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                               <Radio
                                 size="small"
                                 disabled={!includedBase[b.key]}
+                                sx={{
+                                  "&.Mui-checked": { color: PURPLE },
+                                  "&:hover": { backgroundColor: "rgba(142,68,173,0.08)" },
+                                }}
                               />
                             }
                             label={
@@ -348,6 +391,10 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
                                   }
                                   size="small"
                                   disabled={!includedBase[b.key]}
+                                  sx={{
+                                    "&.Mui-checked": { color: PURPLE },
+                                    "&:hover": { backgroundColor: "rgba(142,68,173,0.08)" },
+                                  }}
                                 />
                               }
                               label={
@@ -369,7 +416,10 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
             ))}
             {(groupsByBaseKey["_ungrouped"] || []).map((g) => (
               <Box key={g.id} sx={{ mt: 1 }}>
-                <MuiTypography variant="body2" sx={{ fontWeight: 600 }}>
+                <MuiTypography
+                  variant="body2"
+                  sx={{ fontWeight: 700, color: PURPLE }}
+                >
                   {g.label}
                 </MuiTypography>
                 {g.type === "single" ? (
@@ -437,8 +487,20 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
           </MuiTypography>
         )}
       </MuiDialogContent>
-      <MuiDialogActions>
-        <MuiButton onClick={onClose} variant="outlined">
+      <MuiDivider sx={{ my: 0, borderColor: `${PURPLE}33` }} />
+      <MuiDialogActions sx={{ p: 2 }}>
+        <MuiButton
+          onClick={onClose}
+          variant="outlined"
+          sx={{
+            borderColor: PURPLE,
+            color: PURPLE,
+            "&:hover": {
+              borderColor: PURPLE_DARK,
+              backgroundColor: "rgba(142,68,173,0.08)",
+            },
+          }}
+        >
           Close
         </MuiButton>
         <MuiButton
@@ -465,6 +527,10 @@ const MenuItemIngredientsDialog: React.FC<Props> = ({
           }}
           variant="contained"
           disabled={locked}
+          sx={{
+            backgroundColor: PURPLE,
+            "&:hover": { backgroundColor: PURPLE_DARK },
+          }}
         >
           Save
         </MuiButton>
