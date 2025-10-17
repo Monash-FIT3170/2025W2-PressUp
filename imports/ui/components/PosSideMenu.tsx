@@ -195,6 +195,40 @@ export const PosSideMenu = ({
     return orders[0]?._id ?? null;
   };
 
+  // Split Bill state
+  const [splits, setSplits] = useState<string[]>([]);
+  const [remaining, setRemaining] = useState<number>(0);
+
+  // Recalculate remaining when total changes
+  useEffect(() => {
+    if (baseTotal) setRemaining(baseTotal);
+  }, [baseTotal]);
+
+  const handleAddSplit = () => {
+    if (remaining <= 0) return;
+    setSplits((prev) => [...prev, ""]);
+  };
+
+  const handleSplitChange = (index: number, value: string) => {
+    const decimalRegex = /^\d*\.?\d{0,2}$/;
+
+    if (value === "" || decimalRegex.test(value)) {
+      const newSplits = [...splits];
+      newSplits[index] = value;
+      setSplits(newSplits);
+
+      // Calculate remaining
+      const sum = newSplits.reduce((a, b) => a + (parseFloat(b) || 0), 0);
+
+      setRemaining(parseFloat((baseTotal - sum).toFixed(2)));
+    }
+  };
+
+  const handleResetSplits = () => {
+    setSplits([]);
+    setRemaining(baseTotal);
+  };
+
   const keyForQty = (it: any): string | null =>
     (it?.lineId as string) ??
     (it?.menuItemId as string) ??
@@ -578,12 +612,91 @@ export const PosSideMenu = ({
         </div>
 
         {/* Footer */}
-        <div className="bg-press-up-purple text-white p-4 flex-shrink-0">
+        <div className="bg-press-up-purple text-white p-4 flex-shrink-0 max-h-70 overflow-auto">
           {/* Displaying total cost*/}
           <div className="flex justify-between items-center mb-2">
             <span className="text-lg font-bold">Total</span>
             <span className="text-lg font-bold">${finalTotal.toFixed(2)}</span>
           </div>
+          {/* --- Split Bill Section --- */}
+          {order && (
+            <div className="mt-4 mb-4 border-t border-white/30 pt-3">
+              {/* Header Row: Split + Reset buttons */}
+              <div className="flex justify-between items-center mb-3">
+                <div className="flex gap-2 w-full justify-end">
+                  <Button
+                    variant="negative"
+                    onClick={handleAddSplit}
+                    className="text-sm py-2 px-4 w-full"
+                  >
+                    Split Bill
+                  </Button>
+
+                  {splits.length > 0 && (
+                    <button
+                      onClick={handleResetSplits}
+                      className="text-sm py-2 px-4 rounded-md bg-gray-300 text-black hover:bg-gray-200 transition shadow-sm"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Show payment fields only after Split is clicked */}
+              {splits.length > 0 && (
+                <>
+                  {splits.map((val, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-col mb-2 bg-white/10 rounded-md px-2 py-1"
+                    >
+                      <label className="text-xs font-medium text-white mb-1">
+                        Payment {i + 1}
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={val}
+                        onChange={(e) => handleSplitChange(i, e.target.value)}
+                        placeholder="Enter amount e.g. 10.50"
+                        className={`w-full bg-white rounded px-3 py-1.5 text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                          parseFloat(val) < 0 || isNaN(parseFloat(val))
+                            ? "ring-red-400"
+                            : "focus:ring-pink-300"
+                        } shadow-sm`}
+                      />
+                      {/* Validation text */}
+                      {parseFloat(val) < 0 || isNaN(parseFloat(val)) ? (
+                        <span className="text-grey-400 font-bold text-[11px] mt-1">
+                          Please enter a valid amount.
+                        </span>
+                      ) : remaining < 0 ? (
+                        <span className="text-grey-400 font-bold text-[11px] mt-1">
+                          Total exceeds bill amount.
+                        </span>
+                      ) : null}
+                    </div>
+                  ))}
+
+                  {/* Non-editable remaining payment */}
+                  {remaining > 0 && (
+                    <div className="flex flex-col mb-2 bg-white/10 rounded-md px-2 py-1">
+                      <label className="text-xs font-medium text-white mb-1">
+                        Payment {splits.length + 1}
+                      </label>
+                      <input
+                        type="text"
+                        value={`$${remaining.toFixed(2)}`}
+                        readOnly
+                        className="w-full bg-gray-50 rounded px-3 py-1.5 text-xs text-black shadow-sm cursor-not-allowed"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {/* Displaying discount infomation*/}
           {discountPercent !== 0 && (
@@ -607,7 +720,6 @@ export const PosSideMenu = ({
               </span>
             </div>
           )}
-
           {/* Discount button */}
           <div className="mb-4">
             <Button
@@ -846,6 +958,7 @@ export const PosSideMenu = ({
                     : null
                 }
                 order={order}
+                splits={splits}
               />
             </div>
           )}
