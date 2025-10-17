@@ -57,16 +57,6 @@ Meteor.methods({
     await mockItemCategories();
   }),
 
-  "debug.mockItemCategories": requireLoginMethod(async function () {
-    if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN]))) {
-      throw new Meteor.Error(
-        "unauthorized",
-        "Only admins can perform debug operations",
-      );
-    }
-    await mockItemCategories();
-  }),
-
   "debug.mockStockItems": requireLoginMethod(async function () {
     if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN]))) {
       throw new Meteor.Error(
