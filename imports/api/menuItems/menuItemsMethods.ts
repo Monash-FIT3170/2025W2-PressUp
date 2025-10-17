@@ -255,21 +255,22 @@ Meteor.methods({
   }),
 
     "menuItems.updateIngredients": requireLoginMethod(async function (
-      menuItemId: string,
+      itemName: string,
       baseIngredients: BaseIngredient[],
       optionGroups: OptionGroup[]
       ) {
-      check(menuItemId, String);
+      check(itemName, String);
       check(baseIngredients, Array);
       check(optionGroups, Array);
 
-      const result = await MenuItemsCollection.updateAsync(menuItemId, {
+      const result = await MenuItemsCollection.updateAsync(
+        { name: itemName },
+        {
         $set: {
           baseIngredients,
           optionGroups
         },
       });
-
       return result;
     }),
 });

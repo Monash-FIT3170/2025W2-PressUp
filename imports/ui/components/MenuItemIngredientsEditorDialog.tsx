@@ -20,6 +20,7 @@ import { Add, Delete } from "@mui/icons-material";
 import { Meteor } from "meteor/meteor";
 import { MenuItemsCollection } from "/imports/api/menuItems/MenuItemsCollection";
 import { MenuItem } from "/imports/api";
+import AddIcon from "@mui/icons-material/Add";
 
 type BaseIngredient = {
   key: string;
@@ -151,7 +152,7 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
   const handleSave = () => {
     Meteor.call(
       "menuItems.updateIngredients",
-      item?._id,
+      item?.name?.toString(),
       baseIngredients,
       optionGroups,
       (err: any) => {
@@ -168,122 +169,154 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>Configure Ingredients for {item?.name}</DialogTitle>
+
       <DialogContent dividers>
+        {/* === Base Ingredients === */}
         <Typography variant="h6" gutterBottom>
           Base Ingredients
         </Typography>
-        <List dense>
-          {baseIngredients.map((b) => (
-            <ListItem key={b.key} alignItems="flex-start">
-              <Box sx={{ width: "100%" }}>
-                <TextField
-                  label="Label"
-                  value={b.label}
-                  onChange={(e) => handleBaseChange(b.key, "label", e.target.value)}
-                  size="small"
-                  sx={{ mr: 1, width: "40%" }}
-                />
-                <TextField
-                  label="Price Δ"
-                  type="number"
-                  value={b.priceDelta ?? 0}
-                  onChange={(e) => handleBaseChange(b.key, "priceDelta", Number(e.target.value))}
-                  size="small"
-                  sx={{ mr: 1, width: "20%" }}
-                />
-                <Typography variant="body2" component="span" sx={{ mr: 1 }}>
-                  Optional:
-                </Typography>
-                <Switch
-                  checked={b.removable ?? true}
-                  onChange={(e) => handleBaseChange(b.key, "removable", e.target.checked)}
-                  size="small"
-                />
-                <Typography variant="body2" component="span" sx={{ mr: 1 }}>
-                  Default:
-                </Typography>
-                <Switch
-                  checked={b.default ?? false}
-                  onChange={(e) => handleBaseChange(b.key, "default", e.target.checked)}
-                  size="small"
-                />
-              </Box>
-              <ListItemSecondaryAction>
-                <IconButton edge="end" onClick={() => handleRemoveBase(b.key)}>
-                  <Delete />
-                </IconButton>
-              </ListItemSecondaryAction>
-            </ListItem>
-          ))}
-        </List>
-        <Button startIcon={<Add />} onClick={handleAddBase}>
+
+        {baseIngredients.map((b) => (
+          <Box
+            key={b.key}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              mb: 1,
+              p: 1,
+              borderRadius: 1,
+              bgcolor: "background.paper",
+              boxShadow: 0.5,
+            }}
+          >
+            <TextField
+              label="Label"
+              value={b.label}
+              onChange={(e) => handleBaseChange(b.key, "label", e.target.value)}
+              size="small"
+              sx={{ flex: "1 1 40%" }}
+            />
+            <TextField
+              label="Price Δ"
+              type="number"
+              value={b.priceDelta ?? 0}
+              onChange={(e) => handleBaseChange(b.key, "priceDelta", Number(e.target.value))}
+              size="small"
+              sx={{ flex: "0 0 120px" }}
+            />
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="body2">Optional:</Typography>
+              <Switch
+                checked={b.removable ?? true}
+                onChange={(e) => handleBaseChange(b.key, "removable", e.target.checked)}
+                size="small"
+              />
+            </Box>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="body2">Default:</Typography>
+              <Switch
+                checked={b.default ?? false}
+                onChange={(e) => handleBaseChange(b.key, "default", e.target.checked)}
+                size="small"
+              />
+            </Box>
+            <IconButton color="error" onClick={() => handleRemoveBase(b.key)}>
+              <Delete />
+            </IconButton>
+          </Box>
+        ))}
+
+        <Button startIcon={<Add />} onClick={handleAddBase} sx={{ mt: 1 }}>
           Add Base Ingredient
         </Button>
 
-        <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 3 }} />
 
+        {/* === Option Groups === */}
         <Typography variant="h6" gutterBottom>
           Option Groups
         </Typography>
 
         {optionGroups.map((g) => (
-          <Box key={g.id} sx={{ mb: 2, p: 1, border: "1px solid #ddd", borderRadius: 1 }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box
+            key={g.id}
+            sx={{
+              mb: 2,
+              p: 2,
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 2,
+              bgcolor: "background.paper",
+            }}
+          >
+            <Box display="flex" alignItems="center" gap={1.5} mb={1}>
               <TextField
                 label="Group Label"
                 value={g.label}
                 onChange={(e) => handleGroupChange(g.id, "label", e.target.value)}
                 size="small"
-                sx={{ width: "40%" }}
+                sx={{ flex: "1 1 40%" }}
               />
               <TextField
                 select
                 SelectProps={{ native: true }}
                 label="Type"
                 value={g.type}
-                onChange={(e) => handleGroupChange(g.id, "type", e.target.value as "single" | "multiple")}
+                onChange={(e) =>
+                  handleGroupChange(g.id, "type", e.target.value as "single" | "multiple")
+                }
                 size="small"
-                sx={{ width: "20%" }}
+                sx={{ flex: "0 0 150px" }}
               >
                 <option value="single">Single</option>
                 <option value="multiple">Multiple</option>
               </TextField>
-              <Typography variant="body2" component="span">
-                Required:
-              </Typography>
-              <Switch
-                checked={g.required ?? false}
-                onChange={(e) => handleGroupChange(g.id, "required", e.target.checked)}
-                size="small"
-              />
-              <IconButton onClick={() => handleRemoveGroup(g.id)}>
+
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="body2">Required:</Typography>
+                <Switch
+                  checked={g.required ?? false}
+                  onChange={(e) => handleGroupChange(g.id, "required", e.target.checked)}
+                  size="small"
+                />
+              </Box>
+
+              <IconButton color="error" onClick={() => handleRemoveGroup(g.id)}>
                 <Delete />
               </IconButton>
             </Box>
 
-            <List dense sx={{ pl: 2 }}>
-              {g.options.map((o) => (
-                <ListItem key={o.key}>
-                  <TextField
-                    label="Label"
-                    value={o.label}
-                    onChange={(e) => handleOptionChange(g.id, o.key, "label", e.target.value)}
-                    size="small"
-                    sx={{ mr: 1, width: "40%" }}
-                  />
-                  <TextField
-                    label="Price Δ"
-                    type="number"
-                    value={o.priceDelta ?? 0}
-                    onChange={(e) =>
-                      handleOptionChange(g.id, o.key, "priceDelta", Number(e.target.value))
-                    }
-                    size="small"
-                    sx={{ mr: 1, width: "20%" }}
-                  />
-                  <Typography variant="body2" component="span" sx={{ mr: 1 }}>
-                    Default:
-                  </Typography>
+            {g.options.map((o) => (
+              <Box
+                key={o.key}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  mb: 1,
+                  ml: 2,
+                }}
+              >
+                <TextField
+                  label="Label"
+                  value={o.label}
+                  onChange={(e) => handleOptionChange(g.id, o.key, "label", e.target.value)}
+                  size="small"
+                  sx={{ flex: "1 1 40%" }}
+                />
+                <TextField
+                  label="Price Δ"
+                  type="number"
+                  value={o.priceDelta ?? 0}
+                  onChange={(e) =>
+                    handleOptionChange(g.id, o.key, "priceDelta", Number(e.target.value))
+                  }
+                  size="small"
+                  sx={{ flex: "0 0 120px" }}
+                />
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography variant="body2">Default:</Typography>
                   <Switch
                     checked={o.default ?? false}
                     onChange={(e) =>
@@ -291,26 +324,26 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
                     }
                     size="small"
                   />
-                  <IconButton onClick={() => handleRemoveOption(g.id, o.key)}>
-                    <Delete />
-                  </IconButton>
-                </ListItem>
-              ))}
-            </List>
+                </Box>
+                <IconButton color="error" onClick={() => handleRemoveOption(g.id, o.key)}>
+                  <Delete />
+                </IconButton>
+              </Box>
+            ))}
 
             <Button
               startIcon={<Add />}
               onClick={() => handleAddOption(g.id)}
               size="small"
-              sx={{ ml: 2 }}
+              sx={{ ml: 2, mt: 1 }}
             >
               Add Option
             </Button>
           </Box>
         ))}
 
-        <Button startIcon={<Add />} onClick={() => handleAddGroup()}>
-          Add Option Group
+        <Button startIcon={<AddIcon />} onClick={() => handleAddGroup()}>
+        Add Option Group
         </Button>
       </DialogContent>
 
@@ -323,7 +356,7 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
         </Button>
       </DialogActions>
     </Dialog>
-  );
-};
+  );}
+
 
 export default MenuItemIngredientsEditorDialog;
