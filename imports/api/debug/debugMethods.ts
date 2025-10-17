@@ -2,7 +2,7 @@ import { Meteor } from "meteor/meteor";
 import { Roles } from "meteor/alanning:roles";
 import { requireLoginMethod } from "../accounts/wrappers";
 import { RoleEnum } from "../accounts/roles";
-import { mockMenuItems } from "../menuItems/mock";
+import { mockMenuItems, mockItemCategories } from "../menuItems/mock";
 import { mockStockItems } from "../stockItems/mock";
 import { mockSuppliers } from "../suppliers/mock";
 import { mockPurchaseOrders } from "../purchaseOrders/mock";
@@ -14,6 +14,7 @@ import { mockDeductions } from "../tax/mock";
 import { mockDataGenerator } from "../mock/mockData";
 
 import { MenuItemsCollection } from "../menuItems/MenuItemsCollection";
+import { ItemCategoriesCollection } from "../menuItems/ItemCategoriesCollection";
 import { StockItemsCollection } from "../stockItems/StockItemsCollection";
 import { SuppliersCollection } from "../suppliers/SuppliersCollection";
 import { PurchaseOrdersCollection } from "../purchaseOrders/PurchaseOrdersCollection";
@@ -55,6 +56,16 @@ Meteor.methods({
     }
     await MenuItemsCollection.rawCollection().deleteMany({});
     await mockMenuItems();
+  }),
+
+  "debug.mockItemCategories": requireLoginMethod(async function () {
+    if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN]))) {
+      throw new Meteor.Error(
+        "unauthorized",
+        "Only admins can perform debug operations",
+      );
+    }
+    await mockItemCategories();
   }),
 
   "debug.mockStockItems": requireLoginMethod(async function () {
@@ -156,6 +167,7 @@ Meteor.methods({
       );
     }
     await MenuItemsCollection.dropCollectionAsync();
+    await ItemCategoriesCollection.dropCollectionAsync();
     await StockItemsCollection.dropCollectionAsync();
     await SuppliersCollection.dropCollectionAsync();
     await PurchaseOrdersCollection.dropCollectionAsync();
@@ -175,6 +187,16 @@ Meteor.methods({
       );
     }
     await MenuItemsCollection.dropCollectionAsync();
+  }),
+
+  "debug.dropItemCategories": requireLoginMethod(async function () {
+    if (!(await Roles.userIsInRoleAsync(this.userId, [RoleEnum.ADMIN]))) {
+      throw new Meteor.Error(
+        "unauthorized",
+        "Only admins can perform debug operations",
+      );
+    }
+    await ItemCategoriesCollection.dropCollectionAsync();
   }),
 
   "debug.dropStockItems": requireLoginMethod(async function () {
