@@ -144,7 +144,11 @@ export const StockTable = ({
         render: (item) => (
           <div className="flex gap-2">
             {onEdit && (
-              <Button variant="positive" onClick={() => onEdit(item)}>
+              <Button
+                variant="positive"
+                onClick={() => onEdit(item)}
+                disabled={item.disposed}
+              >
                 Edit
               </Button>
             )}
