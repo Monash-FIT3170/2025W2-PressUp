@@ -186,40 +186,11 @@ export const MainDisplay = () => {
         1, // Quantity
         {}, // selections (option selections)
       );
-    } else {
-      // convert MenuItem -> OrderMenuItem shape (keep _id, name, price, ingredients, available, category, image)
-      const newOrderItem: OrderMenuItem = {
-        _id: item._id,
-        name: item.name,
-        quantity: 1,
-        ingredients: item.ingredients || [],
-        available: item.available,
-        price: item.price,
-        category: item.category,
-        image: item.image,
-      };
-      updatedItems = [...(order.menuItems as OrderMenuItem[]), newOrderItem];
+      // Totals/discounts are recalculated on the server (recomputeTotals), so no need to calculate here
+    } catch (e) {
+      console.error(e);
+      alert("Failed to add item.");
     }
-    const newTotal = updatedItems.reduce(
-      (sum, i) => sum + i.quantity * i.price,
-      0,
-    );
-    const dp2 = order.discountPercent ?? 0;
-    const da2 = order.discountAmount ?? 0;
-    let discountedTotal = newTotal;
-    if (dp2 > 0) {
-      discountedTotal = newTotal - newTotal * (dp2 / 100) - da2;
-    } else if (da2 > 0) {
-      discountedTotal = newTotal - da2;
-    }
-    updateOrderInDb({
-      menuItems: updatedItems,
-      totalPrice: parseFloat(discountedTotal.toFixed(2)),
-      discountPercent: order.discountPercent ?? 0,
-      discountAmount: order.discountAmount ?? 0,
-      originalPrice: parseFloat(newTotal.toFixed(2)),
-      orderStatus: OrderStatus.Pending,
-    });
   };
 
   return (
