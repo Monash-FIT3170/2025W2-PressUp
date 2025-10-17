@@ -612,7 +612,7 @@ export const PosSideMenu = ({
         </div>
 
         {/* Footer */}
-        <div className="bg-press-up-purple text-white p-4 flex-shrink-0">
+        <div className="bg-press-up-purple text-white p-4 flex-shrink-0 max-h-70 overflow-auto">
           {/* Displaying total cost*/}
           <div className="flex justify-between items-center mb-2">
             <span className="text-lg font-bold">Total</span>
@@ -627,7 +627,7 @@ export const PosSideMenu = ({
                   <Button
                     variant="negative"
                     onClick={handleAddSplit}
-                    className="text-sm py-2 px-4 w-full font-semibold"
+                    className="text-sm py-2 px-4 w-full"
                   >
                     Split Bill
                   </Button>
@@ -635,7 +635,7 @@ export const PosSideMenu = ({
                   {splits.length > 0 && (
                     <button
                       onClick={handleResetSplits}
-                      className="text-sm py-2 px-4 rounded-md bg-gray-300 text-black font-semibold hover:bg-gray-200 transition shadow-sm"
+                      className="text-sm py-2 px-4 rounded-md bg-gray-300 text-black hover:bg-gray-200 transition shadow-sm"
                     >
                       Reset
                     </button>
@@ -668,11 +668,11 @@ export const PosSideMenu = ({
                       />
                       {/* Validation text */}
                       {parseFloat(val) < 0 || isNaN(parseFloat(val)) ? (
-                        <span className="text-red-400 text-[11px] mt-1">
+                        <span className="text-grey-400 font-bold text-[11px] mt-1">
                           Please enter a valid amount.
                         </span>
                       ) : remaining < 0 ? (
-                        <span className="text-red-400 text-[11px] mt-1">
+                        <span className="text-grey-400 font-bold text-[11px] mt-1">
                           Total exceeds bill amount.
                         </span>
                       ) : null}
