@@ -5,11 +5,10 @@ type CompletedItems = {
   [itemId: string]: boolean;
 };
 
-
 export interface TrainingProgress extends DBEntry {
-    staffId: IdType;
-    trainingListId: IdType;
-    completedItems: CompletedItems; // Array of item IDs that have been completed
+  staffId: IdType;
+  trainingListId: IdType;
+  completedItems: CompletedItems; // Array of item IDs that have been completed
 }
 
 export const TrainingProgressCollection = new Mongo.Collection<

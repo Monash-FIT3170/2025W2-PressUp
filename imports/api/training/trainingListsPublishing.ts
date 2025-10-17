@@ -8,4 +8,3 @@ Meteor.publish(
     return TrainingListsCollection.find();
   }),
 );
-

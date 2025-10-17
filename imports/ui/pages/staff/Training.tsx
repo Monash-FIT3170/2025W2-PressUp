@@ -27,7 +27,7 @@ export const TrainingPage = () => {
     "all",
   );
   const [showAddModal, setShowAddModal] = useState(false);
-  const [formResetKey, setFormResetKey] = useState(0);
+  const [, setFormResetKey] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirm, setConfirm] = useState<"cancel" | "delete" | null>(null);
 

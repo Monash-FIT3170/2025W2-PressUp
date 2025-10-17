@@ -19,7 +19,10 @@ export {
 
 // Company
 export { Company, CompanyCollection } from "./company/CompanyCollection";
-export { TrainingList, TrainingListsCollection } from "./training/TrainingListsCollection";
+export {
+  TrainingList,
+  TrainingListsCollection,
+} from "./training/TrainingListsCollection";
 export {
   TrainingProgress,
   TrainingProgressCollection,
@@ -31,4 +34,3 @@ export { Comment, CommentsCollection } from "./posts/CommentsCollection";
 
 // Shifts
 export { Shift, ShiftsCollection } from "./shifts/ShiftsCollection";
-
