@@ -201,7 +201,7 @@ export const OrderHistoryPage = () => {
       align: "center",
       render: (row) => {
         const isPaid = orders.find((o) => o._id === row._id)?.paid === true;
-        const hide = row.status === "served" && !isPaid;
+        const hide = !(row.status === "served" && !isPaid);
         return (
           <div className="flex justify-center gap-2 px-2">
             <Hide hide={hide}>
