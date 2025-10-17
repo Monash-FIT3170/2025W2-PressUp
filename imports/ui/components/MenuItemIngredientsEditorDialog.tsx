@@ -11,14 +11,9 @@ import {
   Divider,
   Switch,
   Box,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
 } from "@mui/material";
 import { Add, Delete } from "@mui/icons-material";
 import { Meteor } from "meteor/meteor";
-import { MenuItemsCollection } from "/imports/api/menuItems/MenuItemsCollection";
 import { MenuItem } from "/imports/api";
 import AddIcon from "@mui/icons-material/Add";
 

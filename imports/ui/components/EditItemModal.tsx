@@ -236,16 +236,18 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 </span>
               </div>
             )}
+
             <button
-            type="button"
-                      onClick={() => openIngredientDialog(item)}
-                      className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg"
-                    >
-            </button>
+                type="button"
+                onClick={() => openIngredientDialog(item)}
+                className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg"
+              >
+                Edit Item Ingredients
+              </button>
+
             <MenuItemIngredientsEditorDialog
               open={ingredientDialog.open}
               item={ingredientDialog.item}
-              //itemIndex={ingredientDialog.index ?? undefined}
               onClose={() =>
                 setIngredientDialog({ open: false, item: null })
               }
