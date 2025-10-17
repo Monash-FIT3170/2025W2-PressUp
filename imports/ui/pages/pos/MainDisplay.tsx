@@ -175,16 +175,16 @@ export const MainDisplay = () => {
     </button>
   ));
 
-  const handleItemClick = (item: MenuItem) => {
-    if (!order) return;
-    if (order.isLocked) return; // prevent adding items to locked orders
-    const existing = (order.menuItems as OrderMenuItem[]).find(
-      (i) => i._id === item._id,
-    );
-    let updatedItems;
-    if (existing) {
-      updatedItems = (order.menuItems as OrderMenuItem[]).map((i) =>
-        i._id === item._id ? { ...i, quantity: i.quantity + 1 } : i,
+  const handleItemClick = async (menu: MenuItem) => {
+    if (!order || order.isLocked) return;
+    try {
+      // If there is no option selection UI, selections will be an empty object {}
+      await Meteor.callAsync(
+        "orders.addMenuItemFromMenu",
+        order._id, // Current order
+        menu._id, // Menu item ID
+        1, // Quantity
+        {}, // selections (option selections)
       );
     } else {
       // convert MenuItem -> OrderMenuItem shape (keep _id, name, price, ingredients, available, category, image)

@@ -30,3 +30,5 @@ import "./menuItems/seedMenuItems";
 import "./training/trainingListsPublishing";
 import "./training/trainingMethods";
 import "./training/trainingProgressPublishing";
+import "./menuItems/itemCategoriesMethods";
+import "./menuItems/itemCategoriesPublishing";
