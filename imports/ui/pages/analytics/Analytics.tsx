@@ -33,6 +33,7 @@ export const AnalyticsPage = () => {
     | "past7Days"
     | "past30Days"
   >("all");
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const [customDateRange] = useState<{
     start: Date;
@@ -75,35 +76,40 @@ export const AnalyticsPage = () => {
     if (!dateRangeBounds.start || !dateRangeBounds.end) {
       return "All Time";
     }
-    return `${format(dateRangeBounds.start, "dd/MM/yy")} – ${format(
+    return `${format(dateRangeBounds.start, "MMM d, yyyy")} – ${format(
       dateRangeBounds.end,
-      "dd/MM/yy",
+      "MMM d, yyyy",
     )}`;
   };
 
   useEffect(() => {
-    const today = startOfToday();
     let start: Date | null = null;
-    let end: Date | null = today;
+    let end: Date | null = null;
 
     switch (dateRange) {
       case "today":
-        start = today;
+        start = startOfToday();
+        end = startOfToday();
         break;
       case "thisWeek":
-        start = startOfWeek(today, { weekStartsOn: 1 });
+        start = startOfWeek(currentDate, { weekStartsOn: 1 });
+        end = subDays(currentDate, 1);
         break;
       case "thisMonth":
-        start = startOfMonth(today);
+        start = startOfMonth(currentDate);
+        end = subDays(currentDate, 1);
         break;
       case "thisYear":
-        start = startOfYear(today);
+        start = startOfYear(currentDate);
+        end = subDays(currentDate, 1);
         break;
       case "past7Days":
-        start = subDays(today, 6);
+        start = subDays(currentDate, 6);
+        end = subDays(currentDate, 1);
         break;
       case "past30Days":
-        start = subDays(today, 29);
+        start = subDays(currentDate, 29);
+        end = subDays(currentDate, 1);
         break;
       case "all":
       default:
@@ -112,10 +118,10 @@ export const AnalyticsPage = () => {
     }
 
     setDateRangeBounds({ start, end });
-  }, [dateRange]);
+  }, [dateRange, currentDate]);
 
   useEffect(() => {
-    setPageTitle("Analytics & Reporting");
+    setPageTitle("Finance - Analytics & Reporting");
   }, [setPageTitle]);
 
   const convertToCSV = (objArray: Order[]) => {
@@ -180,19 +186,17 @@ export const AnalyticsPage = () => {
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto scroll-smooth bg-gray-50 p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-press-up-navy mb-2">
-          Analytics & Reporting
-        </h1>
-        <p className="text-press-up-washed-blue">
-          Comprehensive insights into your business performance
-        </p>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
-        <FinanceDateFilter range={dateRange} onRangeChange={setDateRange} />
+        <FinanceDateFilter
+          range={dateRange}
+          currentDate={currentDate}
+          onRangeChange={(r) => {
+            setDateRange(r);
+            setCurrentDate(new Date());
+          }}
+          onDateChange={setCurrentDate}
+        />
         <h2 className="text-lg lg:text-xl font-semibold text-press-up-washed-blue">
           Viewing Period:{" "}
           <span className="font-normal text-press-up-navy">
