@@ -240,10 +240,10 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             <button
                 type="button"
                 onClick={() => openIngredientDialog(item)}
-                className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg"
+                className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg text-sm"
               >
                 Edit Item Ingredients
-              </button>
+            </button>
 
             <MenuItemIngredientsEditorDialog
               open={ingredientDialog.open}
