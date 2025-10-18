@@ -13,6 +13,9 @@ export type UiOrder = {
     name: string;
     quantity: number;
     served?: boolean;
+    menuItemId?: any;
+    baseIncludedKeys?: string[];
+    optionSelections?: Record<string, string[]>;
   }>;
 };
 

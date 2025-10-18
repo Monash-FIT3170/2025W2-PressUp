@@ -1,24 +1,25 @@
 import React from "react";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
+import { MenuItemsCollection } from "/imports/api/menuItems/MenuItemsCollection";
 import { useNavigate, useLocation } from "react-router";
 import {
   OrdersCollection,
   OrderType,
 } from "/imports/api/orders/OrdersCollection";
 import { Loading } from "../../components/Loading";
+import type { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
+import { Mongo } from "meteor/mongo";
 
 export const ReceiptPage = () => {
   const navigate = useNavigate();
+  useSubscribe("menuItems");
   useSubscribe("orders");
 
-  // passing split bill through navigation as it is not stored in the database
   const location = useLocation();
   const splits = location.state?.splits as string[] | undefined;
 
-  // Get orderId from sessionStorage
   const orderId = sessionStorage.getItem("activeOrderId");
 
-  // Find lowest unpaid dine-in order
   const lowestDineInOrderId = useTracker(() => {
     const orders = OrdersCollection.find(
       { orderType: OrderType.DineIn, paid: false },
@@ -36,11 +37,32 @@ export const ReceiptPage = () => {
     navigate("/pos/orders");
   };
 
-  // Retrieve order by _id
   const order = useTracker(() => {
     if (!orderId) return null;
     return OrdersCollection.findOne(orderId) ?? null;
   }, [orderId]);
+
+  const canonicalMenuItems = useTracker<Record<string, MenuItem>>(() => {
+    const items = order?.menuItems ?? [];
+
+    // Make sure TS knows ObjectID is possible here
+    const rawIds: Array<string | Mongo.ObjectID | undefined> = items.map(
+      (it) => it.menuItemId as string | Mongo.ObjectID | undefined,
+    );
+
+    // Type guard matches the parameter type
+    const ids: Array<string | Mongo.ObjectID> = rawIds.filter(
+      (id): id is string | Mongo.ObjectID => id != null,
+    );
+
+    const map: Record<string, MenuItem> = {};
+    for (const id of ids) {
+      // Minimongo accepts either string or ObjectID here
+      const doc = MenuItemsCollection.findOne(id as any);
+      if (doc) map[String(id)] = doc;
+    }
+    return map;
+  }, [order?.menuItems]);
 
   if (!order) {
     return (
@@ -55,14 +77,48 @@ export const ReceiptPage = () => {
   // for split bill calculations
   const total = order.totalPrice;
 
-  // split bill calculations
   const numericSplits = splits?.map((s) => parseFloat(s) || 0) ?? [];
   const sumOfSplits = numericSplits.reduce((a, b) => a + b, 0);
   const remaining = total - sumOfSplits;
   const displaySplits = numericSplits.length > 0 ? [...numericSplits] : [];
-  if (remaining > 0) {
-    displaySplits.push(remaining);
-  }
+  if (remaining > 0) displaySplits.push(remaining);
+
+  // --- helper functions (same as before) ---
+  const getDefaultBaseKeys = (
+    baseDefs?: Array<{ key: string; default: boolean; removable?: boolean }>,
+  ) =>
+    (baseDefs ?? [])
+      .filter((b) => (b.removable === false ? true : !!b.default))
+      .map((b) => b.key);
+
+  const getDefaultSelections = (
+    optionGroups?: Array<{
+      id: string;
+      type: "single" | "multiple";
+      required?: boolean;
+      options: Array<{ key: string; label: string; default?: boolean }>;
+    }>,
+  ) => {
+    const out: Record<string, string[]> = {};
+    for (const g of optionGroups ?? []) {
+      const defaults = g.options.filter((o) => o.default).map((o) => o.key);
+      if (g.type === "single") {
+        if (defaults.length > 0) out[g.id] = [defaults[0]];
+        else if (g.required && g.options[0]) out[g.id] = [g.options[0].key];
+        else out[g.id] = [];
+      } else {
+        out[g.id] = defaults;
+      }
+    }
+    return out;
+  };
+
+  const sameArray = (a: string[] = [], b: string[] = []) => {
+    if (a.length !== b.length) return false;
+    const sa = [...a].sort().join("|");
+    const sb = [...b].sort().join("|");
+    return sa === sb;
+  };
 
   return (
     <div className="flex flex-1 flex-col">
@@ -112,15 +168,91 @@ export const ReceiptPage = () => {
           </div>
 
           {/* Display quantities */}
-          {order.menuItems.map((menuItem, index) => (
-            <div key={index} className="grid grid-cols-3 mb-1">
-              <span>{menuItem.name}</span>
-              <span className="text-right">{menuItem.quantity}</span>
-              <span className="text-right">
-                ${(menuItem.quantity * menuItem.price).toFixed(2)}
-              </span>
-            </div>
-          ))}
+          {order.menuItems.map((menuItem, index) => {
+            // Get canonical from the pre-fetched object instead of useTracker
+            const canonical = menuItem.menuItemId
+              ? canonicalMenuItems[String(menuItem.menuItemId)]
+              : null;
+
+            // compute diffs (brief)
+            const customNotes: string[] = [];
+            if (canonical) {
+              const baseDefs = canonical.baseIngredients ?? [];
+              const defaultBaseKeys = getDefaultBaseKeys(baseDefs);
+              const chosenBase = new Set(
+                menuItem.baseIncludedKeys &&
+                menuItem.baseIncludedKeys.length > 0
+                  ? menuItem.baseIncludedKeys
+                  : defaultBaseKeys,
+              );
+
+              // base adds/removals (skip non-removable; those are always on)
+              for (const b of baseDefs) {
+                if (b.removable === false) continue;
+                const wasDefault = !!b.default;
+                const isOn = chosenBase.has(b.key);
+                if (wasDefault && !isOn) customNotes.push(`No ${b.label}`);
+                if (!wasDefault && isOn) customNotes.push(`Add ${b.label}`);
+              }
+
+              // option changes
+              const optionGroups = canonical.optionGroups ?? [];
+              const defaultSelections = getDefaultSelections(optionGroups);
+              const savedSelections = menuItem.optionSelections ?? {};
+
+              for (const g of optionGroups) {
+                // if this group is tied to a base key and base is OFF, skip
+                const baseKey = g.id.split("-")[0];
+                const baseExists = baseDefs.some(
+                  (b: { key: string }) => b.key === baseKey,
+                );
+                if (baseExists && !chosenBase.has(baseKey)) continue;
+
+                const saved = Array.isArray(savedSelections[g.id])
+                  ? savedSelections[g.id]
+                  : [];
+
+                const def = defaultSelections[g.id] ?? [];
+
+                if (!sameArray(saved, def)) {
+                  // build human readable labels for saved
+                  const savedLabels = g.options
+                    .filter((o: { key: string; label: string }) =>
+                      saved.includes(o.key),
+                    )
+                    .map((o: { key: string; label: string }) => o.label);
+
+                  if (g.type === "single") {
+                    if (savedLabels[0]) {
+                      customNotes.push(`${g.label}: ${savedLabels[0]}`);
+                    }
+                  } else if (savedLabels.length > 0) {
+                    customNotes.push(`${g.label}: ${savedLabels.join(", ")}`);
+                  }
+                }
+              }
+            }
+
+            return (
+              <div key={index} className="mb-1">
+                {/* main line */}
+                <div className="grid grid-cols-3">
+                  <span>{menuItem.name}</span>
+                  <span className="text-right">{menuItem.quantity}</span>
+                  <span className="text-right">
+                    ${(menuItem.quantity * menuItem.price).toFixed(2)}
+                  </span>
+                </div>
+
+                {/* brief customization line (only when needed) */}
+                {customNotes.length > 0 && (
+                  <div className="col-span-3 text-xs text-gray-500 mt-0.5">
+                    {customNotes.join(" · ")}
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {/* Horizontal divider */}
           <hr className="my-2" />
