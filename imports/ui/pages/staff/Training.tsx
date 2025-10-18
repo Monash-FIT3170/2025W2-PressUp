@@ -211,7 +211,7 @@ export const TrainingPage = () => {
 
   return (
     <div className="flex flex-1 flex-col items-center">
-      <div className="w-full max-w-screen-lg">
+      <div className="w-full max-w-[70rem]">
         {/* Header */}
         <div className="flex flex-wrap items-end p-4 gap-2">
           {/* Filter */}
