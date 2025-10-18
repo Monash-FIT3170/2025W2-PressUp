@@ -19,3 +19,18 @@ export {
 
 // Company
 export { Company, CompanyCollection } from "./company/CompanyCollection";
+export {
+  TrainingList,
+  TrainingListsCollection,
+} from "./training/TrainingListsCollection";
+export {
+  TrainingProgress,
+  TrainingProgressCollection,
+} from "./training/TrainingProgressCollection";
+
+// Posts
+export { Post, PostsCollection } from "./posts/PostsCollection";
+export { Comment, CommentsCollection } from "./posts/CommentsCollection";
+
+// Shifts
+export { Shift, ShiftsCollection } from "./shifts/ShiftsCollection";
