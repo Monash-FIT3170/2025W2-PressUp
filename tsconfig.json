@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     /* Basic Options */
-    "target": "es2018",
-    "module": "esNext",
+    "target": "es2020",
+    "module": "esnext",
     "lib": ["esnext", "dom"],
     "allowJs": true,
     "checkJs": false,
@@ -36,9 +36,11 @@
     "resolveJsonModule": true,
     "types": ["node", "mocha"],
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "preserveSymlinks": true,
     "skipLibCheck": true,
-    "typeRoots": ["node_modules/@types"]
+    "typeRoots": ["node_modules/@types"],
+    "isolatedModules": false
   },
   "include": [
     "client/**/*",
