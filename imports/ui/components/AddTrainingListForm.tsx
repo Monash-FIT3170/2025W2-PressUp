@@ -4,6 +4,7 @@ import { Button } from "./interaction/Button";
 import { TextArea } from "./interaction/TextArea";
 import { Meteor } from "meteor/meteor";
 import { TrainingList } from "/imports/api/training/TrainingListsCollection";
+import { Input, Label } from "./interaction/Input";
 
 export interface TrainingListFormData {
   title: string;
@@ -12,7 +13,7 @@ export interface TrainingListFormData {
 
 interface AddTrainingListFormProps {
   trainingList?: TrainingList | null;
-  onSuccess: () => void;
+  onSuccess: (newListId?: string) => void;
 }
 
 export const AddTrainingListForm: React.FC<AddTrainingListFormProps> = ({
@@ -35,7 +36,7 @@ export const AddTrainingListForm: React.FC<AddTrainingListFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title.trim()) return; // optional: prevent empty title
+    if (!title.trim()) return;
 
     // Parse and deduplicate item names
     const inputNames = Array.from(
@@ -56,7 +57,6 @@ export const AddTrainingListForm: React.FC<AddTrainingListFormProps> = ({
       {} as Record<string, string>,
     );
 
-    // Only keep items that are in the inputNames (removes deleted ones)
     const items = inputNames.map((name) => ({
       id: existingItemsByName[name] || crypto.randomUUID(),
       name,
@@ -67,9 +67,8 @@ export const AddTrainingListForm: React.FC<AddTrainingListFormProps> = ({
       items,
     };
 
-    let listId = trainingList?._id;
-
     try {
+      let listId: string;
       if (trainingList) {
         // Update existing list
         await new Promise((resolve, reject) => {
@@ -83,21 +82,24 @@ export const AddTrainingListForm: React.FC<AddTrainingListFormProps> = ({
             },
           );
         });
+        listId = trainingList._id;
+        onSuccess(trainingList._id);
       } else {
         // Insert new list
-        listId = await new Promise((resolve, reject) => {
+        listId = await new Promise<string>((resolve, reject) => {
           Meteor.call(
             "trainingLists.insert",
             formData,
             (err: Meteor.Error, res: any) => {
               if (err) reject(err);
-              else resolve(res);
+              else resolve(res as string);
             },
           );
         });
+        onSuccess(listId);
       }
 
-      // Update progress for all staff
+      // Update progress for all staff (after listId is set)
       const staff = Meteor.users.find().fetch();
       for (const user of staff) {
         await new Promise((resolve, reject) => {
@@ -113,8 +115,6 @@ export const AddTrainingListForm: React.FC<AddTrainingListFormProps> = ({
           );
         });
       }
-
-      onSuccess();
     } catch (err) {
       alert("Failed to save training list or update staff progress.");
       console.error(err);
@@ -124,24 +124,23 @@ export const AddTrainingListForm: React.FC<AddTrainingListFormProps> = ({
   return (
     <Form
       title={trainingList ? "Edit Training List" : "Create New Training List"}
-      onSubmit={onSuccess}
+      onSubmit={handleSubmit}
     >
       <div>
         <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
           Training List Title
         </label>
-        <input
+        <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
           placeholder="Staff Training"
           required
         />
       </div>
       <div>
-        <label className="block my-2 text-sm font-medium text-red-900 dark:text-white">
+        <Label>
           Training Items (separated by commas, newlines, or multiple spaces)
-        </label>
+        </Label>
         <TextArea
           value={rawItems}
           onChange={(e) => setRawItems(e.target.value)}
@@ -153,7 +152,6 @@ export const AddTrainingListForm: React.FC<AddTrainingListFormProps> = ({
       <Button
         type="submit"
         className="bg-green-600 text-white py-2 mt-2 px-4 rounded w-full"
-        onClick={handleSubmit}
       >
         Save Training List
       </Button>

@@ -10,6 +10,10 @@ import { ConfirmModal } from "../../components/ConfirmModal";
 import { AddTrainingListForm } from "../../components/AddTrainingListForm";
 import { TrainingTable } from "../../components/TrainingTable";
 import { Form } from "../../components/interaction/form/Form";
+import { Label } from "../../components/interaction/Input";
+import { Select } from "../../components/interaction/Select";
+import { Roles } from "meteor/alanning:roles";
+import { RoleEnum } from "/imports/api/accounts/roles";
 
 const FILTER_OPTIONS = [
   { value: "all", label: "All" },
@@ -27,13 +31,18 @@ export const TrainingPage = () => {
     "all",
   );
   const [showAddModal, setShowAddModal] = useState(false);
-  const [, setFormResetKey] = useState(0);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [formResetKey, setFormResetKey] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirm, setConfirm] = useState<"cancel" | "delete" | null>(null);
 
   const [editStaffId, setEditStaffId] = useState<string | null>(null);
   const [editCheckboxes, setEditCheckboxes] = useState<Record<string, boolean>>(
     {},
+  );
+  const [selectedListId, setSelectedListId] = useState<string | null>(null);
+  const [pendingSelectListId, setPendingSelectListId] = useState<string | null>(
+    null,
   );
 
   // Subscriptions
@@ -42,18 +51,38 @@ export const TrainingPage = () => {
   useSubscribe("users.all");
 
   // Trackers
-  const trainingList = useTracker(() => TrainingListsCollection.find().fetch());
+  const trainingLists = useTracker(() =>
+    TrainingListsCollection.find().fetch(),
+  );
   const trainingProgress = useTracker(() =>
     TrainingProgressCollection.find({}).fetch(),
   );
   const staff = useTracker(() => Meteor.users.find({}).fetch());
 
-  const currentList = trainingList[0] || null;
+  // Set initial selectedListId when trainingLists load
+  useEffect(() => {
+    if (trainingLists.length > 0 && !selectedListId) {
+      setSelectedListId(trainingLists[0]._id);
+    } else if (trainingLists.length === 0 && selectedListId) {
+      setSelectedListId(null);
+    }
+  }, [trainingLists, selectedListId]);
+
+  const currentList =
+    trainingLists.find((list) => list._id === selectedListId) || null;
   const items = currentList?.items || [];
 
   // Ensure all staff have progress entries in the DB
   useEffect(() => {
-    if (!currentList || staff.length === 0) return;
+    // Only run when currentList and its items are loaded
+    if (
+      !currentList ||
+      !Array.isArray(currentList.items) ||
+      currentList.items.length === 0 ||
+      staff.length === 0
+    ) {
+      return;
+    }
     staff.forEach((user) => {
       Meteor.call(
         "trainingProgress.ensureForStaff",
@@ -62,7 +91,7 @@ export const TrainingPage = () => {
         currentList.items,
       );
     });
-  }, [currentList, staff]);
+  }, [currentList?._id, currentList?.items, staff]);
 
   const handleDelete = () => {
     if (currentList) {
@@ -72,6 +101,14 @@ export const TrainingPage = () => {
         (error: Meteor.Error | undefined) => {
           if (error) {
             alert("Error deleting training list: " + error.reason);
+          } else {
+            // After deletion, set current list to the first in the collection (if any)
+            const updatedLists = TrainingListsCollection.find().fetch();
+            if (updatedLists.length > 0) {
+              setSelectedListId(updatedLists[0]._id);
+            } else {
+              setSelectedListId(null);
+            }
           }
         },
       );
@@ -155,46 +192,84 @@ export const TrainingPage = () => {
     return true;
   });
 
+  // Effect to select the new list when it appears
+  useEffect(() => {
+    if (
+      pendingSelectListId &&
+      trainingLists.some((list) => list._id === pendingSelectListId)
+    ) {
+      setSelectedListId(pendingSelectListId);
+      setPendingSelectListId(null);
+    }
+  }, [pendingSelectListId, trainingLists]);
+
+  // Check if current user is admin or manager
+  const isAdminOrManager = Roles.userIsInRole(Meteor.userId(), [
+    RoleEnum.ADMIN,
+    RoleEnum.MANAGER,
+  ]);
+
   return (
     <div className="flex flex-1 flex-col max-w-screen">
-      <div className="flex flex-wrap justify-between items-center p-4 gap-2">
+      <div className="flex flex-wrap items-end p-4 gap-2">
         {/* Filter */}
-        <div className="flex gap-2 px-4 items-center flex-wrap">
-          <label htmlFor="training-filter" className="font-medium text-red-900">
-            Filter:
-          </label>
-          <select
-            id="training-filter"
+        <div className="flex flex-col gap-1 px-4 min-w-[120px]">
+          <Label>Filter:</Label>
+          <Select
             value={filter}
             onChange={(e) => setFilter(e.target.value as typeof filter)}
-            className="border rounded-lg px-2 py-1 text-red-900 bg-white focus:ring-2 focus:ring-pink-400"
           >
             {FILTER_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
-        <div className="flex-1 min-w-[200px] flex justify-start items-center">
-          <span className="font-bold text-lg text-red-900">
-            {currentList ? currentList.title : ""}
-          </span>
-        </div>
-        {currentList && (
-          <Button
-            variant="negative"
-            onClick={() => {
-              setConfirm("delete");
-              setShowConfirmation(true);
-            }}
+        {/* Training List Select */}
+        <div className="flex flex-col gap-1 min-w-[200px]">
+          <Label>Training List:</Label>
+          <Select
+            value={selectedListId ?? ""}
+            onChange={(e) => setSelectedListId(e.target.value)}
+            disabled={trainingLists.length === 0}
           >
-            Delete Training List
-          </Button>
-        )}
-        <Button variant="positive" onClick={() => setShowAddModal(true)}>
-          {currentList ? "Edit Training List" : "Add Training List"}
-        </Button>
+            {trainingLists.map((list) => (
+              <option key={list._id} value={list._id}>
+                {list.title}
+              </option>
+            ))}
+          </Select>
+        </div>
+        {/* Button group aligned right */}
+        <div className="flex-1 flex justify-end items-end gap-2 min-w-[320px]">
+          {isAdminOrManager && currentList ? (
+            <>
+              <Button
+                variant="negative"
+                onClick={() => {
+                  setConfirm("delete");
+                  setShowConfirmation(true);
+                }}
+              >
+                Delete Training List
+              </Button>
+              <Button variant="positive" onClick={() => setShowEditModal(true)}>
+                Edit Training List
+              </Button>
+            </>
+          ) : (
+            <>
+              <span className="w-[140px]"></span>
+              <span className="w-[140px]"></span>
+            </>
+          )}
+          {isAdminOrManager && (
+            <Button variant="positive" onClick={() => setShowAddModal(true)}>
+              Add Training List
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Table */}
@@ -211,7 +286,7 @@ export const TrainingPage = () => {
               <TrainingTable
                 staffRows={filteredStaffRows}
                 items={items}
-                onEditStaff={handleEditStaff}
+                onEditStaff={isAdminOrManager ? handleEditStaff : undefined}
               />
             )}
           </div>
@@ -227,9 +302,30 @@ export const TrainingPage = () => {
         }}
       >
         <AddTrainingListForm
-          trainingList={currentList}
-          onSuccess={() => {
+          key={formResetKey}
+          onSuccess={(newListId) => {
             setShowAddModal(false);
+            setFormResetKey((prev) => prev + 1);
+            setConfirm(null);
+            setShowConfirmation(false);
+            if (newListId) setPendingSelectListId(newListId);
+          }}
+        />
+      </Modal>
+
+      {/* Edit Training List Modal */}
+      <Modal
+        open={showEditModal}
+        onClose={() => {
+          setConfirm("cancel");
+          setShowConfirmation(true);
+        }}
+      >
+        <AddTrainingListForm
+          trainingList={currentList}
+          key={formResetKey}
+          onSuccess={() => {
+            setShowEditModal(false);
             setFormResetKey((prev) => prev + 1);
             setConfirm(null);
             setShowConfirmation(false);
@@ -248,14 +344,14 @@ export const TrainingPage = () => {
         >
           <div className="flex flex-col gap-2">
             {items.map((item) => (
-              <label key={item.id} className="flex items-center gap-2">
+              <Label key={item.id}>
                 <input
                   type="checkbox"
                   checked={!!editCheckboxes[item.id]}
                   onChange={() => handleEditCheckboxChange(item.id)}
                 />
-                <span>{item.name}</span>
-              </label>
+                <span className="mx-2">{item.name}</span>
+              </Label>
             ))}
           </div>
           <div className="flex gap-2 mt-4">

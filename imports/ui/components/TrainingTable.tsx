@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import React from "react";
 import { Button } from "./interaction/Button";
 
@@ -46,9 +46,11 @@ export const TrainingTable = ({
             </div>
           ))}
         </div>
-        <div className="w-24 bg-press-up-light-purple py-1 px-2 border-y-2 border-press-up-light-purple rounded-r-lg flex items-center justify-center font-bold text-red-900 text-center">
-          Edit
-        </div>
+        {onEditStaff && (
+          <div className="w-24 bg-press-up-light-purple py-1 px-2 border-y-2 border-press-up-light-purple rounded-r-lg flex items-center justify-center font-bold text-red-900 text-center">
+            Edit
+          </div>
+        )}
       </div>
       {/* Body rows */}
       <div className="flex flex-col">
@@ -77,21 +79,23 @@ export const TrainingTable = ({
                       {completed ? (
                         <Check className="text-press-up-purple" />
                       ) : (
-                        "Not completed"
+                        <X className="text-press-up-grey" />
                       )}
                     </div>
                   );
                 })}
               </div>
-              <div className="w-24 flex items-center justify-center">
-                <Button
-                  variant="positive"
-                  width="fit"
-                  onClick={() => onEditStaff?.(row.id)}
-                >
-                  Edit
-                </Button>
-              </div>
+              {onEditStaff && (
+                <div className="w-24 flex items-center justify-center">
+                  <Button
+                    variant="positive"
+                    width="fit"
+                    onClick={() => onEditStaff?.(row.id)}
+                  >
+                    Edit
+                  </Button>
+                </div>
+              )}
             </div>
           ))
         ) : (
