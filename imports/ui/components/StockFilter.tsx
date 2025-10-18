@@ -1,15 +1,14 @@
 import React from "react";
+import { StockFilter as StockFilterEnum } from "../pages/inventory/types";
 
 interface StockFilterProps {
-  filter: "all" | "inStock" | "lowInStock" | "outOfStock";
-  onFilterChange: (
-    filter: "all" | "inStock" | "lowInStock" | "outOfStock",
-  ) => void;
+  filter: StockFilterEnum;
+  onFilterChange: (filter: StockFilterEnum) => void;
 }
 
 export const StockFilter = ({ filter, onFilterChange }: StockFilterProps) => {
   return (
-    <div className="mb-4 flex items-center">
+    <div className="flex items-center">
       <img
         src="/filter-icon.svg"
         alt="Filter Icon"
@@ -21,17 +20,13 @@ export const StockFilter = ({ filter, onFilterChange }: StockFilterProps) => {
       <select
         id="stock-filter"
         value={filter}
-        onChange={(e) =>
-          onFilterChange(
-            e.target.value as "all" | "inStock" | "lowInStock" | "outOfStock",
-          )
-        }
+        onChange={(e) => onFilterChange(e.target.value as StockFilterEnum)}
         className="border border-red-900 rounded-xl px-3 py-1 text-red-900 bg-white"
       >
-        <option value="all">All</option>
-        <option value="inStock">In Stock</option>
-        <option value="lowInStock">Low in Stock</option>
-        <option value="outOfStock">Out of Stock</option>
+        <option value={StockFilterEnum.ALL}>All</option>
+        <option value={StockFilterEnum.IN_STOCK}>In Stock</option>
+        <option value={StockFilterEnum.LOW_IN_STOCK}>Low in Stock</option>
+        <option value={StockFilterEnum.OUT_OF_STOCK}>Out of Stock</option>
       </select>
     </div>
   );
