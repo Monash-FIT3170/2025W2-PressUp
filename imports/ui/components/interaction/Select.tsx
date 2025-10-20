@@ -19,17 +19,20 @@ interface SelectProps
 }
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ variant = "default", placeholder, children, ...rest }, ref) => {
+  ({ variant = "default", placeholder, disabled, children, ...rest }, ref) => {
     const hasPlaceholder =
       typeof placeholder === "string" && placeholder.length > 0;
 
     return (
       <select
         ref={ref}
+        disabled={disabled}
         {...rest}
         className={clsx(
           "sm:text-3xl md:text-sm rounded-lg w-full p-3",
-          variantColours[variant],
+          disabled
+            ? "bg-gray-100 border border-gray-200 text-gray-500 cursor-not-allowed"
+            : variantColours[variant],
         )}
       >
         {hasPlaceholder && (

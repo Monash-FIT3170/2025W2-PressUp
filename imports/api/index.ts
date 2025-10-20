@@ -2,6 +2,7 @@ export { Supplier, SuppliersCollection } from "./suppliers/SuppliersCollection";
 export { MenuItem, MenuItemsCollection } from "./menuItems/MenuItemsCollection";
 export {
   StockItem,
+  StockLineItem,
   StockItemsCollection,
 } from "./stockItems/StockItemsCollection";
 export { Order, OrdersCollection } from "./orders/OrdersCollection";
