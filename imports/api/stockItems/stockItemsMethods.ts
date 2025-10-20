@@ -155,7 +155,7 @@ Meteor.methods({
     return mergedItemId || stockItemId;
   }),
 
-  "stockItems.disposeLineItem": requireLoginMethod(async function (
+  "stockItems.toggleDisposeLineItem": requireLoginMethod(async function (
     stockItemId: IdType,
     lineItemId: string,
   ) {
@@ -174,11 +174,12 @@ Meteor.methods({
       throw new Meteor.Error("not-found", "Line item not found");
     }
 
+    const currentLineItem = stockItem.lineItems[lineItemIndex];
     const updatedLineItems = [...stockItem.lineItems];
+
     updatedLineItems[lineItemIndex] = {
-      ...updatedLineItems[lineItemIndex],
-      disposed: true,
-      quantity: 0,
+      ...currentLineItem,
+      disposed: !currentLineItem.disposed,
     };
 
     return await StockItemsCollection.updateAsync(stockItemId, {

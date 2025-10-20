@@ -153,12 +153,8 @@ export const StockTable = ({
               </Button>
             )}
             {onDispose && (
-              <Button
-                variant="negative"
-                onClick={() => onDispose?.(item)}
-                disabled={item.disposed}
-              >
-                {item.disposed ? "Disposed" : "Dispose"}
+              <Button variant="negative" onClick={() => onDispose?.(item)}>
+                {item.disposed ? "Undo" : "Dispose"}
               </Button>
             )}
           </div>

@@ -50,7 +50,18 @@ export const StockPage = () => {
       const supplier = stockItem.supplier
         ? SuppliersCollection.find(stockItem.supplier).fetch()[0] || null
         : null;
-      result.push({ ...stockItem, supplier });
+
+      // Set quantity visually to 0 for disposed items
+      const processedLineItems = stockItem.lineItems.map((lineItem) => ({
+        ...lineItem,
+        quantity: lineItem.disposed ? 0 : lineItem.quantity,
+      }));
+
+      result.push({
+        ...stockItem,
+        supplier,
+        lineItems: processedLineItems,
+      });
     }
     return result;
   });
@@ -139,12 +150,12 @@ export const StockPage = () => {
 
   const handleDisposeItem = (item: LineItemWithDetails) => {
     Meteor.call(
-      "stockItems.disposeLineItem",
+      "stockItems.toggleDisposeLineItem",
       item.stockItemId,
       item.id,
       (error: Meteor.Error | undefined) => {
         if (error) {
-          alert("Error disposing item: " + error.reason);
+          alert("Error updating item: " + error.reason);
         }
       },
     );
