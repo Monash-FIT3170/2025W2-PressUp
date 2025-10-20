@@ -1,6 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { SuppliersCollection, StockItemsCollection } from "/imports/api";
 
 import { StockItemWithSupplier } from "../pages/inventory/types";
@@ -36,21 +36,28 @@ export const AddStockItemForm = ({
   const [quantity, setQuantity] = useState<string>("");
   const [location, setLocation] = useState("");
   const [supplier, setSupplier] = useState<string>(
-    String(prefillData?.supplier?._id || ""),
+    prefillData?.supplier?._id ? String(prefillData.supplier._id) : "",
   );
   const [expiry, setExpiry] = useState<string>("");
+
+  // Handle resetting of pre-filled form data
+  useEffect(() => {
+    if (!prefillData) {
+      setItemName("");
+      setSupplier("");
+    } else {
+      setItemName(prefillData.name || "");
+      setSupplier(
+        prefillData.supplier?._id ? String(prefillData.supplier._id) : "",
+      );
+    }
+  }, [prefillData]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
     const parsedQuantity = parseInt(quantity, 10);
-    if (
-      !itemName ||
-      !location ||
-      !supplier ||
-      isNaN(parsedQuantity) ||
-      parsedQuantity < 0
-    ) {
+    if (!itemName || !location || isNaN(parsedQuantity) || parsedQuantity < 0) {
       alert("Please fill in all fields correctly.");
       return;
     }
@@ -61,7 +68,7 @@ export const AddStockItemForm = ({
         name: itemName,
         quantity: parsedQuantity,
         location,
-        supplier: supplier || null,
+        supplier: supplier ? supplier : null,
         expiry: expiry ? new Date(expiry) : null,
       },
       (error: Meteor.Error | undefined) => {
@@ -103,8 +110,7 @@ export const AddStockItemForm = ({
           <Select
             value={supplier}
             onChange={(e) => setSupplier(e.target.value)}
-            placeholder="--Select supplier--"
-            required
+            placeholder="No supplier"
           >
             {suppliers
               .sort((a, b) => a.name.localeCompare(b.name))
