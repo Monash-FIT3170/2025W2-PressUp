@@ -23,6 +23,8 @@ import {
 } from "@mui/material";
 import type { UiOrder } from "./KitchenMgmtTypes";
 import { OrderType } from "/imports/api/orders/OrdersCollection";
+import { MenuItemsCollection } from "/imports/api/menuItems/MenuItemsCollection";
+import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 
 type UiMenuItem = UiOrder["menuItems"][number];
 
@@ -53,6 +55,7 @@ function formatWait(ms: number) {
 }
 
 export const OrderCard = ({ order }: OrderCardProps) => {
+  useSubscribe("menuItems");
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: order._id,
@@ -162,6 +165,136 @@ export const OrderCard = ({ order }: OrderCardProps) => {
     );
   };
 
+  // Build default selections from canonical
+  const getDefaultBaseKeys = (
+    baseDefs?: Array<{ key: string; default: boolean; removable?: boolean }>,
+  ) =>
+    (baseDefs ?? [])
+      .filter((b) => (b.removable === false ? true : !!b.default))
+      .map((b) => b.key);
+
+  const getDefaultSelections = (
+    optionGroups?: Array<{
+      id: string;
+      label: string;
+      type: "single" | "multiple";
+      required?: boolean;
+      options: Array<{ key: string; label: string; default?: boolean }>;
+    }>,
+  ) => {
+    const out: Record<string, string[]> = {};
+    for (const g of optionGroups ?? []) {
+      const defaults = g.options.filter((o) => o.default).map((o) => o.key);
+      if (g.type === "single") {
+        if (defaults.length > 0) out[g.id] = [defaults[0]];
+        else if (g.required && g.options[0]) out[g.id] = [g.options[0].key];
+        else out[g.id] = [];
+      } else {
+        out[g.id] = defaults;
+      }
+    }
+    return out;
+  };
+
+  const sameArray = (a: string[] = [], b: string[] = []) => {
+    if (a.length !== b.length) return false;
+    const sa = [...a].sort().join("|");
+    const sb = [...b].sort().join("|");
+    return sa === sb;
+  };
+
+  // ===== Canonical map for the items on this card (one hook, no hooks-in-loop) =====
+  const canonicalMap = useTracker(() => {
+    const rawIds = (order.menuItems ?? [])
+      .map((mi) => (mi as any).menuItemId)
+      .filter(Boolean);
+
+    if (rawIds.length === 0) return {} as Record<string, any>;
+
+    const asStrings = rawIds.map((v: any) =>
+      typeof v === "string" ? v : (v?._str ?? String(v)),
+    );
+
+    const selector = { _id: { $in: [...rawIds, ...asStrings] as any } };
+    const docs = MenuItemsCollection.find(selector as any).fetch();
+
+    const map: Record<string, any> = {};
+    docs.forEach((d: any) => {
+      const keyObj = d?._id;
+      const keyStr =
+        typeof keyObj === "string" ? keyObj : (keyObj?._str ?? String(keyObj));
+      map[keyStr] = d;
+      if (keyObj) map[keyObj] = d;
+    });
+    return map;
+  }, [order.menuItems]);
+
+  // ===== Build brief "customization notes" for a line item =====
+  const computeCustomNotes = (menuItem: UiMenuItem): string[] => {
+    const rawId: any = (menuItem as any)?.menuItemId;
+    const keyStr =
+      typeof rawId === "string" ? rawId : (rawId?._str ?? String(rawId));
+    const canonical = canonicalMap[keyStr] ?? canonicalMap[rawId];
+    const notes: string[] = [];
+    if (!canonical) return notes;
+
+    const baseDefs = canonical.baseIngredients ?? [];
+    const defaultBaseKeys = getDefaultBaseKeys(baseDefs);
+    const chosenBase = new Set(
+      (menuItem as any).baseIncludedKeys &&
+      (menuItem as any).baseIncludedKeys.length > 0
+        ? (menuItem as any).baseIncludedKeys
+        : defaultBaseKeys,
+    );
+
+    // Base adds/removals (skip non-removable)
+    for (const b of baseDefs) {
+      if (b.removable === false) continue;
+      const wasDefault = !!b.default;
+      const isOn = chosenBase.has(b.key);
+      if (wasDefault && !isOn) notes.push(`No ${b.label}`);
+      if (!wasDefault && isOn) notes.push(`Add ${b.label}`);
+    }
+
+    // Option changes
+    const optionGroups = canonical.optionGroups ?? [];
+    const defaultSelections = getDefaultSelections(optionGroups);
+    const savedSelections =
+      ((menuItem as any).optionSelections as Record<string, string[]>) ?? {};
+
+    for (const g of optionGroups) {
+      const baseKey = g.id.split("-")[0];
+      const baseExists = baseDefs.some(
+        (b: { key: string }) => b.key === baseKey,
+      );
+      if (baseExists && !chosenBase.has(baseKey)) continue;
+
+      // saved/default arrays
+      const savedRaw = Array.isArray(savedSelections[g.id])
+        ? savedSelections[g.id]
+        : [];
+      const def = defaultSelections[g.id] ?? [];
+
+      const saved = savedRaw.length === 0 && def.length > 0 ? def : savedRaw;
+
+      if (!sameArray(saved, def)) {
+        const savedLabels = g.options
+          .filter((o: { key: string }) => saved.includes(o.key))
+          .map((o: { label: string }) => o.label);
+
+        if (g.type === "single") {
+          if (savedLabels.length > 0) {
+            notes.push(`${g.label}: ${savedLabels[0]}`);
+          }
+        } else if (savedLabels.length > 0) {
+          notes.push(`${g.label}: ${savedLabels.join(", ")}`);
+        }
+      }
+    }
+
+    return notes;
+  };
+
   return (
     <>
       <div
@@ -207,16 +340,25 @@ export const OrderCard = ({ order }: OrderCardProps) => {
                 : "Takeaway"}
             </p>
             <p className="text-sm text-press-up-purple">{order.createdAt}</p>
-            <ul className="mt-3 list-disc list-inside text-lg text-press-up-purple">
+            <ul className="mt-3 space-y-1 text-lg text-press-up-purple">
               {Array.isArray(order.menuItems) && order.menuItems.length > 0 ? (
-                order.menuItems.map((item, index) => (
-                  <li key={index}>
-                    <span className="ml-2 text-base font-semibold">
-                      {item.quantity} x{" "}
-                    </span>
-                    {item.name}
-                  </li>
-                ))
+                order.menuItems.map((item, index) => {
+                  const notes = computeCustomNotes(item);
+                  return (
+                    <li key={index} className="flex flex-wrap items-baseline">
+                      <span className="mr-2">-</span>
+                      <span className="font-semibold mr-1">
+                        {item.quantity}x
+                      </span>
+                      <span className="mr-2">{item.name}</span>
+                      {notes.length > 0 && (
+                        <span className="text-xs text-gray-500">
+                          {notes.join(" · ")}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })
               ) : (
                 <li className="italic text-sm text-press-up-purple">
                   No items
@@ -295,30 +437,43 @@ export const OrderCard = ({ order }: OrderCardProps) => {
 
           <List dense>
             {items.length > 0 ? (
-              items.map((it, idx) => (
-                <ListItem
-                  key={`${it.name}-${idx}`}
-                  secondaryAction={<Chip label={`x${it.quantity}`} />}
-                  disableGutters
-                >
-                  <ListItemIcon>
-                    <Checkbox
-                      edge="start"
-                      checked={!!it.served}
-                      onChange={() => toggleServed(idx)}
-                      tabIndex={-1}
+              items.map((it, idx) => {
+                const notes = computeCustomNotes(it);
+                return (
+                  <ListItem
+                    key={`${it.name}-${idx}`}
+                    secondaryAction={<Chip label={`x${it.quantity}`} />}
+                    disableGutters
+                  >
+                    <ListItemIcon>
+                      <Checkbox
+                        edge="start"
+                        checked={!!it.served}
+                        onChange={() => toggleServed(idx)}
+                        tabIndex={-1}
+                      />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={it.name}
+                      secondary={
+                        notes.length > 0 ? (
+                          <span
+                            style={{ color: "#6b7280" /* Tailwind gray-500 */ }}
+                          >
+                            {notes.join(" · ")}
+                          </span>
+                        ) : undefined
+                      }
                     />
-                  </ListItemIcon>
-                  <ListItemText primary={it.name} />
-                </ListItem>
-              ))
+                  </ListItem>
+                );
+              })
             ) : (
               <Typography variant="body2" fontStyle="italic">
                 No items
               </Typography>
             )}
           </List>
-
           {/* Status Dropdown */}
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel>Status</InputLabel>
