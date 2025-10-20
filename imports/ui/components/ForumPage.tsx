@@ -40,7 +40,7 @@ export default function ForumPage() {
     .sort((a, b) => {
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
-      
+
       return b.datePosted.getTime() - a.datePosted.getTime();
     });
   const [subject, setSubject] = useState<string>("");
@@ -110,7 +110,7 @@ export default function ForumPage() {
 
   const handlePinPost = (postId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent post selection when clicking pin
-    Meteor.call("posts.pin", postId);
+    Meteor.call("posts.togglePin", postId);
   };
 
   return (
