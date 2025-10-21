@@ -1,3 +1,4 @@
+import { OrdersCollection } from "../orders/OrdersCollection";
 import { Meteor } from "meteor/meteor";
 import { requireLoginMethod } from "../accounts/wrappers";
 import { Tables, TablesCollection } from "./TablesCollection";
@@ -152,5 +153,58 @@ Meteor.methods({
     if (!tableID)
       throw new Meteor.Error("invalid-arguments", "Table ID is required");
     return await TablesCollection.removeAsync(tableID);
+  }),
+
+  "tables.mergeTablesAndOrders": requireLoginMethod(async function (params: {
+    tableNos: number[];
+    mergedOrderId: string;
+    mergedMenuItems: any[];
+    mergedTotal: number;
+  }) {
+    const { tableNos, mergedOrderId, mergedMenuItems, mergedTotal } = params;
+    if (!Array.isArray(tableNos) || tableNos.length < 2)
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "At least two tables required",
+      );
+    if (!mergedOrderId)
+      throw new Meteor.Error("invalid-arguments", "Merged order ID required");
+
+    // Find all tables
+    const tables = await TablesCollection.find({
+      tableNo: { $in: tableNos },
+    }).fetchAsync();
+    if (tables.length !== tableNos.length)
+      throw new Meteor.Error("not-found", "Some tables not found");
+
+    // Find all active orders for these tables
+    const activeOrderIDs = tables.map((t) => t.activeOrderID).filter(Boolean);
+      // Update merged order: set menuItems, totalPrice, and assign all tableNos
+      await OrdersCollection.updateAsync(mergedOrderId, {
+        $set: {
+          menuItems: mergedMenuItems,
+          totalPrice: mergedTotal,
+          tableNo: tableNos,
+        },
+      });
+
+    // Remove all other orders (except mergedOrderId) if they exist and are not paid
+    for (const oid of activeOrderIDs) {
+      if (oid && oid !== mergedOrderId) {
+        const order = await OrdersCollection.findOneAsync(oid);
+        if (order && !order.paid) {
+          await OrdersCollection.removeAsync(oid);
+        }
+      }
+    }
+
+    // Update all tables: set activeOrderID to mergedOrderId, add to orderIDs
+    for (const t of tables) {
+      await TablesCollection.updateAsync(t._id, {
+        $set: { activeOrderID: mergedOrderId, isOccupied: true },
+        $addToSet: { orderIDs: mergedOrderId },
+      });
+    }
+    return true;
   }),
 });

@@ -148,6 +148,9 @@ export const TablesPage = () => {
   );
 
   const [editMode, setEditMode] = useState(false);
+  // Merge mode state
+  const [mergeMode, setMergeMode] = useState(false);
+  const [selectedMergeTables, setSelectedMergeTables] = useState<number[]>([]);
   const userIsAdmin = Meteor.user()?.username === "admin";
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -190,6 +193,62 @@ export const TablesPage = () => {
   }, [tablesFromDb, grid, GRID_SIZE]);
 
   const markChanged = () => setHasChanges(true);
+
+  // Merge tables logic
+  const toggleMergeTable = (tableNo: number) => {
+    setSelectedMergeTables((prev) =>
+      prev.includes(tableNo)
+        ? prev.filter((n) => n !== tableNo)
+        : [...prev, tableNo],
+    );
+  };
+
+  const resetMergeMode = () => {
+    setMergeMode(false);
+    setSelectedMergeTables([]);
+  };
+
+  // Merge tables and orders
+  const handleMergeTables = async () => {
+    if (selectedMergeTables.length < 2) return;
+    // Find all selected tables
+    const tablesToMerge = tablesFromDb.filter((t) =>
+      selectedMergeTables.includes(t.tableNo),
+    );
+    // Find all active orders for these tables
+    const activeOrders = orders.filter((o) =>
+      tablesToMerge.some((t) => t.activeOrderID && t.activeOrderID === o._id),
+    );
+    if (activeOrders.length === 0) return;
+    // Pick the earliest order as the merged order
+    const mergedOrder = activeOrders.reduce((earliest, curr) =>
+      curr.createdAt < earliest.createdAt ? curr : earliest,
+    );
+    // Merge menu items from all orders
+    const mergedMenuItems = activeOrders.flatMap((o) => o.menuItems);
+    // Calculate new total price
+    const mergedTotal = mergedMenuItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
+    // Call server method to update orders and tables
+    Meteor.call(
+      "tables.mergeTablesAndOrders",
+      {
+        tableNos: selectedMergeTables,
+        mergedOrderId: mergedOrder._id,
+        mergedMenuItems,
+        mergedTotal,
+      },
+      (err: any) => {
+        if (err) {
+          alert("Failed to merge tables: " + err.reason);
+        } else {
+          resetMergeMode();
+        }
+      },
+    );
+  };
 
   const moveTable = (fromIdx: number, toIdx: number) => {
     const updated = [...grid];
@@ -237,13 +296,23 @@ export const TablesPage = () => {
       }),
     });
 
+    // Merge mode: allow selection
+    const isSelectedForMerge =
+      table && mergeMode && selectedMergeTables.includes(table.tableNo);
     return (
       <div
         ref={drop as unknown as React.Ref<HTMLDivElement>}
         className={`relative flex items-center justify-center border border-gray-300 bg-white rounded-full min-h-[150px] min-w-[150px] ${
           isOver && canDrop ? "bg-purple-100" : ""
-        }`}
-        style={{ height: 150, width: 150 }}
+        } ${isSelectedForMerge ? "ring-4 ring-press-up-purple" : ""}`}
+        style={{
+          height: 150,
+          width: 150,
+          cursor: mergeMode && table ? "pointer" : undefined,
+        }}
+        onClick={() => {
+          if (mergeMode && table) toggleMergeTable(table.tableNo);
+        }}
       >
         {table ? (
           <TableCard
@@ -255,6 +324,7 @@ export const TablesPage = () => {
             dragRef={drag as unknown as React.Ref<HTMLDivElement>}
             onEdit={() => {
               // open modal and capture a snapshot of the table so Cancel can revert
+              if (mergeMode) return;
               setEditTableData(table);
               setModalOriginalTable(table);
               setModalType("editTable");
@@ -272,6 +342,17 @@ export const TablesPage = () => {
             +
           </button>
         ) : null}
+        {mergeMode && table && (
+          <div
+            className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+              isSelectedForMerge
+                ? "bg-press-up-purple border-press-up-purple text-white"
+                : "bg-white border-gray-400"
+            }`}
+          >
+            {isSelectedForMerge ? "✓" : ""}
+          </div>
+        )}
       </div>
     );
   };
@@ -360,6 +441,35 @@ export const TablesPage = () => {
                   </Button>
                 </Hide>
               ))}
+            {/* Merge Tables Button */}
+            {!editMode && !mergeMode && (
+              <Button
+                variant="positive"
+                onClick={() => setMergeMode(true)}
+                className="ml-2"
+              >
+                Merge Tables
+              </Button>
+            )}
+            {mergeMode && (
+              <>
+                <Button
+                  variant="negative"
+                  onClick={resetMergeMode}
+                  className="ml-2"
+                >
+                  Cancel Merge
+                </Button>
+                <Button
+                  variant="positive"
+                  onClick={handleMergeTables}
+                  disabled={selectedMergeTables.length < 2}
+                  className="ml-2"
+                >
+                  Merge Selected ({selectedMergeTables.length})
+                </Button>
+              </>
+            )}
             {/* Legend - always visible */}
             <div className="flex gap-4 ml-6">
               <div className="flex items-center gap-1">
@@ -369,6 +479,10 @@ export const TablesPage = () => {
               <div className="flex items-center gap-1">
                 <div className="w-5 h-5 rounded-full bg-press-up-grey border border-gray-500"></div>
                 <span className="text-sm">Not Occupied</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-5 h-5 rounded-full border-2 border-press-up-purple"></div>
+                <span className="text-sm">Selected for Merge</span>
               </div>
             </div>
           </div>
@@ -673,12 +787,12 @@ export const TablesPage = () => {
                       <Button
                         variant="negative"
                         disabled={!selectedMoveOrderNo}
-                        onClick={async () => {
-                          // Update the selected order's tableNo
+                          onClick={async () => {
+                          // Update the selected order's tableNo (store as array)
                           await Meteor.callAsync(
                             "orders.updateOrder",
                             selectedMoveOrderNo,
-                            { tableNo: editTableData.tableNo },
+                            { tableNo: [editTableData.tableNo] },
                           );
                           // Add order to table
                           await Meteor.callAsync(
@@ -774,11 +888,11 @@ export const TablesPage = () => {
                             true,
                             1,
                           );
-                          // Update order's tableNo
+                          // Update order's tableNo (store as array)
                           await Meteor.callAsync(
                             "orders.updateOrder",
                             editTableData.activeOrderID,
-                            { tableNo: newTable.tableNo },
+                            { tableNo: [newTable.tableNo] },
                           );
                           // Re-render by updating grid from DB
                           const refreshedTables = TablesCollection.find(
