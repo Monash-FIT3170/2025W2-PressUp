@@ -290,6 +290,13 @@ export const TablesPage = () => {
     );
   };
 
+  // splitAvailable: whether any table references an order that is merged (has multiple tableNos)
+  const splitAvailable = tablesFromDb.some((t) => {
+    if (!t.activeOrderID) return false;
+    const o = orders.find((x) => x._id === t.activeOrderID);
+    return !!(o && o.tableNo && o.tableNo.length > 1);
+  });
+
   const moveTable = (fromIdx: number, toIdx: number) => {
     const updated = [...grid];
     updated[toIdx] = updated[fromIdx];
@@ -341,20 +348,45 @@ export const TablesPage = () => {
       table && mergeMode && selectedMergeTables.includes(table.tableNo);
     const isSelectedForSplit =
       table && splitMode && selectedSplitTables.includes(table.tableNo);
+
+    // Determine whether this table is eligible for splitting.
+    // A table is eligible for split when it has an activeOrderID and that
+    // order has multiple table numbers (i.e. a merged order).
+    const orderForTable = table?.activeOrderID
+      ? orders.find((o) => o._id === table.activeOrderID)
+      : null;
+    const isSplitEligible = !!(
+      table &&
+      splitMode &&
+      orderForTable &&
+      orderForTable.tableNo &&
+      orderForTable.tableNo.length > 1
+    );
     return (
       <div
         ref={drop as unknown as React.Ref<HTMLDivElement>}
         className={`relative flex items-center justify-center border border-gray-300 bg-white rounded-full min-h-[150px] min-w-[150px] ${
           isOver && canDrop ? "bg-purple-100" : ""
-        } ${isSelectedForMerge || isSelectedForSplit ? "ring-4 ring-press-up-purple" : ""}`}
+        } ${isSelectedForMerge || isSelectedForSplit ? "ring-4 ring-press-up-purple" : ""} ${
+          // dim non-eligible tables when in split mode
+          splitMode && table && !isSplitEligible ? "opacity-40" : ""
+        }`}
         style={{
           height: 150,
           width: 150,
-          cursor: (mergeMode || splitMode) && table ? "pointer" : undefined,
+          cursor: splitMode && table && !isSplitEligible
+            ? "not-allowed"
+            : (mergeMode || splitMode) && table
+            ? "pointer"
+            : undefined,
         }}
         onClick={() => {
           if (mergeMode && table) toggleMergeTable(table.tableNo);
-          else if (splitMode && table) toggleSplitTable(table.tableNo);
+          else if (splitMode && table) {
+            // prevent selecting non-eligible tables in split mode
+            if (!isSplitEligible) return;
+            toggleSplitTable(table.tableNo);
+          }
         }}
       >
         {table ? (
@@ -367,7 +399,11 @@ export const TablesPage = () => {
             dragRef={drag as unknown as React.Ref<HTMLDivElement>}
             onEdit={() => {
               // open modal and capture a snapshot of the table so Cancel can revert
+              // Do not allow editing while in merge mode. During split mode, only
+              // allow edit if the table is eligible for splitting (so we don't
+              // open edit UI for greyed-out tables).
               if (mergeMode) return;
+              if (splitMode && !isSplitEligible) return;
               setEditTableData(table);
               setModalOriginalTable(table);
               setModalType("editTable");
@@ -547,10 +583,7 @@ export const TablesPage = () => {
         )}
         {/* Merge Tables Button */}
         {editMode && !mergeMode && !splitMode && (
-          <Button
-            variant="positive"
-            onClick={() => setMergeMode(true)}
-          >
+          <Button variant="positive" onClick={() => setMergeMode(true)}>
             Merge Tables
           </Button>
         )}
@@ -573,10 +606,13 @@ export const TablesPage = () => {
           </>
         )}
         {/* Split Tables Button */}
-        {editMode && !splitMode && !mergeMode && (
+        {editMode && !splitMode && !mergeMode && splitAvailable && (
           <Button
             variant="positive"
-            onClick={() => setSplitMode(true)}
+            onClick={() => {
+              resetMergeMode();
+              setSplitMode(true);
+            }}
             className="ml-2"
           >
             Split Tables

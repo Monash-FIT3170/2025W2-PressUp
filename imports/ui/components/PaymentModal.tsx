@@ -37,16 +37,11 @@ export const PaymentModal = ({ order, splits }: PaymentModalProps) => {
 
     // Clear the table(s) if dine-in
     if (order.tableNo !== null && order.tableNo !== undefined) {
-      if (Array.isArray(order.tableNo)) {
-        for (const tn of order.tableNo) {
-          const tbl = TablesCollection.findOne({ tableNo: tn });
-          if (tbl?._id) {
-            Meteor.call("tables.clearOrder", tbl._id);
-          }
+      for (const tn of order.tableNo) {
+        const tbl = TablesCollection.findOne({ tableNo: tn });
+        if (tbl?._id) {
+          Meteor.call("tables.clearOrder", tbl._id);
         }
-      } else {
-        const tbl = TablesCollection.findOne({ tableNo: order.tableNo as any });
-        if (tbl?._id) Meteor.call("tables.clearOrder", tbl._id);
       }
     }
   };

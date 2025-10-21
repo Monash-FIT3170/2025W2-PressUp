@@ -162,7 +162,7 @@ Meteor.methods({
     mergedTotal: number;
   }) {
     const { tableNos, mergedOrderId, mergedMenuItems, mergedTotal } = params;
-    if (!Array.isArray(tableNos) || tableNos.length < 2)
+    if (!tableNos || tableNos.length < 2)
       throw new Meteor.Error(
         "invalid-arguments",
         "At least two tables required",
@@ -256,7 +256,7 @@ Meteor.methods({
     tableNos: number[];
   }) {
     const { orderId, tableNos } = params;
-    if (!orderId || !Array.isArray(tableNos) || tableNos.length === 0)
+    if (!orderId || !tableNos || tableNos.length === 0)
       throw new Meteor.Error(
         "invalid-arguments",
         "Order ID and at least one table number are required",
