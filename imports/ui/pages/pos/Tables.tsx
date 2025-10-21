@@ -178,9 +178,7 @@ export const TablesPage = () => {
   const [selectedMoveTableNo, setSelectedMoveTableNo] = useState<string | null>(
     null,
   );
-  const [selectedMoveOrderNo, setSelectedMoveOrderNo] = useState<string | null>(
-    null,
-  );
+  const [addOrderId, setAddOrderId] = useState<string | null>(null);
 
   // Prefill grid with tables from DB on initial load
   useEffect(() => {
@@ -898,8 +896,8 @@ export const TablesPage = () => {
                     </label>
                     <div className="mb-3 flex flex-row items-center justify-between gap-2">
                       <select
-                        value={selectedMoveOrderNo ?? ""}
-                        onChange={(e) => setSelectedMoveOrderNo(e.target.value)}
+                        value={addOrderId ?? ""}
+                        onChange={(e) => setAddOrderId(e.target.value)}
                         className="text-lg font-semibold bg-press-up-negative-button text-white border-none outline-none rounded-full px-4 py-2 shadow-md"
                         style={{ minWidth: 160 }}
                       >
@@ -923,48 +921,6 @@ export const TablesPage = () => {
                             </option>
                           ))}
                       </select>
-                      <Button
-                        variant="negative"
-                        disabled={!selectedMoveOrderNo}
-                        onClick={async () => {
-                          // Update the selected order's tableNo (store as array)
-                          await Meteor.callAsync(
-                            "orders.updateOrder",
-                            selectedMoveOrderNo,
-                            { tableNo: [editTableData.tableNo] },
-                          );
-                          // Add order to table
-                          await Meteor.callAsync(
-                            "tables.addOrder",
-                            editTableData._id,
-                            selectedMoveOrderNo,
-                          );
-                          // Set table as occupied with at least 1 occupant
-                          await Meteor.callAsync(
-                            "tables.setOccupied",
-                            editTableData._id,
-                            true,
-                            1,
-                          );
-                          // Re-render by updating grid from DB
-                          const refreshedTables = TablesCollection.find(
-                            {},
-                            { sort: { tableNo: 1 } },
-                          ).fetch();
-                          const newGrid = Array(GRID_SIZE).fill(null);
-                          refreshedTables.forEach((table, idx) => {
-                            if (idx < GRID_SIZE) {
-                              newGrid[idx] = table;
-                            }
-                          });
-                          setGrid(newGrid);
-                          setModalType(null);
-                          markChanged();
-                          goToOrder(String(selectedMoveOrderNo));
-                        }}
-                      >
-                        Add Order
-                      </Button>
                     </div>
                   </div>
                 )}
@@ -1131,6 +1087,28 @@ export const TablesPage = () => {
                               parseInt(occupancyInput || "0", 10),
                             );
                           }
+                          // If an order is selected, add it now
+                          if (addOrderId) {
+                            // Update the selected order's tableNo (store as array)
+                            await Meteor.callAsync(
+                              "orders.updateOrder",
+                              addOrderId,
+                              { tableNo: [editTableData.tableNo] },
+                            );
+                            // Add order to table
+                            await Meteor.callAsync(
+                              "tables.addOrder",
+                              dbTable._id,
+                              addOrderId,
+                            );
+                            // Set table as occupied with at least 1 occupant
+                            await Meteor.callAsync(
+                              "tables.setOccupied",
+                              dbTable._id,
+                              true,
+                              1,
+                            );
+                          }
                           // clear snapshot after successful save
                           setModalOriginalTable(null);
                           setClearOrderOnSave(false);
@@ -1141,6 +1119,8 @@ export const TablesPage = () => {
                           );
                         }
                       }
+                      // Clear order after save
+                      setAddOrderId(null);
                     }}
                   >
                     Save
@@ -1163,6 +1143,7 @@ export const TablesPage = () => {
                         setOccupancyInput("");
                         setOccupiedToggle(false);
                       }
+                      setAddOrderId(null);
                     }}
                   >
                     Cancel
