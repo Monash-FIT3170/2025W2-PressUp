@@ -374,11 +374,12 @@ export const TablesPage = () => {
         style={{
           height: 150,
           width: 150,
-          cursor: splitMode && table && !isSplitEligible
-            ? "not-allowed"
-            : (mergeMode || splitMode) && table
-            ? "pointer"
-            : undefined,
+          cursor:
+            splitMode && table && !isSplitEligible
+              ? "not-allowed"
+              : (mergeMode || splitMode) && table
+                ? "pointer"
+                : undefined,
         }}
         onClick={() => {
           if (mergeMode && table) toggleMergeTable(table.tableNo);
@@ -542,6 +543,73 @@ export const TablesPage = () => {
                   </Button>
                 </Hide>
               ))}
+            {userIsAdmin && (
+              <>
+                {/* Merge/Split entry buttons */}
+                
+                  {!mergeMode && !splitMode && (
+                    <Button
+                      variant="positive"
+                      onClick={() => {
+                        // entering merge mode; clear split selections
+                        resetSplitMode();
+                        setMergeMode(true);
+                      }}
+                    >
+                      Merge Tables
+                    </Button>
+                  )}
+                  {!splitMode && !mergeMode && splitAvailable && (
+                    <Button
+                      variant="positive"
+                      onClick={() => {
+                        // entering split mode; clear merge selections
+                        resetMergeMode();
+                        setSplitMode(true);
+                      }}
+                    >
+                      Split Tables
+                    </Button>
+                  )}
+                {/* Merge/Split selected buttons */}
+                  {/* Merge Tables Button */}
+                  {mergeMode && (
+                    <div className="flex gap-2 items-center">
+                      <Button
+                        variant="positive"
+                        onClick={handleMergeTables}
+                        disabled={selectedMergeTables.length < 2}
+                      >
+                        Merge Selected ({selectedMergeTables.length})
+                      </Button>
+                      <Button variant="negative" onClick={resetMergeMode}>
+                        Cancel Merge
+                      </Button>
+                    </div>
+                  )}
+                  {/* Split Tables Button */}
+                  {splitMode && (
+                    <div className="flex gap-2 items-center">
+                      <Button
+                        variant="positive"
+                        onClick={handleSplitTables}
+                        disabled={selectedSplitTables.length < 1}
+                      >
+                        Split Selected ({selectedSplitTables.length})
+                      </Button>
+                      <Button
+                        variant="negative"
+                        onClick={() => {
+                          setSplitMode(false);
+                          setSelectedSplitTables([]);
+                        }}
+                      >
+                        Cancel Split
+                      </Button>
+                    </div>
+                  )}
+              </>
+            )}
             {/* Legend - always visible */}
             <div className="flex gap-4 ml-6">
               <div className="flex items-center gap-1">
@@ -581,65 +649,6 @@ export const TablesPage = () => {
             </Button>
           </div>
         )}
-        {/* Merge Tables Button */}
-        {editMode && !mergeMode && !splitMode && (
-          <Button variant="positive" onClick={() => setMergeMode(true)}>
-            Merge Tables
-          </Button>
-        )}
-        {editMode && mergeMode && (
-          <>
-            <Button
-              variant="positive"
-              onClick={handleMergeTables}
-              disabled={selectedMergeTables.length < 2}
-            >
-              Merge Selected ({selectedMergeTables.length})
-            </Button>
-            <Button
-              variant="negative"
-              onClick={resetMergeMode}
-              className="ml-2"
-            >
-              Cancel Merge
-            </Button>
-          </>
-        )}
-        {/* Split Tables Button */}
-        {editMode && !splitMode && !mergeMode && splitAvailable && (
-          <Button
-            variant="positive"
-            onClick={() => {
-              resetMergeMode();
-              setSplitMode(true);
-            }}
-            className="ml-2"
-          >
-            Split Tables
-          </Button>
-        )}
-        {editMode && splitMode && (
-          <>
-            <Button
-              variant="positive"
-              onClick={handleSplitTables}
-              disabled={selectedSplitTables.length < 1}
-            >
-              Split Selected ({selectedSplitTables.length})
-            </Button>
-            <Button
-              variant="negative"
-              onClick={() => {
-                setSplitMode(false);
-                setSelectedSplitTables([]);
-              }}
-              className="ml-2"
-            >
-              Cancel Split
-            </Button>
-          </>
-        )}
-
         {/* Table grid */}
         <div className="grid grid-cols-5 gap-16 p-4 justify-items-center">
           {grid.map((table, idx) => (
