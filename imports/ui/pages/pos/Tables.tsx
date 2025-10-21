@@ -208,13 +208,20 @@ export const TablesPage = () => {
 
   const toggleSplitTable = (tableNo: number) => {
     setSelectedSplitTables((prev) =>
-      prev.includes(tableNo) ? prev.filter((n) => n !== tableNo) : [...prev, tableNo],
+      prev.includes(tableNo)
+        ? prev.filter((n) => n !== tableNo)
+        : [...prev, tableNo],
     );
   };
 
   const resetMergeMode = () => {
     setMergeMode(false);
     setSelectedMergeTables([]);
+  };
+
+  const resetSplitMode = () => {
+    setSplitMode(false);
+    setSelectedSplitTables([]);
   };
 
   // Merge tables and orders
@@ -262,9 +269,12 @@ export const TablesPage = () => {
   const handleSplitTables = async () => {
     if (selectedSplitTables.length === 0) return;
     // determine merged order id (use first selected table's activeOrderID)
-    const table = tablesFromDb.find((t) => t.tableNo === selectedSplitTables[0]);
+    const table = tablesFromDb.find(
+      (t) => t.tableNo === selectedSplitTables[0],
+    );
     const mergedOrderId = table?.activeOrderID;
-    if (!mergedOrderId) return alert("Selected table has no active merged order");
+    if (!mergedOrderId)
+      return alert("Selected table has no active merged order");
 
     Meteor.call(
       "tables.splitTablesFromOrder",
@@ -327,8 +337,10 @@ export const TablesPage = () => {
     });
 
     // Merge/Split mode: allow selection
-    const isSelectedForMerge = table && mergeMode && selectedMergeTables.includes(table.tableNo);
-    const isSelectedForSplit = table && splitMode && selectedSplitTables.includes(table.tableNo);
+    const isSelectedForMerge =
+      table && mergeMode && selectedMergeTables.includes(table.tableNo);
+    const isSelectedForSplit =
+      table && splitMode && selectedSplitTables.includes(table.tableNo);
     return (
       <div
         ref={drop as unknown as React.Ref<HTMLDivElement>}
@@ -407,7 +419,9 @@ export const TablesPage = () => {
         "No permissions to edit table layout.",
       );
     }
-
+    // Clear any merge/split state when entering edit mode
+    resetMergeMode();
+    resetSplitMode();
     setOriginalGrid(JSON.parse(JSON.stringify(grid)));
     setEditMode(true);
     setHasChanges(false);
@@ -417,6 +431,9 @@ export const TablesPage = () => {
     setHasChanges(false);
     setEditMode(false);
     setOriginalGrid(null);
+    // clear merge/split state on save
+    resetMergeMode();
+    resetSplitMode();
   };
 
   const discardChanges = () => {
@@ -425,6 +442,9 @@ export const TablesPage = () => {
     }
     setHasChanges(false);
     setEditMode(false);
+    // clear merge/split state on discard
+    resetMergeMode();
+    resetSplitMode();
     setModalType(null);
   };
 
@@ -433,6 +453,9 @@ export const TablesPage = () => {
       setModalType("exitConfirm");
     } else {
       setEditMode(false);
+      // clear any merge/split selection visuals when leaving edit mode
+      resetMergeMode();
+      resetSplitMode();
     }
   };
 
@@ -483,67 +506,6 @@ export const TablesPage = () => {
                   </Button>
                 </Hide>
               ))}
-            {/* Merge Tables Button */}
-            {!editMode && !mergeMode && (
-              <Button
-                variant="positive"
-                onClick={() => setMergeMode(true)}
-                className="ml-2"
-              >
-                Merge Tables
-              </Button>
-            )}
-            {mergeMode && (
-              <>
-                <Button
-                  variant="positive"
-                  onClick={handleMergeTables}
-                  disabled={selectedMergeTables.length < 2}
-                  className="ml-2"
-                >
-                  Merge Selected ({selectedMergeTables.length})
-                </Button>
-                <Button
-                  variant="negative"
-                  onClick={resetMergeMode}
-                  className="ml-2"
-                >
-                  Cancel Merge
-                </Button>
-              </>
-            )}
-            {/* Split Tables Button */}
-            {!editMode && !splitMode && !mergeMode && (
-              <Button
-                variant="positive"
-                onClick={() => setSplitMode(true)}
-                className="ml-2"
-              >
-                Split Tables
-              </Button>
-            )}
-            {splitMode && (
-              <>
-                <Button
-                  variant="positive"
-                  onClick={handleSplitTables}
-                  disabled={selectedSplitTables.length < 1}
-                  className="ml-2"
-                >
-                  Split Selected ({selectedSplitTables.length})
-                </Button>
-                <Button
-                  variant="negative"
-                  onClick={() => {
-                    setSplitMode(false);
-                    setSelectedSplitTables([]);
-                  }}
-                  className="ml-2"
-                >
-                  Cancel Split
-                </Button>
-              </>
-            )}
             {/* Legend - always visible */}
             <div className="flex gap-4 ml-6">
               <div className="flex items-center gap-1">
@@ -582,6 +544,64 @@ export const TablesPage = () => {
               - Delete Table
             </Button>
           </div>
+        )}
+        {/* Merge Tables Button */}
+        {editMode && !mergeMode && !splitMode && (
+          <Button
+            variant="positive"
+            onClick={() => setMergeMode(true)}
+          >
+            Merge Tables
+          </Button>
+        )}
+        {editMode && mergeMode && (
+          <>
+            <Button
+              variant="positive"
+              onClick={handleMergeTables}
+              disabled={selectedMergeTables.length < 2}
+            >
+              Merge Selected ({selectedMergeTables.length})
+            </Button>
+            <Button
+              variant="negative"
+              onClick={resetMergeMode}
+              className="ml-2"
+            >
+              Cancel Merge
+            </Button>
+          </>
+        )}
+        {/* Split Tables Button */}
+        {editMode && !splitMode && !mergeMode && (
+          <Button
+            variant="positive"
+            onClick={() => setSplitMode(true)}
+            className="ml-2"
+          >
+            Split Tables
+          </Button>
+        )}
+        {editMode && splitMode && (
+          <>
+            <Button
+              variant="positive"
+              onClick={handleSplitTables}
+              disabled={selectedSplitTables.length < 1}
+            >
+              Split Selected ({selectedSplitTables.length})
+            </Button>
+            <Button
+              variant="negative"
+              onClick={() => {
+                setSplitMode(false);
+                setSelectedSplitTables([]);
+              }}
+              className="ml-2"
+            >
+              Cancel Split
+            </Button>
+          </>
         )}
 
         {/* Table grid */}
@@ -742,8 +762,11 @@ export const TablesPage = () => {
                     const liveTable = tablesFromDb.find(
                       (t) => t.tableNo === editTableData!.tableNo,
                     );
-                    const activeOrderId = liveTable?.activeOrderID ?? editTableData?.activeOrderID;
-                    const order = activeOrderId ? orders.find((o) => o._id === activeOrderId) : null;
+                    const activeOrderId =
+                      liveTable?.activeOrderID ?? editTableData?.activeOrderID;
+                    const order = activeOrderId
+                      ? orders.find((o) => o._id === activeOrderId)
+                      : null;
                     if (!order) return null;
                     return (
                       <div className="flex gap-2">
@@ -858,7 +881,7 @@ export const TablesPage = () => {
                       <Button
                         variant="negative"
                         disabled={!selectedMoveOrderNo}
-                          onClick={async () => {
+                        onClick={async () => {
                           // Update the selected order's tableNo (store as array)
                           await Meteor.callAsync(
                             "orders.updateOrder",
