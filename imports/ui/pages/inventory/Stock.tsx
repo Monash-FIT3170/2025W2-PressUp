@@ -1,20 +1,25 @@
+import React, { useState, useEffect, useMemo } from "react";
 import { Meteor } from "meteor/meteor";
-import React, { useState, useEffect } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-import { StockItemWithSupplier } from "./types";
-import {
-  StockItemsCollection,
-  Supplier,
-  SuppliersCollection,
-  StockItem,
-} from "/imports/api";
+import { StockItemsCollection, SuppliersCollection } from "/imports/api";
+import { StockItemWithSupplier, LineItemWithDetails } from "./types";
+import { AggregateStockTable } from "../../components/AggregateStockTable";
 import { StockTable } from "../../components/StockTable";
 import { Modal } from "../../components/Modal";
-import { AddItemForm } from "../../components/AddItemForm";
+import { AddStockItemForm } from "../../components/AddStockItemForm";
+import { EditLineItemForm } from "../../components/EditLineItemForm";
+import { EditStockItemNameModal } from "../../components/EditStockItemNameModal";
 import { StockFilter } from "../../components/StockFilter";
-import { ConfirmModal } from "../../components/ConfirmModal";
 import { Loading } from "../../components/Loading";
+import { LineItemFilter as LineItemFilterComponent } from "../../components/LineItemFilter";
+import {
+  LineItemFilter as LineItemFilterKey,
+  StockFilter as StockFilterKey,
+} from "./types";
+import { Button } from "../../components/interaction/Button";
+import { ConfirmModal } from "../../components/ConfirmModal";
+import { ArrowLeft } from "lucide-react";
 
 export const StockPage = () => {
   const [_, setPageTitle] = usePageTitle();
@@ -22,136 +27,256 @@ export const StockPage = () => {
     setPageTitle("Inventory Management - Stock");
   }, [setPageTitle]);
 
-  const [filter, setFilter] = useState<
-    "all" | "inStock" | "lowInStock" | "outOfStock"
-  >("all");
+  const [filter, setFilter] = useState<StockFilterKey>(StockFilterKey.ALL);
+  const [lineItemFilter, setLineItemFilter] = useState<LineItemFilterKey>(
+    LineItemFilterKey.UNDISPOSED,
+  );
   const [formResetKey, setFormResetKey] = useState(0);
+  const [selectedStockItemId, setSelectedStockItemId] = useState<string | null>(
+    null,
+  );
 
   const isLoadingStockItems = useSubscribe("stockItems.all");
   const isLoadingSuppliers = useSubscribe("suppliers");
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [confirm, setConfirm] = useState<"cancel" | "delete" | null>(null);
 
-  const stockItems: StockItemWithSupplier[] = useTracker(() => {
+  const stockItems = useTracker(() => {
     const stockItems = StockItemsCollection.find(
       {},
       { sort: { name: 1 } },
     ).fetch();
+
     const result = [];
     for (const stockItem of stockItems) {
-      let supplier: Supplier | null = null;
-      if (stockItem.supplier != null) {
-        supplier = SuppliersCollection.findOne(stockItem.supplier) || null;
-      }
-      result.push({ ...stockItem, supplier });
+      const supplier = stockItem.supplier
+        ? SuppliersCollection.find(stockItem.supplier).fetch()[0] || null
+        : null;
+
+      // Set quantity visually to 0 for disposed items
+      const processedLineItems = stockItem.lineItems.map((lineItem) => ({
+        ...lineItem,
+        quantity: lineItem.disposed ? 0 : lineItem.quantity,
+      }));
+
+      result.push({
+        ...stockItem,
+        supplier,
+        lineItems: processedLineItems,
+      });
     }
     return result;
   });
 
-  const lowStockThreshold = 10;
-  const filteredStockItems = stockItems.filter((item) => {
-    if (filter === "inStock") return item.quantity > lowStockThreshold;
-    if (filter === "outOfStock") return item.quantity === 0;
-    if (filter === "lowInStock")
-      return item.quantity > 0 && item.quantity <= lowStockThreshold;
-    return true;
-  });
+  // Flatten line items for sub-table
+  const lineItems = useMemo(() => {
+    const result = [];
+    for (const stockItem of stockItems) {
+      for (const lineItem of stockItem.lineItems) {
+        result.push({
+          ...lineItem,
+          stockItemId: stockItem._id,
+          stockItemName: stockItem.name,
+          supplier: stockItem.supplier,
+        });
+      }
+    }
+    return result;
+  }, [stockItems]);
 
-  // Modal state
-  const [open, setOpen] = useState<boolean>(false);
-  const [editItem, setEditItem] = useState<StockItem | null>(null);
-  const [deleteItem, setDeleteItem] = useState<StockItem | null>(null);
+  const filteredLineItems = useMemo(() => {
+    let filtered = lineItems.filter((item) =>
+      selectedStockItemId ? item.stockItemId === selectedStockItemId : true,
+    );
 
-  const handleEdit = (item: StockItem) => {
-    setEditItem(item);
-    setOpen(true);
+    const today = new Date();
+    switch (lineItemFilter) {
+      case LineItemFilterKey.UNDISPOSED:
+        filtered = filtered.filter((item) => !item.disposed);
+        break;
+      case LineItemFilterKey.NOT_EXPIRED:
+        filtered = filtered.filter(
+          (item) => !item.expiry || item.expiry > today,
+        );
+        break;
+      case LineItemFilterKey.EXPIRED:
+        filtered = filtered.filter(
+          (item) => item.expiry && item.expiry <= today,
+        );
+        break;
+      case LineItemFilterKey.DISPOSED:
+        filtered = filtered.filter((item) => item.disposed);
+        break;
+      default:
+        break;
+    }
+
+    return filtered;
+  }, [lineItems, selectedStockItemId, lineItemFilter]);
+
+  const [addItemModalOpen, setAddItemModalOpen] = useState(false);
+  const [editItemModalOpen, setEditItemModalOpen] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState<LineItemWithDetails | null>(
+    null,
+  );
+  const [editStockItemModalOpen, setEditStockItemModalOpen] = useState(false);
+  const [stockItemToEdit, setStockItemToEdit] =
+    useState<StockItemWithSupplier | null>(null);
+
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingCloseAction, setPendingCloseAction] = useState<
+    (() => void) | null
+  >(null);
+
+  const handleConfirmClose = (closeAction: () => void) => {
+    setPendingCloseAction(() => closeAction);
+    setShowConfirmation(true);
   };
 
   const handleModalClose = () => {
-    setOpen(false);
+    setAddItemModalOpen(false);
     setFormResetKey((prev) => prev + 1);
   };
 
   const handleSuccess = () => handleModalClose();
 
-  const handleDeleteRequest = (item: StockItem) => {
-    setConfirm("delete");
-    setShowConfirmation(true);
-    setDeleteItem(item);
+  const handleEditItem = (item: LineItemWithDetails) => {
+    setItemToEdit(item);
+    setEditItemModalOpen(true);
   };
 
-  const handleDelete = () => {
-    if (deleteItem)
-      Meteor.call(
-        "stockItems.remove",
-        deleteItem._id,
-        (error: Meteor.Error | undefined) => {
-          if (error) {
-            alert("Error deleting item: " + error.reason);
-          }
-        },
-      );
+  const handleEditModalClose = () => {
+    setEditItemModalOpen(false);
+    setItemToEdit(null);
+  };
+
+  const handleDisposeItem = (item: LineItemWithDetails) => {
+    Meteor.call(
+      "stockItems.toggleDisposeLineItem",
+      item.stockItemId,
+      item.id,
+      (error: Meteor.Error | undefined) => {
+        if (error) {
+          alert("Error updating item: " + error.reason);
+        }
+      },
+    );
+  };
+
+  const handleEditStockItem = (stockItem: StockItemWithSupplier) => {
+    setStockItemToEdit(stockItem);
+    setEditStockItemModalOpen(true);
+  };
+
+  const handleEditStockItemModalClose = () => {
+    setEditStockItemModalOpen(false);
+    setStockItemToEdit(null);
   };
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="grid grid-cols-2">
-        <StockFilter filter={filter} onFilterChange={setFilter} />
-        <button
-          onClick={() => {
-            setEditItem(null);
-            setOpen(true);
-          }}
-          className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 rounded-xl px-3 bg-press-up-purple text-white cursor-pointer w-24 right-2 hover:bg-press-up-purple"
-        >
+    <div className="flex flex-1 flex-col h-full">
+      {selectedStockItemId && (
+        <div className="p-4">
+          <h2 className="text-lg font-semibold text-gray-700">
+            {filteredLineItems[0]?.stockItemName || "Item"} from{" "}
+            {filteredLineItems[0]?.supplier?.name || "No supplier"}
+          </h2>
+        </div>
+      )}
+      <div className="flex justify-between items-center p-4">
+        <div className="flex items-center gap-4">
+          {selectedStockItemId ? (
+            <>
+              <Button
+                variant="positive"
+                onClick={() => setSelectedStockItemId(null)}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft size={16} />
+                Back to All Items
+              </Button>
+              <LineItemFilterComponent
+                filter={lineItemFilter}
+                onFilterChange={setLineItemFilter}
+              />
+            </>
+          ) : (
+            <StockFilter filter={filter} onFilterChange={setFilter} />
+          )}
+        </div>
+        <Button variant="positive" onClick={() => setAddItemModalOpen(true)}>
           Add Item
-        </button>
+        </Button>
       </div>
-      <div id="stock" className="flex flex-1 flex-col min-h-0">
+      <div id="stock" className="flex flex-1 flex-col min-h-0 h-0">
         {isLoadingStockItems() || isLoadingSuppliers() ? (
           <Loading />
-        ) : (
+        ) : selectedStockItemId ? (
           <StockTable
-            stockItems={filteredStockItems}
-            onEdit={handleEdit}
-            onDelete={handleDeleteRequest}
+            stockItems={filteredLineItems}
+            onEdit={handleEditItem}
+            onDispose={handleDisposeItem}
+          />
+        ) : (
+          <AggregateStockTable
+            stockItems={stockItems}
+            filter={filter}
+            onItemNameClick={setSelectedStockItemId}
+            onEditItem={handleEditStockItem}
           />
         )}
       </div>
 
       <Modal
-        open={open}
-        onClose={() => {
-          setConfirm("cancel");
-          setShowConfirmation(true);
-        }}
+        open={addItemModalOpen}
+        onClose={() => handleConfirmClose(handleModalClose)}
       >
-        <AddItemForm
+        <AddStockItemForm
           key={formResetKey}
           onSuccess={handleSuccess}
-          onCancel={handleModalClose}
-          item={editItem}
+          prefillData={
+            selectedStockItemId
+              ? stockItems.find((si) => si._id === selectedStockItemId)
+              : undefined
+          }
         />
       </Modal>
+
+      {itemToEdit && (
+        <Modal
+          open={editItemModalOpen}
+          onClose={() => handleConfirmClose(handleEditModalClose)}
+        >
+          <EditLineItemForm
+            item={itemToEdit}
+            onSuccess={handleEditModalClose}
+          />
+        </Modal>
+      )}
+
+      {stockItemToEdit && (
+        <Modal
+          open={editStockItemModalOpen}
+          onClose={() => handleConfirmClose(handleEditStockItemModalClose)}
+        >
+          <EditStockItemNameModal
+            stockItem={stockItemToEdit}
+            onSuccess={handleEditStockItemModalClose}
+          />
+        </Modal>
+      )}
+
       <ConfirmModal
         open={showConfirmation}
-        message={
-          confirm === "cancel"
-            ? "Are you sure you want to discard your changes?"
-            : "Are you sure you want to delete this item?"
-        }
+        message="Discard changes?"
         onConfirm={() => {
-          if (confirm === "cancel") {
-            handleModalClose();
-          } else if (confirm === "delete") {
-            handleDelete();
-          }
           setShowConfirmation(false);
-          setConfirm(null);
+          if (pendingCloseAction) {
+            pendingCloseAction();
+            setPendingCloseAction(null);
+          }
         }}
         onCancel={() => {
           setShowConfirmation(false);
-          setConfirm(null);
+          setPendingCloseAction(null);
         }}
       />
     </div>

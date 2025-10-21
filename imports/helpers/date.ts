@@ -33,3 +33,17 @@ export function getDayOfWeek(
 
   return result;
 }
+
+export function dateDifferenceDisplay(date: Date): string {
+  const today = new Date();
+  const diffTime = date.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return `${Math.abs(diffDays)} days ago`;
+  } else if (diffDays === 0) {
+    return "Today";
+  } else {
+    return `In ${diffDays} days`;
+  }
+}
