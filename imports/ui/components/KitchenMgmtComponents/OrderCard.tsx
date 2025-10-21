@@ -336,7 +336,7 @@ export const OrderCard = ({ order }: OrderCardProps) => {
               {order.orderType == OrderType.DineIn
                 ? order.tableNo == null
                   ? "Dine-In"
-                  : `Table No: ${order.tableNo}`
+                  : `Table No: ${order.tableNo.join(", ")}`
                 : "Takeaway"}
             </p>
             <p className="text-sm text-press-up-purple">{order.createdAt}</p>
@@ -385,7 +385,7 @@ export const OrderCard = ({ order }: OrderCardProps) => {
               {order.orderType == OrderType.DineIn
                 ? order.tableNo == null
                   ? "Dine-In"
-                  : `Table No: ${order.tableNo}`
+                  : `Table No: ${order.tableNo.join(", ")}`
                 : "Takeaway"}
             </strong>
           </p>

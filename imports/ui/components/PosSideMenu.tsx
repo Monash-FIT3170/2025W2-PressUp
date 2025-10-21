@@ -17,7 +17,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { IconButton as MuiIconButton } from "@mui/material";
 
 interface PosSideMenuProps {
-  tableNo: number | null;
+  tableNo: number[] | null;
   items: (MenuItem | OrderMenuItem)[];
   total: number;
   orderId?: string;
