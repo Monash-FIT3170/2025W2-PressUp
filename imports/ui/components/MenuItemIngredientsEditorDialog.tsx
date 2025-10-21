@@ -100,10 +100,10 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({
     );
   };
 
-
   const handleAddGroup = (baseKey?: string, label = "") => {
     // create an id that includes the baseKey when present so groups can be associated
-    const idSource = (baseKey ? `${baseKey}-${label}` : label) || `group-${Date.now()}`;
+    const idSource =
+      (baseKey ? `${baseKey}-${label}` : label) || `group-${Date.now()}`;
     const newId = slugify(idSource);
 
     setOptionGroups((prev) => [
