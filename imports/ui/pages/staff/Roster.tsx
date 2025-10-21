@@ -34,7 +34,6 @@ export const RosterPage = () => {
     getDayOfWeek(new Date(), DayOfWeek.MONDAY),
   );
 
-  // Role filter
   const [selectedRoles, setSelectedRoles] = useState<RoleEnum[]>(() =>
     Object.values(RoleEnum),
   );
