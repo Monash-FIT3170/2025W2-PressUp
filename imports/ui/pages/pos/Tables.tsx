@@ -546,68 +546,68 @@ export const TablesPage = () => {
             {userIsAdmin && (
               <>
                 {/* Merge/Split entry buttons */}
-                
-                  {!mergeMode && !splitMode && (
-                    <Button
-                      variant="positive"
-                      onClick={() => {
-                        // entering merge mode; clear split selections
-                        resetSplitMode();
-                        setMergeMode(true);
-                      }}
-                    >
-                      Merge Tables
-                    </Button>
-                  )}
-                  {!splitMode && !mergeMode && splitAvailable && (
-                    <Button
-                      variant="positive"
-                      onClick={() => {
-                        // entering split mode; clear merge selections
-                        resetMergeMode();
-                        setSplitMode(true);
-                      }}
-                    >
-                      Split Tables
-                    </Button>
-                  )}
+
+                {!mergeMode && !splitMode && (
+                  <Button
+                    variant="positive"
+                    onClick={() => {
+                      // entering merge mode; clear split selections
+                      resetSplitMode();
+                      setMergeMode(true);
+                    }}
+                  >
+                    Merge Tables
+                  </Button>
+                )}
+                {!splitMode && !mergeMode && splitAvailable && (
+                  <Button
+                    variant="positive"
+                    onClick={() => {
+                      // entering split mode; clear merge selections
+                      resetMergeMode();
+                      setSplitMode(true);
+                    }}
+                  >
+                    Split Tables
+                  </Button>
+                )}
                 {/* Merge/Split selected buttons */}
-                  {/* Merge Tables Button */}
-                  {mergeMode && (
-                    <div className="flex gap-2 items-center">
-                      <Button
-                        variant="positive"
-                        onClick={handleMergeTables}
-                        disabled={selectedMergeTables.length < 2}
-                      >
-                        Merge Selected ({selectedMergeTables.length})
-                      </Button>
-                      <Button variant="negative" onClick={resetMergeMode}>
-                        Cancel Merge
-                      </Button>
-                    </div>
-                  )}
-                  {/* Split Tables Button */}
-                  {splitMode && (
-                    <div className="flex gap-2 items-center">
-                      <Button
-                        variant="positive"
-                        onClick={handleSplitTables}
-                        disabled={selectedSplitTables.length < 1}
-                      >
-                        Split Selected ({selectedSplitTables.length})
-                      </Button>
-                      <Button
-                        variant="negative"
-                        onClick={() => {
-                          setSplitMode(false);
-                          setSelectedSplitTables([]);
-                        }}
-                      >
-                        Cancel Split
-                      </Button>
-                    </div>
-                  )}
+                {/* Merge Tables Button */}
+                {mergeMode && (
+                  <div className="flex gap-2 items-center">
+                    <Button
+                      variant="positive"
+                      onClick={handleMergeTables}
+                      disabled={selectedMergeTables.length < 2}
+                    >
+                      Merge Selected ({selectedMergeTables.length})
+                    </Button>
+                    <Button variant="negative" onClick={resetMergeMode}>
+                      Cancel Merge
+                    </Button>
+                  </div>
+                )}
+                {/* Split Tables Button */}
+                {splitMode && (
+                  <div className="flex gap-2 items-center">
+                    <Button
+                      variant="positive"
+                      onClick={handleSplitTables}
+                      disabled={selectedSplitTables.length < 1}
+                    >
+                      Split Selected ({selectedSplitTables.length})
+                    </Button>
+                    <Button
+                      variant="negative"
+                      onClick={() => {
+                        setSplitMode(false);
+                        setSelectedSplitTables([]);
+                      }}
+                    >
+                      Cancel Split
+                    </Button>
+                  </div>
+                )}
               </>
             )}
             {/* Legend - always visible */}
