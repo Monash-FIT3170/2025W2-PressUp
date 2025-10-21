@@ -3,14 +3,10 @@ import { Order } from "/imports/api/orders/OrdersCollection";
 import {
   format,
   startOfWeek,
-  startOfMonth,
-  startOfYear,
   eachDayOfInterval,
   eachWeekOfInterval,
   eachMonthOfInterval,
   differenceInDays,
-  differenceInWeeks,
-  differenceInMonths,
 } from "date-fns";
 
 interface SalesTrendsVisualizationProps {
@@ -35,28 +31,28 @@ export const SalesTrendsVisualization: React.FC<
 
     if (start && end) {
       const daysDiff = differenceInDays(end, start);
-      
+
       if (daysDiff <= 7) {
         // For periods ≤ 7 days: show daily data
         const days = eachDayOfInterval({ start, end });
-        periods = days.map(day => format(day, "MMM d"));
+        periods = days.map((day) => format(day, "MMM d"));
       } else if (daysDiff <= 90) {
         // For periods ≤ 90 days: show weekly data
         const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
-        periods = weeks.map(week => `Week of ${format(week, "MMM d")}`);
+        periods = weeks.map((week) => `Week of ${format(week, "MMM d")}`);
       } else {
         // For periods > 90 days: show monthly data
         const months = eachMonthOfInterval({ start, end });
-        periods = months.map(month => format(month, "MMM yyyy"));
+        periods = months.map((month) => format(month, "MMM yyyy"));
       }
     } else {
       // Default: show last 7 days
       const today = new Date();
-      const days = eachDayOfInterval({ 
-        start: new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000), 
-        end: today 
+      const days = eachDayOfInterval({
+        start: new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000),
+        end: today,
       });
-      periods = days.map(day => format(day, "MMM d"));
+      periods = days.map((day) => format(day, "MMM d"));
     }
 
     // Group transactions by period
@@ -73,26 +69,28 @@ export const SalesTrendsVisualization: React.FC<
       if ((start && orderDate < start) || (end && orderDate > end)) return;
 
       let periodKey: string | undefined;
-      
+
       if (start && end) {
         const daysDiff = differenceInDays(end, start);
-        
+
         if (daysDiff <= 7) {
           // Daily aggregation
-          periodKey = periods.find(p => p === format(orderDate, "MMM d"));
+          periodKey = periods.find((p) => p === format(orderDate, "MMM d"));
         } else if (daysDiff <= 90) {
           // Weekly aggregation
           const weekStart = startOfWeek(orderDate, { weekStartsOn: 1 });
-          periodKey = periods.find(p => p === `Week of ${format(weekStart, "MMM d")}`);
+          periodKey = periods.find(
+            (p) => p === `Week of ${format(weekStart, "MMM d")}`,
+          );
         } else {
           // Monthly aggregation
-          periodKey = periods.find(p => p === format(orderDate, "MMM yyyy"));
+          periodKey = periods.find((p) => p === format(orderDate, "MMM yyyy"));
         }
       } else {
         // Default daily aggregation
-        periodKey = periods.find(p => p === format(orderDate, "MMM d"));
+        periodKey = periods.find((p) => p === format(orderDate, "MMM d"));
       }
-      
+
       if (!periodKey) return;
 
       const existing = periodMap.get(periodKey);
@@ -174,12 +172,14 @@ export const SalesTrendsVisualization: React.FC<
                       y="195"
                       textAnchor="middle"
                       className="text-xs fill-gray-600"
-                      style={{ fontSize: dataPoint.period.length > 10 ? '10px' : '12px' }}
+                      style={{
+                        fontSize:
+                          dataPoint.period.length > 10 ? "10px" : "12px",
+                      }}
                     >
-                      {dataPoint.period.length > 15 ? 
-                        dataPoint.period.substring(0, 12) + '...' : 
-                        dataPoint.period
-                      }
+                      {dataPoint.period.length > 15
+                        ? dataPoint.period.substring(0, 12) + "..."
+                        : dataPoint.period}
                     </text>
                     <text
                       x={`${x + barWidth / 2}%`}
