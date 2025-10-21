@@ -1,4 +1,4 @@
-import { OrdersCollection } from "../orders/OrdersCollection";
+import { OrderMenuItem, OrdersCollection } from "../orders/OrdersCollection";
 import { Meteor } from "meteor/meteor";
 import { requireLoginMethod } from "../accounts/wrappers";
 import { Tables, TablesCollection } from "./TablesCollection";
@@ -158,10 +158,10 @@ Meteor.methods({
   "tables.mergeTablesAndOrders": requireLoginMethod(async function (params: {
     tableNos: number[];
     mergedOrderId: string;
-    mergedMenuItems: any[];
-    mergedTotal: number;
+    mergedMenuItems?: OrderMenuItem[] | null;
+    mergedTotal?: number;
   }) {
-    const { tableNos, mergedOrderId, mergedMenuItems, mergedTotal } = params;
+    const { tableNos, mergedOrderId } = params;
     if (!tableNos || tableNos.length < 2)
       throw new Meteor.Error(
         "invalid-arguments",
@@ -204,6 +204,76 @@ Meteor.methods({
         ...tablesPointingNos,
       ]),
     ).sort((a, b) => a - b);
+
+    // --- Merge menu items from all orders ---
+    // Load all active orders (including mergedOrderId)
+    const allOrderIDs = Array.from(new Set([...activeOrderIDs, mergedOrderId]));
+    const allOrders = await OrdersCollection.find({
+      _id: { $in: allOrderIDs },
+    } as any).fetchAsync();
+    // Flatten all menu items
+    const allMenuItems = allOrders.flatMap((o) => o.menuItems || []);
+
+    // Helper: compare two menu items for merge (same menuItemId, options, baseIncludedKeys, modifiers)
+    function menuItemsEqual(a: OrderMenuItem, b: OrderMenuItem) {
+      if (a.menuItemId !== b.menuItemId) return false;
+      // Compare optionSelections
+      const selectionA = a.optionSelections || {};
+      const selectionB = b.optionSelections || {};
+      const keysA = Object.keys(selectionA).sort();
+      const keysB = Object.keys(selectionB).sort();
+      if (keysA.length !== keysB.length) return false;
+      for (let i = 0; i < keysA.length; i++) {
+        if (keysA[i] !== keysB[i]) return false;
+        const selectedOptionsA = selectionA[keysA[i]].slice().sort();
+        const selectedOptionsB = selectionB[keysB[i]].slice().sort();
+        if (
+          selectedOptionsA.length !== selectedOptionsB.length ||
+          selectedOptionsA.some(
+            (v: any, idx: number) => v !== selectedOptionsB[idx],
+          )
+        )
+          return false;
+      }
+      // Compare baseIncludedKeys
+      const baseA = a.baseIncludedKeys ? a.baseIncludedKeys.slice().sort() : [];
+      const baseB = b.baseIncludedKeys ? b.baseIncludedKeys.slice().sort() : [];
+      if (
+        baseA.length !== baseB.length ||
+        baseA.some((v: any, idx: number) => v !== baseB[idx])
+      )
+        return false;
+      // Compare modifiers (by key/label/priceDelta)
+      const modA = a.modifiers ? a.modifiers : [];
+      const modB = b.modifiers ? b.modifiers : [];
+      if (modA.length !== modB.length) return false;
+      for (let i = 0; i < modA.length; i++) {
+        if (
+          modA[i].key !== modB[i].key ||
+          modA[i].label !== modB[i].label ||
+          modA[i].priceDelta !== modB[i].priceDelta
+        )
+          return false;
+      }
+      return true;
+    }
+
+    // Merge: sum quantities for identical items
+    const mergedMenuItems: OrderMenuItem[] = [];
+    for (const item of allMenuItems) {
+      const found = mergedMenuItems.find((it) => menuItemsEqual(it, item));
+      if (found) {
+        found.quantity += item.quantity;
+      } else {
+        mergedMenuItems.push({ ...item });
+      }
+    }
+
+    // Recompute total
+    const mergedTotal = mergedMenuItems.reduce(
+      (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
+      0,
+    );
 
     // Update merged order: set menuItems, totalPrice, and assign all tableNos (union)
     await OrdersCollection.updateAsync(mergedOrderId, {
@@ -289,17 +359,21 @@ Meteor.methods({
 
     const created: { tableNo: number; orderId: string }[] = [];
 
-    // For each table being split, create a new order cloned from mergedOrder
     for (const tableNo of tableNos) {
-      // Deep copy menu items to avoid shared references
+      // Deep copy menu items (preserve all customisations and duplicates)
       const menuItems = JSON.parse(JSON.stringify(mergedOrder.menuItems ?? []));
+      const totalPrice = menuItems.reduce(
+        (sum: number, item: { price: number; quantity: number }) =>
+          sum + (item.price || 0) * (item.quantity || 1),
+        0,
+      );
 
       const newOrder: any = {
         orderNo: nextOrderNo,
         tableNo: [tableNo],
         orderType: mergedOrder.orderType,
         menuItems,
-        totalPrice: mergedOrder.totalPrice ?? 0,
+        totalPrice: totalPrice,
         originalPrice: mergedOrder.originalPrice,
         discountedPrice: mergedOrder.discountedPrice,
         discountPercent: mergedOrder.discountPercent,
