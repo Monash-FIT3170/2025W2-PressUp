@@ -182,7 +182,7 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
   <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
     <DialogTitle sx={{ position: "relative", pr: 4 }}>
       <h2 className="text-2xl font-bold text-red-900 dark:text-white">
-        Configure Ingredients for {item?.name}
+        Configure Customer Options for {item?.name}
       </h2>
 
       <button

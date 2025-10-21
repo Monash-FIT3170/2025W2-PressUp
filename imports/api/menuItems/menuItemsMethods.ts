@@ -254,6 +254,19 @@ Meteor.methods({
     }).fetch();
   }),
 
+
+  "items.updateItemIngredients": requireLoginMethod(async function (
+    itemName: string, newIngredients: string[]) {
+    check(itemName, String);
+    check(newIngredients, [String]);
+
+    MenuItemsCollection.updateAsync(
+      { name: itemName },
+      { $set: { ingredients: newIngredients } }
+    );
+  }),
+
+
     "menuItems.updateIngredients": requireLoginMethod(async function (
       itemName: string,
       baseIngredients: BaseIngredient[],

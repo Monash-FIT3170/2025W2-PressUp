@@ -8,7 +8,7 @@ import { CategoryDropdown } from "./CategoryDropdown";
 import { AllergenDropdown } from "./AllergenDropdown";
 import { ConfirmModal } from "./ConfirmModal";
 import MenuItemIngredientsEditorDialog from "./MenuItemIngredientsEditorDialog";
-
+import { AddIngredientModal } from "../components/AddIngredientModal";
 
 interface EditItemModalProps {
   isOpen: boolean;
@@ -58,6 +58,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   const [allergens, setAllergens] = useState<string[]>([]);
   const [discount, setDiscount] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isIngredientModalOpen, setIsIngredientModalOpen] = useState(false);
   const [confirm, setConfirm] = useState<"cancel" | "save" | null>(null);
   const [selectedImageType, setSelectedImageType] = useState<
     "predefined" | "upload"
@@ -158,6 +159,8 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
       setIngredientDialog({ open: true, item });
     };
 
+  if (!isOpen || !item) return null;
+
   return (
     <>
       <Modal
@@ -234,11 +237,25 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             )}
 
             <button
+              type="button"
+              onClick={() => setIsIngredientModalOpen(true)}
+              className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg text-sm"
+            >
+              Edit Item Ingredients
+            </button>
+
+            <AddIngredientModal
+              isOpen={isIngredientModalOpen}
+              onClose={() => setIsIngredientModalOpen(false)}
+              itemName={item.name}
+            />
+
+            <button
                 type="button"
                 onClick={() => openIngredientDialog(item)}
                 className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg text-sm"
               >
-                Edit Item Ingredients
+                Edit Customer Options
             </button>
 
             <MenuItemIngredientsEditorDialog
