@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Button } from "../../components/interaction/Button";
 import { Modal } from "../../components/Modal";
 import { PublishShiftForm } from "../../components/PublishShiftForm";
+import { EditShiftForm } from "../../components/EditShiftForm";
 import { RosterTable, RosterStaff } from "../../components/RosterTable";
 import {
   ShiftsCollection,
   ShiftStatus,
+  Shift,
 } from "/imports/api/shifts/ShiftsCollection";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { usePageTitle } from "../../hooks/PageTitleContext";
@@ -26,6 +28,8 @@ export const RosterPage = () => {
   }, [setPageTitle]);
 
   const [shiftModalOpen, setShiftModalOpen] = useState(false);
+  const [editShiftModalOpen, setEditShiftModalOpen] = useState(false);
+  const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [showShiftModalCloseConfirmation, setShowShiftModalCloseConfirmation] =
     useState(false);
 
@@ -50,6 +54,21 @@ export const RosterPage = () => {
   const onCloseShiftModalConfirm = () => {
     setShiftModalOpen(false);
     setShowShiftModalCloseConfirmation(false);
+  };
+
+  const handleEditShift = (shift: Shift) => {
+    setSelectedShift(shift);
+    setEditShiftModalOpen(true);
+  };
+
+  const handleEditShiftSuccess = () => {
+    setEditShiftModalOpen(false);
+    setSelectedShift(null);
+  };
+
+  const handleEditShiftCancel = () => {
+    setEditShiftModalOpen(false);
+    setSelectedShift(null);
   };
 
   const canPublishShifts = useTracker(
@@ -181,12 +200,24 @@ export const RosterPage = () => {
           )}
           start={weekStart}
           end={weekEnd}
+          onEditShift={canPublishShifts ? handleEditShift : undefined}
         />
       </div>
 
       <Modal open={shiftModalOpen} onClose={() => setShiftModalOpen(false)}>
         <PublishShiftForm onSuccess={() => setShiftModalOpen(false)} />
       </Modal>
+
+      {selectedShift && (
+        <Modal open={editShiftModalOpen} onClose={handleEditShiftCancel}>
+          <EditShiftForm
+            shift={selectedShift}
+            onSuccess={handleEditShiftSuccess}
+            onCancel={handleEditShiftCancel}
+          />
+        </Modal>
+      )}
+
       <ConfirmModal
         open={showShiftModalCloseConfirmation}
         message="Are you sure you want to discard your changes?"

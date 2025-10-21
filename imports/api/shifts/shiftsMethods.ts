@@ -211,4 +211,102 @@ Meteor.methods({
 
     return active._id;
   }),
+
+  "shifts.edit": requireLoginMethod(async function ({
+    shiftId,
+    userId,
+    start,
+    end,
+  }: {
+    shiftId: string;
+    userId: string;
+    start: Date;
+    end: Date;
+  }) {
+    check(shiftId, String);
+    check(userId, String);
+    check(start, Date);
+    check(end, Date);
+
+    if (!(await Roles.userIsInRoleAsync(Meteor.userId(), [RoleEnum.MANAGER]))) {
+      throw new Meteor.Error(
+        "invalid-permissions",
+        "No permissions to edit a shift",
+      );
+    }
+
+    const shift = await ShiftsCollection.findOneAsync(shiftId);
+    if (!shift) {
+      throw new Meteor.Error("shift-not-found", "Shift not found");
+    }
+
+    const userExists = !!(await Meteor.users.findOneAsync(
+      { _id: userId },
+      { fields: { _id: 1 } },
+    ));
+    if (!userExists) {
+      throw new Meteor.Error("invalid-user", "No user found with the given ID");
+    }
+
+    if (end <= start) {
+      throw new Meteor.Error(
+        "invalid-time-range",
+        "End time must be after start time",
+      );
+    }
+
+    // Error if there is an overlapping shift with a non-schedule status (excluding current shift)
+    const trueOverlaps = await ShiftsCollection.find({
+      _id: { $ne: shiftId },
+      user: userId,
+      start: { $lt: end },
+      end: { $gt: start },
+      status: { $ne: ShiftStatus.SCHEDULED },
+    }).fetchAsync();
+
+    if (trueOverlaps.length > 0) {
+      throw new Meteor.Error(
+        "shift-overlap-error",
+        "Cannot edit shift that overlaps with non-scheduled shifts",
+      );
+    }
+
+    return await ShiftsCollection.updateAsync(shiftId, {
+      $set: {
+        user: userId,
+        start,
+        end,
+      },
+    });
+  }),
+
+  "shifts.delete": requireLoginMethod(async function ({
+    shiftId,
+  }: {
+    shiftId: string;
+  }) {
+    check(shiftId, String);
+
+    if (!(await Roles.userIsInRoleAsync(Meteor.userId(), [RoleEnum.MANAGER]))) {
+      throw new Meteor.Error(
+        "invalid-permissions",
+        "No permissions to delete a shift",
+      );
+    }
+
+    const shift = await ShiftsCollection.findOneAsync(shiftId);
+    if (!shift) {
+      throw new Meteor.Error("shift-not-found", "Shift not found");
+    }
+
+    // Only allow deletion of scheduled shifts
+    if (shift.status !== ShiftStatus.SCHEDULED) {
+      throw new Meteor.Error(
+        "invalid-shift-status",
+        "Can only delete scheduled shifts",
+      );
+    }
+
+    return await ShiftsCollection.removeAsync(shiftId);
+  }),
 });
