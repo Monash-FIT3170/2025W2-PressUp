@@ -16,6 +16,7 @@ import { MonitorIcon, BookIcon, TableIcon } from "../symbols/navigation/POS";
 import { CoffeeIcon } from "../symbols/navigation/Coffee";
 import {
   Calendar,
+  Check,
   Clipboard,
   Clock3Icon,
   DollarSign,
@@ -161,6 +162,12 @@ export const NavigationMenu = ({ show }: NavigationMenuProps) => {
             icon={<MessageSquare />}
             name="Communication"
             path="/staff/communication"
+            selectionType={NavigationEntrySelection.ARROW}
+          />
+          <NavigationEntry
+            icon={<Check />}
+            name="Training"
+            path="/staff/training"
             selectionType={NavigationEntrySelection.ARROW}
           />
         </NavigationEntry>

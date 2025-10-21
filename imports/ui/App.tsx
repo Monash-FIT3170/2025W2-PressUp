@@ -20,6 +20,7 @@ import { CommunicationPage } from "./pages/staff/Communication";
 import { DebugPage } from "./pages/debug/Debug";
 import { CompanySettings } from "./pages/company/CompanySettings";
 import { GlobalProvider } from "./hooks/GlobalDataContext";
+import { TrainingPage } from "./pages/staff/Training";
 
 const router = createBrowserRouter([
   {
@@ -86,6 +87,7 @@ const router = createBrowserRouter([
           { index: true, Component: () => <Navigate replace to={"roster"} /> },
           { path: "roster", Component: RosterPage },
           { path: "communication", Component: CommunicationPage },
+          { path: "training", Component: TrainingPage },
         ],
       },
       {
