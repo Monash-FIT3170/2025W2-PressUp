@@ -1,5 +1,17 @@
 import React, { useMemo } from "react";
 import { Order } from "/imports/api/orders/OrdersCollection";
+import {
+  format,
+  startOfWeek,
+  startOfMonth,
+  startOfYear,
+  eachDayOfInterval,
+  eachWeekOfInterval,
+  eachMonthOfInterval,
+  differenceInDays,
+  differenceInWeeks,
+  differenceInMonths,
+} from "date-fns";
 
 interface SalesTrendsVisualizationProps {
   orders: Order[];
@@ -22,27 +34,29 @@ export const SalesTrendsVisualization: React.FC<
     let periods: string[] = [];
 
     if (start && end) {
-      const daysDiff = Math.ceil(
-        (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000),
-      );
-      periods = Array.from({ length: daysDiff + 1 }, (_, i) => {
-        const date = new Date(start);
-        date.setDate(start.getDate() + i);
-        return date.toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-        });
-      });
+      const daysDiff = differenceInDays(end, start);
+      
+      if (daysDiff <= 7) {
+        // For periods ≤ 7 days: show daily data
+        const days = eachDayOfInterval({ start, end });
+        periods = days.map(day => format(day, "MMM d"));
+      } else if (daysDiff <= 90) {
+        // For periods ≤ 90 days: show weekly data
+        const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+        periods = weeks.map(week => `Week of ${format(week, "MMM d")}`);
+      } else {
+        // For periods > 90 days: show monthly data
+        const months = eachMonthOfInterval({ start, end });
+        periods = months.map(month => format(month, "MMM yyyy"));
+      }
     } else {
+      // Default: show last 7 days
       const today = new Date();
-      periods = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date(today);
-        date.setDate(today.getDate() - (6 - i));
-        return date.toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-        });
+      const days = eachDayOfInterval({ 
+        start: new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000), 
+        end: today 
       });
+      periods = days.map(day => format(day, "MMM d"));
     }
 
     // Group transactions by period
@@ -58,13 +72,27 @@ export const SalesTrendsVisualization: React.FC<
       const orderDate = new Date(order.createdAt);
       if ((start && orderDate < start) || (end && orderDate > end)) return;
 
-      const periodKey = periods.find(
-        (p) =>
-          orderDate.toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-          }) === p,
-      );
+      let periodKey: string | undefined;
+      
+      if (start && end) {
+        const daysDiff = differenceInDays(end, start);
+        
+        if (daysDiff <= 7) {
+          // Daily aggregation
+          periodKey = periods.find(p => p === format(orderDate, "MMM d"));
+        } else if (daysDiff <= 90) {
+          // Weekly aggregation
+          const weekStart = startOfWeek(orderDate, { weekStartsOn: 1 });
+          periodKey = periods.find(p => p === `Week of ${format(weekStart, "MMM d")}`);
+        } else {
+          // Monthly aggregation
+          periodKey = periods.find(p => p === format(orderDate, "MMM yyyy"));
+        }
+      } else {
+        // Default daily aggregation
+        periodKey = periods.find(p => p === format(orderDate, "MMM d"));
+      }
+      
       if (!periodKey) return;
 
       const existing = periodMap.get(periodKey);
@@ -146,8 +174,12 @@ export const SalesTrendsVisualization: React.FC<
                       y="195"
                       textAnchor="middle"
                       className="text-xs fill-gray-600"
+                      style={{ fontSize: dataPoint.period.length > 10 ? '10px' : '12px' }}
                     >
-                      {dataPoint.period}
+                      {dataPoint.period.length > 15 ? 
+                        dataPoint.period.substring(0, 12) + '...' : 
+                        dataPoint.period
+                      }
                     </text>
                     <text
                       x={`${x + barWidth / 2}%`}
