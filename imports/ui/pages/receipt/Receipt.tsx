@@ -151,7 +151,7 @@ export const ReceiptPage = () => {
               {order.orderType == OrderType.DineIn
                 ? order.tableNo == null
                   ? "Dine-In"
-                  : `Table No: ${order.tableNo}`
+                  : `Table No: ${order.tableNo.join(", ")}`
                 : "Takeaway"}
             </p>
           </div>

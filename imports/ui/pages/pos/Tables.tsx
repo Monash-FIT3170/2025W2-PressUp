@@ -668,18 +668,19 @@ export const TablesPage = () => {
                 >
                   {/* Go to Order button (only displays for Table which has an active order) */}
                   {(() => {
-                    const order = editTableData?.activeOrderID
-                      ? orders.find(
-                          (o) => o._id === editTableData.activeOrderID,
-                        )
-                      : null;
+                    // prefer the live table record's activeOrderID (in case it changed via merge)
+                    const liveTable = tablesFromDb.find(
+                      (t) => t.tableNo === editTableData!.tableNo,
+                    );
+                    const activeOrderId = liveTable?.activeOrderID ?? editTableData?.activeOrderID;
+                    const order = activeOrderId ? orders.find((o) => o._id === activeOrderId) : null;
                     if (!order) return null;
                     return (
                       <div className="flex gap-2">
                         <Button
                           type="button"
                           onClick={() => {
-                            goToOrder(String(editTableData?.activeOrderID));
+                            goToOrder(String(activeOrderId));
                           }}
                           variant="positive"
                         >

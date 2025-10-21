@@ -7,7 +7,7 @@ import { OrderStatus } from "/imports/api/orders/OrdersCollection";
 import { Button } from "./interaction/Button";
 
 interface PaymentModalProps {
-  tableNo?: number | null;
+  tableNo?: number[] | null;
   order: Order;
   splits?: string[] | null;
 }
@@ -35,12 +35,19 @@ export const PaymentModal = ({ order, splits }: PaymentModalProps) => {
       orderStatus: OrderStatus.Paid,
     });
 
-    // Clear the table if dine-in
+    // Clear the table(s) if dine-in
     if (order.tableNo !== null && order.tableNo !== undefined) {
-      Meteor.call(
-        "tables.clearOrder",
-        TablesCollection.findOne({ tableNo: order.tableNo })?._id,
-      );
+      if (Array.isArray(order.tableNo)) {
+        for (const tn of order.tableNo) {
+          const tbl = TablesCollection.findOne({ tableNo: tn });
+          if (tbl?._id) {
+            Meteor.call("tables.clearOrder", tbl._id);
+          }
+        }
+      } else {
+        const tbl = TablesCollection.findOne({ tableNo: order.tableNo as any });
+        if (tbl?._id) Meteor.call("tables.clearOrder", tbl._id);
+      }
     }
   };
 

@@ -27,7 +27,7 @@ export type OrderMenuItem = {
 
 export interface Order extends DBEntry {
   orderNo: number;
-  tableNo?: number | null; // null for takeaway orders
+  tableNo?: number[] | null; // null for takeaway orders, array for dine-in
   orderType: OrderType;
   menuItems: OrderMenuItem[];
   totalPrice: number;

@@ -17,7 +17,7 @@ import { Hide } from "../../components/display/Hide";
 type RowOrder = {
   _id: string;
   orderNo: number;
-  tableNo: number | null;
+  tableNo: number[] | null;
   createdAt: string;
   status: "pending" | "preparing" | "ready" | "served" | "paid";
   items: string;
@@ -64,7 +64,7 @@ export const OrderHistoryPage = () => {
 
     const key = q.toLowerCase();
     return base.filter((o) => {
-      const tableText = o.tableNo != null ? String(o.tableNo) : "takeaway";
+      const tableText = o.tableNo != null ? o.tableNo.join(", ") : "takeaway";
       return (
         String(o.orderNo).includes(key) ||
         tableText.includes(key) ||
@@ -99,7 +99,7 @@ export const OrderHistoryPage = () => {
       header: "Table",
       gridCol: "min-content",
       render: (row) => (
-        <span>{row.tableNo != null ? row.tableNo : "Takeaway"}</span>
+        <span>{row.tableNo != null ? row.tableNo.join(", ") : "Takeaway"}</span>
       ),
     },
     {
