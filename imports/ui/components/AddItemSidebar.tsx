@@ -112,7 +112,13 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-[9999]">
+    <div
+      className={`
+        fixed inset-0 flex items-center justify-center z-[9999]
+        transition-colors z-[1000]
+        ${isOpen ? "visible bg-black/20" : "invisible"}
+      `}
+    >
       <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
         <h2 className="text-xl font-bold mb-4 text-red-900">
           Add New Menu Item Category

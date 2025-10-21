@@ -71,14 +71,13 @@ export const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999]">
-      {/* Full-page semi-transparent overlay */}
-      <div
-        className="absolute inset-0 bg-black/20"
-        onClick={onClose} // clicking overlay closes modal
-      />
-
-      {/* Centered modal */}
+    <div
+      className={`
+        fixed inset-0 flex items-center justify-center z-[9999]
+        transition-colors z-[1000]
+        ${isOpen ? "visible bg-black/20" : "invisible"}
+      `}
+    >
       <div className="fixed inset-0 flex justify-center items-center pointer-events-none">
         <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto pointer-events-auto">
           <h2 className="text-xl font-bold mb-4 text-red-900">

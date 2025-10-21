@@ -181,9 +181,9 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
   return (
   <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
     <DialogTitle sx={{ position: "relative", pr: 4 }}>
-      <h2 className="text-2xl font-bold text-red-900 dark:text-white">
+      <div className="text-2xl font-bold text-red-900 dark:text-white">
         Configure Customer Options for {item?.name}
-      </h2>
+      </div>
 
       <button
         onClick={onClose}
@@ -199,7 +199,7 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
 
     <DialogContent dividers>
       {/* === Base Ingredients === */}
-      <h2 className="text-xl font-semibold text-red-900 dark:text-white">Base Ingredients</h2>
+      <div className="text-xl font-semibold text-red-900 dark:text-white">Base Ingredients</div>
 
       {baseIngredients.map((b) => (
         <Box key={b.key} position="relative" sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1, p: 1, borderRadius: 1, bgcolor: "background.paper", boxShadow: 0.5, pr: 6 }}>
@@ -255,7 +255,7 @@ const MenuItemIngredientsEditorDialog: React.FC<Props> = ({ open, item, onClose 
       <Divider sx={{ my: 3 }} />
 
       {/* === Option Groups === */}
-      <h2 className="text-xl font-semibold text-red-900 dark:text-white mb-2">Option Groups</h2>
+      <div className="text-xl font-semibold text-red-900 dark:text-white mb-2">Option Groups</div>
 
       {optionGroups.map((g) => (
         <Box key={g.id} position="relative" sx={{ mb: 2, p: 2, border: "1px solid", borderColor: "divider", borderRadius: 2, bgcolor: "background.paper", pr: 6 }}>
