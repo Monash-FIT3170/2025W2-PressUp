@@ -162,7 +162,7 @@ export const EditShiftForm = ({
           </Button>
           <Button
             type="button"
-            variant="secondary"
+            variant="negative"
             onClick={onCancel}
             width="full"
           >
