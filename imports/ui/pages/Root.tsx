@@ -22,7 +22,7 @@ export const RootPage = () => {
         <nav>
           <NavigationMenu show={menuOpen} />
         </nav>
-        <main className="flex flex-1 flex-col ps-8 pt-4">
+        <main className="flex flex-1 flex-col ps-8 pt-4 overflow-hidden">
           <Outlet />
         </main>
       </div>

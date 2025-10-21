@@ -11,9 +11,9 @@ interface FormBodyProps
 export const Form = React.forwardRef<HTMLFormElement, FormBodyProps>(
   ({ children, title, onSubmit }: FormBodyProps, ref) => {
     return (
-      <div>
+      <div className="w-full">
         {title && (
-          <div className="flex items-center justify-center p-4 w-100 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+          <div className="flex items-center justify-center p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200 -m-6 mb-2 px-6">
             <FormTitle>{title}</FormTitle>
           </div>
         )}
