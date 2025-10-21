@@ -147,17 +147,15 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     });
   };
 
-    // Ingredient dialog state
-    const [ingredientDialog, setIngredientDialog] = useState<{
-      open: boolean;
-      item: (MenuItem) | null;
-    }>({ open: false, item: null });
+  // Ingredient dialog state
+  const [ingredientDialog, setIngredientDialog] = useState<{
+    open: boolean;
+    item: MenuItem | null;
+  }>({ open: false, item: null });
 
-    const openIngredientDialog = (
-      item: MenuItem,
-    ) => {
-      setIngredientDialog({ open: true, item });
-    };
+  const openIngredientDialog = (item: MenuItem) => {
+    setIngredientDialog({ open: true, item });
+  };
 
   if (!isOpen || !item) return null;
 
@@ -251,19 +249,17 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             />
 
             <button
-                type="button"
-                onClick={() => openIngredientDialog(item)}
-                className="ml-2 bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg text-sm"
-              >
-                Edit Customer Options
+              type="button"
+              onClick={() => openIngredientDialog(item)}
+              className="ml-2 bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg text-sm"
+            >
+              Edit Customer Options
             </button>
 
             <MenuItemIngredientsEditorDialog
               open={ingredientDialog.open}
               item={ingredientDialog.item}
-              onClose={() =>
-                setIngredientDialog({ open: false, item: null })
-              }
+              onClose={() => setIngredientDialog({ open: false, item: null })}
             />
 
             <CategoryDropdown

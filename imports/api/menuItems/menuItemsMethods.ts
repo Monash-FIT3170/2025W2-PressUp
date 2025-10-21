@@ -254,36 +254,37 @@ Meteor.methods({
     }).fetch();
   }),
 
-
   "items.updateItemIngredients": requireLoginMethod(async function (
-    itemName: string, newIngredients: string[]) {
+    itemName: string,
+    newIngredients: string[],
+  ) {
     check(itemName, String);
     check(newIngredients, [String]);
 
     MenuItemsCollection.updateAsync(
       { name: itemName },
-      { $set: { ingredients: newIngredients } }
+      { $set: { ingredients: newIngredients } },
     );
   }),
 
+  "menuItems.updateIngredients": requireLoginMethod(async function (
+    itemName: string,
+    baseIngredients: BaseIngredient[],
+    optionGroups: OptionGroup[],
+  ) {
+    check(itemName, String);
+    check(baseIngredients, Array);
+    check(optionGroups, Array);
 
-    "menuItems.updateIngredients": requireLoginMethod(async function (
-      itemName: string,
-      baseIngredients: BaseIngredient[],
-      optionGroups: OptionGroup[]
-      ) {
-      check(itemName, String);
-      check(baseIngredients, Array);
-      check(optionGroups, Array);
-
-      const result = await MenuItemsCollection.updateAsync(
-        { name: itemName },
-        {
+    const result = await MenuItemsCollection.updateAsync(
+      { name: itemName },
+      {
         $set: {
           baseIngredients,
-          optionGroups
+          optionGroups,
         },
-      });
-      return result;
-    }),
+      },
+    );
+    return result;
+  }),
 });

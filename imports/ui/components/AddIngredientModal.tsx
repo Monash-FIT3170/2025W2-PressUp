@@ -16,7 +16,7 @@ export const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
   itemName,
 }) => {
   const item = useTracker(() =>
-    MenuItemsCollection.findOne({ name: itemName })
+    MenuItemsCollection.findOne({ name: itemName }),
   );
   const [newIngredient, setNewIngredient] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -35,14 +35,14 @@ export const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
           "items.updateItemIngredients",
           itemName,
           [...(item.ingredients || []), newIngredient.trim()],
-          (error: Meteor.Error) => (error ? reject(error) : resolve())
+          (error: Meteor.Error) => (error ? reject(error) : resolve()),
         );
       });
       setNewIngredient("");
     } catch (error) {
       alert(
         "Error adding ingredient: " +
-          ((error as Meteor.Error).reason || (error as Error).message)
+          ((error as Meteor.Error).reason || (error as Error).message),
       );
     } finally {
       setIsSubmitting(false);
@@ -57,13 +57,13 @@ export const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
           "items.updateItemIngredients",
           itemName,
           updated,
-          (error: Meteor.Error) => (error ? reject(error) : resolve())
+          (error: Meteor.Error) => (error ? reject(error) : resolve()),
         );
       });
     } catch (error) {
       alert(
         "Error deleting ingredient: " +
-          ((error as Meteor.Error).reason || (error as Error).message)
+          ((error as Meteor.Error).reason || (error as Error).message),
       );
     } finally {
       setDeleteTarget(null);
