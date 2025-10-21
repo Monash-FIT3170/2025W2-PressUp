@@ -6,28 +6,22 @@ import { IdType, OmitDB } from "../database";
 import type { BaseIngredient, OptionGroup } from "./MenuItemsCollection";
 
 // Define reusable schemas
-const BaseIngredientSchema: Match.Matcher<BaseIngredient> =
-  Match.ObjectIncluding({
-    key: String,
-    label: String,
-    default: Boolean,
-    removable: Match.Optional(Boolean),
-    priceDelta: Match.Optional(Number),
-  });
+const BaseIngredientSchema: any = Match.ObjectIncluding({
+  key: String,
+  label: String,
+  default: Boolean,
+  removable: Match.Optional(Boolean),
+  priceDelta: Match.Optional(Number),
+});
 
-const OptionSchema: Match.Matcher<{
-  key: string;
-  label: string;
-  priceDelta?: number;
-  default?: boolean;
-}> = Match.ObjectIncluding({
+const OptionSchema: any = Match.ObjectIncluding({
   key: String,
   label: String,
   priceDelta: Match.Optional(Number),
   default: Match.Optional(Boolean),
 });
 
-const OptionGroupSchema: Match.Matcher<OptionGroup> = Match.ObjectIncluding({
+const OptionGroupSchema: any = Match.ObjectIncluding({
   id: String,
   label: String,
   type: Match.OneOf("single", "multiple"),

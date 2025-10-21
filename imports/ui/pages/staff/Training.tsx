@@ -91,7 +91,7 @@ export const TrainingPage = () => {
         currentList.items,
       );
     });
-  }, [currentList, staff]);
+  }, [currentList?._id, currentList?.items, staff]);
 
   const handleDelete = () => {
     if (currentList) {
@@ -153,7 +153,7 @@ export const TrainingPage = () => {
         "trainingProgress.update",
         progress._id,
         { completedItems: editCheckboxes },
-        (err: Meteor.Error | undefined) => {
+        (err: any) => {
           if (err) {
             alert("Failed to update training progress");
           } else {

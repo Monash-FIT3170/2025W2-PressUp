@@ -28,14 +28,11 @@ export const MainDisplay = () => {
   useSubscribe("orders");
   useSubscribe("itemCategories");
   const categories = useTracker(() => ItemCategoriesCollection.find().fetch());
-  Meteor.call(
-    "itemCategories.insertInitial",
-    (error: Meteor.Error | undefined) => {
-      if (error) {
-        console.error("Error inserting initial categories:", error);
-      }
-    },
-  );
+  Meteor.call("itemCategories.insertInitial", (error: any) => {
+    if (error) {
+      console.error("Error inserting initial categories:", error);
+    }
+  });
 
   const posItems = useTracker(() => MenuItemsCollection.find().fetch());
   // Only use activeOrderId for order selection

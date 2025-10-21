@@ -13,7 +13,7 @@ export type UiOrder = {
     name: string;
     quantity: number;
     served?: boolean;
-    menuItemId?: IdType;
+    menuItemId?: any;
     baseIncludedKeys?: string[];
     optionSelections?: Record<string, string[]>;
   }>;

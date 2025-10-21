@@ -58,7 +58,7 @@ export const ReceiptPage = () => {
     const map: Record<string, MenuItem> = {};
     for (const id of ids) {
       // Minimongo accepts either string or ObjectID here
-      const doc = MenuItemsCollection.findOne(id as string | Mongo.ObjectID);
+      const doc = MenuItemsCollection.findOne(id as any);
       if (doc) map[String(id)] = doc;
     }
     return map;

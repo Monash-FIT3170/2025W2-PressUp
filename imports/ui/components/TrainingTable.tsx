@@ -39,7 +39,7 @@ export const TrainingTable = ({
       header: item.name,
       gridCol: "1fr",
       align: "center" as const,
-      render: (row: { completedItems: { [x: string]: boolean } }) =>
+      render: (row: { completedItems: { [x: string]: any } }) =>
         row.completedItems[item.id] ? (
           <Check className="text-press-up-purple mx-auto" />
         ) : (
