@@ -12,7 +12,11 @@ export const mergeDuplicates = async (
   supplier: string | null,
   excludeId?: IdType,
 ): Promise<IdType | null> => {
-  const query: any = { name, supplier };
+  const query: {
+    name: string;
+    supplier: string | null;
+    _id?: { $ne: IdType };
+  } = { name, supplier };
   if (excludeId) {
     query._id = { $ne: excludeId };
   }

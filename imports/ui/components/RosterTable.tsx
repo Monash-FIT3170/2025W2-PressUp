@@ -120,7 +120,7 @@ export const RosterTable = ({
     }
 
     return days;
-  }, [start, end]);
+  }, [start, end, locale]);
 
   return (
     <div className="h-full flex flex-col">

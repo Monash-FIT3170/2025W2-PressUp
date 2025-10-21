@@ -483,7 +483,7 @@ export const TablesPage = () => {
                         setModalType(null);
                         setCapacityInput("");
                         markChanged();
-                      } catch (err: any) {
+                      } catch (err: unknown) {
                         // If server rejects, do not change UI
                         alert(
                           err?.reason || err?.message || "Failed to add table.",
