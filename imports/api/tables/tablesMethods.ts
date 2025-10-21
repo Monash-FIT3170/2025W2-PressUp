@@ -178,27 +178,69 @@ Meteor.methods({
       throw new Meteor.Error("not-found", "Some tables not found");
 
     // Find all active orders for these tables
-    const activeOrderIDs = tables.map((t) => t.activeOrderID).filter(Boolean);
-      // Update merged order: set menuItems, totalPrice, and assign all tableNos
-      await OrdersCollection.updateAsync(mergedOrderId, {
-        $set: {
-          menuItems: mergedMenuItems,
-          totalPrice: mergedTotal,
-          tableNo: tableNos,
-        },
-      });
+    const activeOrderIDs = tables
+      .map((t) => t.activeOrderID)
+      .filter(Boolean) as string[];
+
+    // Load the current merged order to preserve any previously-merged tables
+    const currentMergedOrder =
+      await OrdersCollection.findOneAsync(mergedOrderId);
+    const currentMergedTableNos: number[] =
+      currentMergedOrder?.tableNo != null ? currentMergedOrder.tableNo : [];
+
+    // Also include any tables which currently reference the merged order
+    const tablesPointingToMerged = await TablesCollection.find({
+      activeOrderID: mergedOrderId,
+    }).fetchAsync();
+    const tablesPointingNos = tablesPointingToMerged.map(
+      (t) => t.tableNo as number,
+    );
+
+    // Compute union of selected tableNos, currentMergedTableNos, and tables already pointing to merged order
+    const unionTableNos = Array.from(
+      new Set([
+        ...(tableNos || []),
+        ...currentMergedTableNos,
+        ...tablesPointingNos,
+      ]),
+    ).sort((a, b) => a - b);
+
+    // Update merged order: set menuItems, totalPrice, and assign all tableNos (union)
+    await OrdersCollection.updateAsync(mergedOrderId, {
+      $set: {
+        menuItems: mergedMenuItems,
+        totalPrice: mergedTotal,
+        tableNo: unionTableNos,
+      },
+    });
+
+    // Identify other order IDs to merge into mergedOrderId (exclude mergedOrderId itself)
+    const otherOrderIDs = activeOrderIDs.filter((id) => id !== mergedOrderId);
+
+    // For any tables that referenced those other orders, update them to point to mergedOrderId
+    if (otherOrderIDs.length > 0) {
+      const tablesReferencingOthers = await TablesCollection.find({
+        activeOrderID: { $in: otherOrderIDs },
+      }).fetchAsync();
+      for (const t of tablesReferencingOthers) {
+        await TablesCollection.updateAsync(t._id, {
+          $set: { activeOrderID: mergedOrderId, isOccupied: true },
+          $addToSet: { orderIDs: mergedOrderId },
+        });
+      }
+    }
 
     // Remove all other orders (except mergedOrderId) if they exist and are not paid
-    for (const oid of activeOrderIDs) {
-      if (oid && oid !== mergedOrderId) {
-        const order = await OrdersCollection.findOneAsync(oid);
+    for (const orderID of otherOrderIDs) {
+      if (orderID) {
+        const order = await OrdersCollection.findOneAsync(orderID);
         if (order && !order.paid) {
-          await OrdersCollection.removeAsync(oid);
+          await OrdersCollection.removeAsync(orderID);
         }
       }
     }
 
-    // Update all tables: set activeOrderID to mergedOrderId, add to orderIDs
+    // Update all originally selected tables: set activeOrderID to mergedOrderId, add to orderIDs
     for (const t of tables) {
       await TablesCollection.updateAsync(t._id, {
         $set: { activeOrderID: mergedOrderId, isOccupied: true },

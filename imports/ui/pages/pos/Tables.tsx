@@ -454,19 +454,19 @@ export const TablesPage = () => {
             {mergeMode && (
               <>
                 <Button
-                  variant="negative"
-                  onClick={resetMergeMode}
-                  className="ml-2"
-                >
-                  Cancel Merge
-                </Button>
-                <Button
                   variant="positive"
                   onClick={handleMergeTables}
                   disabled={selectedMergeTables.length < 2}
                   className="ml-2"
                 >
                   Merge Selected ({selectedMergeTables.length})
+                </Button>
+                <Button
+                  variant="negative"
+                  onClick={resetMergeMode}
+                  className="ml-2"
+                >
+                  Cancel Merge
                 </Button>
               </>
             )}
@@ -479,10 +479,6 @@ export const TablesPage = () => {
               <div className="flex items-center gap-1">
                 <div className="w-5 h-5 rounded-full bg-press-up-grey border border-gray-500"></div>
                 <span className="text-sm">Not Occupied</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-5 h-5 rounded-full border-2 border-press-up-purple"></div>
-                <span className="text-sm">Selected for Merge</span>
               </div>
             </div>
           </div>
