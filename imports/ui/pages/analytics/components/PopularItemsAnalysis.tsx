@@ -1,12 +1,5 @@
 import React, { useMemo } from "react";
 import { Order, OrderMenuItem } from "/imports/api/orders/OrdersCollection";
-import {
-  startOfToday,
-  startOfWeek,
-  startOfMonth,
-  startOfYear,
-  subDays,
-} from "date-fns";
 
 interface PopularItemsAnalysisProps {
   orders: Order[];
@@ -34,48 +27,11 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
   customDateRange: _customDateRange,
 }) => {
   const popularItems = useMemo(() => {
-    const today = startOfToday();
-    let startDate: Date | null = null;
-    let endDate: Date | null = today;
-
-    switch (timeFrame) {
-      case "today":
-        startDate = today;
-        break;
-      case "thisWeek":
-        startDate = startOfWeek(today, { weekStartsOn: 1 });
-        break;
-      case "thisMonth":
-        startDate = startOfMonth(today);
-        break;
-      case "thisYear":
-        startDate = startOfYear(today);
-        break;
-      case "past7Days":
-        startDate = subDays(today, 6);
-        break;
-      case "past30Days":
-        startDate = subDays(today, 29);
-        break;
-      case "all":
-      default:
-        startDate = null;
-        endDate = null;
-    }
-
-    const filteredorders = orders.filter((order) => {
-      const orderDate = new Date(order.createdAt);
-
-      if (!startDate || !endDate) {
-        return true;
-      }
-
-      return orderDate >= startDate && orderDate <= endDate;
-    });
-
+    // Use the already-filtered orders from the parent component
+    // No need to do additional date filtering here
     const itemMap = new Map<string, ItemStats>();
 
-    filteredorders.forEach((order) => {
+    orders.forEach((order) => {
       // Include all orders for analytics, not just paid ones
       // if (!order.paid) {
       //   return;
@@ -103,7 +59,7 @@ export const PopularItemsAnalysis: React.FC<PopularItemsAnalysisProps> = ({
     return Array.from(itemMap.values())
       .sort((a, b) => b.totalQuantity - a.totalQuantity)
       .slice(0, 5);
-  }, [orders, timeFrame]);
+  }, [orders]);
 
   const overallMostPopular = useMemo<{ name: string; quantity: number }>(() => {
     const itemMap = new Map<string, number>();

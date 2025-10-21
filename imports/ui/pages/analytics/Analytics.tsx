@@ -66,9 +66,7 @@ export const AnalyticsPage = () => {
 
     return orders.filter((order) => {
       const orderDate = new Date(order.createdAt);
-      return (
-        orderDate >= dateRangeBounds.start! && orderDate <= dateRangeBounds.end!
-      );
+      return orderDate >= dateRangeBounds.start! && orderDate <= dateRangeBounds.end!;
     });
   }, [orders, dateRangeBounds]);
 
@@ -89,27 +87,27 @@ export const AnalyticsPage = () => {
     switch (dateRange) {
       case "today":
         start = startOfToday();
-        end = startOfToday();
+        end = new Date(); // Include all of today
         break;
       case "thisWeek":
         start = startOfWeek(currentDate, { weekStartsOn: 1 });
-        end = subDays(currentDate, 1);
+        end = new Date(); // Include up to now
         break;
       case "thisMonth":
         start = startOfMonth(currentDate);
-        end = subDays(currentDate, 1);
+        end = new Date(); // Include up to now
         break;
       case "thisYear":
         start = startOfYear(currentDate);
-        end = subDays(currentDate, 1);
+        end = new Date(); // Include up to now
         break;
       case "past7Days":
-        start = subDays(currentDate, 6);
-        end = subDays(currentDate, 1);
+        start = subDays(new Date(), 6);
+        end = new Date(); // Include up to now
         break;
       case "past30Days":
-        start = subDays(currentDate, 29);
-        end = subDays(currentDate, 1);
+        start = subDays(new Date(), 29);
+        end = new Date(); // Include up to now
         break;
       case "all":
       default:
