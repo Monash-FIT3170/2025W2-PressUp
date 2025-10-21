@@ -5,6 +5,8 @@ import { SuppliersPage } from "./pages/inventory/Suppliers";
 import { Menu } from "./pages/menuManagement/Menu";
 import { ProfitLossPage } from "./pages/finance/ProfitLossPage";
 import { TaxPage } from "./pages/finance/TaxPage";
+import { ExpensesPage } from "./pages/finance/ExpensesPage";
+import { AnalyticsPage } from "./pages/analytics/Analytics";
 import { KitchenManagement } from "./pages/kitchenManagement/KitchenManagement";
 import { OrderHistoryPage } from "./pages/kitchenManagement/OrderHistoryPage";
 import { MainDisplay } from "./pages/pos/MainDisplay";
@@ -38,6 +40,8 @@ const router = createBrowserRouter([
           },
           { path: "profit-loss", Component: ProfitLossPage },
           { path: "tax", Component: TaxPage },
+          { path: "expenses", Component: ExpensesPage },
+          { path: "analytics", Component: AnalyticsPage },
         ],
       },
       {
