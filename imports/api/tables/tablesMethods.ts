@@ -249,4 +249,98 @@ Meteor.methods({
     }
     return true;
   }),
+
+  // Split selected tables out of a merged order by cloning the merged order per table
+  "tables.splitTablesFromOrder": requireLoginMethod(async function (params: {
+    orderId: string;
+    tableNos: number[];
+  }) {
+    const { orderId, tableNos } = params;
+    if (!orderId || !Array.isArray(tableNos) || tableNos.length === 0)
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Order ID and at least one table number are required",
+      );
+
+    // Load the original merged order
+    const mergedOrder = await OrdersCollection.findOneAsync(orderId);
+    if (!mergedOrder)
+      throw new Meteor.Error("order-not-found", "Order not found");
+
+    // Normalise current merged table numbers to an array
+    const currentTableNos: number[] =
+      mergedOrder.tableNo != null ? mergedOrder.tableNo : [];
+
+    // Validate requested tables exist in DB
+    const tables = await TablesCollection.find({
+      tableNo: { $in: tableNos },
+    }).fetchAsync();
+    if (tables.length !== tableNos.length)
+      throw new Meteor.Error("not-found", "Some tables not found");
+
+    // Compute starting orderNo (reuse orders.addOrder logic)
+    const last = await OrdersCollection.find(
+      {},
+      { sort: { orderNo: -1 }, limit: 1 },
+    ).fetchAsync();
+    let nextOrderNo = 1001;
+    if (last.length > 0 && typeof last[0].orderNo === "number")
+      nextOrderNo = last[0].orderNo + 1;
+
+    const created: { tableNo: number; orderId: string }[] = [];
+
+    // For each table being split, create a new order cloned from mergedOrder
+    for (const tableNo of tableNos) {
+      // Deep copy menu items to avoid shared references
+      const menuItems = JSON.parse(JSON.stringify(mergedOrder.menuItems ?? []));
+
+      const newOrder: any = {
+        orderNo: nextOrderNo,
+        tableNo: [tableNo],
+        orderType: mergedOrder.orderType,
+        menuItems,
+        totalPrice: mergedOrder.totalPrice ?? 0,
+        originalPrice: mergedOrder.originalPrice,
+        discountedPrice: mergedOrder.discountedPrice,
+        discountPercent: mergedOrder.discountPercent,
+        discountAmount: mergedOrder.discountAmount,
+        createdAt: new Date(),
+        orderStatus: mergedOrder.orderStatus ?? "pending",
+        paid: false,
+      };
+
+      const newOrderId = await OrdersCollection.insertAsync(newOrder);
+      created.push({ tableNo: tableNo, orderId: newOrderId });
+      nextOrderNo++;
+
+      // Assign new order to the table record
+      const table = tables.find((x) => x.tableNo === tableNo);
+      if (table && table._id) {
+        await TablesCollection.updateAsync(table._id, {
+          $set: { activeOrderID: newOrderId, isOccupied: true },
+          $addToSet: { orderIDs: newOrderId },
+        });
+      }
+    }
+
+    // Remove split table numbers from original merged order
+    const remaining = currentTableNos.filter((n) => !tableNos.includes(n));
+    if (remaining.length > 0) {
+      const sorted = [...new Set(remaining)].sort((a, b) => a - b);
+      await OrdersCollection.updateAsync(orderId, {
+        $set: { tableNo: sorted },
+      });
+    } else {
+      // No tables remain on merged order — remove it if unpaid, otherwise set tableNo to null
+      if (!mergedOrder.paid) {
+        await OrdersCollection.removeAsync(orderId);
+      } else {
+        await OrdersCollection.updateAsync(orderId, {
+          $set: { tableNo: null },
+        });
+      }
+    }
+
+    return { created };
+  }),
 });

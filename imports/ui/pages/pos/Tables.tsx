@@ -151,6 +151,9 @@ export const TablesPage = () => {
   // Merge mode state
   const [mergeMode, setMergeMode] = useState(false);
   const [selectedMergeTables, setSelectedMergeTables] = useState<number[]>([]);
+  // Split mode state
+  const [splitMode, setSplitMode] = useState(false);
+  const [selectedSplitTables, setSelectedSplitTables] = useState<number[]>([]);
   const userIsAdmin = Meteor.user()?.username === "admin";
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -203,6 +206,12 @@ export const TablesPage = () => {
     );
   };
 
+  const toggleSplitTable = (tableNo: number) => {
+    setSelectedSplitTables((prev) =>
+      prev.includes(tableNo) ? prev.filter((n) => n !== tableNo) : [...prev, tableNo],
+    );
+  };
+
   const resetMergeMode = () => {
     setMergeMode(false);
     setSelectedMergeTables([]);
@@ -245,6 +254,27 @@ export const TablesPage = () => {
           alert("Failed to merge tables: " + err.reason);
         } else {
           resetMergeMode();
+        }
+      },
+    );
+  };
+
+  const handleSplitTables = async () => {
+    if (selectedSplitTables.length === 0) return;
+    // determine merged order id (use first selected table's activeOrderID)
+    const table = tablesFromDb.find((t) => t.tableNo === selectedSplitTables[0]);
+    const mergedOrderId = table?.activeOrderID;
+    if (!mergedOrderId) return alert("Selected table has no active merged order");
+
+    Meteor.call(
+      "tables.splitTablesFromOrder",
+      { orderId: mergedOrderId, tableNos: selectedSplitTables },
+      (err: any) => {
+        if (err) {
+          alert("Failed to split tables: " + err.reason);
+        } else {
+          setSplitMode(false);
+          setSelectedSplitTables([]);
         }
       },
     );
@@ -296,22 +326,23 @@ export const TablesPage = () => {
       }),
     });
 
-    // Merge mode: allow selection
-    const isSelectedForMerge =
-      table && mergeMode && selectedMergeTables.includes(table.tableNo);
+    // Merge/Split mode: allow selection
+    const isSelectedForMerge = table && mergeMode && selectedMergeTables.includes(table.tableNo);
+    const isSelectedForSplit = table && splitMode && selectedSplitTables.includes(table.tableNo);
     return (
       <div
         ref={drop as unknown as React.Ref<HTMLDivElement>}
         className={`relative flex items-center justify-center border border-gray-300 bg-white rounded-full min-h-[150px] min-w-[150px] ${
           isOver && canDrop ? "bg-purple-100" : ""
-        } ${isSelectedForMerge ? "ring-4 ring-press-up-purple" : ""}`}
+        } ${isSelectedForMerge || isSelectedForSplit ? "ring-4 ring-press-up-purple" : ""}`}
         style={{
           height: 150,
           width: 150,
-          cursor: mergeMode && table ? "pointer" : undefined,
+          cursor: (mergeMode || splitMode) && table ? "pointer" : undefined,
         }}
         onClick={() => {
           if (mergeMode && table) toggleMergeTable(table.tableNo);
+          else if (splitMode && table) toggleSplitTable(table.tableNo);
         }}
       >
         {table ? (
@@ -351,6 +382,17 @@ export const TablesPage = () => {
             }`}
           >
             {isSelectedForMerge ? "✓" : ""}
+          </div>
+        )}
+        {splitMode && table && (
+          <div
+            className={`absolute top-2 left-2 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+              isSelectedForSplit
+                ? "bg-yellow-400 border-yellow-400 text-white"
+                : "bg-white border-gray-400"
+            }`}
+          >
+            {isSelectedForSplit ? "✓" : ""}
           </div>
         )}
       </div>
@@ -467,6 +509,38 @@ export const TablesPage = () => {
                   className="ml-2"
                 >
                   Cancel Merge
+                </Button>
+              </>
+            )}
+            {/* Split Tables Button */}
+            {!editMode && !splitMode && !mergeMode && (
+              <Button
+                variant="positive"
+                onClick={() => setSplitMode(true)}
+                className="ml-2"
+              >
+                Split Tables
+              </Button>
+            )}
+            {splitMode && (
+              <>
+                <Button
+                  variant="positive"
+                  onClick={handleSplitTables}
+                  disabled={selectedSplitTables.length < 1}
+                  className="ml-2"
+                >
+                  Split Selected ({selectedSplitTables.length})
+                </Button>
+                <Button
+                  variant="negative"
+                  onClick={() => {
+                    setSplitMode(false);
+                    setSelectedSplitTables([]);
+                  }}
+                  className="ml-2"
+                >
+                  Cancel Split
                 </Button>
               </>
             )}
