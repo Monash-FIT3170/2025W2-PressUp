@@ -16,6 +16,7 @@ import { Roles } from "meteor/alanning:roles";
 import { RoleEnum } from "/imports/api/accounts/roles";
 import { Hide } from "./display/Hide";
 import { RiDeleteBinFill, RiDeleteBinLine } from "react-icons/ri";
+import { RiPushpinFill, RiPushpinLine } from "react-icons/ri";
 
 export default function ForumPage() {
   useSubscribe("posts");
@@ -36,7 +37,12 @@ export default function ForumPage() {
           p.category.toLowerCase().includes(search.toLowerCase())) &&
         (categoryFilter === "" || p.category === categoryFilter),
     )
-    .sort((a, b) => b.datePosted.getTime() - a.datePosted.getTime());
+    .sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+
+      return b.datePosted.getTime() - a.datePosted.getTime();
+    });
   const [subject, setSubject] = useState<string>("");
   const [content, setContent] = useState<string>("");
   const [category, setCategory] = useState<string>("");
@@ -102,6 +108,11 @@ export default function ForumPage() {
     setSelectedPost(undefined);
   };
 
+  const handlePinPost = (postId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent post selection when clicking pin
+    Meteor.call("posts.togglePin", postId);
+  };
+
   return (
     <div className="flex h-full">
       {/* LEFT PANEL */}
@@ -155,18 +166,36 @@ export default function ForumPage() {
                   </p>
                 </div>
                 <Hide hide={!canDeletePosts}>
-                  <div
-                    onClick={() => setShowDeleteConfirmation(true)}
-                    className="group cursor-pointer ml-auto shrink-0 duration-100 transition-all"
-                  >
-                    <RiDeleteBinLine
-                      size={20}
-                      className="text-press-up-negative-button group-hover:hidden"
-                    />
-                    <RiDeleteBinFill
-                      size={20}
-                      className="hidden text-press-up-negative-button group-hover:block"
-                    />
+                  <div className="flex items-center gap-2 ml-auto shrink-0">
+                    <div
+                      onClick={(e) => handlePinPost(post._id, e)}
+                      className="group cursor-pointer duration-100 transition-all"
+                    >
+                      {post.pinned ? (
+                        <RiPushpinFill
+                          size={20}
+                          className="text-press-up-negative-button"
+                        />
+                      ) : (
+                        <RiPushpinLine
+                          size={20}
+                          className="text-press-up-negative-button group-hover:text-press-up-blue"
+                        />
+                      )}
+                    </div>
+                    <div
+                      onClick={() => setShowDeleteConfirmation(true)}
+                      className="group cursor-pointer duration-100 transition-all"
+                    >
+                      <RiDeleteBinLine
+                        size={20}
+                        className="text-press-up-negative-button group-hover:hidden"
+                      />
+                      <RiDeleteBinFill
+                        size={20}
+                        className="hidden text-press-up-negative-button group-hover:block"
+                      />
+                    </div>
                   </div>
                 </Hide>
               </div>
