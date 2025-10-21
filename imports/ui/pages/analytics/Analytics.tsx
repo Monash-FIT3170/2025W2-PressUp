@@ -66,7 +66,9 @@ export const AnalyticsPage = () => {
 
     return orders.filter((order) => {
       const orderDate = new Date(order.createdAt);
-      return orderDate >= dateRangeBounds.start! && orderDate <= dateRangeBounds.end!;
+      return (
+        orderDate >= dateRangeBounds.start! && orderDate <= dateRangeBounds.end!
+      );
     });
   }, [orders, dateRangeBounds]);
 
