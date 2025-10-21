@@ -9,9 +9,10 @@ import { Button } from "./interaction/Button";
 interface PaymentModalProps {
   tableNo?: number | null;
   order: Order;
+  splits?: string[] | null;
 }
 
-export const PaymentModal = ({ order }: PaymentModalProps) => {
+export const PaymentModal = ({ order, splits }: PaymentModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const isServed = order.orderStatus === OrderStatus.Served;
   const openModal = () => {
@@ -49,7 +50,7 @@ export const PaymentModal = ({ order }: PaymentModalProps) => {
     if (order._id) {
       sessionStorage.setItem("activeOrderId", order._id);
     }
-    navigate("/receipt");
+    navigate("/receipt", { state: { splits } });
   };
 
   return (
