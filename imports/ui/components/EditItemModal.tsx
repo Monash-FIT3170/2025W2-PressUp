@@ -13,7 +13,7 @@ import { AddIngredientModal } from "../components/AddIngredientModal";
 interface EditItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  item: MenuItem;
+  item: MenuItem | null;
   onSave: (updatedItem: Partial<MenuItem>) => void;
 }
 
