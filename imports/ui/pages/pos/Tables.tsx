@@ -1045,7 +1045,7 @@ export const TablesPage = () => {
                           (a: TableBooking, b: TableBooking) =>
                             a.bookingDate.getTime() - b.bookingDate.getTime(),
                         )
-                        .map((booking: TableBooking, idx: number) => (
+                        .map((booking: TableBooking) => (
                           <div
                             key={booking.bookingDate.getTime()}
                             className="bg-gray-50 p-2 rounded-lg text-sm"
