@@ -6,13 +6,16 @@ export type UiOrder = {
   orderNo: number;
   orderType: OrderType;
   status: OrderStatus;
-  tableNo: number | null;
+  tableNo: number[] | null;
   createdAt: string;
   createdAtMs: number;
   menuItems: Array<{
     name: string;
     quantity: number;
     served?: boolean;
+    menuItemId?: any;
+    baseIncludedKeys?: string[];
+    optionSelections?: Record<string, string[]>;
   }>;
 };
 

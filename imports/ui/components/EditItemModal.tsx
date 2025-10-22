@@ -1,11 +1,14 @@
 import React, { useState, useEffect, FormEvent } from "react";
 import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
+import { ItemCategoriesCollection } from "/imports/api/menuItems/ItemCategoriesCollection";
 import { Modal } from "./Modal";
 import { MenuItem } from "/imports/api/menuItems/MenuItemsCollection";
-import { IngredientDropdown } from "./IngredientDropdown";
 import { CategoryDropdown } from "./CategoryDropdown";
 import { AllergenDropdown } from "./AllergenDropdown";
 import { ConfirmModal } from "./ConfirmModal";
+import MenuItemIngredientsEditorDialog from "./MenuItemIngredientsEditorDialog";
+import { AddIngredientModal } from "../components/AddIngredientModal";
 
 interface EditItemModalProps {
   isOpen: boolean;
@@ -33,6 +36,11 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   item,
   onSave,
 }) => {
+  const categoriesCollection = useTracker(() =>
+    ItemCategoriesCollection.find().fetch(),
+  );
+  const categoryNames = categoriesCollection.map((c) => c.name);
+
   const [formData, setFormData] = useState({
     name: "",
     quantity: 0,
@@ -50,6 +58,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   const [allergens, setAllergens] = useState<string[]>([]);
   const [discount, setDiscount] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isIngredientModalOpen, setIsIngredientModalOpen] = useState(false);
   const [confirm, setConfirm] = useState<"cancel" | "save" | null>(null);
   const [selectedImageType, setSelectedImageType] = useState<
     "predefined" | "upload"
@@ -122,6 +131,33 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   const selectPredefinedImage = (imagePath: string) => {
     setFormData({ ...formData, image: imagePath });
   };
+
+  const handleCategoryChange = (newCategories: string[]) => {
+    setCategories(newCategories);
+
+    // Detect newly added categories
+    const newOnes = newCategories.filter((cat) => !categoryNames.includes(cat));
+
+    newOnes.forEach((cat) => {
+      Meteor.call("itemCategories.insert", { name: cat }, (error: any) => {
+        if (error) {
+          console.error("Error inserting category:", error);
+        }
+      });
+    });
+  };
+
+  // Ingredient dialog state
+  const [ingredientDialog, setIngredientDialog] = useState<{
+    open: boolean;
+    item: MenuItem | null;
+  }>({ open: false, item: null });
+
+  const openIngredientDialog = (item: MenuItem) => {
+    setIngredientDialog({ open: true, item });
+  };
+
+  if (!isOpen || !item) return null;
 
   return (
     <>
@@ -198,28 +234,38 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
               </div>
             )}
 
-            <IngredientDropdown
-              selectedIngredients={ingredients}
-              onChange={setIngredients}
-              initialIngredients={[
-                "Milk",
-                "Flour",
-                "Eggs",
-                "Bread",
-                "Butter",
-                "Strawberries",
-                "Avocado",
-                "Bacon",
-                "Olive Oil",
-                "Paprika",
-                "Jam",
-              ]}
+            <button
+              type="button"
+              onClick={() => setIsIngredientModalOpen(true)}
+              className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg text-sm"
+            >
+              Edit Item Ingredients
+            </button>
+
+            <AddIngredientModal
+              isOpen={isIngredientModalOpen}
+              onClose={() => setIsIngredientModalOpen(false)}
+              itemName={item.name}
+            />
+
+            <button
+              type="button"
+              onClick={() => openIngredientDialog(item)}
+              className="ml-2 bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg text-sm"
+            >
+              Edit Customer Options
+            </button>
+
+            <MenuItemIngredientsEditorDialog
+              open={ingredientDialog.open}
+              item={ingredientDialog.item}
+              onClose={() => setIngredientDialog({ open: false, item: null })}
             />
 
             <CategoryDropdown
               selectedCategories={categories}
-              onChange={setCategories}
-              initialCategories={["Food", "Drink", "Dessert"]}
+              onChange={handleCategoryChange}
+              initialCategories={categoryNames} // reactive categories
             />
 
             <AllergenDropdown

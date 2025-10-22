@@ -8,7 +8,7 @@ export const CommunicationPage = () => {
     setPageTitle("Staff Management - Forum");
   }, [setPageTitle]);
   return (
-    <div className="w-full">
+    <div className="w-full overflow-y-scroll">
       <ForumPage></ForumPage>
     </div>
   );
