@@ -2,7 +2,10 @@ import { Meteor } from "meteor/meteor";
 import React, { useEffect, useState } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-import { TablesCollection } from "/imports/api/tables/TablesCollection";
+import { 
+  TablesCollection,
+  TableBooking
+ } from "/imports/api/tables/TablesCollection";
 import {
   OrdersCollection,
   OrderType,
@@ -41,6 +44,7 @@ interface Table {
   isOccupied?: boolean;
   activeOrderID?: string | null;
   orderIDs?: string[];
+  bookings?: TableBooking[];
 }
 
 interface TableCardProps {
@@ -152,7 +156,7 @@ export const TablesPage = () => {
   const [hasChanges, setHasChanges] = useState(false);
 
   const [modalType, setModalType] = useState<
-    null | "addTable" | "editTable" | "exitConfirm" | "deleteTable"
+    null | "addTable" | "editTable" | "exitConfirm" | "deleteTable" | "addBooking"
   >(null);
   const [selectedCellIndex, setSelectedCellIndex] = useState<number | null>(
     null,
@@ -175,6 +179,24 @@ export const TablesPage = () => {
   const [selectedMoveOrderNo, setSelectedMoveOrderNo] = useState<string | null>(
     null,
   );
+
+  // Booking form state
+  const [bookingForm, setBookingForm] = useState({
+    customerName: "",
+    customerPhone: "",
+    partySize: "",
+    bookingDate: "",
+    notes: "",
+  });
+  const resetBookingForm = () => {
+    setBookingForm({
+      customerName: "",
+      customerPhone: "",
+      partySize: "",
+      bookingDate: "",
+      notes: "",
+    });
+  };
 
   // Prefill grid with tables from DB on initial load
   useEffect(() => {
@@ -801,6 +823,58 @@ export const TablesPage = () => {
                   </div>
                 )}
 
+                {/* Table Bookings */}
+                
+                <div className="mb-3">
+                  <hr></hr>
+                  <label className="block mt-2 font-semibold">Bookings:</label>
+                  {editTableData?.bookings && (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {editTableData.bookings
+                        .sort((a: TableBooking, b: TableBooking) => 
+                          new Date(a.bookingDate).getTime() - new Date(b.bookingDate).getTime()
+                        )
+                        .filter((booking: TableBooking) => new Date(booking.bookingDate) >= new Date())
+                        .map((booking: TableBooking, idx: number) => (
+                          <div key={idx} className="bg-gray-50 p-2 rounded-lg text-sm">
+                            <div className="font-medium">{booking.customerName}</div>
+                            <div className="text-gray-600">
+                              {new Date(booking.bookingDate).toLocaleString()} · {booking.partySize} people
+                            </div>
+                            {booking.notes && (
+                              <div className="text-gray-500 italic">{booking.notes}</div>
+                            )}
+                            <Button
+                              variant="positive"
+                              onClick={() => {
+                                Meteor.call(
+                                  "tables.removeBooking",
+                                  editTableData._id,
+                                  booking.bookingDate,
+                                  (err: unknown) => {
+                                    if (err) alert(`Failed to remove booking: ${String(err)}`);
+                                  }
+                                );
+                              }}
+                            >
+                              Cancel Booking
+                            </Button>
+                          </div>
+                        ))}
+                    </div>
+                    )}
+                </div>
+                
+                <Button
+                    variant="negative"
+                    onClick={() => {
+                      setModalType("addBooking");
+                      resetBookingForm();
+                    }}
+                  >
+                    Add Booking
+                </Button>
+
                 {/* Bottom row: Cancel & Save */}
                 <div className="flex justify-end gap-2">
                   <Button
@@ -991,6 +1065,142 @@ export const TablesPage = () => {
                     Cancel
                   </Button>
                 </div>
+              </>
+            )}
+
+            {/* Add Booking Modal */}
+            {modalType === "addBooking" && editTableData && (
+              <>
+                <h2 className="text-lg font-semibold mb-4">
+                  Add Booking for Table {editTableData.tableNo}
+                </h2>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                    await new Promise((resolve, reject) => {
+                      Meteor.call(
+                        "tables.addBooking",
+                        editTableData._id,
+                        {
+                          customerName: bookingForm.customerName,
+                          customerPhone: bookingForm.customerPhone,
+                          partySize: parseInt(bookingForm.partySize),
+                          bookingDate: bookingForm.bookingDate,
+                          notes: bookingForm.notes || undefined,
+                        },
+                        (err: unknown) => (err ? reject(err) : resolve(undefined))
+                      );
+                    });
+                    setModalType("editTable");
+                    resetBookingForm();
+                  } catch (err) {
+                    alert(`Failed to add booking: ${String(err)}`);
+                  }
+                }}>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Customer Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={bookingForm.customerName}
+                        onChange={(e) =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            customerName: e.target.value,
+                          }))
+                        }
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={bookingForm.customerPhone}
+                        onChange={(e) =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            customerPhone: e.target.value,
+                          }))
+                        }
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Party Size *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min={1}
+                        max={editTableData.capacity}
+                        value={bookingForm.partySize}
+                        onChange={(e) =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            partySize: e.target.value,
+                          }))
+                        }
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Date & Time *
+                      </label>
+                      <input
+                        type="datetime-local"
+                        required
+                        min={new Date().toISOString().slice(0, 16)}
+                        value={bookingForm.bookingDate}
+                        onChange={(e) =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            bookingDate: e.target.value,
+                          }))
+                        }
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Notes
+                      </label>
+                      <textarea
+                        value={bookingForm.notes}
+                        onChange={(e) =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            notes: e.target.value,
+                          }))
+                        }
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <Button
+                      variant="positive"
+                      onClick={() => {
+                        setModalType("editTable");
+                        resetBookingForm();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button variant="negative" type="submit">
+                      Add Booking
+                    </Button>
+                  </div>
+                </form>
               </>
             )}
 

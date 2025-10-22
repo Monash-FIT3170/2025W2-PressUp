@@ -1,6 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import { requireLoginMethod } from "../accounts/wrappers";
-import { Tables, TablesCollection } from "./TablesCollection";
+import { Tables, TablesCollection, TableBooking } from "./TablesCollection";
 import { IdType, OmitDB } from "../database";
 
 Meteor.methods({
@@ -152,5 +152,85 @@ Meteor.methods({
     if (!tableID)
       throw new Meteor.Error("invalid-arguments", "Table ID is required");
     return await TablesCollection.removeAsync(tableID);
+  }),
+
+  "tables.addBooking": requireLoginMethod(async function (
+    tableID: IdType,
+    booking: Omit<TableBooking, "bookingDate"> & { bookingDate: string },
+  ) {
+    if (!tableID || !booking)
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Table ID and booking details are required",
+      );
+
+    // Validate booking fields
+    if (!booking.customerName || !booking.customerPhone || !booking.partySize) {
+      throw new Meteor.Error(
+        "invalid-booking",
+        "Customer name, phone, and party size are required",
+      );
+    }
+
+    // Validate party size (must be positive)
+    if (booking.partySize <= 0) {
+      throw new Meteor.Error(
+        "invalid-party-size",
+        "Party size must be greater than 0",
+      );
+    }
+
+    // Convert date string to Date object
+    const bookingDate = new Date(booking.bookingDate);
+    if (isNaN(bookingDate.getTime())) {
+      throw new Meteor.Error("invalid-date", "Invalid booking date");
+    }
+
+    // Don't allow bookings in the past
+    if (bookingDate < new Date()) {
+      throw new Meteor.Error(
+        "invalid-date",
+        "Booking date must be in the future",
+      );
+    }
+
+    // Add booking to table
+    const newBooking: TableBooking = {
+      customerName: booking.customerName,
+      customerPhone: booking.customerPhone,
+      partySize: booking.partySize,
+      bookingDate,
+      notes: booking.notes,
+    };
+
+    return await TablesCollection.updateAsync(tableID, {
+      $push: {
+        bookings: newBooking,
+      },
+    });
+  }),
+
+  "tables.removeBooking": requireLoginMethod(async function (
+    tableID: IdType,
+    bookingDate: string,
+  ) {
+    if (!tableID || !bookingDate)
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Table ID and booking date are required",
+      );
+
+    const date = new Date(bookingDate);
+    if (isNaN(date.getTime())) {
+      throw new Meteor.Error("invalid-date", "Invalid booking date");
+    }
+
+    return await TablesCollection.updateAsync(tableID, {
+      $pull: {
+        bookings: {
+          bookingDate: date,
+        },
+      },
+    });
   }),
 });
