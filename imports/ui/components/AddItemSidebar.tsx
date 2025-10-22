@@ -114,12 +114,12 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-[9999]">
       <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
-        <h2 className="text-xl font-bold mb-4 text-red-900">
+        <h2 className="text-xl font-semibold text-press-up-purple dark:text-white">
           Add New Menu Item Category
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4 mb-6">
           <div>
-            <label className="block mb-2 text-sm font-medium text-red-900">
+            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
               Name
             </label>
             <input
@@ -295,7 +295,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-[9999]">
       <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
-        <h2 className="text-xl font-bold mb-4 text-red-900 dark:text-white">
+        <h2 className="text-xl font-semibold text-press-up-purple dark:text-white">
           Add New Menu Item
         </h2>
 
