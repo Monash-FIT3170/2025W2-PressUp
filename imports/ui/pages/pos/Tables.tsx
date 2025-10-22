@@ -104,17 +104,16 @@ const TableCard = ({
       <span className="text-lg font-semibold mb-2 z-10">
         Table {table?.tableNo ?? ""}
       </span>
-      <button
+      <Button
         onClick={onEdit}
         style={{
-          backgroundColor: "#ffffff",
-          border: "1px solid #6f597b",
-          color: "#6f597b",
+          backgroundColor: "rgba(255, 255, 255, 0)",
+          border: "1px solid black",
+          color: "black",
         }}
-        className="text-xs px-2 py-1 rounded hover:bg-[#c4b5cf]"
       >
         Edit
-      </button>
+      </Button>
     </div>
   );
 };
@@ -824,15 +823,14 @@ export const TablesPage = () => {
                 )}
 
                 {/* Table Bookings */}
-                
                 <div className="mb-3">
                   <hr></hr>
                   <label className="block mt-2 font-semibold">Bookings:</label>
                   {editTableData?.bookings && (
                     <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {editTableData.bookings
+                      {[...editTableData.bookings]
                         .sort((a: TableBooking, b: TableBooking) => 
-                          new Date(a.bookingDate).getTime() - new Date(b.bookingDate).getTime()
+                          a.bookingDate.getTime() - b.bookingDate.getTime()
                         )
                         .filter((booking: TableBooking) => new Date(booking.bookingDate) >= new Date())
                         .map((booking: TableBooking, idx: number) => (
@@ -846,15 +844,40 @@ export const TablesPage = () => {
                             )}
                             <Button
                               variant="positive"
-                              onClick={() => {
-                                Meteor.call(
-                                  "tables.removeBooking",
-                                  editTableData._id,
-                                  booking.bookingDate,
-                                  (err: unknown) => {
-                                    if (err) alert(`Failed to remove booking: ${String(err)}`);
-                                  }
-                                );
+                              onClick={async () => {
+                                try {
+                                  await new Promise<void>((resolve, reject) => {
+                                    Meteor.call(
+                                      "tables.removeBooking",
+                                      editTableData._id,
+                                      booking.bookingDate,
+                                      (err: unknown) => (err ? reject(err) : resolve())
+                                    );
+                                  });
+                                  
+                                  // Update local state after successful removal
+                                  setEditTableData(prev => 
+                                    prev ? {
+                                      ...prev,
+                                      bookings: prev.bookings?.filter(b => 
+                                        b.bookingDate.getTime() !== booking.bookingDate.getTime()
+                                      )
+                                    } : null
+                                  );
+                                  
+                                  // Also update the grid state
+                                  setGrid(prev => prev.map(table => {
+                                    if (!table || table._id !== editTableData._id) return table;
+                                    return {
+                                      ...table,
+                                      bookings: table.bookings?.filter(b =>
+                                        b.bookingDate.getTime() !== booking.bookingDate.getTime()
+                                      )
+                                    };
+                                  }));
+                                } catch (err) {
+                                  alert(`Failed to remove booking: ${String(err)}`);
+                                }
                               }}
                             >
                               Cancel Booking
@@ -877,6 +900,28 @@ export const TablesPage = () => {
 
                 {/* Bottom row: Cancel & Save */}
                 <div className="flex justify-end gap-2">
+                  <Button
+                    variant="positive"
+                    onClick={() => {
+                      // discard modal-local changes: restore snapshot
+                      setModalType(null);
+                      if (modalOriginalTable) {
+                        setCapacityInput(
+                          modalOriginalTable.capacity.toString(),
+                        );
+                        setOccupancyInput(
+                          modalOriginalTable.noOccupants?.toString() ?? "",
+                        );
+                        setOccupiedToggle(!!modalOriginalTable.isOccupied);
+                      } else {
+                        setCapacityInput("");
+                        setOccupancyInput("");
+                        setOccupiedToggle(false);
+                      }
+                    }}
+                  >
+                    Cancel
+                  </Button>
                   <Button
                     variant="negative"
                     onClick={async () => {
@@ -965,28 +1010,6 @@ export const TablesPage = () => {
                     }}
                   >
                     Save
-                  </Button>
-                  <Button
-                    variant="positive"
-                    onClick={() => {
-                      // discard modal-local changes: restore snapshot
-                      setModalType(null);
-                      if (modalOriginalTable) {
-                        setCapacityInput(
-                          modalOriginalTable.capacity.toString(),
-                        );
-                        setOccupancyInput(
-                          modalOriginalTable.noOccupants?.toString() ?? "",
-                        );
-                        setOccupiedToggle(!!modalOriginalTable.isOccupied);
-                      } else {
-                        setCapacityInput("");
-                        setOccupancyInput("");
-                        setOccupiedToggle(false);
-                      }
-                    }}
-                  >
-                    Cancel
                   </Button>
                 </div>
               </>
@@ -1091,6 +1114,51 @@ export const TablesPage = () => {
                         (err: unknown) => (err ? reject(err) : resolve(undefined))
                       );
                     });
+
+                    // Create the new booking object
+                    const newBooking: TableBooking = {
+                      customerName: bookingForm.customerName,
+                      customerPhone: bookingForm.customerPhone,
+                      partySize: parseInt(bookingForm.partySize),
+                      bookingDate: new Date(bookingForm.bookingDate),
+                      notes: bookingForm.notes || undefined,
+                    };
+
+                    // Update editTableData state with sorted bookings
+                    setEditTableData(prev => {
+                      if (!prev) return null;
+                      const updatedBookings = [...(prev.bookings || []), newBooking].sort(
+                        (a, b) => a.bookingDate.getTime() - b.bookingDate.getTime()
+                      );
+                      return {
+                        ...prev,
+                        bookings: updatedBookings,
+                      };
+                    });
+
+                    // Update grid state with sorted bookings
+                    setGrid(prevGrid => {
+                      const updatedGrid = prevGrid.map((table: Table | null) => {
+                        if (!table || table._id !== editTableData._id) return table;
+                        const updatedBookings = [...(table.bookings || []), newBooking].sort(
+                          (a, b) => a.bookingDate.getTime() - b.bookingDate.getTime()
+                        );
+                        return {
+                          ...table,
+                          bookings: updatedBookings,
+                        };
+                      });
+                      
+                      // Get the fresh updated table data
+                      const updatedTable = updatedGrid.find((t: Table | null) => t?._id === editTableData._id);
+                      if (updatedTable) {
+                        setEditTableData(updatedTable);
+                        setModalOriginalTable(updatedTable);
+                      }
+                      
+                      return updatedGrid;
+                    });
+                    
                     setModalType("editTable");
                     resetBookingForm();
                   } catch (err) {
@@ -1190,6 +1258,12 @@ export const TablesPage = () => {
                     <Button
                       variant="positive"
                       onClick={() => {
+                        // When returning to edit table, get fresh data from grid
+                        const currentTable = grid.find(t => t?._id === editTableData._id);
+                        if (currentTable) {
+                          setEditTableData(currentTable);
+                          setModalOriginalTable(currentTable);
+                        }
                         setModalType("editTable");
                         resetBookingForm();
                       }}
