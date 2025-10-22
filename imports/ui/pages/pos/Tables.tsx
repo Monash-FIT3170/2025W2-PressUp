@@ -179,23 +179,16 @@ export const TablesPage = () => {
     null,
   );
 
-  // Booking form state
-  const [bookingForm, setBookingForm] = useState({
+  // Initial booking form state
+  const initialBookingForm = {
     customerName: "",
     customerPhone: "",
     partySize: "",
     bookingDate: "",
     notes: "",
-  });
-  const resetBookingForm = () => {
-    setBookingForm({
-      customerName: "",
-      customerPhone: "",
-      partySize: "",
-      bookingDate: "",
-      notes: "",
-    });
   };
+  const [bookingForm, setBookingForm] = useState(initialBookingForm);
+  const resetBookingForm = () => setBookingForm(initialBookingForm);
 
   // Prefill grid with tables from DB on initial load
   useEffect(() => {
@@ -824,20 +817,18 @@ export const TablesPage = () => {
 
                 {/* Table Bookings */}
                 <div className="mb-3">
-                  <hr></hr>
+                  <hr />
                   <label className="block mt-2 font-semibold">Bookings:</label>
                   {editTableData?.bookings && (
                     <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {[...editTableData.bookings]
-                        .sort((a: TableBooking, b: TableBooking) => 
-                          a.bookingDate.getTime() - b.bookingDate.getTime()
-                        )
-                        .filter((booking: TableBooking) => new Date(booking.bookingDate) >= new Date())
+                      {editTableData.bookings
+                        .filter((booking: TableBooking) => booking.bookingDate >= new Date())
+                        .sort((a: TableBooking, b: TableBooking) => a.bookingDate.getTime() - b.bookingDate.getTime())
                         .map((booking: TableBooking, idx: number) => (
-                          <div key={idx} className="bg-gray-50 p-2 rounded-lg text-sm">
+                          <div key={booking.bookingDate.getTime()} className="bg-gray-50 p-2 rounded-lg text-sm">
                             <div className="font-medium">{booking.customerName}</div>
                             <div className="text-gray-600">
-                              {new Date(booking.bookingDate).toLocaleString()} · {booking.partySize} people
+                              {booking.bookingDate.toLocaleString()} · {booking.partySize} people
                             </div>
                             {booking.notes && (
                               <div className="text-gray-500 italic">{booking.notes}</div>
@@ -850,31 +841,32 @@ export const TablesPage = () => {
                                     Meteor.call(
                                       "tables.removeBooking",
                                       editTableData._id,
-                                      booking.bookingDate,
+                                      booking.bookingDate.toISOString(),
                                       (err: unknown) => (err ? reject(err) : resolve())
                                     );
                                   });
                                   
-                                  // Update local state after successful removal
-                                  setEditTableData(prev => 
-                                    prev ? {
-                                      ...prev,
-                                      bookings: prev.bookings?.filter(b => 
-                                        b.bookingDate.getTime() !== booking.bookingDate.getTime()
-                                      )
-                                    } : null
-                                  );
-                                  
-                                  // Also update the grid state
-                                  setGrid(prev => prev.map(table => {
-                                    if (!table || table._id !== editTableData._id) return table;
-                                    return {
-                                      ...table,
-                                      bookings: table.bookings?.filter(b =>
-                                        b.bookingDate.getTime() !== booking.bookingDate.getTime()
-                                      )
-                                    };
-                                  }));
+                                  // Update both states in one operation
+                                  setGrid(prevGrid => {
+                                    const updatedGrid = prevGrid.map(table => {
+                                      if (!table || table._id !== editTableData._id) return table;
+                                      return {
+                                        ...table,
+                                        bookings: table.bookings?.filter(b => 
+                                          b.bookingDate.getTime() !== booking.bookingDate.getTime()
+                                        )
+                                      };
+                                    });
+
+                                    // Update the edit modal data
+                                    const updatedTable = updatedGrid.find(t => t?._id === editTableData._id);
+                                    if (updatedTable) {
+                                      setEditTableData(updatedTable);
+                                      setModalOriginalTable(updatedTable);
+                                    }
+
+                                    return updatedGrid;
+                                  });
                                 } catch (err) {
                                   alert(`Failed to remove booking: ${String(err)}`);
                                 }
@@ -1099,66 +1091,49 @@ export const TablesPage = () => {
                 </h2>
                 <form onSubmit={async (e) => {
                   e.preventDefault();
+                  
+                  const newBooking: TableBooking = {
+                    customerName: bookingForm.customerName,
+                    customerPhone: bookingForm.customerPhone,
+                    partySize: parseInt(bookingForm.partySize),
+                    bookingDate: new Date(bookingForm.bookingDate),
+                    notes: bookingForm.notes || undefined,
+                  };
+
                   try {
-                    await new Promise((resolve, reject) => {
+                    await new Promise<void>((resolve, reject) => {
                       Meteor.call(
                         "tables.addBooking",
                         editTableData._id,
                         {
-                          customerName: bookingForm.customerName,
-                          customerPhone: bookingForm.customerPhone,
-                          partySize: parseInt(bookingForm.partySize),
-                          bookingDate: bookingForm.bookingDate,
-                          notes: bookingForm.notes || undefined,
+                          ...newBooking,
+                          bookingDate: bookingForm.bookingDate, // Send string date to server
                         },
-                        (err: unknown) => (err ? reject(err) : resolve(undefined))
+                        (err: unknown) => (err ? reject(err) : resolve())
                       );
                     });
 
-                    // Create the new booking object
-                    const newBooking: TableBooking = {
-                      customerName: bookingForm.customerName,
-                      customerPhone: bookingForm.customerPhone,
-                      partySize: parseInt(bookingForm.partySize),
-                      bookingDate: new Date(bookingForm.bookingDate),
-                      notes: bookingForm.notes || undefined,
-                    };
-
-                    // Update editTableData state with sorted bookings
-                    setEditTableData(prev => {
-                      if (!prev) return null;
-                      const updatedBookings = [...(prev.bookings || []), newBooking].sort(
-                        (a, b) => a.bookingDate.getTime() - b.bookingDate.getTime()
-                      );
-                      return {
-                        ...prev,
-                        bookings: updatedBookings,
-                      };
-                    });
-
-                    // Update grid state with sorted bookings
+                    // Update grid and table data in one operation
                     setGrid(prevGrid => {
                       const updatedGrid = prevGrid.map((table: Table | null) => {
                         if (!table || table._id !== editTableData._id) return table;
-                        const updatedBookings = [...(table.bookings || []), newBooking].sort(
-                          (a, b) => a.bookingDate.getTime() - b.bookingDate.getTime()
-                        );
                         return {
                           ...table,
-                          bookings: updatedBookings,
+                          bookings: [...(table.bookings || []), newBooking]
+                            .sort((a, b) => a.bookingDate.getTime() - b.bookingDate.getTime())
                         };
                       });
-                      
-                      // Get the fresh updated table data
-                      const updatedTable = updatedGrid.find((t: Table | null) => t?._id === editTableData._id);
+
+                      // Update the edit modal data with the updated table
+                      const updatedTable = updatedGrid.find(t => t?._id === editTableData._id);
                       if (updatedTable) {
                         setEditTableData(updatedTable);
                         setModalOriginalTable(updatedTable);
                       }
-                      
+
                       return updatedGrid;
                     });
-                    
+
                     setModalType("editTable");
                     resetBookingForm();
                   } catch (err) {
