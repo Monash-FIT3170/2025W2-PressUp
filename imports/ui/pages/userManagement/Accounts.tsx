@@ -331,7 +331,7 @@ const AddUserModal = ({
   return (
     <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999]">
       <div className="bg-white p-6 rounded-lg w-96 shadow-2xl">
-        <h2 className="text-xl font-bold mb-4" style={{ color: "#1e032e" }}>
+        <h2 className="text-xl font-semibold text-press-up-purple dark:text-white" style={{ color: "#1e032e" }}>
           Add New User
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
