@@ -1167,7 +1167,7 @@ export const TablesPage = () => {
                 }}>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
                         Customer Name *
                       </label>
                       <input
@@ -1180,11 +1180,11 @@ export const TablesPage = () => {
                             customerName: e.target.value,
                           }))
                         }
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                        className="w-full border rounded px-2 py-1 mb-4"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
                         Phone Number *
                       </label>
                       <input
@@ -1197,11 +1197,11 @@ export const TablesPage = () => {
                             customerPhone: e.target.value,
                           }))
                         }
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                        className="w-full border rounded px-2 py-1 mb-4"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
                         Party Size *
                       </label>
                       <input
@@ -1216,11 +1216,11 @@ export const TablesPage = () => {
                             partySize: e.target.value,
                           }))
                         }
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                        className="w-full border rounded px-2 py-1 mb-4"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
                         Date & Time *
                       </label>
                       <input
@@ -1234,11 +1234,11 @@ export const TablesPage = () => {
                             bookingDate: e.target.value,
                           }))
                         }
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                        className="w-full border rounded px-2 py-1 mb-4"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
                         Notes
                       </label>
                       <textarea
@@ -1249,7 +1249,7 @@ export const TablesPage = () => {
                             notes: e.target.value,
                           }))
                         }
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                        className="w-full border rounded px-2 py-1 mb-4"
                         rows={2}
                       />
                     </div>
