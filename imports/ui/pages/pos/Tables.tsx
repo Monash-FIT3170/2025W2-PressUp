@@ -658,14 +658,14 @@ export const TablesPage = () => {
       {/* -------- Modals -------- */}
       {modalType && (
         <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
+          <div className="bg-stone-100 dark:bg-neutral-800 rounded-lg p-6 w-80 shadow-lg">
             {/* Add Table */}
             {modalType === "addTable" && (
               <>
-                <h2 className="text-lg font-semibold mb-4">Add Table</h2>
+                <h2 className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Add Table</h2>
                 <label
                   htmlFor="edit-table-capacity"
-                  className="block mb-2 text-sm font-medium text-red-900 dark:text-black"
+                  className="block mb-2 text-sm font-medium text-red-900 dark:text-white"
                 >
                   Capacity
                 </label>
@@ -673,7 +673,7 @@ export const TablesPage = () => {
                   type="number"
                   value={capacityInput}
                   onChange={(e) => setCapacityInput(e.target.value)}
-                  className="w-full border rounded px-2 py-1 mb-4"
+                  className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
                   placeholder="Number of seats"
                   min={1}
                   max={MAX_TABLE_CAPACITY}
@@ -750,12 +750,12 @@ export const TablesPage = () => {
             {/* Edit Table */}
             {modalType === "editTable" && editTableData && (
               <>
-                <h2 className="text-lg font-semibold mb-4">
+                <h2 className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
                   Edit Table {editTableData!.tableNo}
                 </h2>
                 <label
                   htmlFor="edit-table-capacity"
-                  className="block mb-2 text-sm font-medium text-red-900 dark:text-black"
+                  className="block mb-2 text-sm font-medium text-red-900 dark:text-white"
                 >
                   Capacity
                 </label>
@@ -764,7 +764,7 @@ export const TablesPage = () => {
                   type="number"
                   value={capacityInput}
                   onChange={(e) => setCapacityInput(e.target.value)}
-                  className="w-full border rounded px-2 py-1 mb-4"
+                  className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
                   placeholder="Number of seats"
                   min={1}
                   max={12}
@@ -773,7 +773,7 @@ export const TablesPage = () => {
                   <>
                     <label
                       htmlFor="edit-table-occupancy"
-                      className="block mb-2 text-sm font-medium text-red-900 dark:text-black"
+                      className="block mb-2 text-sm font-medium text-red-900 dark:text-white"
                     >
                       Number of Occupants
                     </label>
@@ -782,7 +782,7 @@ export const TablesPage = () => {
                       type="number"
                       value={occupancyInput}
                       onChange={(e) => setOccupancyInput(e.target.value)}
-                      className="w-full border rounded px-2 py-1 mb-4"
+                      className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
                       placeholder="Number of occupants"
                       min={1}
                     />
@@ -929,7 +929,7 @@ export const TablesPage = () => {
                 {editTableData?.activeOrderID && (
                   <div className="mb-3">
                     <hr></hr>
-                    <label className="block mt-2 font-semibold">
+                    <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
                       Move Order to Table:
                     </label>
                     <div className="mb-3 flex flex-row items-center justify-between gap-2">
@@ -1165,7 +1165,7 @@ export const TablesPage = () => {
             {/* Delete Table Modal */}
             {modalType === "deleteTable" && (
               <>
-                <h2 className="text-lg font-semibold mb-4">Delete Table</h2>
+                <h2 className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Delete Table</h2>
                 <input
                   type="number"
                   value={deleteTableInput}
@@ -1173,7 +1173,7 @@ export const TablesPage = () => {
                     const val = e.target.value;
                     if (/^\d*$/.test(val)) setDeleteTableInput(val);
                   }}
-                  className="w-full border rounded px-2 py-1 mb-4"
+                  className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
                   placeholder="Enter table number to delete"
                   min={1}
                   inputMode="numeric"
