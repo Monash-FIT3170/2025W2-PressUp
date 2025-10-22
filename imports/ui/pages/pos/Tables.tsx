@@ -58,6 +58,19 @@ interface TableCardProps {
 // helper local type to avoid long inline intersection in casts
 type TableWithOptionalOccupants = Table & { noOccupants?: number };
 
+// Helper function to check if a table has a current booking
+const getCurrentBooking = (bookings?: TableBooking[]): TableBooking | null => {
+  if (!bookings) return null;
+  
+  const now = new Date();
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+  
+  return bookings.find(booking => {
+    const bookingTime = new Date(booking.bookingDate);
+    return bookingTime >= oneHourAgo && bookingTime <= now;
+  }) || null;
+};
+
 // -------- TableCard --------
 const TableCard = ({
   table,
@@ -66,9 +79,14 @@ const TableCard = ({
   dragRef,
   onEdit,
 }: TableCardProps) => {
+  // Check for current booking
+  const currentBooking = getCurrentBooking(table.bookings);
+  
   const seatPositions = getSeatPositions(table?.capacity ?? 0);
-  const occupied =
-    typeof table.noOccupants === "number" ? table.noOccupants : 0;
+  // Use booking party size if there's a current booking
+  const occupied = currentBooking 
+    ? currentBooking.partySize 
+    : (typeof table.noOccupants === "number" ? table.noOccupants : 0);
   const capacity = table?.capacity ?? 0;
   const occupiedIndexes: number[] = [];
   if (occupied > 0 && capacity > 0) {
@@ -77,15 +95,35 @@ const TableCard = ({
       occupiedIndexes.push(Math.round(j * gap));
     }
   }
+  
+  // If there's a current booking, mark the table as reserved
+  useEffect(() => {
+    if (currentBooking && table._id) {
+      Meteor.call(
+        "tables.setOccupied",
+        table._id,
+        true,
+        currentBooking.partySize,
+        (err: unknown) => {
+          if (err) console.error("Failed to update table occupancy:", err);
+        }
+      );
+    }
+  }, [currentBooking, table._id]);
 
   return (
     <div
       ref={dragRef}
       className={`${cardColour} border-2 shadow-md relative flex flex-col items-center justify-center cursor-move ${
         isDragging ? "opacity-50" : ""
-      } rounded-full`}
+      } rounded-full ${currentBooking ? 'ring-2 ring-yellow-400' : ''}`}
       style={{ width: 140, height: 140 }}
     >
+      {currentBooking && (
+        <div className="bg-yellow-400 text-black text-xs px-2 py-1 rounded-full">
+          Reserved
+        </div>
+      )}
       {seatPositions.map((pos, i) => (
         <div
           key={i}
@@ -1037,10 +1075,6 @@ export const TablesPage = () => {
                   {editTableData?.bookings && (
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {editTableData.bookings
-                        .filter(
-                          (booking: TableBooking) =>
-                            booking.bookingDate >= new Date(),
-                        )
                         .sort(
                           (a: TableBooking, b: TableBooking) =>
                             a.bookingDate.getTime() - b.bookingDate.getTime(),
