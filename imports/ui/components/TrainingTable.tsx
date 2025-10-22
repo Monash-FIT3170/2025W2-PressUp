@@ -68,8 +68,6 @@ export const TrainingTable = ({
   ];
 
   return (
-    <div className="flex flex-col h-full">
-      <Table columns={columns} data={staffRows} emptyMessage="No staff found" />
-    </div>
+    <Table columns={columns} data={staffRows} emptyMessage="No staff found" />
   );
 };

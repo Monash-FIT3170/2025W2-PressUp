@@ -37,13 +37,6 @@ export const UserManagementPage = () => {
     };
   }, []);
 
-  /* const canManageUsers = useTracker(() => {
-    return Roles.userIsInRoleAsync(Meteor.userId(), [
-      RoleEnum.ADMIN,
-      RoleEnum.MANAGER,
-    ]);
-  }, []); */
-
   const handleAddUser = (userData: CreateUserData) => {
     Meteor.call("users.create", userData, (error: Meteor.Error) => {
       if (error) {
@@ -264,7 +257,7 @@ export const UserManagementPage = () => {
   ];
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col min-h-0">
       {/* Action buttons */}
       <div className="flex justify-between items-center p-4 gap-2">
         <div></div>
@@ -283,10 +276,7 @@ export const UserManagementPage = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="flex-1 min-h-0">
-        <Table columns={columns} data={users} emptyMessage="No users found" />
-      </div>
+      <Table columns={columns} data={users} emptyMessage="No users found" />
 
       {/* Add User Modal */}
       {showAddUserModal && (

@@ -252,16 +252,11 @@ export const OrderHistoryPage = () => {
           />
         </div>
       </div>
-      {/* Table with scrolling */}
-      <div className="flex-1 min-h-0 overflow-auto">
-        {" "}
-        {/* Add overflow-auto for scrolling */}
-        <Table
-          columns={columns}
-          data={filtered}
-          emptyMessage="No orders found."
-        />
-      </div>
+      <Table
+        columns={columns}
+        data={filtered}
+        emptyMessage="No orders found."
+      />
     </div>
   );
 };

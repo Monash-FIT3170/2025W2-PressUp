@@ -34,7 +34,9 @@ export const TrainingPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [formResetKey, setFormResetKey] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [confirm, setConfirm] = useState<"cancel" | "delete" | null>(null);
+  const [confirm, setConfirm] = useState<
+    "cancel" | "cancel-edit" | "delete" | null
+  >(null);
 
   const [editStaffId, setEditStaffId] = useState<string | null>(null);
   const [editCheckboxes, setEditCheckboxes] = useState<Record<string, boolean>>(
@@ -210,90 +212,83 @@ export const TrainingPage = () => {
   ]);
 
   return (
-    <div className="flex flex-1 flex-col items-center">
-      <div className="w-full max-w-[70rem]">
-        {/* Header */}
-        <div className="flex flex-wrap items-end p-4 gap-2">
-          {/* Filter */}
-          <div className="flex flex-col gap-1 px-4 min-w-[120px]">
-            <Label>Filter:</Label>
-            <Select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value as typeof filter)}
-            >
-              {FILTER_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-          {/* Training List Select */}
-          <div className="flex flex-col gap-1 min-w-[200px]">
-            <Label>Training List:</Label>
-            <Select
-              value={selectedListId ?? ""}
-              onChange={(e) => setSelectedListId(e.target.value)}
-              disabled={trainingLists.length === 0}
-            >
-              {trainingLists.map((list) => (
-                <option key={list._id} value={list._id}>
-                  {list.title}
-                </option>
-              ))}
-            </Select>
-          </div>
-          {/* Button group aligned right */}
-          <div className="flex-1 flex justify-end items-end gap-2 min-w-[320px]">
-            {isAdminOrManager && currentList ? (
-              <>
-                <Button
-                  variant="negative"
-                  onClick={() => {
-                    setConfirm("delete");
-                    setShowConfirmation(true);
-                  }}
-                >
-                  Delete Training List
-                </Button>
-                <Button
-                  variant="positive"
-                  onClick={() => setShowEditModal(true)}
-                >
-                  Edit Training List
-                </Button>
-              </>
-            ) : (
-              <>
-                <span className="w-[140px]"></span>
-                <span className="w-[140px]"></span>
-              </>
-            )}
-            {isAdminOrManager && (
-              <Button variant="positive" onClick={() => setShowAddModal(true)}>
-                Add Training List
-              </Button>
-            )}
-          </div>
+    <div className="flex flex-1 flex-col min-h-0 h-0">
+      {/* Header */}
+      <div className="flex flex-wrap items-end py-4 gap-2">
+        {/* Filter */}
+        <div className="flex flex-col gap-1 min-w-[120px]">
+          <Label>Filter:</Label>
+          <Select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as typeof filter)}
+          >
+            {FILTER_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
         </div>
-
-        {/* Table */}
-        <div className="flex-1 min-h-0">
-          {isLoadingLists() || isLoadingProgress() ? (
-            <p className="text-gray-400 p-4">Loading training lists...</p>
-          ) : !currentList ? (
-            <h2 className="flex-1 text-center font-bold text-xl text-red-900">
-              No existing training list.
-            </h2>
+        {/* Training List Select */}
+        <div className="flex flex-col gap-1 min-w-[200px]">
+          <Label>Training List:</Label>
+          <Select
+            value={selectedListId ?? ""}
+            onChange={(e) => setSelectedListId(e.target.value)}
+            disabled={trainingLists.length === 0}
+          >
+            {trainingLists.map((list) => (
+              <option key={list._id} value={list._id}>
+                {list.title}
+              </option>
+            ))}
+          </Select>
+        </div>
+        {/* Button group aligned right */}
+        <div className="flex-1 flex justify-end items-end gap-2 min-w-[320px]">
+          {isAdminOrManager && currentList ? (
+            <>
+              <Button
+                variant="negative"
+                onClick={() => {
+                  setConfirm("delete");
+                  setShowConfirmation(true);
+                }}
+              >
+                Delete Training List
+              </Button>
+              <Button variant="positive" onClick={() => setShowEditModal(true)}>
+                Edit Training List
+              </Button>
+            </>
           ) : (
-            <TrainingTable
-              staffRows={filteredStaffRows}
-              items={items}
-              onEditStaff={isAdminOrManager ? handleEditStaff : undefined}
-            />
+            <>
+              <span className="w-[140px]"></span>
+              <span className="w-[140px]"></span>
+            </>
+          )}
+          {isAdminOrManager && (
+            <Button variant="positive" onClick={() => setShowAddModal(true)}>
+              Add Training List
+            </Button>
           )}
         </div>
       </div>
+
+      {/* Table */}
+      {isLoadingLists() || isLoadingProgress() ? (
+        <p className="text-gray-400 p-4">Loading training lists...</p>
+      ) : !currentList ? (
+        <h2 className="flex-1 text-center font-bold text-xl text-red-900">
+          No existing training list.
+        </h2>
+      ) : (
+        <TrainingTable
+          staffRows={filteredStaffRows}
+          items={items}
+          onEditStaff={isAdminOrManager ? handleEditStaff : undefined}
+        />
+      )}
 
       {/* Add Training List Modal */}
       <Modal
@@ -319,7 +314,7 @@ export const TrainingPage = () => {
       <Modal
         open={showEditModal}
         onClose={() => {
-          setConfirm("cancel");
+          setConfirm("cancel-edit");
           setShowConfirmation(true);
         }}
       >
@@ -376,13 +371,17 @@ export const TrainingPage = () => {
       <ConfirmModal
         open={showConfirmation}
         message={
-          confirm === "cancel"
+          confirm === "cancel" || confirm === "cancel-edit"
             ? "Are you sure you want to discard your changes?"
             : "Are you sure you want to delete the training list?"
         }
         onConfirm={() => {
           if (confirm === "cancel") {
             setShowAddModal(false);
+            setFormResetKey((prev) => prev + 1);
+            setConfirm(null);
+          } else if (confirm === "cancel-edit") {
+            setShowEditModal(false);
             setFormResetKey((prev) => prev + 1);
             setConfirm(null);
           } else if (confirm === "delete") {
