@@ -4,6 +4,13 @@ import { requireLoginMethod } from "../accounts/wrappers";
 import { Tables, TablesCollection, TableBooking } from "./TablesCollection";
 import { IdType, OmitDB } from "../database";
 
+// Helper function to check if a booking is expired (more than 1 hour old)
+const isBookingExpired = (bookingDate: Date) => {
+  const now = new Date();
+  const oneHourAgo = new Date(bookingDate.getTime() + 60 * 60 * 1000);
+  return now > oneHourAgo;
+};
+
 Meteor.methods({
   "tables.addOrder": requireLoginMethod(async function (
     tableID: IdType,
@@ -496,5 +503,46 @@ Meteor.methods({
         },
       },
     });
+  }),
+
+  "tables.cleanupExpiredBookings": requireLoginMethod(async function () {
+    // Find all tables with bookings
+    const tables = await TablesCollection.find({
+      bookings: { $exists: true },
+    }).fetchAsync();
+
+    for (const table of tables) {
+      if (!table.bookings || table.bookings.length === 0) continue;
+
+      // Filter out expired bookings
+      const currentBookings = table.bookings.filter(
+        (booking) => !isBookingExpired(booking.bookingDate),
+      );
+
+      // If the number of bookings changed, update the table
+      if (currentBookings.length !== table.bookings.length) {
+        await TablesCollection.updateAsync(table._id, {
+          $set: { bookings: currentBookings },
+        });
+
+        // If this was the last current booking, also clear occupancy
+        const hasCurrentBooking = currentBookings.some((booking) => {
+          const now = new Date();
+          const bookingTime = new Date(booking.bookingDate);
+          const oneHourAfterBooking = new Date(
+            bookingTime.getTime() + 60 * 60 * 1000,
+          );
+          return now >= bookingTime && now <= oneHourAfterBooking;
+        });
+
+        if (!hasCurrentBooking && table.isOccupied) {
+          await TablesCollection.updateAsync(table._id, {
+            $set: { isOccupied: false },
+            $unset: { noOccupants: "" },
+          });
+        }
+      }
+    }
+    return true;
   }),
 });

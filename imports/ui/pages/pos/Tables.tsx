@@ -61,14 +61,16 @@ type TableWithOptionalOccupants = Table & { noOccupants?: number };
 // Helper function to check if a table has a current booking
 const getCurrentBooking = (bookings?: TableBooking[]): TableBooking | null => {
   if (!bookings) return null;
-  
+
   const now = new Date();
   const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-  
-  return bookings.find(booking => {
-    const bookingTime = new Date(booking.bookingDate);
-    return bookingTime >= oneHourAgo && bookingTime <= now;
-  }) || null;
+
+  return (
+    bookings.find((booking) => {
+      const bookingTime = new Date(booking.bookingDate);
+      return bookingTime >= oneHourAgo && bookingTime <= now;
+    }) || null
+  );
 };
 
 // -------- TableCard --------
@@ -81,12 +83,14 @@ const TableCard = ({
 }: TableCardProps) => {
   // Check for current booking
   const currentBooking = getCurrentBooking(table.bookings);
-  
+
   const seatPositions = getSeatPositions(table?.capacity ?? 0);
   // Use booking party size if there's a current booking
-  const occupied = currentBooking 
-    ? currentBooking.partySize 
-    : (typeof table.noOccupants === "number" ? table.noOccupants : 0);
+  const occupied = currentBooking
+    ? currentBooking.partySize
+    : typeof table.noOccupants === "number"
+      ? table.noOccupants
+      : 0;
   const capacity = table?.capacity ?? 0;
   const occupiedIndexes: number[] = [];
   if (occupied > 0 && capacity > 0) {
@@ -95,7 +99,7 @@ const TableCard = ({
       occupiedIndexes.push(Math.round(j * gap));
     }
   }
-  
+
   // If there's a current booking, mark the table as reserved
   useEffect(() => {
     if (currentBooking && table._id) {
@@ -106,7 +110,7 @@ const TableCard = ({
         currentBooking.partySize,
         (err: unknown) => {
           if (err) console.error("Failed to update table occupancy:", err);
-        }
+        },
       );
     }
   }, [currentBooking, table._id]);
@@ -116,7 +120,7 @@ const TableCard = ({
       ref={dragRef}
       className={`${cardColour} border-2 shadow-md relative flex flex-col items-center justify-center cursor-move ${
         isDragging ? "opacity-50" : ""
-      } rounded-full ${currentBooking ? 'ring-2 ring-yellow-400' : ''}`}
+      } rounded-full ${currentBooking ? "ring-2 ring-yellow-400" : ""}`}
       style={{ width: 140, height: 140 }}
     >
       {currentBooking && (
@@ -162,6 +166,24 @@ export const TablesPage = () => {
   useEffect(() => {
     setPageTitle("POS System - Tables");
   }, [setPageTitle]);
+
+  // Run cleanup of expired bookings every minute and on component mount
+  useEffect(() => {
+    // Initial cleanup
+    Meteor.call("tables.cleanupExpiredBookings", (err: unknown) => {
+      if (err) console.error("Failed to cleanup expired bookings:", err);
+    });
+
+    // Set up periodic cleanup
+    const cleanupInterval = setInterval(() => {
+      Meteor.call("tables.cleanupExpiredBookings", (err: unknown) => {
+        if (err) console.error("Failed to cleanup expired bookings:", err);
+      });
+    }, 60 * 1000); // Run every minute
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(cleanupInterval);
+  }, []);
 
   useSubscribe("tables");
   const tablesFromDb = useTracker(() =>
