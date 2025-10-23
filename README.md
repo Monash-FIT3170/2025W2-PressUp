@@ -151,7 +151,7 @@ External contributors (those without direct write access) should use a Fork and 
 
 All pull requests must pass the automated checks defined in GitHub Actions before merging. These include linting to enforce coding style and syntax consistency, along with additional build and deploy pipelines configured to deploy to Render.
 
-Pull requests must be reviewed and approved by at least one user (with admin privileges) other than the last committer, and must be free of merge conflicts before merging. GitHub branch protection rules are in place to enforce these requirements automatically.
+Pull requests must be reviewed and approved by at least one maintainer other than the last committer, and must be free of merge conflicts before merging. GitHub branch protection rules are in place to enforce these requirements automatically.
 
 Each pull request should clearly describe the feature implemented or bug fixed, include steps to test the change, and, where appropriate, provide screenshots or videos demonstrating the expected outcome. PRs should remain small and focused to simplify review and reduce the likelihood of introducing errors.
 
@@ -161,8 +161,8 @@ The recommended workflow is summarised below:
 3. Push the branch to the remote repository or fork.
 4. Open a Pull Request to `main`.
 5. Verify that all GitHub Actions checks pass.
-6. Request review and approval from another team member (or administrator if external contributor).
-7. Merge the PR using “Merge Commit” once all requirements are satisfied.
+6. Request review and approval from another team member (or maintainer if external contributor).
+7. Merge the PR using “Merge Commit” once all requirements are satisfied (limited to maintainer's discretion).
 
 ## Code Quality
 
