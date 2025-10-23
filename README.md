@@ -141,6 +141,29 @@ Branches should be prefixed with an indicator for their purpose and descriptivel
 
 Commits should be short but descriptive. Limit to 50 characters and format as having the first letter capitalised but _don't_ end with a period.
 
+## Pull Request strategy
+
+To maintain a consistent and traceable development process, all contributors are expected to follow the pull request strategy outlined below.
+
+This repository is configured to only allow “Merge Commits” when merging into the `main` branch. This approach preserves the complete commit history of each feature branch, ensuring a transparent and auditable record of all development activity. “Rebase and Merge” and “Squash and Merge” options are disabled to maintain the integrity of the project history.
+
+External contributors (those without direct write access) should use a Fork and Pull Request strategy. To contribute, fork this repository into your own GitHub account, create a feature branch from your fork’s `main` branch, make your changes, and then open a pull request back to this project’s `main` branch.
+
+All pull requests must pass the automated checks defined in GitHub Actions before merging. These include linting to enforce coding style and syntax consistency, along with additional build and deploy pipelines configured to deploy to Render.
+
+Pull requests must be reviewed and approved by at least one user (with admin privileges) other than the last committer, and must be free of merge conflicts before merging. GitHub branch protection rules are in place to enforce these requirements automatically.
+
+Each pull request should clearly describe the feature implemented or bug fixed, include steps to test the change, and, where appropriate, provide screenshots or videos demonstrating the expected outcome. PRs should remain small and focused to simplify review and reduce the likelihood of introducing errors.
+
+The recommended workflow is summarised below:
+1. Create a new feature branch from `main` (or from your fork’s `main` if external contributor).
+2. Make and commit your changes locally.
+3. Push the branch to the remote repository or fork.
+4. Open a Pull Request to `main`.
+5. Verify that all GitHub Actions checks pass.
+6. Request review and approval from another team member (or administrator if external contributor).
+7. Merge the PR using “Merge Commit” once all requirements are satisfied.
+
 ## Code Quality
 
 Before committing changes, run `npm run fix` to lint and format your code. Note that some problems may require manual resolution. All PRs are automatically checked for code quality and must pass before merging.
