@@ -2,6 +2,7 @@ export { Supplier, SuppliersCollection } from "./suppliers/SuppliersCollection";
 export { MenuItem, MenuItemsCollection } from "./menuItems/MenuItemsCollection";
 export {
   StockItem,
+  StockLineItem,
   StockItemsCollection,
 } from "./stockItems/StockItemsCollection";
 export { Order, OrdersCollection } from "./orders/OrdersCollection";
@@ -12,6 +13,25 @@ export {
 } from "./purchaseOrders/PurchaseOrdersCollection";
 export { Tables, TablesCollection } from "./tables/TablesCollection";
 export { Deduction, DeductionsCollection } from "./tax/DeductionsCollection";
+export {
+  ItemCategory,
+  ItemCategoriesCollection,
+} from "./menuItems/ItemCategoriesCollection";
 
 // Company
 export { Company, CompanyCollection } from "./company/CompanyCollection";
+export {
+  TrainingList,
+  TrainingListsCollection,
+} from "./training/TrainingListsCollection";
+export {
+  TrainingProgress,
+  TrainingProgressCollection,
+} from "./training/TrainingProgressCollection";
+
+// Posts
+export { Post, PostsCollection } from "./posts/PostsCollection";
+export { Comment, CommentsCollection } from "./posts/CommentsCollection";
+
+// Shifts
+export { Shift, ShiftsCollection } from "./shifts/ShiftsCollection";

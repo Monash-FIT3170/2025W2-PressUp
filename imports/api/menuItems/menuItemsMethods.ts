@@ -127,6 +127,7 @@ Meteor.methods({
       available: Match.Optional(Boolean),
       price: Match.Optional(Number),
       category: Match.Optional([String]),
+      allergens: Match.Optional([String]),
       image: Match.Optional(String),
       discount: Match.Optional(Number),
       baseIngredients: Match.Optional([BaseIngredientSchema]),
@@ -251,5 +252,39 @@ Meteor.methods({
     return MenuItemsCollection.find({
       ingredients: { $regex: ingredient, $options: "i" },
     }).fetch();
+  }),
+
+  "items.updateItemIngredients": requireLoginMethod(async function (
+    itemName: string,
+    newIngredients: string[],
+  ) {
+    check(itemName, String);
+    check(newIngredients, [String]);
+
+    MenuItemsCollection.updateAsync(
+      { name: itemName },
+      { $set: { ingredients: newIngredients } },
+    );
+  }),
+
+  "menuItems.updateIngredients": requireLoginMethod(async function (
+    itemName: string,
+    baseIngredients: BaseIngredient[],
+    optionGroups: OptionGroup[],
+  ) {
+    check(itemName, String);
+    check(baseIngredients, Array);
+    check(optionGroups, Array);
+
+    const result = await MenuItemsCollection.updateAsync(
+      { name: itemName },
+      {
+        $set: {
+          baseIngredients,
+          optionGroups,
+        },
+      },
+    );
+    return result;
   }),
 });

@@ -148,6 +148,12 @@ export const TablesPage = () => {
   );
 
   const [editMode, setEditMode] = useState(false);
+  // Merge mode state
+  const [mergeMode, setMergeMode] = useState(false);
+  const [selectedMergeTables, setSelectedMergeTables] = useState<number[]>([]);
+  // Split mode state
+  const [splitMode, setSplitMode] = useState(false);
+  const [selectedSplitTables, setSelectedSplitTables] = useState<number[]>([]);
   const userIsAdmin = Meteor.user()?.username === "admin";
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -172,9 +178,7 @@ export const TablesPage = () => {
   const [selectedMoveTableNo, setSelectedMoveTableNo] = useState<string | null>(
     null,
   );
-  const [selectedMoveOrderNo, setSelectedMoveOrderNo] = useState<string | null>(
-    null,
-  );
+  const [addOrderId, setAddOrderId] = useState<string | null>(null);
 
   // Prefill grid with tables from DB on initial load
   useEffect(() => {
@@ -190,6 +194,106 @@ export const TablesPage = () => {
   }, [tablesFromDb, grid, GRID_SIZE]);
 
   const markChanged = () => setHasChanges(true);
+
+  // Merge tables logic
+  const toggleMergeTable = (tableNo: number) => {
+    setSelectedMergeTables((prev) =>
+      prev.includes(tableNo)
+        ? prev.filter((n) => n !== tableNo)
+        : [...prev, tableNo],
+    );
+  };
+
+  const toggleSplitTable = (tableNo: number) => {
+    setSelectedSplitTables((prev) =>
+      prev.includes(tableNo)
+        ? prev.filter((n) => n !== tableNo)
+        : [...prev, tableNo],
+    );
+  };
+
+  const resetMergeMode = () => {
+    setMergeMode(false);
+    setSelectedMergeTables([]);
+  };
+
+  const resetSplitMode = () => {
+    setSplitMode(false);
+    setSelectedSplitTables([]);
+  };
+
+  // Merge tables and orders
+  const handleMergeTables = async () => {
+    if (selectedMergeTables.length < 2) return;
+    // Find all selected tables
+    const tablesToMerge = tablesFromDb.filter((t) =>
+      selectedMergeTables.includes(t.tableNo),
+    );
+    // Find all active orders for these tables
+    const activeOrders = orders.filter((o) =>
+      tablesToMerge.some((t) => t.activeOrderID && t.activeOrderID === o._id),
+    );
+    if (activeOrders.length === 0) return;
+    // Pick the earliest order as the merged order
+    const mergedOrder = activeOrders.reduce((earliest, curr) =>
+      curr.createdAt < earliest.createdAt ? curr : earliest,
+    );
+    // Merge menu items from all orders
+    const mergedMenuItems = activeOrders.flatMap((o) => o.menuItems);
+    // Calculate new total price
+    const mergedTotal = mergedMenuItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
+    // Call server method to update orders and tables
+    Meteor.call(
+      "tables.mergeTablesAndOrders",
+      {
+        tableNos: selectedMergeTables,
+        mergedOrderId: mergedOrder._id,
+        mergedMenuItems,
+        mergedTotal,
+      },
+      (err: any) => {
+        if (err) {
+          alert("Failed to merge tables: " + err.reason);
+        } else {
+          resetMergeMode();
+        }
+      },
+    );
+  };
+
+  const handleSplitTables = async () => {
+    if (selectedSplitTables.length === 0) return;
+    // determine merged order id (use first selected table's activeOrderID)
+    const table = tablesFromDb.find(
+      (t) => t.tableNo === selectedSplitTables[0],
+    );
+    const mergedOrderId = table?.activeOrderID;
+    if (!mergedOrderId)
+      return alert("Selected table has no active merged order");
+
+    Meteor.call(
+      "tables.splitTablesFromOrder",
+      { orderId: mergedOrderId, tableNos: selectedSplitTables },
+      (err: any) => {
+        if (err) {
+          alert("Failed to split tables: " + err.reason);
+        } else {
+          setSplitMode(false);
+          setSelectedSplitTables([]);
+        }
+      },
+    );
+  };
+
+  // splitAvailable: whether any table references an order that is merged (has multiple tableNos)
+  const splitAvailable = tablesFromDb.some((t) => {
+    if (!t.activeOrderID) return false;
+    const o = orders.find((x) => x._id === t.activeOrderID);
+    return !!(o && o.tableNo && o.tableNo.length > 1);
+  });
 
   const moveTable = (fromIdx: number, toIdx: number) => {
     const updated = [...grid];
@@ -237,13 +341,52 @@ export const TablesPage = () => {
       }),
     });
 
+    // Merge/Split mode: allow selection
+    const isSelectedForMerge =
+      table && mergeMode && selectedMergeTables.includes(table.tableNo);
+    const isSelectedForSplit =
+      table && splitMode && selectedSplitTables.includes(table.tableNo);
+
+    // Determine whether this table is eligible for splitting.
+    // A table is eligible for split when it has an activeOrderID and that
+    // order has multiple table numbers (i.e. a merged order).
+    const orderForTable = table?.activeOrderID
+      ? orders.find((o) => o._id === table.activeOrderID)
+      : null;
+    const isSplitEligible = !!(
+      table &&
+      splitMode &&
+      orderForTable &&
+      orderForTable.tableNo &&
+      orderForTable.tableNo.length > 1
+    );
     return (
       <div
         ref={drop as unknown as React.Ref<HTMLDivElement>}
         className={`relative flex items-center justify-center border border-gray-300 bg-white rounded-full min-h-[150px] min-w-[150px] ${
           isOver && canDrop ? "bg-purple-100" : ""
+        } ${isSelectedForMerge || isSelectedForSplit ? "ring-4 ring-press-up-purple" : ""} ${
+          // dim non-eligible tables when in split mode
+          splitMode && table && !isSplitEligible ? "opacity-40" : ""
         }`}
-        style={{ height: 150, width: 150 }}
+        style={{
+          height: 150,
+          width: 150,
+          cursor:
+            splitMode && table && !isSplitEligible
+              ? "not-allowed"
+              : (mergeMode || splitMode) && table
+                ? "pointer"
+                : undefined,
+        }}
+        onClick={() => {
+          if (mergeMode && table) toggleMergeTable(table.tableNo);
+          else if (splitMode && table) {
+            // prevent selecting non-eligible tables in split mode
+            if (!isSplitEligible) return;
+            toggleSplitTable(table.tableNo);
+          }
+        }}
       >
         {table ? (
           <TableCard
@@ -255,6 +398,11 @@ export const TablesPage = () => {
             dragRef={drag as unknown as React.Ref<HTMLDivElement>}
             onEdit={() => {
               // open modal and capture a snapshot of the table so Cancel can revert
+              // Do not allow editing while in merge mode. During split mode, only
+              // allow edit if the table is eligible for splitting (so we don't
+              // open edit UI for greyed-out tables).
+              if (mergeMode) return;
+              if (splitMode && !isSplitEligible) return;
               setEditTableData(table);
               setModalOriginalTable(table);
               setModalType("editTable");
@@ -272,6 +420,28 @@ export const TablesPage = () => {
             +
           </button>
         ) : null}
+        {mergeMode && table && (
+          <div
+            className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+              isSelectedForMerge
+                ? "bg-press-up-purple border-press-up-purple text-white"
+                : "bg-white border-gray-400"
+            }`}
+          >
+            {isSelectedForMerge ? "✓" : ""}
+          </div>
+        )}
+        {splitMode && table && (
+          <div
+            className={`absolute top-2 left-2 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+              isSelectedForSplit
+                ? "bg-yellow-400 border-yellow-400 text-white"
+                : "bg-white border-gray-400"
+            }`}
+          >
+            {isSelectedForSplit ? "✓" : ""}
+          </div>
+        )}
       </div>
     );
   };
@@ -284,7 +454,9 @@ export const TablesPage = () => {
         "No permissions to edit table layout.",
       );
     }
-
+    // Clear any merge/split state when entering edit mode
+    resetMergeMode();
+    resetSplitMode();
     setOriginalGrid(JSON.parse(JSON.stringify(grid)));
     setEditMode(true);
     setHasChanges(false);
@@ -294,6 +466,9 @@ export const TablesPage = () => {
     setHasChanges(false);
     setEditMode(false);
     setOriginalGrid(null);
+    // clear merge/split state on save
+    resetMergeMode();
+    resetSplitMode();
   };
 
   const discardChanges = () => {
@@ -302,6 +477,9 @@ export const TablesPage = () => {
     }
     setHasChanges(false);
     setEditMode(false);
+    // clear merge/split state on discard
+    resetMergeMode();
+    resetSplitMode();
     setModalType(null);
   };
 
@@ -310,6 +488,9 @@ export const TablesPage = () => {
       setModalType("exitConfirm");
     } else {
       setEditMode(false);
+      // clear any merge/split selection visuals when leaving edit mode
+      resetMergeMode();
+      resetSplitMode();
     }
   };
 
@@ -360,6 +541,73 @@ export const TablesPage = () => {
                   </Button>
                 </Hide>
               ))}
+            {userIsAdmin && (
+              <>
+                {/* Merge/Split entry buttons */}
+
+                {!mergeMode && !splitMode && (
+                  <Button
+                    variant="positive"
+                    onClick={() => {
+                      // entering merge mode; clear split selections
+                      resetSplitMode();
+                      setMergeMode(true);
+                    }}
+                  >
+                    Merge Tables
+                  </Button>
+                )}
+                {!splitMode && !mergeMode && splitAvailable && (
+                  <Button
+                    variant="positive"
+                    onClick={() => {
+                      // entering split mode; clear merge selections
+                      resetMergeMode();
+                      setSplitMode(true);
+                    }}
+                  >
+                    Split Tables
+                  </Button>
+                )}
+                {/* Merge/Split selected buttons */}
+                {/* Merge Tables Button */}
+                {mergeMode && (
+                  <div className="flex gap-2 items-center">
+                    <Button
+                      variant="positive"
+                      onClick={handleMergeTables}
+                      disabled={selectedMergeTables.length < 2}
+                    >
+                      Merge Selected ({selectedMergeTables.length})
+                    </Button>
+                    <Button variant="negative" onClick={resetMergeMode}>
+                      Cancel Merge
+                    </Button>
+                  </div>
+                )}
+                {/* Split Tables Button */}
+                {splitMode && (
+                  <div className="flex gap-2 items-center">
+                    <Button
+                      variant="positive"
+                      onClick={handleSplitTables}
+                      disabled={selectedSplitTables.length < 1}
+                    >
+                      Split Selected ({selectedSplitTables.length})
+                    </Button>
+                    <Button
+                      variant="negative"
+                      onClick={() => {
+                        setSplitMode(false);
+                        setSelectedSplitTables([]);
+                      }}
+                    >
+                      Cancel Split
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
             {/* Legend - always visible */}
             <div className="flex gap-4 ml-6">
               <div className="flex items-center gap-1">
@@ -399,7 +647,6 @@ export const TablesPage = () => {
             </Button>
           </div>
         )}
-
         {/* Table grid */}
         <div className="grid grid-cols-5 gap-16 p-4 justify-items-center">
           {grid.map((table, idx) => (
@@ -554,10 +801,14 @@ export const TablesPage = () => {
                 >
                   {/* Go to Order button (only displays for Table which has an active order) */}
                   {(() => {
-                    const order = editTableData?.activeOrderID
-                      ? orders.find(
-                          (o) => o._id === editTableData.activeOrderID,
-                        )
+                    // prefer the live table record's activeOrderID (in case it changed via merge)
+                    const liveTable = tablesFromDb.find(
+                      (t) => t.tableNo === editTableData!.tableNo,
+                    );
+                    const activeOrderId =
+                      liveTable?.activeOrderID ?? editTableData?.activeOrderID;
+                    const order = activeOrderId
+                      ? orders.find((o) => o._id === activeOrderId)
                       : null;
                     if (!order) return null;
                     return (
@@ -565,7 +816,7 @@ export const TablesPage = () => {
                         <Button
                           type="button"
                           onClick={() => {
-                            goToOrder(String(editTableData?.activeOrderID));
+                            goToOrder(String(activeOrderId));
                           }}
                           variant="positive"
                         >
@@ -645,8 +896,8 @@ export const TablesPage = () => {
                     </label>
                     <div className="mb-3 flex flex-row items-center justify-between gap-2">
                       <select
-                        value={selectedMoveOrderNo ?? ""}
-                        onChange={(e) => setSelectedMoveOrderNo(e.target.value)}
+                        value={addOrderId ?? ""}
+                        onChange={(e) => setAddOrderId(e.target.value)}
                         className="text-lg font-semibold bg-press-up-negative-button text-white border-none outline-none rounded-full px-4 py-2 shadow-md"
                         style={{ minWidth: 160 }}
                       >
@@ -670,48 +921,6 @@ export const TablesPage = () => {
                             </option>
                           ))}
                       </select>
-                      <Button
-                        variant="negative"
-                        disabled={!selectedMoveOrderNo}
-                        onClick={async () => {
-                          // Update the selected order's tableNo
-                          await Meteor.callAsync(
-                            "orders.updateOrder",
-                            selectedMoveOrderNo,
-                            { tableNo: editTableData.tableNo },
-                          );
-                          // Add order to table
-                          await Meteor.callAsync(
-                            "tables.addOrder",
-                            editTableData._id,
-                            selectedMoveOrderNo,
-                          );
-                          // Set table as occupied with at least 1 occupant
-                          await Meteor.callAsync(
-                            "tables.setOccupied",
-                            editTableData._id,
-                            true,
-                            1,
-                          );
-                          // Re-render by updating grid from DB
-                          const refreshedTables = TablesCollection.find(
-                            {},
-                            { sort: { tableNo: 1 } },
-                          ).fetch();
-                          const newGrid = Array(GRID_SIZE).fill(null);
-                          refreshedTables.forEach((table, idx) => {
-                            if (idx < GRID_SIZE) {
-                              newGrid[idx] = table;
-                            }
-                          });
-                          setGrid(newGrid);
-                          setModalType(null);
-                          markChanged();
-                          goToOrder(String(selectedMoveOrderNo));
-                        }}
-                      >
-                        Add Order
-                      </Button>
                     </div>
                   </div>
                 )}
@@ -774,11 +983,11 @@ export const TablesPage = () => {
                             true,
                             1,
                           );
-                          // Update order's tableNo
+                          // Update order's tableNo (store as array)
                           await Meteor.callAsync(
                             "orders.updateOrder",
                             editTableData.activeOrderID,
-                            { tableNo: newTable.tableNo },
+                            { tableNo: [newTable.tableNo] },
                           );
                           // Re-render by updating grid from DB
                           const refreshedTables = TablesCollection.find(
@@ -878,6 +1087,28 @@ export const TablesPage = () => {
                               parseInt(occupancyInput || "0", 10),
                             );
                           }
+                          // If an order is selected, add it now
+                          if (addOrderId) {
+                            // Update the selected order's tableNo (store as array)
+                            await Meteor.callAsync(
+                              "orders.updateOrder",
+                              addOrderId,
+                              { tableNo: [editTableData.tableNo] },
+                            );
+                            // Add order to table
+                            await Meteor.callAsync(
+                              "tables.addOrder",
+                              dbTable._id,
+                              addOrderId,
+                            );
+                            // Set table as occupied with at least 1 occupant
+                            await Meteor.callAsync(
+                              "tables.setOccupied",
+                              dbTable._id,
+                              true,
+                              1,
+                            );
+                          }
                           // clear snapshot after successful save
                           setModalOriginalTable(null);
                           setClearOrderOnSave(false);
@@ -888,6 +1119,8 @@ export const TablesPage = () => {
                           );
                         }
                       }
+                      // Clear order after save
+                      setAddOrderId(null);
                     }}
                   >
                     Save
@@ -910,6 +1143,7 @@ export const TablesPage = () => {
                         setOccupancyInput("");
                         setOccupiedToggle(false);
                       }
+                      setAddOrderId(null);
                     }}
                   >
                     Cancel

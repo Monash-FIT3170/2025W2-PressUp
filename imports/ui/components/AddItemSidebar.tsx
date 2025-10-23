@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { Meteor } from "meteor/meteor";
+import { useSubscribe, useTracker } from "meteor/react-meteor-data";
+import { ItemCategoriesCollection } from "/imports/api/menuItems/ItemCategoriesCollection";
 import { IngredientDropdown } from "./IngredientDropdown";
 import { CategoryDropdown } from "./CategoryDropdown";
+import { ConfirmModal } from "./ConfirmModal";
 
 // Import possible images from mockData
 const possibleImages = [
@@ -21,6 +24,197 @@ interface AddItemModalProps {
   onClose: () => void;
   onSuccess: () => void;
 }
+
+interface AddCategoryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+}) => {
+  const [formData, setFormData] = useState({
+    name: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  useSubscribe("itemCategories");
+  const categories = useTracker(() => ItemCategoriesCollection.find().fetch());
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        Meteor.call(
+          "itemCategories.insert",
+          formData,
+          (error: Meteor.Error) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve();
+            }
+          },
+        );
+      });
+
+      console.log("Item category created successfully");
+      onSuccess();
+      onClose();
+      resetForm();
+    } catch (error) {
+      console.error("Error creating item category:", error);
+      alert(
+        "Error creating item category: " +
+          ((error as Meteor.Error).reason || (error as Error).message),
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+    });
+  };
+
+  const handleDelete = async (categoryName: string) => {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        Meteor.call(
+          "itemCategories.delete",
+          categoryName,
+          (error: Meteor.Error) => {
+            if (error) reject(error);
+            else resolve();
+          },
+        );
+      });
+      console.log("Category deleted:", categoryName);
+      onSuccess();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      alert(
+        "Error deleting category: " +
+          ((error as Meteor.Error).reason || (error as Error).message),
+      );
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className={`
+        fixed inset-0 flex items-center justify-center z-[9999]
+        transition-colors z-[1000]
+        ${isOpen ? "visible bg-black/20" : "invisible"}
+      `}
+    >
+      <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
+        <h2 className="text-xl font-bold mb-4 text-red-900">
+          Add New Menu Item Category
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4 mb-6">
+          <div>
+            <label className="block mb-2 text-sm font-medium text-red-900">
+              Name
+            </label>
+            <input
+              type="text"
+              placeholder="Category Name"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5"
+              required
+            />
+          </div>
+
+          <div className="flex justify-between pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                resetForm();
+              }}
+              className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2 text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: "#6f597b" }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </form>
+
+        <h3 className="text-lg font-semibold mb-2 text-red-900">
+          Existing Categories
+        </h3>
+        <ul className="space-y-2 max-h-48 overflow-y-auto">
+          {categories.map((cat) => (
+            <li
+              key={cat._id}
+              className="flex justify-between items-center bg-white rounded-lg px-3 py-2 shadow-sm"
+            >
+              <span className="text-red-900">{cat.name}</span>
+              <button
+                type="button"
+                className="bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors"
+                title="Delete category"
+                onClick={() => setDeleteTarget(cat.name)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-red-500"
+                >
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                </svg>
+              </button>
+            </li>
+          ))}
+          {categories.length === 0 && (
+            <li className="text-sm text-gray-500">No categories yet.</li>
+          )}
+        </ul>
+      </div>
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        message="Are you sure you want to delete this category?"
+        onConfirm={() => {
+          if (deleteTarget) handleDelete(deleteTarget);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
+    </div>
+  );
+};
 
 const AddItemModal: React.FC<AddItemModalProps> = ({
   isOpen,
@@ -390,10 +584,15 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
 const Sidebar: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   const handleAddItemSuccess = () => {
     // You can add any additional logic here, like refreshing a list
     console.log("Item added successfully!");
+  };
+
+  const handleAddCategorySuccess = () => {
+    console.log("Category added successfully!");
   };
 
   return (
@@ -407,6 +606,14 @@ const Sidebar: React.FC = () => {
         >
           Add Item
         </button>
+
+        <button
+          onClick={() => setIsCategoryModalOpen(true)}
+          className="w-full py-2.5 px-4 rounded-lg mb-4 font-bold text-sm transition-all hover:opacity-90 hover:shadow-md"
+          style={{ backgroundColor: "#6f597b", color: "white" }}
+        >
+          Add Category
+        </button>
       </div>
 
       {/* Add Item Modal */}
@@ -414,6 +621,13 @@ const Sidebar: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleAddItemSuccess}
+      />
+
+      {/* Add Category Modal */}
+      <AddCategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onSuccess={handleAddCategorySuccess}
       />
     </>
   );

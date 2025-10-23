@@ -17,7 +17,7 @@ import { Hide } from "../../components/display/Hide";
 type RowOrder = {
   _id: string;
   orderNo: number;
-  tableNo: number | null;
+  tableNo: number[] | null;
   createdAt: string;
   status: "pending" | "preparing" | "ready" | "served" | "paid";
   items: string;
@@ -64,7 +64,7 @@ export const OrderHistoryPage = () => {
 
     const key = q.toLowerCase();
     return base.filter((o) => {
-      const tableText = o.tableNo != null ? String(o.tableNo) : "takeaway";
+      const tableText = o.tableNo != null ? o.tableNo.join(", ") : "takeaway";
       return (
         String(o.orderNo).includes(key) ||
         tableText.includes(key) ||
@@ -99,7 +99,7 @@ export const OrderHistoryPage = () => {
       header: "Table",
       gridCol: "min-content",
       render: (row) => (
-        <span>{row.tableNo != null ? row.tableNo : "Takeaway"}</span>
+        <span>{row.tableNo != null ? row.tableNo.join(", ") : "Takeaway"}</span>
       ),
     },
     {
@@ -201,7 +201,7 @@ export const OrderHistoryPage = () => {
       align: "center",
       render: (row) => {
         const isPaid = orders.find((o) => o._id === row._id)?.paid === true;
-        const hide = row.status === "served" && !isPaid;
+        const hide = !(row.status === "served" && !isPaid);
         return (
           <div className="flex justify-center gap-2 px-2">
             <Hide hide={hide}>
@@ -225,9 +225,13 @@ export const OrderHistoryPage = () => {
   ];
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col h-full">
+      {" "}
+      {/* Add h-full */}
       {/* Controls */}
-      <div className="flex items-center p-4 gap-3">
+      <div className="flex items-center p-4 gap-3 flex-shrink-0">
+        {" "}
+        {/* Add flex-shrink-0 to prevent controls from shrinking */}
         <div className="w-60">
           <Select
             value={statusFilter}
@@ -248,15 +252,11 @@ export const OrderHistoryPage = () => {
           />
         </div>
       </div>
-
-      {/* Table */}
-      <div className="flex-1 min-h-0">
-        <Table
-          columns={columns}
-          data={filtered}
-          emptyMessage="No orders found."
-        />
-      </div>
+      <Table
+        columns={columns}
+        data={filtered}
+        emptyMessage="No orders found."
+      />
     </div>
   );
 };
