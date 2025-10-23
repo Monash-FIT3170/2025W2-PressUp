@@ -67,7 +67,9 @@ const getCurrentBooking = (bookings?: TableBooking[]): TableBooking | null => {
   // Find a booking that's currently active
   const currentBooking = bookings.find((booking) => {
     const bookingTime = new Date(booking.bookingDate);
-    const bookingEndTime = new Date(bookingTime.getTime() + booking.duration * 60 * 1000);
+    const bookingEndTime = new Date(
+      bookingTime.getTime() + booking.duration * 60 * 1000,
+    );
     return now >= bookingTime && now <= bookingEndTime;
   });
 
@@ -83,7 +85,9 @@ const TableCard = ({
   onEdit,
 }: TableCardProps) => {
   // State for real-time booking status
-  const [activeBooking, setActiveBooking] = useState<TableBooking | null>(getCurrentBooking(table.bookings));
+  const [activeBooking, setActiveBooking] = useState<TableBooking | null>(
+    getCurrentBooking(table.bookings),
+  );
   const [remainingMinutes, setRemainingMinutes] = useState<number>(0);
 
   // Update remaining time every minute
@@ -93,7 +97,9 @@ const TableCard = ({
     const updateRemainingTime = () => {
       const now = new Date();
       const bookingTime = new Date(activeBooking.bookingDate);
-      const bookingEndTime = new Date(bookingTime.getTime() + activeBooking.duration * 60 * 1000);
+      const bookingEndTime = new Date(
+        bookingTime.getTime() + activeBooking.duration * 60 * 1000,
+      );
       const remainingMs = bookingEndTime.getTime() - now.getTime();
       setRemainingMinutes(Math.max(0, Math.ceil(remainingMs / (1000 * 60))));
     };
@@ -122,7 +128,7 @@ const TableCard = ({
       // Update state and table occupancy if booking status changed
       if (currentActiveBookingId !== newActiveBookingId) {
         setActiveBooking(currentBooking || null);
-        
+
         if (table._id) {
           if (currentBooking) {
             // New booking started - update occupancy
@@ -132,8 +138,9 @@ const TableCard = ({
               true,
               currentBooking.partySize,
               (err: unknown) => {
-                if (err) console.error("Failed to update table occupancy:", err);
-              }
+                if (err)
+                  console.error("Failed to update table occupancy:", err);
+              },
             );
           } else {
             // Booking ended - clear occupancy only if it was set by this booking
@@ -144,7 +151,7 @@ const TableCard = ({
               0,
               (err: unknown) => {
                 if (err) console.error("Failed to clear table occupancy:", err);
-              }
+              },
             );
           }
         }
@@ -801,8 +808,12 @@ export const TablesPage = () => {
       {/* -------- Modals -------- */}
       {modalType && (
         <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm pt-20">
-          <div className="bg-white rounded-lg p-6 shadow-lg max-h-[calc(100vh-120px)] overflow-y-auto" 
-               style={{ width: modalType === "addBooking" ? "min(450px, 90vw)" : "320px" }}>
+          <div
+            className="bg-white rounded-lg p-6 shadow-lg max-h-[calc(100vh-120px)] overflow-y-auto"
+            style={{
+              width: modalType === "addBooking" ? "min(450px, 90vw)" : "320px",
+            }}
+          >
             {/* Add Table */}
             {modalType === "addTable" && (
               <>
@@ -1175,8 +1186,13 @@ export const TablesPage = () => {
                             </div>
                             <div className="text-gray-600">
                               {booking.bookingDate.toLocaleString()} {" - "}
-                              {new Date(booking.bookingDate.getTime() + booking.duration * 60 * 1000).toLocaleTimeString()} <br/>
-                              {booking.partySize} {(booking.partySize == 1) ? "person" : "people"}
+                              {new Date(
+                                booking.bookingDate.getTime() +
+                                  booking.duration * 60 * 1000,
+                              ).toLocaleTimeString()}{" "}
+                              <br />
+                              {booking.partySize}{" "}
+                              {booking.partySize == 1 ? "person" : "people"}
                             </div>
                             {booking.notes && (
                               <div className="text-gray-500 italic">
@@ -1618,7 +1634,7 @@ export const TablesPage = () => {
                       <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
                         Duration *
                       </label>
-                      <select 
+                      <select
                         value={bookingForm.duration}
                         required
                         onChange={(e) =>
@@ -1627,20 +1643,36 @@ export const TablesPage = () => {
                             duration: e.target.value,
                           }))
                         }
-                        className="w-full border rounded px-2 py-1 mb-4">
-                        <option value="" className="w-full border rounded px-2 py-1 mb-4">
+                        className="w-full border rounded px-2 py-1 mb-4"
+                      >
+                        <option
+                          value=""
+                          className="w-full border rounded px-2 py-1 mb-4"
+                        >
                           Select Booking Duration
                         </option>
-                        <option value="30" className="w-full border rounded px-2 py-1 mb-4">
+                        <option
+                          value="30"
+                          className="w-full border rounded px-2 py-1 mb-4"
+                        >
                           30 minutes
                         </option>
-                        <option value="45" className="w-full border rounded px-2 py-1 mb-4">
+                        <option
+                          value="45"
+                          className="w-full border rounded px-2 py-1 mb-4"
+                        >
                           45 minutes
                         </option>
-                        <option value="60" className="w-full border rounded px-2 py-1 mb-4">
+                        <option
+                          value="60"
+                          className="w-full border rounded px-2 py-1 mb-4"
+                        >
                           60 minutes
                         </option>
-                        <option value="90" className="w-full border rounded px-2 py-1 mb-4">
+                        <option
+                          value="90"
+                          className="w-full border rounded px-2 py-1 mb-4"
+                        >
                           90 minutes
                         </option>
                       </select>
