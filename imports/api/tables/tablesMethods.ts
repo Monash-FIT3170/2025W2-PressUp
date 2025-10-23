@@ -458,6 +458,31 @@ Meteor.methods({
       );
     }
 
+    // Check for overlapping bookings
+    const table = await TablesCollection.findOneAsync(tableID);
+    if (table?.bookings) {
+      const newBookingEnd = new Date(
+        bookingDate.getTime() + booking.duration * 60 * 1000,
+      );
+
+      const hasOverlap = table.bookings.some((existingBooking) => {
+        const existingStart = new Date(existingBooking.bookingDate);
+        const existingEnd = new Date(
+          existingStart.getTime() + existingBooking.duration * 60 * 1000,
+        );
+
+        // Check if new booking overlaps with existing booking
+        return bookingDate <= existingEnd && newBookingEnd >= existingStart;
+      });
+
+      if (hasOverlap) {
+        throw new Meteor.Error(
+          "booking-overlap",
+          "This time slot overlaps with an existing booking",
+        );
+      }
+    }
+
     // Add booking to table
     const newBooking: TableBooking = {
       customerName: booking.customerName,
