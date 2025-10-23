@@ -63,14 +63,15 @@ const getCurrentBooking = (bookings?: TableBooking[]): TableBooking | null => {
   if (!bookings) return null;
 
   const now = new Date();
-  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-  return (
-    bookings.find((booking) => {
-      const bookingTime = new Date(booking.bookingDate);
-      return bookingTime >= oneHourAgo && bookingTime <= now;
-    }) || null
-  );
+  // Find a booking that's currently active
+  const currentBooking = bookings.find((booking) => {
+    const bookingTime = new Date(booking.bookingDate);
+    const bookingEndTime = new Date(bookingTime.getTime() + booking.duration * 60 * 1000);
+    return now >= bookingTime && now <= bookingEndTime;
+  });
+
+  return currentBooking || null;
 };
 
 // -------- TableCard --------
@@ -81,13 +82,88 @@ const TableCard = ({
   dragRef,
   onEdit,
 }: TableCardProps) => {
-  // Check for current booking
-  const currentBooking = getCurrentBooking(table.bookings);
+  // State for real-time booking status
+  const [activeBooking, setActiveBooking] = useState<TableBooking | null>(getCurrentBooking(table.bookings));
+  const [remainingMinutes, setRemainingMinutes] = useState<number>(0);
+
+  // Update remaining time every minute
+  useEffect(() => {
+    if (!activeBooking) return;
+
+    const updateRemainingTime = () => {
+      const now = new Date();
+      const bookingTime = new Date(activeBooking.bookingDate);
+      const bookingEndTime = new Date(bookingTime.getTime() + activeBooking.duration * 60 * 1000);
+      const remainingMs = bookingEndTime.getTime() - now.getTime();
+      setRemainingMinutes(Math.max(0, Math.ceil(remainingMs / (1000 * 60))));
+    };
+
+    // Initial update
+    updateRemainingTime();
+
+    // Set up interval for updates
+    const interval = setInterval(updateRemainingTime, 10000); // Update every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [activeBooking]);
+
+  // Check for booking status changes every 10 seconds
+  useEffect(() => {
+    const checkBookingStatus = () => {
+      // Trigger cleanup first
+      Meteor.call("tables.cleanupExpiredBookings", (err: unknown) => {
+        if (err) console.error("Failed to cleanup expired bookings:", err);
+      });
+
+      const currentBooking = getCurrentBooking(table.bookings);
+      const currentActiveBookingId = activeBooking?.bookingDate.getTime() ?? 0;
+      const newActiveBookingId = currentBooking?.bookingDate.getTime() ?? 0;
+
+      // Update state and table occupancy if booking status changed
+      if (currentActiveBookingId !== newActiveBookingId) {
+        setActiveBooking(currentBooking || null);
+        
+        if (table._id) {
+          if (currentBooking) {
+            // New booking started - update occupancy
+            Meteor.call(
+              "tables.setOccupied",
+              table._id,
+              true,
+              currentBooking.partySize,
+              (err: unknown) => {
+                if (err) console.error("Failed to update table occupancy:", err);
+              }
+            );
+          } else {
+            // Booking ended - clear occupancy only if it was set by this booking
+            Meteor.call(
+              "tables.setOccupied",
+              table._id,
+              false,
+              0,
+              (err: unknown) => {
+                if (err) console.error("Failed to clear table occupancy:", err);
+              }
+            );
+          }
+        }
+      }
+    };
+
+    // Initial check
+    checkBookingStatus();
+
+    // Set up interval for periodic checks
+    const interval = setInterval(checkBookingStatus, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [table.bookings, table._id, activeBooking]);
 
   const seatPositions = getSeatPositions(table?.capacity ?? 0);
   // Use booking party size if there's a current booking
-  const occupied = currentBooking
-    ? currentBooking.partySize
+  const occupied = activeBooking
+    ? activeBooking.partySize
     : typeof table.noOccupants === "number"
       ? table.noOccupants
       : 0;
@@ -100,32 +176,18 @@ const TableCard = ({
     }
   }
 
-  // If there's a current booking, mark the table as reserved
-  useEffect(() => {
-    if (currentBooking && table._id) {
-      Meteor.call(
-        "tables.setOccupied",
-        table._id,
-        true,
-        currentBooking.partySize,
-        (err: unknown) => {
-          if (err) console.error("Failed to update table occupancy:", err);
-        },
-      );
-    }
-  }, [currentBooking, table._id]);
-
   return (
     <div
       ref={dragRef}
       className={`${cardColour} border-2 shadow-md relative flex flex-col items-center justify-center cursor-move ${
         isDragging ? "opacity-50" : ""
-      } rounded-full ${currentBooking ? "ring-2 ring-yellow-400" : ""}`}
+      } rounded-full ${activeBooking ? "ring-2 ring-yellow-400" : ""}`}
       style={{ width: 140, height: 140 }}
     >
-      {currentBooking && (
-        <div className="bg-yellow-400 text-black text-xs px-2 py-1 rounded-full">
-          Reserved
+      {activeBooking && (
+        <div className="bg-yellow-400 text-black text-xs px-2 py-1 rounded-full flex flex-col items-center">
+          <div>Reserved</div>
+          <div>{remainingMinutes}m remaining</div>
         </div>
       )}
       {seatPositions.map((pos, i) => (
@@ -254,6 +316,7 @@ export const TablesPage = () => {
     customerPhone: "",
     partySize: "",
     bookingDate: "",
+    duration: "",
     notes: "",
   };
   const [bookingForm, setBookingForm] = useState(initialBookingForm);
@@ -1111,8 +1174,9 @@ export const TablesPage = () => {
                               {booking.customerName}
                             </div>
                             <div className="text-gray-600">
-                              {booking.bookingDate.toLocaleString()} ·{" "}
-                              {booking.partySize} people
+                              {booking.bookingDate.toLocaleString()} {" - "}
+                              {new Date(booking.bookingDate.getTime() + booking.duration * 60 * 1000).toLocaleTimeString()} <br/>
+                              {booking.partySize} {(booking.partySize == 1) ? "person" : "people"}
                             </div>
                             {booking.notes && (
                               <div className="text-gray-500 italic">
@@ -1422,6 +1486,7 @@ export const TablesPage = () => {
                       customerPhone: bookingForm.customerPhone,
                       partySize: parseInt(bookingForm.partySize),
                       bookingDate: new Date(bookingForm.bookingDate),
+                      duration: parseInt(bookingForm.duration),
                       notes: bookingForm.notes || undefined,
                     };
 
@@ -1548,6 +1613,37 @@ export const TablesPage = () => {
                         }
                         className="w-full border rounded px-2 py-1 mb-4"
                       />
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
+                        Duration *
+                      </label>
+                      <select 
+                        value={bookingForm.duration}
+                        required
+                        onChange={(e) =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            duration: e.target.value,
+                          }))
+                        }
+                        className="w-full border rounded px-2 py-1 mb-4">
+                        <option value="" className="w-full border rounded px-2 py-1 mb-4">
+                          Select Booking Duration
+                        </option>
+                        <option value="30" className="w-full border rounded px-2 py-1 mb-4">
+                          30 minutes
+                        </option>
+                        <option value="45" className="w-full border rounded px-2 py-1 mb-4">
+                          45 minutes
+                        </option>
+                        <option value="60" className="w-full border rounded px-2 py-1 mb-4">
+                          60 minutes
+                        </option>
+                        <option value="90" className="w-full border rounded px-2 py-1 mb-4">
+                          90 minutes
+                        </option>
+                      </select>
                     </div>
                     <div>
                       <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">

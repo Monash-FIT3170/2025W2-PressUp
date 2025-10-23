@@ -6,6 +6,7 @@ export interface TableBooking {
   partySize: number;
   customerName: string;
   customerPhone: string;
+  duration: number; // in minutes
   notes?: string;
 }
 

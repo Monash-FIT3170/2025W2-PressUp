@@ -4,13 +4,6 @@ import { requireLoginMethod } from "../accounts/wrappers";
 import { Tables, TablesCollection, TableBooking } from "./TablesCollection";
 import { IdType, OmitDB } from "../database";
 
-// Helper function to check if a booking is expired (more than 1 hour old)
-const isBookingExpired = (bookingDate: Date) => {
-  const now = new Date();
-  const oneHourAgo = new Date(bookingDate.getTime() + 60 * 60 * 1000);
-  return now > oneHourAgo;
-};
-
 Meteor.methods({
   "tables.addOrder": requireLoginMethod(async function (
     tableID: IdType,
@@ -471,6 +464,7 @@ Meteor.methods({
       customerPhone: booking.customerPhone,
       partySize: booking.partySize,
       bookingDate,
+      duration: booking.duration,
       notes: booking.notes,
     };
 
@@ -511,37 +505,43 @@ Meteor.methods({
       bookings: { $exists: true },
     }).fetchAsync();
 
+    const now = new Date();
+    
     for (const table of tables) {
       if (!table.bookings || table.bookings.length === 0) continue;
 
-      // Filter out expired bookings
-      const currentBookings = table.bookings.filter(
-        (booking) => !isBookingExpired(booking.bookingDate),
-      );
+      // Filter out expired bookings and check for current bookings
+      const currentBookings = table.bookings.filter((booking) => {
+        const bookingTime = new Date(booking.bookingDate);
+        const bookingEndTime = new Date(bookingTime.getTime() + booking.duration * 60 * 1000);
+        return now <= bookingEndTime;
+      });
 
-      // If the number of bookings changed, update the table
-      if (currentBookings.length !== table.bookings.length) {
-        await TablesCollection.updateAsync(table._id, {
-          $set: { bookings: currentBookings },
-        });
+      // Get any active booking
+      const activeBooking = currentBookings.find((booking) => {
+        const bookingTime = new Date(booking.bookingDate);
+        const bookingEndTime = new Date(bookingTime.getTime() + booking.duration * 60 * 1000);
+        return now >= bookingTime && now <= bookingEndTime;
+      });
 
-        // If this was the last current booking, also clear occupancy
-        const hasCurrentBooking = currentBookings.some((booking) => {
-          const now = new Date();
-          const bookingTime = new Date(booking.bookingDate);
-          const oneHourAfterBooking = new Date(
-            bookingTime.getTime() + 60 * 60 * 1000,
-          );
-          return now >= bookingTime && now <= oneHourAfterBooking;
-        });
+      // Always update bookings and table status
+      const updateFields: Partial<Tables> & { bookings: TableBooking[] } = {
+        bookings: currentBookings
+      };
 
-        if (!hasCurrentBooking && table.isOccupied) {
-          await TablesCollection.updateAsync(table._id, {
-            $set: { isOccupied: false },
-            $unset: { noOccupants: "" },
-          });
-        }
+      // Update occupied status based on active booking
+      if (activeBooking) {
+        updateFields.isOccupied = true;
+        updateFields.noOccupants = activeBooking.partySize;
+      } else if (!table.activeOrderID) {
+        // Only clear occupancy if there's no active order
+        updateFields.isOccupied = false;
+        updateFields.noOccupants = 0;
       }
+
+      await TablesCollection.updateAsync(table._id, {
+        $set: updateFields
+      });
     }
     return true;
   }),
