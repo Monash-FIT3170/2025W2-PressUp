@@ -1,7 +1,7 @@
 import { OrderMenuItem, OrdersCollection } from "../orders/OrdersCollection";
 import { Meteor } from "meteor/meteor";
 import { requireLoginMethod } from "../accounts/wrappers";
-import { Tables, TablesCollection } from "./TablesCollection";
+import { Tables, TablesCollection, TableBooking } from "./TablesCollection";
 import { IdType, OmitDB } from "../database";
 
 Meteor.methods({
@@ -416,5 +416,162 @@ Meteor.methods({
     }
 
     return { created };
+  }),
+
+  "tables.addBooking": requireLoginMethod(async function (
+    tableID: IdType,
+    booking: Omit<TableBooking, "bookingDate"> & { bookingDate: string },
+  ) {
+    if (!tableID || !booking)
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Table ID and booking details are required",
+      );
+
+    // Validate booking fields
+    if (!booking.customerName || !booking.customerPhone || !booking.partySize) {
+      throw new Meteor.Error(
+        "invalid-booking",
+        "Customer name, phone, and party size are required",
+      );
+    }
+
+    // Validate party size (must be positive)
+    if (booking.partySize <= 0) {
+      throw new Meteor.Error(
+        "invalid-party-size",
+        "Party size must be greater than 0",
+      );
+    }
+
+    // Convert date string to Date object
+    const bookingDate = new Date(booking.bookingDate);
+    if (isNaN(bookingDate.getTime())) {
+      throw new Meteor.Error("invalid-date", "Invalid booking date");
+    }
+
+    // Don't allow bookings in the past
+    if (bookingDate < new Date()) {
+      throw new Meteor.Error(
+        "invalid-date",
+        "Booking date must be in the future",
+      );
+    }
+
+    // Check for overlapping bookings
+    const table = await TablesCollection.findOneAsync(tableID);
+    if (table?.bookings) {
+      const newBookingEnd = new Date(
+        bookingDate.getTime() + booking.duration * 60 * 1000,
+      );
+
+      const hasOverlap = table.bookings.some((existingBooking) => {
+        const existingStart = new Date(existingBooking.bookingDate);
+        const existingEnd = new Date(
+          existingStart.getTime() + existingBooking.duration * 60 * 1000,
+        );
+
+        // Check if new booking overlaps with existing booking
+        return bookingDate <= existingEnd && newBookingEnd >= existingStart;
+      });
+
+      if (hasOverlap) {
+        throw new Meteor.Error(
+          "booking-overlap",
+          "This time slot overlaps with an existing booking",
+        );
+      }
+    }
+
+    // Add booking to table
+    const newBooking: TableBooking = {
+      customerName: booking.customerName,
+      customerPhone: booking.customerPhone,
+      partySize: booking.partySize,
+      bookingDate,
+      duration: booking.duration,
+      notes: booking.notes,
+    };
+
+    return await TablesCollection.updateAsync(tableID, {
+      $push: {
+        bookings: newBooking,
+      },
+    });
+  }),
+
+  "tables.removeBooking": requireLoginMethod(async function (
+    tableID: IdType,
+    bookingDate: string,
+  ) {
+    if (!tableID || !bookingDate)
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Table ID and booking date are required",
+      );
+
+    const date = new Date(bookingDate);
+    if (isNaN(date.getTime())) {
+      throw new Meteor.Error("invalid-date", "Invalid booking date");
+    }
+
+    return await TablesCollection.updateAsync(tableID, {
+      $pull: {
+        bookings: {
+          bookingDate: date,
+        },
+      },
+    });
+  }),
+
+  "tables.cleanupExpiredBookings": requireLoginMethod(async function () {
+    // Find all tables with bookings
+    const tables = await TablesCollection.find({
+      bookings: { $exists: true },
+    }).fetchAsync();
+
+    const now = new Date();
+
+    for (const table of tables) {
+      if (!table.bookings || table.bookings.length === 0) continue;
+
+      // Filter out expired bookings and check for current bookings
+      const currentBookings = table.bookings.filter((booking) => {
+        const bookingTime = new Date(booking.bookingDate);
+        const bookingEndTime = new Date(
+          bookingTime.getTime() + booking.duration * 60 * 1000,
+        );
+        return now <= bookingEndTime;
+      });
+
+      // Get any active booking
+      const activeBooking = currentBookings.find((booking) => {
+        const bookingTime = new Date(booking.bookingDate);
+        const bookingEndTime = new Date(
+          bookingTime.getTime() + booking.duration * 60 * 1000,
+        );
+        return now >= bookingTime && now <= bookingEndTime;
+      });
+
+      // Always update bookings and table status
+      const updateFields: Partial<Tables> & { bookings: TableBooking[] } = {
+        bookings: currentBookings,
+      };
+
+      // Update occupied status based on active booking
+      if (activeBooking) {
+        updateFields.isOccupied = true;
+        updateFields.noOccupants = activeBooking.partySize;
+      } else if (!table.activeOrderID) {
+        // Only clear occupancy if there's no active order
+        updateFields.isOccupied = false;
+        updateFields.noOccupants = 0;
+      }
+
+      await TablesCollection.updateAsync(table._id, {
+        $set: updateFields,
+      });
+    }
+    return true;
   }),
 });

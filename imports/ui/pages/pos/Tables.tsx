@@ -2,7 +2,10 @@ import { Meteor } from "meteor/meteor";
 import React, { useEffect, useState } from "react";
 import { usePageTitle } from "../../hooks/PageTitleContext";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
-import { TablesCollection } from "/imports/api/tables/TablesCollection";
+import {
+  TablesCollection,
+  TableBooking,
+} from "/imports/api/tables/TablesCollection";
 import {
   OrdersCollection,
   OrderType,
@@ -41,6 +44,7 @@ interface Table {
   isOccupied?: boolean;
   activeOrderID?: string | null;
   orderIDs?: string[];
+  bookings?: TableBooking[];
 }
 
 interface TableCardProps {
@@ -54,6 +58,24 @@ interface TableCardProps {
 // helper local type to avoid long inline intersection in casts
 type TableWithOptionalOccupants = Table & { noOccupants?: number };
 
+// Helper function to check if a table has a current booking
+const getCurrentBooking = (bookings?: TableBooking[]): TableBooking | null => {
+  if (!bookings) return null;
+
+  const now = new Date();
+
+  // Find a booking that's currently active
+  const currentBooking = bookings.find((booking) => {
+    const bookingTime = new Date(booking.bookingDate);
+    const bookingEndTime = new Date(
+      bookingTime.getTime() + booking.duration * 60 * 1000,
+    );
+    return now >= bookingTime && now <= bookingEndTime;
+  });
+
+  return currentBooking || null;
+};
+
 // -------- TableCard --------
 const TableCard = ({
   table,
@@ -62,9 +84,96 @@ const TableCard = ({
   dragRef,
   onEdit,
 }: TableCardProps) => {
+  // State for real-time booking status
+  const [activeBooking, setActiveBooking] = useState<TableBooking | null>(
+    getCurrentBooking(table.bookings),
+  );
+  const [remainingMinutes, setRemainingMinutes] = useState<number>(0);
+
+  // Update remaining time every minute
+  useEffect(() => {
+    if (!activeBooking) return;
+
+    const updateRemainingTime = () => {
+      const now = new Date();
+      const bookingTime = new Date(activeBooking.bookingDate);
+      const bookingEndTime = new Date(
+        bookingTime.getTime() + activeBooking.duration * 60 * 1000,
+      );
+      const remainingMs = bookingEndTime.getTime() - now.getTime();
+      setRemainingMinutes(Math.max(0, Math.ceil(remainingMs / (1000 * 60))));
+    };
+
+    // Initial update
+    updateRemainingTime();
+
+    // Set up interval for updates
+    const interval = setInterval(updateRemainingTime, 10000); // Update every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [activeBooking]);
+
+  // Check for booking status changes every 10 seconds
+  useEffect(() => {
+    const checkBookingStatus = () => {
+      // Trigger cleanup first
+      Meteor.call("tables.cleanupExpiredBookings", (err: unknown) => {
+        if (err) console.error("Failed to cleanup expired bookings:", err);
+      });
+
+      const currentBooking = getCurrentBooking(table.bookings);
+      const currentActiveBookingId = activeBooking?.bookingDate.getTime() ?? 0;
+      const newActiveBookingId = currentBooking?.bookingDate.getTime() ?? 0;
+
+      // Update state and table occupancy if booking status changed
+      if (currentActiveBookingId !== newActiveBookingId) {
+        setActiveBooking(currentBooking || null);
+
+        if (table._id) {
+          if (currentBooking) {
+            // New booking started - update occupancy
+            Meteor.call(
+              "tables.setOccupied",
+              table._id,
+              true,
+              currentBooking.partySize,
+              (err: unknown) => {
+                if (err)
+                  console.error("Failed to update table occupancy:", err);
+              },
+            );
+          } else {
+            // Booking ended - clear occupancy only if it was set by this booking
+            Meteor.call(
+              "tables.setOccupied",
+              table._id,
+              false,
+              0,
+              (err: unknown) => {
+                if (err) console.error("Failed to clear table occupancy:", err);
+              },
+            );
+          }
+        }
+      }
+    };
+
+    // Initial check
+    checkBookingStatus();
+
+    // Set up interval for periodic checks
+    const interval = setInterval(checkBookingStatus, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [table.bookings, table._id, activeBooking]);
+
   const seatPositions = getSeatPositions(table?.capacity ?? 0);
-  const occupied =
-    typeof table.noOccupants === "number" ? table.noOccupants : 0;
+  // Use booking party size if there's a current booking
+  const occupied = activeBooking
+    ? activeBooking.partySize
+    : typeof table.noOccupants === "number"
+      ? table.noOccupants
+      : 0;
   const capacity = table?.capacity ?? 0;
   const occupiedIndexes: number[] = [];
   if (occupied > 0 && capacity > 0) {
@@ -79,9 +188,15 @@ const TableCard = ({
       ref={dragRef}
       className={`${cardColour} border-2 shadow-md relative flex flex-col items-center justify-center cursor-move ${
         isDragging ? "opacity-50" : ""
-      } rounded-full`}
+      } rounded-full ${activeBooking ? "ring-2 ring-yellow-400" : ""}`}
       style={{ width: 140, height: 140 }}
     >
+      {activeBooking && (
+        <div className="bg-yellow-400 text-black text-xs px-2 py-1 rounded-full flex flex-col items-center">
+          <div>Reserved</div>
+          <div>{remainingMinutes}m remaining</div>
+        </div>
+      )}
       {seatPositions.map((pos, i) => (
         <div
           key={i}
@@ -100,17 +215,16 @@ const TableCard = ({
       <span className="text-lg font-semibold mb-2 z-10">
         Table {table?.tableNo ?? ""}
       </span>
-      <button
+      <Button
         onClick={onEdit}
         style={{
-          backgroundColor: "#ffffff",
-          border: "1px solid #6f597b",
-          color: "#6f597b",
+          backgroundColor: "rgba(255, 255, 255, 0)",
+          border: "1px solid black",
+          color: "black",
         }}
-        className="text-xs px-2 py-1 rounded hover:bg-[#c4b5cf]"
       >
         Edit
-      </button>
+      </Button>
     </div>
   );
 };
@@ -121,6 +235,24 @@ export const TablesPage = () => {
   useEffect(() => {
     setPageTitle("POS System - Tables");
   }, [setPageTitle]);
+
+  // Run cleanup of expired bookings every minute and on component mount
+  useEffect(() => {
+    // Initial cleanup
+    Meteor.call("tables.cleanupExpiredBookings", (err: unknown) => {
+      if (err) console.error("Failed to cleanup expired bookings:", err);
+    });
+
+    // Set up periodic cleanup
+    const cleanupInterval = setInterval(() => {
+      Meteor.call("tables.cleanupExpiredBookings", (err: unknown) => {
+        if (err) console.error("Failed to cleanup expired bookings:", err);
+      });
+    }, 60 * 1000); // Run every minute
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(cleanupInterval);
+  }, []);
 
   useSubscribe("tables");
   const tablesFromDb = useTracker(() =>
@@ -158,7 +290,12 @@ export const TablesPage = () => {
   const [hasChanges, setHasChanges] = useState(false);
 
   const [modalType, setModalType] = useState<
-    null | "addTable" | "editTable" | "exitConfirm" | "deleteTable"
+    | null
+    | "addTable"
+    | "editTable"
+    | "exitConfirm"
+    | "deleteTable"
+    | "addBooking"
   >(null);
   const [selectedCellIndex, setSelectedCellIndex] = useState<number | null>(
     null,
@@ -179,6 +316,18 @@ export const TablesPage = () => {
     null,
   );
   const [addOrderId, setAddOrderId] = useState<string | null>(null);
+
+  // Initial booking form state
+  const initialBookingForm = {
+    customerName: "",
+    customerPhone: "",
+    partySize: "",
+    bookingDate: "",
+    duration: "",
+    notes: "",
+  };
+  const [bookingForm, setBookingForm] = useState(initialBookingForm);
+  const resetBookingForm = () => setBookingForm(initialBookingForm);
 
   // Prefill grid with tables from DB on initial load
   useEffect(() => {
@@ -647,6 +796,7 @@ export const TablesPage = () => {
             </Button>
           </div>
         )}
+
         {/* Table grid */}
         <div className="grid grid-cols-5 gap-16 p-4 justify-items-center">
           {grid.map((table, idx) => (
@@ -657,8 +807,13 @@ export const TablesPage = () => {
 
       {/* -------- Modals -------- */}
       {modalType && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm pt-20">
+          <div
+            className="bg-white rounded-lg p-6 shadow-lg max-h-[calc(100vh-120px)] overflow-y-auto"
+            style={{
+              width: modalType === "addBooking" ? "min(450px, 90vw)" : "320px",
+            }}
+          >
             {/* Add Table */}
             {modalType === "addTable" && (
               <>
@@ -1010,8 +1165,135 @@ export const TablesPage = () => {
                   </div>
                 )}
 
+                {/* Table Bookings */}
+                <div className="mb-3">
+                  <hr />
+                  <label className="block mt-2 font-semibold">Bookings:</label>
+                  {editTableData?.bookings && (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {editTableData.bookings
+                        .sort(
+                          (a: TableBooking, b: TableBooking) =>
+                            a.bookingDate.getTime() - b.bookingDate.getTime(),
+                        )
+                        .map((booking: TableBooking) => (
+                          <div
+                            key={booking.bookingDate.getTime()}
+                            className="bg-gray-50 p-2 rounded-lg text-sm"
+                          >
+                            <div className="font-medium">
+                              {booking.customerName}
+                            </div>
+                            <div className="text-gray-600">
+                              {booking.bookingDate.toLocaleString()} {" - "}
+                              {new Date(
+                                booking.bookingDate.getTime() +
+                                  booking.duration * 60 * 1000,
+                              ).toLocaleTimeString()}{" "}
+                              <br />
+                              {booking.partySize}{" "}
+                              {booking.partySize == 1 ? "person" : "people"}
+                            </div>
+                            {booking.notes && (
+                              <div className="text-gray-500 italic">
+                                {booking.notes}
+                              </div>
+                            )}
+                            <Button
+                              variant="positive"
+                              onClick={async () => {
+                                try {
+                                  await new Promise<void>((resolve, reject) => {
+                                    Meteor.call(
+                                      "tables.removeBooking",
+                                      editTableData._id,
+                                      booking.bookingDate.toISOString(),
+                                      (err: unknown) =>
+                                        err ? reject(err) : resolve(),
+                                    );
+                                  });
+
+                                  // Update both states in one operation
+                                  setGrid((prevGrid) => {
+                                    const updatedGrid = prevGrid.map(
+                                      (table) => {
+                                        if (
+                                          !table ||
+                                          table._id !== editTableData._id
+                                        )
+                                          return table;
+                                        return {
+                                          ...table,
+                                          bookings: table.bookings?.filter(
+                                            (b) =>
+                                              b.bookingDate.getTime() !==
+                                              booking.bookingDate.getTime(),
+                                          ),
+                                        };
+                                      },
+                                    );
+
+                                    // Update the edit modal data
+                                    const updatedTable = updatedGrid.find(
+                                      (t) => t?._id === editTableData._id,
+                                    );
+                                    if (updatedTable) {
+                                      setEditTableData(updatedTable);
+                                      setModalOriginalTable(updatedTable);
+                                    }
+
+                                    return updatedGrid;
+                                  });
+                                } catch (err) {
+                                  alert(
+                                    `Failed to remove booking: ${String(err)}`,
+                                  );
+                                }
+                              }}
+                            >
+                              Cancel Booking
+                            </Button>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+
+                <Button
+                  variant="negative"
+                  onClick={() => {
+                    setModalType("addBooking");
+                    resetBookingForm();
+                  }}
+                >
+                  Add Booking
+                </Button>
+
                 {/* Bottom row: Cancel & Save */}
                 <div className="flex justify-end gap-2">
+                  <Button
+                    variant="positive"
+                    onClick={() => {
+                      // discard modal-local changes: restore snapshot
+                      setModalType(null);
+                      if (modalOriginalTable) {
+                        setCapacityInput(
+                          modalOriginalTable.capacity.toString(),
+                        );
+                        setOccupancyInput(
+                          modalOriginalTable.noOccupants?.toString() ?? "",
+                        );
+                        setOccupiedToggle(!!modalOriginalTable.isOccupied);
+                      } else {
+                        setCapacityInput("");
+                        setOccupancyInput("");
+                        setOccupiedToggle(false);
+                      }
+                      setAddOrderId(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
                   <Button
                     variant="negative"
                     onClick={async () => {
@@ -1125,29 +1407,6 @@ export const TablesPage = () => {
                   >
                     Save
                   </Button>
-                  <Button
-                    variant="positive"
-                    onClick={() => {
-                      // discard modal-local changes: restore snapshot
-                      setModalType(null);
-                      if (modalOriginalTable) {
-                        setCapacityInput(
-                          modalOriginalTable.capacity.toString(),
-                        );
-                        setOccupancyInput(
-                          modalOriginalTable.noOccupants?.toString() ?? "",
-                        );
-                        setOccupiedToggle(!!modalOriginalTable.isOccupied);
-                      } else {
-                        setCapacityInput("");
-                        setOccupancyInput("");
-                        setOccupiedToggle(false);
-                      }
-                      setAddOrderId(null);
-                    }}
-                  >
-                    Cancel
-                  </Button>
                 </div>
               </>
             )}
@@ -1225,6 +1484,239 @@ export const TablesPage = () => {
                     Cancel
                   </Button>
                 </div>
+              </>
+            )}
+
+            {/* Add Booking Modal */}
+            {modalType === "addBooking" && editTableData && (
+              <>
+                <h2 className="text-lg font-semibold mb-4">
+                  Add Booking for Table {editTableData.tableNo}
+                </h2>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+
+                    const newBooking: TableBooking = {
+                      customerName: bookingForm.customerName,
+                      customerPhone: bookingForm.customerPhone,
+                      partySize: parseInt(bookingForm.partySize),
+                      bookingDate: new Date(bookingForm.bookingDate),
+                      duration: parseInt(bookingForm.duration),
+                      notes: bookingForm.notes || undefined,
+                    };
+
+                    try {
+                      await new Promise<void>((resolve, reject) => {
+                        Meteor.call(
+                          "tables.addBooking",
+                          editTableData._id,
+                          {
+                            ...newBooking,
+                            bookingDate: bookingForm.bookingDate, // Send string date to server
+                          },
+                          (err: unknown) => (err ? reject(err) : resolve()),
+                        );
+                      });
+
+                      // Update grid and table data in one operation
+                      setGrid((prevGrid) => {
+                        const updatedGrid = prevGrid.map(
+                          (table: Table | null) => {
+                            if (!table || table._id !== editTableData._id)
+                              return table;
+                            return {
+                              ...table,
+                              bookings: [
+                                ...(table.bookings || []),
+                                newBooking,
+                              ].sort(
+                                (a, b) =>
+                                  a.bookingDate.getTime() -
+                                  b.bookingDate.getTime(),
+                              ),
+                            };
+                          },
+                        );
+
+                        // Update the edit modal data with the updated table
+                        const updatedTable = updatedGrid.find(
+                          (t) => t?._id === editTableData._id,
+                        );
+                        if (updatedTable) {
+                          setEditTableData(updatedTable);
+                          setModalOriginalTable(updatedTable);
+                        }
+
+                        return updatedGrid;
+                      });
+
+                      setModalType("editTable");
+                      resetBookingForm();
+                    } catch (err) {
+                      alert(`Failed to add booking: ${String(err)}`);
+                    }
+                  }}
+                >
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
+                        Customer Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={bookingForm.customerName}
+                        onChange={(e) =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            customerName: e.target.value,
+                          }))
+                        }
+                        className="w-full border rounded px-2 py-1 mb-4"
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={bookingForm.customerPhone}
+                        onChange={(e) =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            customerPhone: e.target.value,
+                          }))
+                        }
+                        className="w-full border rounded px-2 py-1 mb-4"
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
+                        Party Size *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min={1}
+                        max={editTableData.capacity}
+                        value={bookingForm.partySize}
+                        onChange={(e) =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            partySize: e.target.value,
+                          }))
+                        }
+                        className="w-full border rounded px-2 py-1 mb-4"
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
+                        Date & Time *
+                      </label>
+                      <input
+                        type="datetime-local"
+                        required
+                        min={new Date().toISOString().slice(0, 16)}
+                        value={bookingForm.bookingDate}
+                        onChange={(e) =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            bookingDate: e.target.value,
+                          }))
+                        }
+                        className="w-full border rounded px-2 py-1 mb-4"
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
+                        Duration *
+                      </label>
+                      <select
+                        value={bookingForm.duration}
+                        required
+                        onChange={(e) =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            duration: e.target.value,
+                          }))
+                        }
+                        className="w-full border rounded px-2 py-1 mb-4"
+                      >
+                        <option
+                          value=""
+                          className="w-full border rounded px-2 py-1 mb-4"
+                        >
+                          Select Booking Duration
+                        </option>
+                        <option
+                          value="30"
+                          className="w-full border rounded px-2 py-1 mb-4"
+                        >
+                          30 minutes
+                        </option>
+                        <option
+                          value="45"
+                          className="w-full border rounded px-2 py-1 mb-4"
+                        >
+                          45 minutes
+                        </option>
+                        <option
+                          value="60"
+                          className="w-full border rounded px-2 py-1 mb-4"
+                        >
+                          60 minutes
+                        </option>
+                        <option
+                          value="90"
+                          className="w-full border rounded px-2 py-1 mb-4"
+                        >
+                          90 minutes
+                        </option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-red-900 dark:text-black">
+                        Notes
+                      </label>
+                      <textarea
+                        value={bookingForm.notes}
+                        onChange={(e) =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            notes: e.target.value,
+                          }))
+                        }
+                        className="w-full border rounded px-2 py-1 mb-4"
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <Button
+                      variant="positive"
+                      onClick={() => {
+                        // When returning to edit table, get fresh data from grid
+                        const currentTable = grid.find(
+                          (t) => t?._id === editTableData._id,
+                        );
+                        if (currentTable) {
+                          setEditTableData(currentTable);
+                          setModalOriginalTable(currentTable);
+                        }
+                        setModalType("editTable");
+                        resetBookingForm();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button variant="negative" type="submit">
+                      Add Booking
+                    </Button>
+                  </div>
+                </form>
               </>
             )}
 
