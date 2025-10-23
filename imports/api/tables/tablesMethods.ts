@@ -506,27 +506,31 @@ Meteor.methods({
     }).fetchAsync();
 
     const now = new Date();
-    
+
     for (const table of tables) {
       if (!table.bookings || table.bookings.length === 0) continue;
 
       // Filter out expired bookings and check for current bookings
       const currentBookings = table.bookings.filter((booking) => {
         const bookingTime = new Date(booking.bookingDate);
-        const bookingEndTime = new Date(bookingTime.getTime() + booking.duration * 60 * 1000);
+        const bookingEndTime = new Date(
+          bookingTime.getTime() + booking.duration * 60 * 1000,
+        );
         return now <= bookingEndTime;
       });
 
       // Get any active booking
       const activeBooking = currentBookings.find((booking) => {
         const bookingTime = new Date(booking.bookingDate);
-        const bookingEndTime = new Date(bookingTime.getTime() + booking.duration * 60 * 1000);
+        const bookingEndTime = new Date(
+          bookingTime.getTime() + booking.duration * 60 * 1000,
+        );
         return now >= bookingTime && now <= bookingEndTime;
       });
 
       // Always update bookings and table status
       const updateFields: Partial<Tables> & { bookings: TableBooking[] } = {
-        bookings: currentBookings
+        bookings: currentBookings,
       };
 
       // Update occupied status based on active booking
@@ -540,7 +544,7 @@ Meteor.methods({
       }
 
       await TablesCollection.updateAsync(table._id, {
-        $set: updateFields
+        $set: updateFields,
       });
     }
     return true;
