@@ -737,8 +737,9 @@ export const TablesPage = () => {
 
       {/* -------- Modals -------- */}
       {modalType && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm pt-20">
+          <div className="bg-white rounded-lg p-6 shadow-lg max-h-[calc(100vh-120px)] overflow-y-auto" 
+               style={{ width: modalType === "addBooking" ? "min(450px, 90vw)" : "320px" }}>
             {/* Add Table */}
             {modalType === "addTable" && (
               <>
