@@ -51,6 +51,10 @@ export const KitchenManagement = () => {
           name: it.name,
           quantity: typeof it.quantity === "number" ? it.quantity : 1,
           served: it.served === true,
+
+          menuItemId: it.menuItemId,
+          baseIncludedKeys: it.baseIncludedKeys,
+          optionSelections: it.optionSelections,
         })),
       };
     });

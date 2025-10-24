@@ -1,5 +1,21 @@
 <img src="PressUp.png" alt="PressUp Logo" />
 
+# Project Summary
+PressUp forms an all-in-one solution for cafe management, simplifying the complexities of running a small business.  By combining modern technology with an intuitive, user-friendly design and reliable system performance, we aim to empower café owners and streamline daily operations for their teams.
+
+Key Features:
+- POS system
+- Inventory Management
+- Menu Management
+- User Management
+- Staff Management
+- Financial Management
+- Analytics & Reporting
+- Kitchen Management
+
+All this and more has been created to allow cafe owners to run their small business with ease. The following ReadMe details how it can be utilised, with tips to make this as simple as possible. 
+
+
 # Team
 
 ## 🧠 System Architects
@@ -125,6 +141,29 @@ Branches should be prefixed with an indicator for their purpose and descriptivel
 
 Commits should be short but descriptive. Limit to 50 characters and format as having the first letter capitalised but _don't_ end with a period.
 
+## Pull Request strategy
+
+To maintain a consistent and traceable development process, all contributors are expected to follow the pull request strategy outlined below.
+
+This repository is configured to only allow “Merge Commits” when merging into the `main` branch. This approach preserves the complete commit history of each feature branch, ensuring a transparent and auditable record of all development activity. “Rebase and Merge” and “Squash and Merge” options are disabled to maintain the integrity of the project history.
+
+External contributors (those without direct write access) should use a Fork and Pull Request strategy. To contribute, fork this repository into your own GitHub account, create a feature branch from your fork’s `main` branch, make your changes, and then open a pull request back to this project’s `main` branch.
+
+All pull requests must pass the automated checks defined in GitHub Actions before merging. These include linting to enforce coding style and syntax consistency, along with additional build and deploy pipelines configured to deploy to Render.
+
+Pull requests must be reviewed and approved by at least one maintainer other than the last committer, and must be free of merge conflicts before merging. GitHub branch protection rules are in place to enforce these requirements automatically.
+
+Each pull request should clearly describe the feature implemented or bug fixed, include steps to test the change, and, where appropriate, provide screenshots or videos demonstrating the expected outcome. PRs should remain small and focused to simplify review and reduce the likelihood of introducing errors.
+
+The recommended workflow is summarised below:
+1. Create a new feature branch from `main` (or from your fork’s `main` if external contributor).
+2. Make and commit your changes locally.
+3. Push the branch to the remote repository or fork.
+4. Open a Pull Request to `main`.
+5. Verify that all GitHub Actions checks pass.
+6. Request review and approval from another team member (or maintainer if external contributor).
+7. Merge the PR using “Merge Commit” once all requirements are satisfied (limited to maintainer's discretion).
+
 ## Code Quality
 
 Before committing changes, run `npm run fix` to lint and format your code. Note that some problems may require manual resolution. All PRs are automatically checked for code quality and must pass before merging.
@@ -134,16 +173,18 @@ This check is performed using the workflow found at `.github/workflows/code-qual
 ## Versioning Strategy
 
 This project versions based on the [Semantic Versioning](https://semver.org/) standard. Each release is associated with a version number vX.Y.Z (e.g. 1.2.3) where:
+
 - X (Major): denotes significant widespread or breaking changes.
 - Y (Minor): indicates implementation of a new feature.
 - Z (Patch): representing a bug fix or small adjustment.
-Given that this is a web application major version updates are expected to be very infrequent. However, the full versioning scheme is maintained for consistency.
+  Given that this is a web application major version updates are expected to be very infrequent. However, the full versioning scheme is maintained for consistency.
 
 Versioning is performed using a GitHub Actions workflow located at `.github/versioning.yml` which runs on PR merge. The workflow makes use of git tags and the branch prefix to determine versioning:
+
 - A prefix of `major/` will increment the major version (and reset minor and patch to zero).
 - A prefix of `fix/`, `bugfix/`, `bug/` or `hotfix/` will increment the patch version
 - All other prefixes increment the minor version (and reset the patch version).
-Minor patch branches are expected to almost always be prefixed with `feature/`.
+  Minor patch branches are expected to almost always be prefixed with `feature/`.
 
 The workflow also creates a GitHub release with the new version and a list of commits included in the PR with attribution. As a result contributors are encouraged to make descriptive but concise commit messages.
 

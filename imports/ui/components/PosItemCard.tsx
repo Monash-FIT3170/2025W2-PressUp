@@ -7,6 +7,11 @@ interface Props {
 }
 
 export const PosItemCard = ({ item, onClick }: Props) => {
+  const hasDiscount = (item.discount ?? 0) > 0;
+  const effectivePrice = hasDiscount
+    ? item.price * (1 - (item.discount ?? 0) / 100)
+    : item.price;
+
   return (
     <div
       className="rounded-2xl shadow-sm bg-white overflow-hidden w-full max-w-[160px] mx-auto cursor-pointer"
@@ -24,7 +29,14 @@ export const PosItemCard = ({ item, onClick }: Props) => {
         <h3 className="text-sm font-semibold text-gray-200 truncate">
           {item.name}
         </h3>
-        <p className="text-white font-bold text-sm">${item.price.toFixed(2)}</p>
+        <div className="text-white font-bold text-sm">
+          {hasDiscount && (
+            <span className="line-through opacity-60 mr-1">
+              ${item.price.toFixed(2)}
+            </span>
+          )}
+          <span>${effectivePrice.toFixed(2)}</span>
+        </div>
       </div>
     </div>
   );

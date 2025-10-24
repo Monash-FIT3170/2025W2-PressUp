@@ -4,6 +4,7 @@ import { CircleUserRound } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useSubscribe } from "meteor/react-meteor-data";
 import { Roles } from "meteor/alanning:roles";
+import { Loading } from "../components/Loading";
 
 interface Comment {
   postedBy: string;
@@ -57,9 +58,11 @@ function Comment({ key, comment }: CommentProps) {
                 {user ? user.profile?.lastName : "User"}
               </p>
               <p className="text-sm text-gray-500">
-                {userRole
-                  ? userRole.charAt(0).toUpperCase() + userRole.slice(1)
-                  : "Loading role..."}
+                {userRole ? (
+                  userRole.charAt(0).toUpperCase() + userRole.slice(1)
+                ) : (
+                  <Loading />
+                )}
               </p>
             </div>
 

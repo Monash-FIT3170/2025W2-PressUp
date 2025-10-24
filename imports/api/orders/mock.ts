@@ -96,7 +96,7 @@ export const mockOrders = async (count: number) => {
     const orderID = await OrdersCollection.insertAsync({
       orderNo: nextOrderNo,
       orderType: OrderType.DineIn,
-      tableNo,
+      tableNo: [tableNo],
       menuItems: items,
       totalPrice: total,
       paid: false,

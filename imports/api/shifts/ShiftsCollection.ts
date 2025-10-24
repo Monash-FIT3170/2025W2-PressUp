@@ -14,6 +14,7 @@ export interface Shift extends DBEntry {
   status: ShiftStatus;
 }
 
-export const ShiftsCollection = new Mongo.Collection<OmitDB<Shift>, Shift>(
-  "shifts",
-);
+export const ShiftsCollection = new Mongo.Collection<
+  OmitDB<Shift> | Shift,
+  Shift
+>("shifts");
