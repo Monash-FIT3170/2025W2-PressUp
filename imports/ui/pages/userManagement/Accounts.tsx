@@ -13,6 +13,7 @@ import { Button } from "../../components/interaction/Button";
 import { Table, TableColumn } from "../../components/Table";
 import { SmallPill } from "../../components/SmallPill";
 import { Roles } from "meteor/alanning:roles";
+import { Modal } from "../../components/Modal";
 
 export const UserManagementPage = () => {
   const [selectedUsers, setSelectedUsers] = useState<Meteor.User[]>([]);
@@ -329,9 +330,8 @@ const AddUserModal = ({
     currentUserRole.includes(RoleEnum.MANAGER);
 
   return (
-    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999]">
-      <div className="bg-white p-6 rounded-lg w-96 shadow-2xl">
-        <h2 className="text-xl font-semibold text-press-up-purple dark:text-white" style={{ color: "#1e032e" }}>
+    <Modal open={true} onClose={onClose}>
+        <h2 className="text-xl font-semibold text-press-up-purple dark:text-white">
           Add New User
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -381,7 +381,7 @@ const AddUserModal = ({
           <select
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300"
           >
             <option value={RoleEnum.CASUAL}>Casual</option>
             <option value={RoleEnum.MANAGER}>Manager</option>
@@ -416,8 +416,7 @@ const AddUserModal = ({
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 };
 

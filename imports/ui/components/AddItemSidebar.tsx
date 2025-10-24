@@ -503,7 +503,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                   onChange={handleImageUpload}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
                 />
-                <p className="text-xs text-gray-500 mt-1 dark:text-white">
+                <p className="text-xs text-gray-500 mt-1 dark:text-gray">
                   Upload a custom image (JPG, PNG, etc.)
                 </p>
               </div>
