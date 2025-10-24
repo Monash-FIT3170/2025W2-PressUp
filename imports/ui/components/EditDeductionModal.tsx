@@ -3,6 +3,7 @@ import { Meteor } from "meteor/meteor";
 import { Modal } from "./Modal";
 import { Deduction } from "/imports/api/tax/DeductionsCollection";
 import { ConfirmModal } from "./ConfirmModal";
+import { Button } from "./interaction/Button";
 
 interface EditDeductionModalProps {
   isOpen: boolean;
@@ -145,8 +146,8 @@ export const EditDeductionModal: React.FC<EditDeductionModalProps> = ({
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
-              <button
-                type="button"
+              <Button
+                variant="negative"
                 onClick={() => {
                   setConfirm("cancel");
                   setShowConfirmation(true);
@@ -154,10 +155,10 @@ export const EditDeductionModal: React.FC<EditDeductionModalProps> = ({
                 className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded-lg"
               >
                 Cancel
-              </button>
+              </Button>
 
-              <button
-                type="button"
+              <Button
+                variant="positive"
                 onClick={() => {
                   setConfirm("save");
                   setShowConfirmation(true);
@@ -165,7 +166,7 @@ export const EditDeductionModal: React.FC<EditDeductionModalProps> = ({
                 className="bg-press-up-purple hover:bg-press-up-purple text-white px-4 py-2 rounded-lg"
               >
                 Save
-              </button>
+              </Button>
             </div>
           </form>
         </div>

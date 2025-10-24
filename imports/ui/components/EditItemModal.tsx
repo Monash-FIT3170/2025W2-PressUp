@@ -6,6 +6,7 @@ import { IngredientDropdown } from "./IngredientDropdown";
 import { CategoryDropdown } from "./CategoryDropdown";
 import { AllergenDropdown } from "./AllergenDropdown";
 import { ConfirmModal } from "./ConfirmModal";
+import { Button } from "./interaction/Button";
 
 interface EditItemModalProps {
   isOpen: boolean;
