@@ -3,6 +3,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { Input } from "./interaction/Input";
+import { Button } from "./interaction/Button";
 
 type UserState = {
   firstName: string;
@@ -47,13 +48,13 @@ export const EditPassword: React.FC<EditPasswordProps> = ({
             placeholder="Old Password"
             type={showOldPassword ? "text" : "password"}
           />
-          <button
-            type="button"
+          <Button
+            variant="positive"
             onClick={() => setShowOldPassword((prev) => !prev)}
             className="absolute right-6 top-6 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
           >
             {showOldPassword ? <FaEyeSlash /> : <FaEye />}
-          </button>
+          </Button>
         </div>
       )}
       <div className="relative">
@@ -65,13 +66,12 @@ export const EditPassword: React.FC<EditPasswordProps> = ({
           placeholder="User Password"
           type={showPassword ? "text" : "password"}
         />
-        <button
-          type="button"
+        <Button
+          variant="positive"
           onClick={() => setShowPassword((prev) => !prev)}
-          className="absolute right-6 top-6 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
         >
           {showPassword ? <FaEyeSlash /> : <FaEye />}
-        </button>
+        </Button>
       </div>
     </div>
   );

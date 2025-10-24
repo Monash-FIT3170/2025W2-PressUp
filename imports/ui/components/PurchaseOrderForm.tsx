@@ -322,7 +322,7 @@ export const PurchaseOrderForm = ({
         </div>
         <div className="border-b-1 border-b-[#F4E2E3] px-2 flex items-center justify-center print:hidden">
           <button
-            className="m-2 ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-green-500 hover:bg-green-600 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-green-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-green-600 print:hidden"
+            className="m-2 ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 bg-press-up-positive-button text-white hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-press-up-purple font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-press-up-purple dark:hover:bg-press-up-hover dark:focus:ring-press-up-purple print:hidden"
             onClick={() => {
               addStockItemLine();
             }}
@@ -349,7 +349,7 @@ export const PurchaseOrderForm = ({
             </div>
             <div className="border-b-1 border-b-[#F4E2E3] px-2 flex items-center justify-center">
               <button
-                className="m-2 ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-red-400 hover:bg-red-500 focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-red-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-300 dark:hover:bg-red-400 dark:focus:ring-red-400 print:hidden"
+                className="m-2 ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 bg-press-up-negative-button text-white hover:bg-press-up-hover focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-red-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-300 dark:hover:bg-red-400 dark:focus:ring-red-400 print:hidden"
                 onClick={() =>
                   setStockItems((prev) =>
                     prev.filter(
@@ -371,13 +371,13 @@ export const PurchaseOrderForm = ({
         <div className="col-span-7 text-left flex items-end">
           <button
             onClick={handleSubmit}
-            className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-[#A43375] text-white cursor-pointer w-right-2 hover:bg-rose-500 print:hidden"
+            className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-press-up-positive-button text-white cursor-pointer w-right-2 hover:bg-press-up-hover print:hidden"
           >
             Save PO
           </button>
           <button
             onClick={() => handlePrint()}
-            className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-[#A43375] text-white cursor-pointer w-right-2 hover:bg-rose-500 print:hidden"
+            className="text-nowrap justify-self-end shadow-lg/20 ease-in-out transition-all duration-300 p-1 m-4 ml-auto rounded-xl px-3 bg-press-up-positive-button text-white cursor-pointer w-right-2 hover:bg-press-up-hover print:hidden"
           >
             Print
           </button>
