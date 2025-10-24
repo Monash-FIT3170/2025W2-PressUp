@@ -662,7 +662,9 @@ export const TablesPage = () => {
             {/* Add Table */}
             {modalType === "addTable" && (
               <>
-                <h2 className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Add Table</h2>
+                <h2 className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
+                  Add Table
+                </h2>
                 <label
                   htmlFor="edit-table-capacity"
                   className="block mb-2 text-sm font-medium text-red-900 dark:text-white"
@@ -1165,7 +1167,9 @@ export const TablesPage = () => {
             {/* Delete Table Modal */}
             {modalType === "deleteTable" && (
               <>
-                <h2 className="block mb-2 text-sm font-medium text-red-900 dark:text-white">Delete Table</h2>
+                <h2 className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
+                  Delete Table
+                </h2>
                 <input
                   type="number"
                   value={deleteTableInput}

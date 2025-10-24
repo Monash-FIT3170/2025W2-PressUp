@@ -331,91 +331,91 @@ const AddUserModal = ({
 
   return (
     <Modal open={true} onClose={onClose}>
-        <h2 className="text-xl font-semibold text-press-up-purple dark:text-white">
-          Add New User
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <h2 className="text-xl font-semibold text-press-up-purple dark:text-white">
+        Add New User
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          type="text"
+          placeholder="First Name"
+          value={formData.firstName}
+          onChange={(e) =>
+            setFormData({ ...formData, firstName: e.target.value })
+          }
+        />
+        <Input
+          type="text"
+          placeholder="Last Name"
+          value={formData.lastName}
+          onChange={(e) =>
+            setFormData({ ...formData, lastName: e.target.value })
+          }
+        />
+        <Input
+          type="username"
+          placeholder="Username"
+          value={formData.username}
+          onChange={(e) =>
+            setFormData({ ...formData, username: e.target.value })
+          }
+          required
+        />
+        <div className="relative">
           <Input
-            type="text"
-            placeholder="First Name"
-            value={formData.firstName}
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={formData.password}
             onChange={(e) =>
-              setFormData({ ...formData, firstName: e.target.value })
-            }
-          />
-          <Input
-            type="text"
-            placeholder="Last Name"
-            value={formData.lastName}
-            onChange={(e) =>
-              setFormData({ ...formData, lastName: e.target.value })
-            }
-          />
-          <Input
-            type="username"
-            placeholder="Username"
-            value={formData.username}
-            onChange={(e) =>
-              setFormData({ ...formData, username: e.target.value })
+              setFormData({ ...formData, password: e.target.value })
             }
             required
-          />
-          <div className="relative">
-            <Input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              required
-            />{" "}
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-6 top-6 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </button>
-          </div>
-          <select
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300"
+          />{" "}
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-6 top-6 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
           >
-            <option value={RoleEnum.CASUAL}>Casual</option>
-            <option value={RoleEnum.MANAGER}>Manager</option>
-            <option value={RoleEnum.ADMIN}>Admin</option>
-          </select>
-          {canEditPayRate && (
-            <Input
-              type="number"
-              placeholder="Pay Rate"
-              value={formData.payRate ?? ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFormData({
-                  ...formData,
-                  payRate: value === "" ? 0 : parseFloat(value),
-                });
-              }}
-              required
-            />
-          )}
-          <div className="flex gap-2 pt-4">
-            <Button
-              type="button"
-              onClick={onClose}
-              variant="negative"
-              width="full"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" variant="positive" width="full">
-              Add User
-            </Button>
-          </div>
-        </form>
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </button>
+        </div>
+        <select
+          value={formData.role}
+          onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+          className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300"
+        >
+          <option value={RoleEnum.CASUAL}>Casual</option>
+          <option value={RoleEnum.MANAGER}>Manager</option>
+          <option value={RoleEnum.ADMIN}>Admin</option>
+        </select>
+        {canEditPayRate && (
+          <Input
+            type="number"
+            placeholder="Pay Rate"
+            value={formData.payRate ?? ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setFormData({
+                ...formData,
+                payRate: value === "" ? 0 : parseFloat(value),
+              });
+            }}
+            required
+          />
+        )}
+        <div className="flex gap-2 pt-4">
+          <Button
+            type="button"
+            onClick={onClose}
+            variant="negative"
+            width="full"
+          >
+            Cancel
+          </Button>
+          <Button type="submit" variant="positive" width="full">
+            Add User
+          </Button>
+        </div>
+      </form>
     </Modal>
   );
 };
