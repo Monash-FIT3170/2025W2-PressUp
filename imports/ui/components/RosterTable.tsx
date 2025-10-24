@@ -14,6 +14,7 @@ interface RosterTableProps {
   staff: RosterStaff[];
   start?: Date;
   end?: Date;
+  onEditShift?: (shift: Shift) => void;
 }
 
 const statusColour = (status: ShiftStatus) => {
@@ -33,6 +34,7 @@ export const RosterTable = ({
   staff,
   start: providedStart,
   end: providedEnd,
+  onEditShift,
 }: RosterTableProps) => {
   const locale = navigator.language ?? "en-AU";
   const today = new Date();
@@ -168,13 +170,24 @@ export const RosterTable = ({
                     className={clsx(
                       "absolute flex flex-col items-center justify-center h-12 top-2 rounded border text-[10px] font-medium overflow-hidden px-1",
                       statusColour(shift.status),
+                      onEditShift &&
+                        shift.status === ShiftStatus.SCHEDULED &&
+                        "cursor-pointer hover:opacity-80 transition-opacity",
                     )}
                     style={{
                       left: `${shift.leftPercent}%`,
                       width: `${Math.max(shift.widthPercent, 0.5)}%`,
                       zIndex: shift.zIndex,
                     }}
-                    title={`${shift.status} - ${shift.start.toLocaleString()} to ${shift.end?.toLocaleString() ?? "Ongoing"}`}
+                    title={`${shift.status} - ${shift.start.toLocaleString()} to ${shift.end?.toLocaleString() ?? "Ongoing"}${onEditShift && shift.status === ShiftStatus.SCHEDULED ? " (Click to edit)" : ""}`}
+                    onClick={() => {
+                      if (
+                        onEditShift &&
+                        shift.status === ShiftStatus.SCHEDULED
+                      ) {
+                        onEditShift(shift);
+                      }
+                    }}
                   >
                     {shift.widthPercent > 4 ? (
                       shift.status === ShiftStatus.CLOCKED_IN && !shift.end ? (

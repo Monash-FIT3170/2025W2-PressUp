@@ -253,4 +253,38 @@ Meteor.methods({
       ingredients: { $regex: ingredient, $options: "i" },
     }).fetch();
   }),
+
+  "items.updateItemIngredients": requireLoginMethod(async function (
+    itemName: string,
+    newIngredients: string[],
+  ) {
+    check(itemName, String);
+    check(newIngredients, [String]);
+
+    MenuItemsCollection.updateAsync(
+      { name: itemName },
+      { $set: { ingredients: newIngredients } },
+    );
+  }),
+
+  "menuItems.updateIngredients": requireLoginMethod(async function (
+    itemName: string,
+    baseIngredients: BaseIngredient[],
+    optionGroups: OptionGroup[],
+  ) {
+    check(itemName, String);
+    check(baseIngredients, Array);
+    check(optionGroups, Array);
+
+    const result = await MenuItemsCollection.updateAsync(
+      { name: itemName },
+      {
+        $set: {
+          baseIngredients,
+          optionGroups,
+        },
+      },
+    );
+    return result;
+  }),
 });
