@@ -673,7 +673,7 @@ export const TablesPage = () => {
                   type="number"
                   value={capacityInput}
                   onChange={(e) => setCapacityInput(e.target.value)}
-                  className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+                  className="mb-4 bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
                   placeholder="Number of seats"
                   min={1}
                   max={MAX_TABLE_CAPACITY}
@@ -782,7 +782,7 @@ export const TablesPage = () => {
                       type="number"
                       value={occupancyInput}
                       onChange={(e) => setOccupancyInput(e.target.value)}
-                      className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+                      className="mb-4 bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
                       placeholder="Number of occupants"
                       min={1}
                     />
@@ -1173,7 +1173,7 @@ export const TablesPage = () => {
                     const val = e.target.value;
                     if (/^\d*$/.test(val)) setDeleteTableInput(val);
                   }}
-                  className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+                  className="mb-4 bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
                   placeholder="Enter table number to delete"
                   min={1}
                   inputMode="numeric"
