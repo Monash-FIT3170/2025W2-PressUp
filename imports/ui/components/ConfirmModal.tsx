@@ -33,15 +33,11 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       >
         <p className="text-black dark:text-white mb-6 text-center">{message}</p>
         <div className="flex justify-end gap-4">
-          <Button
-            variant="negative"
-            onClick={onCancel}
+          <Button variant="negative" onClick={onCancel}
           >
             Cancel
           </Button>
-          <Button
-            variant="positive"
-            onClick={onConfirm}
+          <Button variant="positive" onClick={onConfirm}
           >
             Confirm
           </Button>
