@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Meteor } from "meteor/meteor";
+import { Button } from "./interaction/Button";
 
 export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [supplierName, setSupplierName] = useState("");
@@ -125,12 +126,9 @@ export const AddSupplierForm = ({ onSuccess }: { onSuccess: () => void }) => {
           </div>
 
           <div className="grid grid-cols-1 p-4">
-            <button
-              type="submit"
-              className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-press-up-purple hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-press-up-purple font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-press-up-purple dark:focus:ring-press-up-purple"
-            >
+            <Button type="submit" variant="positive" width="full">
               Add Supplier
-            </button>
+            </Button>
           </div>
         </form>
       </div>

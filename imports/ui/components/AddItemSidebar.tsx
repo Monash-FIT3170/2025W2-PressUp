@@ -5,6 +5,7 @@ import { ItemCategoriesCollection } from "/imports/api/menuItems/ItemCategoriesC
 import { IngredientDropdown } from "./IngredientDropdown";
 import { CategoryDropdown } from "./CategoryDropdown";
 import { ConfirmModal } from "./ConfirmModal";
+import { Modal } from "./Modal";
 
 // Import possible images from mockData
 const possibleImages = [
@@ -112,97 +113,87 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className={`
-        fixed inset-0 flex items-center justify-center z-[9999]
-        transition-colors z-[1000]
-        ${isOpen ? "visible bg-black/20" : "invisible"}
-      `}
-    >
-      <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
-        <h2 className="text-xl font-bold mb-4 text-red-900">
-          Add New Menu Item Category
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4 mb-6">
-          <div>
-            <label className="block mb-2 text-sm font-medium text-red-900">
-              Name
-            </label>
-            <input
-              type="text"
-              placeholder="Category Name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5"
-              required
-            />
-          </div>
+    <Modal open={isOpen} onClose={onClose}>
+      <h2 className="text-xl font-semibold text-press-up-purple dark:text-white">
+        Add New Menu Item Category
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-4 mb-6">
+        <div>
+          <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
+            Name
+          </label>
+          <input
+            type="text"
+            placeholder="Category Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+            required
+          />
+        </div>
 
-          <div className="flex justify-between pt-4">
+        <div className="flex justify-between pt-4">
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              resetForm();
+            }}
+            className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-6 py-2 text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: "#6f597b" }}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </form>
+
+      <h3 className="text-lg font-semibold mb-2 text-white">
+        Existing Categories
+      </h3>
+      <ul className="space-y-2 max-h-48 overflow-y-auto">
+        {categories.map((cat) => (
+          <li
+            key={cat._id}
+            className="flex justify-between items-center bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+          >
+            <span className="text-white">{cat.name}</span>
             <button
               type="button"
-              onClick={() => {
-                onClose();
-                resetForm();
-              }}
-              className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all"
-              disabled={isSubmitting}
+              className="bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors"
+              title="Delete category"
+              onClick={() => setDeleteTarget(cat.name)}
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2 text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: "#6f597b" }}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Saving..." : "Save"}
-            </button>
-          </div>
-        </form>
-
-        <h3 className="text-lg font-semibold mb-2 text-red-900">
-          Existing Categories
-        </h3>
-        <ul className="space-y-2 max-h-48 overflow-y-auto">
-          {categories.map((cat) => (
-            <li
-              key={cat._id}
-              className="flex justify-between items-center bg-white rounded-lg px-3 py-2 shadow-sm"
-            >
-              <span className="text-red-900">{cat.name}</span>
-              <button
-                type="button"
-                className="bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors"
-                title="Delete category"
-                onClick={() => setDeleteTarget(cat.name)}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-red-500"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-red-500"
-                >
-                  <path d="M3 6h18"></path>
-                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                </svg>
-              </button>
-            </li>
-          ))}
-          {categories.length === 0 && (
-            <li className="text-sm text-gray-500">No categories yet.</li>
-          )}
-        </ul>
-      </div>
+                <path d="M3 6h18"></path>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              </svg>
+            </button>
+          </li>
+        ))}
+        {categories.length === 0 && (
+          <li className="text-sm text-gray-500">No categories yet.</li>
+        )}
+      </ul>
 
       <ConfirmModal
         open={!!deleteTarget}
@@ -212,7 +203,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         }}
         onCancel={() => setDeleteTarget(null)}
       />
-    </div>
+    </Modal>
   );
 };
 
@@ -299,286 +290,279 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-      <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
-        <h2 className="text-xl font-bold mb-4 text-red-900 dark:text-white">
-          Add New Menu Item
-        </h2>
+    <Modal open={isOpen} onClose={onClose}>
+      <h2 className="text-xl font-semibold text-press-up-purple dark:text-white">
+        Add New Menu Item
+      </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name */}
-          <div>
-            <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
-              Name
-            </label>
-            <input
-              type="text"
-              placeholder="Item Name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-              required
-            />
-          </div>
-
-          {/* Price */}
-          <div>
-            <label className="block text-sm font-medium mb-1 text-red-900 dark:text-white">
-              Price ($)
-            </label>
-            <input
-              type="number"
-              step="any"
-              min="0"
-              placeholder="10.65"
-              value={formData.price || ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                // Allow empty string for better user experience while typing
-                if (value === "") {
-                  setFormData({ ...formData, price: 0 });
-                } else {
-                  const numValue = parseFloat(value);
-                  if (!isNaN(numValue)) {
-                    setFormData({ ...formData, price: numValue });
-                  }
-                }
-              }}
-              onBlur={(e) => {
-                // Ensure we have a valid number when user leaves the field
-                const value = parseFloat(e.target.value);
-                if (isNaN(value) || value < 0) {
-                  setFormData({ ...formData, price: 0 });
-                }
-              }}
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-              required
-            />
-          </div>
-
-          {/* Quantity */}
-          <div>
-            <label className="block text-sm font-medium mb-1 text-red-900 dark:text-white">
-              Quantity
-            </label>
-            <input
-              type="number"
-              min="0"
-              placeholder="0"
-              value={formData.quantity}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  quantity: parseInt(e.target.value) || 0,
-                })
-              }
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
-              required
-            />
-          </div>
-
-          {/* Ingredients */}
-          <IngredientDropdown
-            selectedIngredients={formData.ingredients}
-            onChange={(newIngredients: string[]) =>
-              setFormData({ ...formData, ingredients: newIngredients })
-            }
-            initialIngredients={[
-              "Milk",
-              "Flour",
-              "Eggs",
-              "Bread",
-              "Butter",
-              "Strawberries",
-              "Avocado",
-              "Bacon",
-              "Olive Oil",
-              "Paprika",
-              "Jam",
-            ]}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Name */}
+        <div>
+          <label className="block mb-2 text-sm font-medium text-red-900 dark:text-white">
+            Name
+          </label>
+          <input
+            type="text"
+            placeholder="Item Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+            required
           />
+        </div>
 
-          <CategoryDropdown
-            selectedCategories={formData.category}
-            onChange={(newCategories: string[]) =>
-              setFormData({ ...formData, category: newCategories })
-            }
-            initialCategories={["Food", "Drink", "Dessert"]}
-          />
-
-          {/* Availability */}
-          <div className="flex items-center space-x-3">
-            <label className="block text-sm font-medium text-red-900 dark:text-white">
-              Availability
-            </label>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={formData.available}
-                onChange={(e) =>
-                  setFormData({ ...formData, available: e.target.checked })
+        {/* Price */}
+        <div>
+          <label className="block text-sm font-medium mb-1 text-red-900 dark:text-white">
+            Price ($)
+          </label>
+          <input
+            type="number"
+            step="any"
+            min="0"
+            placeholder="10.65"
+            value={formData.price || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              // Allow empty string for better user experience while typing
+              if (value === "") {
+                setFormData({ ...formData, price: 0 });
+              } else {
+                const numValue = parseFloat(value);
+                if (!isNaN(numValue)) {
+                  setFormData({ ...formData, price: numValue });
                 }
-                className="w-4 h-4 rounded"
-                style={{ accentColor: "#6f597b" }}
-              />
-              <span className="ml-2 text-sm text-gray-700">
-                {formData.available ? "Available" : "Unavailable"}
-              </span>
-            </div>
+              }
+            }}
+            onBlur={(e) => {
+              // Ensure we have a valid number when user leaves the field
+              const value = parseFloat(e.target.value);
+              if (isNaN(value) || value < 0) {
+                setFormData({ ...formData, price: 0 });
+              }
+            }}
+            className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+            required
+          />
+        </div>
+
+        {/* Quantity */}
+        <div>
+          <label className="block text-sm font-medium mb-1 text-red-900 dark:text-white">
+            Quantity
+          </label>
+          <input
+            type="number"
+            min="0"
+            placeholder="0"
+            value={formData.quantity}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                quantity: parseInt(e.target.value) || 0,
+              })
+            }
+            className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
+            required
+          />
+        </div>
+
+        {/* Ingredients */}
+        <IngredientDropdown
+          selectedIngredients={formData.ingredients}
+          onChange={(newIngredients: string[]) =>
+            setFormData({ ...formData, ingredients: newIngredients })
+          }
+          initialIngredients={[
+            "Milk",
+            "Flour",
+            "Eggs",
+            "Bread",
+            "Butter",
+            "Strawberries",
+            "Avocado",
+            "Bacon",
+            "Olive Oil",
+            "Paprika",
+            "Jam",
+          ]}
+        />
+
+        <CategoryDropdown
+          selectedCategories={formData.category}
+          onChange={(newCategories: string[]) =>
+            setFormData({ ...formData, category: newCategories })
+          }
+          initialCategories={["Food", "Drink", "Dessert"]}
+        />
+
+        {/* Availability */}
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={formData.available}
+              onChange={(e) =>
+                setFormData({ ...formData, available: e.target.checked })
+              }
+              className="w-4 h-4 rounded"
+              style={{ accentColor: "#6f597b" }}
+            />
+            <span className="ml-2 text-sm text-gray-700">
+              {formData.available ? "Available" : "Unavailable"}
+            </span>
           </div>
+        </div>
 
-          {/* Image Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-2 text-red-900 dark:text-white">
-              Image
-            </label>
+        {/* Image Selection */}
+        <div>
+          <label className="block text-sm font-medium mb-2 text-red-900 dark:text-white">
+            Image
+          </label>
 
-            {/* Image Type Toggle */}
-            <div className="flex mb-3 bg-gray-200 rounded-lg p-1">
-              <button
-                type="button"
-                onClick={() => setSelectedImageType("predefined")}
-                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                  selectedImageType === "predefined"
-                    ? "text-white shadow-sm"
-                    : "text-gray-600 hover:text-gray-800"
-                }`}
-                style={{
-                  backgroundColor:
-                    selectedImageType === "predefined"
-                      ? "#6f597b"
-                      : "transparent",
-                }}
-              >
-                Choose from Gallery
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedImageType("upload")}
-                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                  selectedImageType === "upload"
-                    ? "text-white shadow-sm"
-                    : "text-gray-600 hover:text-gray-800"
-                }`}
-                style={{
-                  backgroundColor:
-                    selectedImageType === "upload" ? "#6f597b" : "transparent",
-                }}
-              >
-                Upload Custom
-              </button>
-            </div>
-
-            {/* Predefined Images Grid */}
-            {selectedImageType === "predefined" && (
-              <div className="grid grid-cols-3 gap-2 mb-3 max-h-48 overflow-y-auto border rounded-lg p-2">
-                {possibleImages.map((imagePath, index) => {
-                  const imageName =
-                    imagePath.split("/").pop()?.replace(".png", "") || "";
-                  return (
-                    <div
-                      key={index}
-                      onClick={() => selectPredefinedImage(imagePath)}
-                      className={`cursor-pointer border-2 rounded-lg p-2 text-center transition-all hover:shadow-md ${
-                        formData.image === imagePath
-                          ? "border-purple-500 bg-purple-50"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <img
-                        src={imagePath}
-                        alt={imageName}
-                        className="w-full h-12 object-cover rounded mb-1"
-                        onError={(e) => {
-                          // Fallback if image doesn't exist
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                      <span className="text-xs text-gray-600 capitalize">
-                        {imageName.replace(/[_-]/g, " ")}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Custom Upload */}
-            {selectedImageType === "upload" && (
-              <div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Upload a custom image (JPG, PNG, etc.)
-                </p>
-              </div>
-            )}
-
-            {/* Selected Image Preview */}
-            {formData.image && (
-              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={formData.image}
-                    alt="Selected"
-                    className="w-12 h-12 object-cover rounded border"
-                    onError={(e) => {
-                      // Show placeholder if image fails to load
-                      e.currentTarget.src =
-                        'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="%23a43375" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>';
-                    }}
-                  />
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">
-                      Selected Image:
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {formData.image.split("/").pop()}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, image: "" })}
-                    className="text-red-500 hover:text-red-700 text-sm"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-between pt-4">
+          {/* Image Type Toggle */}
+          <div className="flex mb-3 bg-gray-200 rounded-lg p-1">
             <button
               type="button"
-              onClick={() => {
-                onClose();
-                resetForm();
+              onClick={() => setSelectedImageType("predefined")}
+              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                selectedImageType === "predefined"
+                  ? "text-white shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+              style={{
+                backgroundColor:
+                  selectedImageType === "predefined"
+                    ? "#6f597b"
+                    : "transparent",
               }}
-              className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all"
-              disabled={isSubmitting}
             >
-              Cancel
+              Choose from Gallery
             </button>
             <button
-              type="submit"
-              className="px-6 py-2 text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: "#6f597b" }}
-              disabled={isSubmitting}
+              type="button"
+              onClick={() => setSelectedImageType("upload")}
+              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                selectedImageType === "upload"
+                  ? "text-white shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+              style={{
+                backgroundColor:
+                  selectedImageType === "upload" ? "#6f597b" : "transparent",
+              }}
             >
-              {isSubmitting ? "Saving..." : "Save"}
+              Upload Custom
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+
+          {/* Predefined Images Grid */}
+          {selectedImageType === "predefined" && (
+            <div className="grid grid-cols-3 gap-2 mb-3 max-h-48 overflow-y-auto border rounded-lg p-2">
+              {possibleImages.map((imagePath, index) => {
+                const imageName =
+                  imagePath.split("/").pop()?.replace(".png", "") || "";
+                return (
+                  <div
+                    key={index}
+                    onClick={() => selectPredefinedImage(imagePath)}
+                    className={`cursor-pointer border-2 rounded-lg p-2 text-center transition-all hover:shadow-md ${
+                      formData.image === imagePath
+                        ? "border-purple-500 bg-purple-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <img
+                      src={imagePath}
+                      alt={imageName}
+                      className="w-full h-12 object-cover rounded mb-1"
+                      onError={(e) => {
+                        // Fallback if image doesn't exist
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                    <span className="text-xs text-gray-600 capitalize">
+                      {imageName.replace(/[_-]/g, " ")}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Custom Upload */}
+          {selectedImageType === "upload" && (
+            <div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+              />
+              <p className="text-xs text-gray-500 mt-1 dark:text-gray">
+                Upload a custom image (JPG, PNG, etc.)
+              </p>
+            </div>
+          )}
+
+          {/* Selected Image Preview */}
+          {formData.image && (
+            <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <img
+                  src={formData.image}
+                  alt="Selected"
+                  className="w-12 h-12 object-cover rounded border"
+                  onError={(e) => {
+                    // Show placeholder if image fails to load
+                    e.currentTarget.src =
+                      'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="%23a43375" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>';
+                  }}
+                />
+                <div>
+                  <p className="text-sm font-medium text-gray-700">
+                    Selected Image:
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {formData.image.split("/").pop()}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, image: "" })}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-between pt-4">
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              resetForm();
+            }}
+            className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-6 py-2 text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: "#6f597b" }}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 
