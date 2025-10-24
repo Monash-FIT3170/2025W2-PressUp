@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { IngredientDropdown } from "./IngredientDropdown";
 import { CategoryDropdown } from "./CategoryDropdown";
+import { Button } from "./interaction/Button";
 
 // Import possible images from mockData
 const possibleImages = [
@@ -243,8 +244,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
             {/* Image Type Toggle */}
             <div className="flex mb-3 bg-gray-200 rounded-lg p-1">
-              <button
-                type="button"
+              <Button
+                variant="positive"
                 onClick={() => setSelectedImageType("predefined")}
                 className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
                   selectedImageType === "predefined"
@@ -259,9 +260,9 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                 }}
               >
                 Choose from Gallery
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="positive"
                 onClick={() => setSelectedImageType("upload")}
                 className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
                   selectedImageType === "upload"
@@ -274,7 +275,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                 }}
               >
                 Upload Custom
-              </button>
+              </Button>
             </div>
 
             {/* Predefined Images Grid */}
@@ -348,13 +349,12 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                       {formData.image.split("/").pop()}
                     </p>
                   </div>
-                  <button
-                    type="button"
+                  <Button
+                    variant="negative"
                     onClick={() => setFormData({ ...formData, image: "" })}
-                    className="text-red-500 hover:text-red-700 text-sm"
                   >
                     Remove
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -362,25 +362,22 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
           {/* Action Buttons */}
           <div className="flex justify-between pt-4">
-            <button
-              type="button"
+            <Button
+              variant="negative"
               onClick={() => {
                 onClose();
                 resetForm();
               }}
-              className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all"
               disabled={isSubmitting}
             >
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2 text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: "#6f597b" }}
+            </Button>
+            <Button
+              variant="positive"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Saving..." : "Save"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -400,13 +397,12 @@ const Sidebar: React.FC = () => {
     <>
       <div className="w-32 p-3 border-r border-gray-200 min-h-screen">
         {/* Add Item Button */}
-        <button
+        <Button
+          variant="positive"
           onClick={() => setIsModalOpen(true)}
-          className="w-full py-2.5 px-4 rounded-lg mb-4 font-bold text-sm transition-all hover:opacity-90 hover:shadow-md"
-          style={{ backgroundColor: "#6f597b", color: "white" }}
         >
           Add Item
-        </button>
+        </Button>
       </div>
 
       {/* Add Item Modal */}

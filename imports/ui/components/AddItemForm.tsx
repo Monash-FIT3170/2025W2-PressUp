@@ -3,6 +3,7 @@ import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { FormEvent, useEffect, useState } from "react";
 import { SuppliersCollection, StockItem } from "/imports/api";
 import { IdType } from "/imports/api/database";
+import { Button } from "./interaction/Button";
 
 interface Props {
   onSuccess: () => void;
@@ -176,22 +177,20 @@ export const AddItemForm = ({ onSuccess, item }: Props) => {
           </div>
           {!item && (
             <div className="grid grid-cols-1 p-4">
-              <button
-                type="submit"
-                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-press-up-positive-button hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
-              >
+              <Button
+                variant="positive"
+                >
                 Add Item
-              </button>
+              </Button>
             </div>
           )}
           {item && (
             <div className="grid grid-cols-1 p-4">
-              <button
-                type="submit"
-                className="ease-in-out transition-all duration-300 shadow-lg/20 cursor-pointer ml-4 text-white bg-press-up-positive-button hover:bg-press-up-purple focus:drop-shadow-none focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-rose-300 dark:hover:bg-rose-400 dark:focus:ring-rose-400"
-              >
+              <Button
+                variant="positive"
+                >
                 Save Item
-              </button>
+              </Button>
             </div>
           )}
         </form>

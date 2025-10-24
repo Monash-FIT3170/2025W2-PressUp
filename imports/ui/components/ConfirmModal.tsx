@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "./interaction/Button";
 
 interface ConfirmModalProps {
   open: boolean;
@@ -32,26 +33,18 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       >
         <p className="text-black dark:text-white mb-6 text-center">{message}</p>
         <div className="flex justify-end gap-4">
-          <button
-            type="button"
+          <Button
+            variant="negative"
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer
-              text-black bg-gray-300 hover:bg-gray-400
-              dark:bg-neutral-600 dark:hover:bg-neutral-700 dark:text-white
-              transition-colors"
           >
             Cancel
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="positive"
             onClick={onConfirm}
-            className="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer
-              text-black bg-press-up-purple hover:bg-press-up-navy
-              dark:hover:bg-press-up-purple dark:text-white
-              transition-colors"
           >
             Confirm
-          </button>
+          </Button>
         </div>
       </div>
     </div>
