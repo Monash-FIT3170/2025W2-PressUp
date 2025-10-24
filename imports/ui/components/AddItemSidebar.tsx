@@ -5,6 +5,7 @@ import { ItemCategoriesCollection } from "/imports/api/menuItems/ItemCategoriesC
 import { IngredientDropdown } from "./IngredientDropdown";
 import { CategoryDropdown } from "./CategoryDropdown";
 import { ConfirmModal } from "./ConfirmModal";
+import { Modal } from "./Modal";
 
 // Import possible images from mockData
 const possibleImages = [
@@ -112,8 +113,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-      <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
+    <Modal open={isOpen} onClose={onClose}>
         <h2 className="text-xl font-semibold text-press-up-purple dark:text-white">
           Add New Menu Item Category
         </h2>
@@ -129,7 +129,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5"
+              className="bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
               required
             />
           </div>
@@ -157,16 +157,16 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
           </div>
         </form>
 
-        <h3 className="text-lg font-semibold mb-2 text-red-900">
+        <h3 className="text-lg font-semibold mb-2 text-white">
           Existing Categories
         </h3>
         <ul className="space-y-2 max-h-48 overflow-y-auto">
           {categories.map((cat) => (
             <li
               key={cat._id}
-              className="flex justify-between items-center bg-white rounded-lg px-3 py-2 shadow-sm"
+              className="flex justify-between items-center bg-gray-50 border border-gray-300 text-red-900 text-sm rounded-lg focus:ring-red-900 focus:border-red-900 block w-full p-2.5 dark:bg-stone-400 dark:border-stone-500 dark:placeholder-stone-300 dark:text-white"
             >
-              <span className="text-red-900">{cat.name}</span>
+              <span className="text-white">{cat.name}</span>
               <button
                 type="button"
                 className="bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors"
@@ -196,7 +196,6 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
             <li className="text-sm text-gray-500">No categories yet.</li>
           )}
         </ul>
-      </div>
 
       <ConfirmModal
         open={!!deleteTarget}
@@ -206,7 +205,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         }}
         onCancel={() => setDeleteTarget(null)}
       />
-    </div>
+    </Modal>
   );
 };
 
@@ -293,8 +292,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-      <div className="bg-stone-100 rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto mt-8">
+    <Modal open={isOpen} onClose={onClose}>
         <h2 className="text-xl font-semibold text-press-up-purple dark:text-white">
           Add New Menu Item
         </h2>
@@ -404,9 +402,6 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
           {/* Availability */}
           <div className="flex items-center space-x-3">
-            <label className="block text-sm font-medium text-red-900 dark:text-white">
-              Availability
-            </label>
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -508,7 +503,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                   onChange={handleImageUpload}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-1 dark:text-white">
                   Upload a custom image (JPG, PNG, etc.)
                 </p>
               </div>
@@ -571,8 +566,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 };
 
